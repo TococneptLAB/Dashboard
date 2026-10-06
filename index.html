@@ -121,6 +121,11 @@
   .pg i.s-na{background:transparent;color:#C9D2D0;font-weight:400;}
   .pg i.cur{border-color:var(--ink);}
   .days-warn{color:var(--rose);font-weight:700;}
+  .sub{font-size:14px;font-weight:700;margin:18px 0 8px;}
+  tr.clickable{cursor:pointer;}
+  tr.clickable.sel td{background:#E4F3E9;}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
+  tr.total td{font-weight:700;background:#EEF3F2;}
 </style>
 </head>
 <body>
@@ -175,6 +180,7 @@
       <button data-tab="pending">งานค้าง</button>
       <button data-tab="dept">สถานะแผนก</button>
       <button data-tab="dash">แดชบอร์ด</button>
+      <button data-tab="report">สรุปหมอ / คลินิก</button>
       <button data-tab="search">ค้นหา / ตรวจสอบงาน</button>
       <button data-tab="rework">งานแก้</button>
     </nav>
@@ -284,6 +290,37 @@
     </div>
   </section>
 
+  <!-- REPORT TAB -->
+  <section id="view-report" class="view">
+    <div class="card">
+      <h2>สรุปหมอ / คลินิก <span class="tag" id="rp-tag"></span></h2>
+      <div class="filters">
+        <select id="rp-by"><option value="doctor">ดูตามหมอ</option><option value="clinic">ดูตามคลินิก</option></select>
+        <select id="rp-period">
+          <option value="month">เดือนที่เลือกด้านบน</option>
+          <option value="last3" selected>3 เดือนล่าสุด</option>
+          <option value="last6">6 เดือนล่าสุด</option>
+          <option value="year">ทั้งปี</option>
+          <option value="all">ทั้งหมด</option>
+        </select>
+        <input id="rp-q" placeholder="ค้นหาชื่อ">
+        <button class="btn ghost" id="rp-csv-overview">⬇ ดาวน์โหลด CSV (ภาพรวม)</button>
+      </div>
+      <div class="note" id="rp-note"></div>
+      <div class="tablewrap"><table id="rp-table"></table></div>
+    </div>
+    <div class="card" id="rp-detail-card" style="display:none">
+      <h2 id="rp-detail-title"></h2>
+      <div class="filters"><button class="btn ghost" id="rp-csv-detail">⬇ ดาวน์โหลด CSV (รายเดือน)</button></div>
+      <div class="sub">แต่ละเดือนทำอะไรไปบ้าง</div>
+      <div class="tablewrap"><table id="rp-month-table"></table></div>
+      <div class="sub" id="rp-rel-title"></div>
+      <div class="tablewrap"><table id="rp-rel-table"></table></div>
+      <div class="sub">รายการเคส (ล่าสุดก่อน แสดงสูงสุด 200)</div>
+      <div class="tablewrap"><table id="rp-cases-table"></table></div>
+    </div>
+  </section>
+
   <!-- SEARCH TAB -->
   <section id="view-search" class="view">
     <div class="card">
@@ -312,15 +349,18 @@
 </div>
 
 <div class="print-order" id="print-order-el"></div>
+<div class="note" id="app-version" style="position:fixed;left:10px;bottom:6px;margin:0;font-size:11px;opacity:.7;z-index:5"></div>
+<datalist id="dl-doctors"></datalist>
 <div class="toast" id="toast"></div>
 
 <script id="data-blob" type="application/json">{"fields":["source_sheet","is_rework","case_type","coupon_status","case_id","date_received","clinic","doctor","patient","implant_system","detail","position","color","material","qty","unit_label","scan_system","delivery_method","notes","status","dep_design","dep_milling_zirconia","dep_milling_premill","dep_press","dep_porcelain","dep_qc","dep_packing","dep_delivery","sent_flag","date_sent","appointment_date","tech1","tech2"],"rows":[]}</script>
-<script id="refs-blob" type="application/json">{"clinics": ["(ออกบิลหมอ)", "14/8", "1st dental clinic", "2024-10-09T00:00:00", "3S Lab", "ABC แฟมิลี่", "AG Dental Plus Clinic", "ARC Dental clinic สนามเป้า", "All About Teeth Dental Clinic สาขาลาดพร้าว", "All About Teeth Dental Clinic สาขาอโศก", "Alpaca Dental Clinic แคราย", "Anuparb", "Apple Dental Clinic", "Arc dental clinic", "At Homeจอหอ", "Athome สระครก จอหอ", "B.A ปทุม", "BCDC", "BCDC สาขาบิ๊กซี", "BCDC สาขาเพิ่มสิน", "BCDC สาขาเพิ่มสิน 64", "BCDC เพิ่มสิน", "BIDC Emquartier", "BIDH", "BKK48", "BPDC", "BSDC", "BWDC", "Bangkok Smile Dental", "Be Well Dental Clinic", "Be well หัวหิน", "Belix Dental Clinic", "Bettrr Smile Clinic", "Bettrr Smile Clinic ภูเก็ต", "Bewell หัวหิน", "Big Smile อ่างทอง", "Big care", "Big care เพิ่มสิน", "Buddy smile", "Buddy smile สาขาลาดพร้าววังหิน", "Charm บางแสน", "Charm ศรีราชา", "Chin dental Clinic", "Clinic All Smile", "Clinic All Smile สาขาตะพง", "Clinic Dentreat", "Clinic wisdom tooth", "Colon P", "Csmileyala Clinic", "D Duo สัตหีบ", "D-Dou สัตหีบ", "D-Plus นวมินทร์", "DNS", "DNY รามอินทรา กม.8", "DNY ลาดพร้าว101", "DNY ลาดพร้าว102", "Daily Daily Dental Clinic", "Daily Dental Clinic", "Deezy สำโรง", "Delta 304", "Deluxe นวนคร", "Dent 4U", "Dent4U", "Dent4u พิษณุโลก", "Dental Art ทาวน์อินทาวน์", "Dental Art สะพานควาย", "Dental Art อุทัยธานี", "Dental Empire Clinic", "Dental Empire รัชดา19", "Dental Home Clinic ปราจีน", "Dental Hub Clinic (หนองแขม)", "Dental Hug", "Dental Image ปิ่นเกล้า", "Dental Protect", "Dental Select", "Dental Shine Clinic", "Dental Story", "Dental Story สัตหีบ", "Dental Wise", "Dental Zone", "Dental art ทาวน์อินทาวน์", "Dental art สะพายควาย", "Dental art อุทัยธานี", "Dental at Home", "Dental at home นวมินทร์ 70", "Dental at home นวมินทร์70", "Dental home clinic (พระโขนง)", "Dental hub Phuket", "Dental hug", "Dental max 50", "Dental wise", "Dental zone", "DentalWise", "Dente Align", "Dentista", "Dentista77", "Dentreat", "Dio", "Doctor Fair Dental Clinic", "DortorTanawat dental clinic", "Dr. Pranmas Teeranuwat", "ESTE บางแสน", "Edelweiss สาขาวิภาวดี", "Edelweiss สาขาสุขุมวิท15", "Eden Dental", "Eden Dental ศาลาแดง", "Eden dental", "Eden detalclinic", "Feel Good", "Feel good", "Feel good clinic", "Feel good ยังไม่ได้ออกบิล", "Floss Dental (เกาะสมุย)", "Forest Dental Clinic", "Freind Dental Clinic สาขาเซฟวัน", "Friend เซฟวัน", "Funwiset Dental อ่างทอง", "GOdaddy", "Gardentist Clinic จันทบุรี", "Gardentist จันทบุรี", "Gentle Peach Dental Clinic", "Give Time จันทบุรี", "Godaddy", "Gold 9", "HYPS Dental CNX", "HYPS Dental Clinic", "HYPS Dental cnx", "Habito Dental", "Hachi dental", "Happy Smile ชิดลม", "Hein Clinic ตาคลี", "Homey Mega Bangna", "JDC", "JK dental clinic ฉะเชิงเทรา", "Jeeraporn", "Joy Dental กระบี่", "KC Smile ลาดพร้าว 71", "KC Smile ลาดพร้าว 72", "KC smile ลาดพร้าว 71", "Kitcha Dental Clinic Chiang Mai", "Kongkrapanclinic(ส่งงานDentalHug)", "Konvy Dental", "LDC พระราม2", "LDC พระราม5", "LDC เพชรเกษม", "LITA Dental Clinic", "Love at first dental clinic", "M'JOY Dental Clinic", "M'Joy Dental Clinic", "MAX 50", "MDC", "Manhattan", "Manhattan Dental Clinic", "Manhatton", "Manhatton Dental", "Medtopia", "Mj Dental Clinic", "Mj Dental clinic", "Monday ลาดพร้าว101", "Moonsmile ลพบุรี", "NS clinic", "NTeeth ราม65", "Nattist บางพลี", "NewHome Dental", "NewHome Dental สาขาปากท่อ", "Nice Dental หลักสี่", "Nis Dental Image ภูเก็ต", "Ortho Smile", "P'Jane", "P'Jom", "PDC", "PSK Dental Center", "PSK dental center", "Perfect Dental", "Perfect dental", "Pop Smile Dental Clinic", "Pop Smile Dental Clinic ตลาดนำชัย", "Pop Smile Dental Clinic นำชัย", "Pop Smile Dental Clinic หัวตะเข้", "Prime Dental Clinic", "Prime dental", "Prime dental Clinic", "Prime dental Clinic เชียงใหม่", "Prodent", "Prodent lab", "ProudDent Dental Clinic", "Pt.", "RDC", "RDL", "Rabbit Dental Clinic", "Rimkhong Dental", "SOL Dental Clinic", "SOL dental clinic | คลินิกทันตกรรมโซล", "Sea Sky", "Seasky", "Sky dental clinic", "Smile & Co", "Smile & shine", "Smile Art Pattya", "Smile Craft", "Smile Crafter ราชเทวี", "Smile Crafters ราชเทวี", "Smile Dent", "Smile Dental Clinic พิษณุโลก", "Smile Phitsanulok", "Smile Room", "Smile Sai5", "Smile Studio Dental", "Smile again ศาลายา", "Smile room ลำพูน", "Smile room แม่ริม", "Smile&Style Dental studio", "SmileCenter", "Smiley ฉะเชิงเทรา", "Sriracha Smile", "Star smile ศรีราชา", "Summer Smile", "TDH Canvas", "TMD", "Tann Dental Clinic", "Tann dental Clinic", "Teema smile", "Teeth Talk  ฟิวเจอร์", "Teeth Time", "Teeth Time (งานส่วนตัวหมอ)", "Teeth Time งานส่วนตัว", "The Glass Smile Dental Clinic", "The Grand Dentist (คลองหลวง)", "The Grand Dentist (ฟิวเจอร์ปาร์ค รังสิต)", "The Grand คลองหลวง", "The dental center Sisaket", "The smile gallery phuket ส่งจากสนามบินภูเก็ต", "The smilist", "Tooth Melody", "Tooth Republic Dental Clinic", "Tooth Republic Dental Clinic คอนโดไลท์เฮ้าส์ เจริญนคร", "Tooth&Mood Dental Clinic", "ToothMelody", "Toothday จอหอ", "Toothday หัวทะเล", "Toothist", "Toothtist", "Toothtist Sea Sky", "Trust dental clinic สาขาซีคอนบางแค", "Vsmile มุกดาหาร", "Vsmileมุกดาหาร", "WE DENT Clinic", "Warmsmile Dental Care", "We are dentist clinic", "Well tooth", "Wellsmiles dental clinic", "White smile clinic lamphun", "Wisdom Dental clinic", "Wisdom Tooth", "Wisdom อนุสาวรีย์", "XDC", "YDC", "YDC กทม", "YDC กรุงเทพกรีฑา", "YDC ทาวน์อินทาวน์", "YDC สาขากรุงเทพกรีฑา", "Yes Tooth Clinic", "Yim Yim Dental Clinic", "Your Dental Clinic", "charm bangsaen clinic", "csmileyala clinic", "dental @ home", "dental at home นวมินทร์70", "dental world", "dentist i need you", "doctortanawat", "esse dental clinic", "feel good", "i-smile dental clinic", "iLike Dental Clinic", "iLike Dental Clinic พัทยา", "my condo ปิ่นเกล้า", "new smile phuket", "pa", "prodent", "scene smile", "sea sky", "sky dental clinic", "skytain อโศก", "smile desire dental clinic", "smile desire dental clinic ปัตตานี", "smile icon", "smile icon สมุทรปราการ", "smile room แม่ริม", "tooth & mood แบริ่ง35", "tooth republic ศาลายา", "vsmile dentel", "กาญจนาภิเษก KDC", "กาญจษาภิเษก KDC", "การ์เด้นทิสท์", "คงกระพันคลินิก", "คงกระพันสาย 5", "คณะ", "คณะทันต ม.พะเยา", "คณะทันต มอ.", "คณะทันตะ ม.นเรศวร", "คณะทันตะมอ.", "คณะทันตแพทยศาสตร์ มหาวิทยาลัยพะเยา", "คณะทันตแพทย์ มหาวิทยาลัยพะเยา", "ครอบครัวฟันดี ระยอง", "ครอบครัวฟันดีระยอง", "ครอบครัวฟันดีราชชุมพล", "ครอบไม่แนบ-จุดสบสูงมาก", "คลินิก Alpaca", "คลินิก Alpaca จรัญ13", "คลินิก Alpaca บางซื่อ", "คลินิก BPDC", "คลินิก sig32", "คลินิก ไอสมาย ลำลูกกา", "คลินิก105เด็นทัลโฮม ลาซาล14", "คลินิกpkdc(ปุณกันทันตแพทย์)", "คลินิกคชเนตตีทันตกรรม", "คลินิกชเนตต์ทันตแพทย์", "คลินิกดับเบิ้ลยู ตลิ่งชัน", "คลินิกทันตกรรม 108", "คลินิกทันตกรรม LDC Dental อุบล", "คลินิกทันตกรรม คลับเดนทอล", "คลินิกทันตกรรม108", "คลินิกทันตกรรมBA", "คลินิกทันตกรรมBA ปทุม", "คลินิกทันตกรรมกิฟไทม์ จันทบุรี", "คลินิกทันตกรรมจั่นเจา", "คลินิกทันตกรรมดีดูโอ้ สัตหีบ", "คลินิกทันตกรรมทันตแพทย์ประสิทธิ์", "คลินิกทันตกรรมนางรอง", "คลินิกทันตกรรมนานา หัวหิน", "คลินิกทันตกรรมนานา หัวหิน(Bewell)", "คลินิกทันตกรรมนิคม 304", "คลินิกทันตกรรมนิคมสไมล์ 304", "คลินิกทันตกรรมบลูทูธ", "คลินิกทันตกรรมบางปะอิน", "คลินิกทันตกรรมบางมด สาขาปิ่นเกล้า (งานส่วนตัว)", "คลินิกทันตกรรมบางมด สาขาเกษตร (งานส่วนตัว)", "คลินิกทันตกรรมบีเอ", "คลินิกทันตกรรมบ้านฟันยิ้ม", "คลินิกทันตกรรมบ้านหมอตั้ม", "คลินิกทันตกรรมพีพี", "คลินิกทันตกรรมฟ.ฟัน", "คลินิกทันตกรรมฟ.ฟัน กบินทร์บุรี", "คลินิกทันตกรรมฟ.ฟัน บุรีรัมย์", "คลินิกทันตกรรมมอร์นิ่ง", "คลินิกทันตกรรมมิตรสัมพันธ์", "คลินิกทันตกรรมยูสมายล์ (สาขาบางแสน)", "คลินิกทันตกรรมรักษ์ฟัน", "คลินิกทันตกรรมวนารมย์", "คลินิกทันตกรรมวอร์มเนส", "คลินิกทันตกรรมวีสไมล์ ราชบุรี", "คลินิกทันตกรรมสมายล์เจอร์นีย์ เอกชัย 69", "คลินิกทันตกรรมสไมล์รูม ลำพูน", "คลินิกทันตกรรมสไมล์ลาย พระราม5", "คลินิกทันตกรรมสไมล์ลี", "คลินิกทันตกรรมสไมล์ลี่", "คลินิกทันตกรรมสไมล์สายสาม", "คลินิกทันตกรรมหนองซาก", "คลินิกทันตกรรมหมอจั่นเจา", "คลินิกทันตกรรมหมอตั้มทันตะ ฉะเฉิงเทรา", "คลินิกทันตกรรมหมอตั้มทันตะ ฉะเชิงเทรา", "คลินิกทันตกรรมหมอตั้มทันตะฉะเชิงเทรา", "คลินิกทันตกรรมหมอธนดล", "คลินิกทันตกรรมหมอน้ำตาล", "คลินิกทันตกรรมหมอฝ้ายพิจิตร", "คลินิกทันตกรรมหมอฝ้ายพิจิตร(ทับคล้อ)", "คลินิกทันตกรรมหมอมด", "คลินิกทันตกรรมหมอสมาย", "คลินิกทันตกรรมหมอเจิ้น", "คลินิกทันตกรรมหมอแป้ง", "คลินิกทันตกรรมอมตะ", "คลินิกทันตกรรมอัลไพน์ พุทธมณฑลสาย2", "คลินิกทันตกรรมเคลียร์เด้นท์", "คลินิกทันตกรรมเดนทัลสไมล์ สระแก้ว", "คลินิกทันตกรรมเดนท์ ฟอร์ ยู", "คลินิกทันตกรรมเดนท์แอนด์สไมล์", "คลินิกทันตกรรมเดอะเทมส์", "คลินิกทันตกรรมเดอะแพททิส", "คลินิกทันตกรรมเพื่อนฟัน", "คลินิกทันตกรรมแต้มยิ้ม อารมณ์ดี พะเยา", "คลินิกทันตกรรมแพลนเนท", "คลินิกทันตกรรมแหลมฉบัง", "คลินิกทันตกรรมโกลด์ไนน์", "คลินิกทันตกรรมโปรเดนห์", "คลินิกทันตกรรมไฉไลทำฟัน", "คลินิกทันตกรรมไลท์สมายมีนบุรี", "คลินิกทันตกรรมไวท์สไมล์", "คลินิกทันตกรรมไฮซีซั่น", "คลินิกทันตแพทย์ณรงค์", "คลินิกทันตแพทย์บุญชู", "คลินิกทันตแพทย์ปกรณ์", "คลินิกทันตแพทย์วราภรณ์", "คลินิกทันตแพทย์สงวน", "คลินิกทันตแพทย์หมอชวนพิศ", "คลินิกทันตแพทย์อินอร", "คลินิกบัณฑิต10 คณะทันตแพทย์ มช.", "คลินิกบีเอ", "คลินิกบ้านหมอฟัน พญาไท", "คลินิกปารีนารถ ปิ่นเกล้า", "คลินิกพร้อมยิ้ม", "คลินิกฟ.ฟันดี", "คลินิกฟันดี", "คลินิกฟันดี กทม เสนา", "คลินิกมิตรสัมพันธ์", "คลินิกมิตรสัมพันธ์ ลาดพร้าว1", "คลินิกยิ้ม ยิ้ม ตลาดราชวัตร", "คลินิกวีสมายล์ ท่าโรงช้าง", "คลินิกศรีตรัง หาดใหญ่", "คลินิกสถานีฟันดี", "คลินิกสถานีฟันดีบ้านฉาง", "คลินิกสุขภาพฟัน DENTAL HEALTH CLINIC", "คลินิกสุขภาพฟัน(ออกบิลคนไข้)", "คลินิกสไมล์", "คลินิกหน้าตลาดวงศกร", "คลินิกหมอฝ้ายบีเอ", "คลินิกหมอฝ้ายบีเอ (พิจิต)", "คลินิกหมอฝ้ายพิจิตร", "คลินิกหมอฝ้ายพิจิตร (ตะพานหิน)", "คลินิกหมอฝ้ายพิจิตร (ทับคล้อ)", "คลินิกหมอฝ้ายพิจิตร(ตะพานหิน)", "คลินิกหมอสมาย จ.บึงกาฬ", "คลินิกหมอสุชาติกระทุ่มแบน", "คลินิกหมอสุมาย จ.บึงกาฬ", "คลินิกหมอเจริญ กำแพงเพชร", "คลินิกหมอเล้ง", "คลินิกอังสะนา", "คลินิกอุ่นใจทันตกรรม กวงฮั้ว", "คลินิกอุ่นใจทันตกรรม มาบตาพุด", "คลินิกเจริญ-วันเพ็ญ ทันตแพทย์", "คลินิกเจริญ-วันเพ็ญทันตแพทย์", "คลินิกเดนทัลเอ็มไพร์", "คลินิกเดนท์ ฟอร์ ยู", "คลินิกเอสซี เดนทัล", "คลินิกโก้สหคลินิก", "คลินิกไบร์ทสมาย", "คลินิคบ้านหมอหนึ่ง", "คลีนิค", "คลีนิคทันตแพทย์ปกรณ์", "คลีนิคบางกอกสไมล์ สาขาอโศก", "คาราเมล", "งานคุณหมอสลิล", "งานส่วนตัว", "งานส่วนตัวคุณหมอ", "งานส่วนตัวคุณหมอ(edelweiss)", "งานส่วนตัวหมอ", "งานหมอเปิ้ล", "จริยา เดนทัล", "จิรกานต์ทันตแพทย์", "จิรกานต์ทันตแพทย์คลินิก", "ชนนี Clinic", "ชนนีทันตกรรม", "ชวิส เด็นทอล คลินิก", "ชวิส เด็นทอลคลินิก", "ชเนตตีทันตแพทย์", "ชเนตตีทันตแพทย์ ราชบุรี", "ดับเบิ้ลยูเดนทัล", "ดี.ดี.เดนทัล", "ดี.ดี.เดนทัล (อ้อมน้อย)", "ดี.ดี.เดนทัล สาขาอ้อมน้อย", "ดี.ดี.เดนทัล สาขาอ้อมใหญ่", "ทรี เด็นทัลแล็บ", "ทองสไมล์ หาดใหญ่", "ทันตกรรมบางปะอิน", "ทันตกรรมบางปะอิิน", "ทันตกรรมบ้านย่า", "ทันตกรรมบ้านหมอยีน", "ทันตกรรมบ้านหมอโบว์", "ทันตกรรมพร้อมยิ้ม", "ทันตกรรมสนามบิน", "ทันตกรรมสูงเนิน", "ทันตกรรมสไมล์ลี่", "ทันตกรรมหมอจั่นเจา", "ทันตกรรมหมอธนดล สระบุรี", "ทันตกรรมเดอะเฟิสต์ บางบัวทอง", "ทันตกิจ", "ทันตแพทย์ประสิทธิ์ จันทบุรี", "ทันตแพทย์ภาวนา", "ทีธอะแนปคลินิก", "นานาหัวหิน", "นานาเดนทอลหัวหิน", "บริษัท เด็นทัล สตาร์ จำกัด สระบุรี", "บางกอกแกรนด์เดนทัล", "บูทีค เดนทัล", "บ่อวินสไมล์", "บ้านรักยิ้ม ปราจีน", "บ้านหมอฟัน ปราจีน", "บ้านหมอฟันดำเนิน", "บ้านหมอฟันดำเนินสะดวก", "บ้านหมอฟันนิคมสไมล์", "บ้านหมอฟันปราจีน", "บ้านหมอลม", "บ้านหมอลม อุบล", "บ้านหมอโบว์", "ปันยิ้ม ราชบุรี", "ปารีนารถ", "พราวเดนท์ คลินิกทันตกรรม ราชบุรี", "ฟ.ฟันดี สาขาเซฟวัน", "ฟอฟัน กาญจนบุรี", "ฟันดี", "ฟันดีคลินิก ปทุมธานี", "ฟันสไมล์ สาขาราชสีมาเซนเตอร์", "ฟันสไมล์ สาขาเเซฟวัน", "ภทรคลินิกทันตกรรม", "ม.นเรศวร", "มิตรสัมพันธ์ ลาดพร้าว", "มิราเคิล", "ยิ้มกว้างทันตกรรม", "ยิ้มพิมพ์ใจ", "ยิ้มหวาน อยุธยา", "ยิ้มหวานอยุธยา", "ยิ้มหวานอยุุธยา", "ยิ้้มยิ้มโชคชัย4", "รพ ราชบุรี", "รพ.กรุงเทพคริสเตียน", "รพ.นาดี", "รพ.พญาไทพหลโยธิน (เปาโลสะพานควาย)", "รพ.ราชบุรี", "รพ.ราชบุรี ส่งงานไบร์ทสมาย", "รพ.สมเด็จพระสังฆราชองค์ที่17", "รพ.สมเด็จยุพราชจอมบึง", "รพ.สระแก้ว", "รพ.สินแพทย์ เสรีรักษ์", "รพ.สุราษฎร์ธานี", "ริมโขงเชียงราย", "ศูนย์จัดฟัน รากฟันเทียม บูทีค เดนทัล", "ศูนย์ทันตกรรม love at", "ศูนย์ทันตกรรมคู้บอน ซอย4", "ศูนย์ทันตกรรมรัชดา", "ศููนย์ทันตกรรม รัชดา ทรัพย์สินดี", "สมาคมรากเทียมแห่งประเทศไทยนะครับ [TADI]", "สมายล์แกลอรี่ สุราษฎร์", "สสจ.นครราชสีมา", "สานัส พรานนก", "สานัส สำเหร่", "สไมล์ลาย พระราม5", "สไมล์สายสาม", "สไมล์อาร์ตคลินิก", "สไมล์อาร์ตคลินิก ชลบุรี", "สไมล์อาร์ตคลินิก พัทยา", "หมอตั้มทันตะ", "หมอตั้มทันตะ คลินิกทันตกรรม", "หมอตั้มทันตะ คลินิกทันตกรรม ฉะเชิงเทรา", "หมอตั้มทันตะ ฉะเฉิงเทรา", "หมอฝ้ายพิจิตร", "หมอเก้ หมอป่าน คลินิกทันตกรรม", "หมอเก้-หมอป่าน คลินิกทันตกรรม", "หมอเก้-หมอป่านคลินิกทันตกรรม", "หมอแป้งสไมล์คลับ", "อนุพันธ์", "อัญชนาเดนทัล", "อัลปาก้า", "อาร์เทคนา เดนทัล แลบ", "ฺBrightsmile", "เคดีแอล", "เคอิชิ", "เจนน้อย", "เดนทอลเวิลด์", "เดนทอลไวส์", "เดนทัล ดี", "เดนทัลโฮม", "เด็นทอลเวิล", "เด็นทัล ดี", "เด็นทัลครีเอชั่น", "เด็นทัลอิมเมจลาดพร้าว", "เด็นทัลโฮม", "เพื่อนฟัน สุพรรณบุรี", "เมก้าเจน", "เมดโทเปีย", "เมตาเดนเต้ บางกะปิ", "เมตาเดนเต้ บิ๊กซีอ่อนนุช", "เมตาเดนเต้ สำโรง", "แรบบิทเดนทัลคลินิก", "แหลมฉบังคลินิกทันตกรรม", "โก้สหคลินิก", "โรงพยาบาลค่ายธนะรัชต์", "โรงพยาบาลท่าศาลา", "โรงพยาบาลอุบลรักษ์ ธนบุรี", "โอมากาเสะ คลินิก", "ไพร์มเด็นทอลโซลูชั่น", "ไอสมาย ลำลูกกา"], "materials": ["3Shape", "Aidite", "Aidite+lisi", "Amber", "Amber Press", "BB", "Biomate  swiss", "Composite", "Custom ASC", "Design", "Digital Guide", "EMAX", "Emax", "Emax+PMMA", "Emax+Zirconia", "Emax,Zirconia", "Enamic", "File", "Full Metal", "Gmail", "Itero", "LISI", "Line", "Lisi", "Lisi press", "Lisipress", "Lithium", "Metal", "Meterial", "Mill Abutment", "Model", "Normal", "PAMA", "PMMA", "PMMA bridge", "Partial Denture", "Premill+model", "Print", "Print Model", "RTN", "Special Tray", "Temp PMMA", "Tibar", "Wax", "Waxing", "Zir+Emax", "Zir+Full", "Zir+Lisi", "Zir+Temp", "Zirconia", "Zirconia + Emax", "acrylic", "allon", "ceramic", "temporary", "zircon", "กลึงอบัตเมนต์", "ทำ PMMA temp crown", "รอยพิมพ์", "รายะเอียดทางไลน์", "วัสดุเลือกอีกที", "หมอไม่ปริ้น"], "systems": ["All-On", "Alpha Bio", "Alpha Dent", "Analog", "Ankylos", "Astra tech", "Bioconcept", "Biohorizon", "Biomet 3i", "Biotem", "Branemark", "Bridge", "Camlog", "Conelog", "Cowell", "Crown", "Dentis", "Dentium", "Dentsply", "Digital WAXUP", "Dio", "Endo CR", "Guide Stent เหงือก", "Hand Waxup", "Hiossen", "Implant", "Inlay/onlay", "Legacy", "MIS", "Marry land Bridge", "Megagen", "Model", "NORMAL", "Neobiotech", "Neodent", "Neoess", "Neoss", "Nobel", "Nuvo", "Onlay/Inlay", "Osstem", "Otakon", "PW Plus", "Point Implant", "Print", "Scan", "Screw Retained Crown", "Sic", "Smile Design & Mockup", "Straumann", "Study Model", "TYPE", "Tekka", "Temp", "Veneer", "Warantec", "Warratac", "Wego", "Xive", "Zeramex", "Zimmer", "all-on", "bridge", "conelog", "crown", "guide stent", "milling custom", "nobel", "overdenture", "point implant", "scan", "temp", "temporary", "veneer", "กลึงงานzr", "กลึงอาบัติเม้น"], "scan_systems": ["3Shape", "BIS Cloud", "CD", "EMS", "Flash drive", "Gmail", "Google Drive", "Itero", "Line", "Medi", "Medit", "Medit Link", "OneDrive", "Shining3D", "eighteeth", "shinning 3D", "พี่ตู่รับ", "รอยพิมพ์", "ส่งแมส"], "statuses": ["ชะลอเคส", "ยกเลิกเคส", "รับเข้าระบบ", "สถานะ", "ส่งแล้ว"], "delivery": ["EMS", "Grab", "Kerry", "พี่เต๋าส่ง", "รถตู้", "รถตู้เอกมัย", "รถทัวร์", "ส่งที่อิมเมจสาขาลาดพร้าว", "ส่งที่เดอะเด้นรัชโยธิน", "ส่งแมส"], "techs": ["(ใช้คูปอง zirงาน TGBIC-9", "1st", "3D", "3Shape", "Ao", "Ball", "CAD/CAM", "Gmail", "Itero", "Job", "Line", "Lita", "May", "Medit", "Medit Link", "Mint", "Mod-x", "Oil", "Shining3D", "Tao", "Tattoo", "Tawan", "Too", "Tum", "Wa", "X", "Yim", "aem", "ball", "chomp", "eighteeth", "oil", "shining 3D", "shinning 3D", "tatt", "tawan", "yim", "ช่างนอก", "ช่างโอ๋", "นโม", "นุ๊ก", "มาย", "รอยพิมพ์", "รอออกบิล", "ลิตา", "หน่อย", "หมอจ่ายค่าแลปแล้ว", "ออกบิลคนไข้", "อ๊อฟ", "เอม", "แม็ค", "โหน่ง"], "dep_statuses": ["รอดำเนินการ", "กำลังดำเนินการ", "เสร็จแล้ว", "ระงับชั่วคราว", "ยกเลิก", "ไม่เกี่ยวข้อง"], "departments": [{"key": "order_intake", "label": "รับออเดอร์ (Admin)"}, {"key": "scan", "label": "SCAN"}, {"key": "design", "label": "DESIGN"}, {"key": "abutment", "label": "Order Abutment (ถ้ามี)"}, {"key": "receive", "label": "รับของ (ถ้ามี)"}, {"key": "milling", "label": "MILLING"}, {"key": "all_ceramic", "label": "ALL CERAMIC (ทำสี)"}, {"key": "qc", "label": "QC"}, {"key": "billing", "label": "ออกบิล (Admin)"}, {"key": "delivery", "label": "DELIVERY"}], "case_types": ["ปกติ", "คูปอง"], "coupon_statuses": ["รออนุมัติ", "อนุมัติแล้ว", "ใช้คูปองแล้ว", "คูปองหมดอายุ/ยกเลิก"]}</script>
+<script id="refs-blob" type="application/json">{"clinics": ["(ออกบิลหมอ)", "14/8", "1st dental clinic", "2024-10-09T00:00:00", "3S Lab", "ABC แฟมิลี่", "AG Dental Plus Clinic", "ARC Dental clinic สนามเป้า", "All About Teeth Dental Clinic สาขาลาดพร้าว", "All About Teeth Dental Clinic สาขาอโศก", "Alpaca Dental Clinic แคราย", "Anuparb", "Apple Dental Clinic", "Arc dental clinic", "At Homeจอหอ", "Athome สระครก จอหอ", "B.A ปทุม", "BCDC", "BCDC สาขาบิ๊กซี", "BCDC สาขาเพิ่มสิน", "BCDC สาขาเพิ่มสิน 64", "BCDC เพิ่มสิน", "BIDC Emquartier", "BIDH", "BKK48", "BPDC", "BSDC", "BWDC", "Bangkok Smile Dental", "Be Well Dental Clinic", "Be well หัวหิน", "Belix Dental Clinic", "Bettrr Smile Clinic", "Bettrr Smile Clinic ภูเก็ต", "Bewell หัวหิน", "Big Smile อ่างทอง", "Big care", "Big care เพิ่มสิน", "Buddy smile", "Buddy smile สาขาลาดพร้าววังหิน", "Charm บางแสน", "Charm ศรีราชา", "Chin dental Clinic", "Clinic All Smile", "Clinic All Smile สาขาตะพง", "Clinic Dentreat", "Clinic wisdom tooth", "Colon P", "Csmileyala Clinic", "D Duo สัตหีบ", "D-Dou สัตหีบ", "D-Plus นวมินทร์", "DNS", "DNY รามอินทรา กม.8", "DNY ลาดพร้าว101", "DNY ลาดพร้าว102", "Daily Daily Dental Clinic", "Daily Dental Clinic", "Deezy สำโรง", "Delta 304", "Deluxe นวนคร", "Dent 4U", "Dent4U", "Dent4u พิษณุโลก", "Dental Art ทาวน์อินทาวน์", "Dental Art สะพานควาย", "Dental Art อุทัยธานี", "Dental Empire Clinic", "Dental Empire รัชดา19", "Dental Home Clinic ปราจีน", "Dental Hub Clinic (หนองแขม)", "Dental Hug", "Dental Image ปิ่นเกล้า", "Dental Protect", "Dental Select", "Dental Shine Clinic", "Dental Story", "Dental Story สัตหีบ", "Dental Wise", "Dental Zone", "Dental art ทาวน์อินทาวน์", "Dental art สะพายควาย", "Dental art อุทัยธานี", "Dental at Home", "Dental at home นวมินทร์ 70", "Dental at home นวมินทร์70", "Dental home clinic (พระโขนง)", "Dental hub Phuket", "Dental hug", "Dental max 50", "Dental wise", "Dental zone", "DentalWise", "Dente Align", "Dentista", "Dentista77", "Dentreat", "Dio", "Doctor Fair Dental Clinic", "DortorTanawat dental clinic", "Dr. Pranmas Teeranuwat", "ESTE บางแสน", "Edelweiss สาขาวิภาวดี", "Edelweiss สาขาสุขุมวิท15", "Eden Dental", "Eden Dental ศาลาแดง", "Eden dental", "Eden detalclinic", "Feel Good", "Feel good", "Feel good clinic", "Feel good ยังไม่ได้ออกบิล", "Floss Dental (เกาะสมุย)", "Forest Dental Clinic", "Freind Dental Clinic สาขาเซฟวัน", "Friend เซฟวัน", "Funwiset Dental อ่างทอง", "GOdaddy", "Gardentist Clinic จันทบุรี", "Gardentist จันทบุรี", "Gentle Peach Dental Clinic", "Give Time จันทบุรี", "Godaddy", "Gold 9", "HYPS Dental CNX", "HYPS Dental Clinic", "HYPS Dental cnx", "Habito Dental", "Hachi dental", "Happy Smile ชิดลม", "Hein Clinic ตาคลี", "Homey Mega Bangna", "JDC", "JK dental clinic ฉะเชิงเทรา", "Jeeraporn", "Joy Dental กระบี่", "KC Smile ลาดพร้าว 71", "KC Smile ลาดพร้าว 72", "KC smile ลาดพร้าว 71", "Kitcha Dental Clinic Chiang Mai", "Kongkrapanclinic(ส่งงานDentalHug)", "Konvy Dental", "LDC พระราม2", "LDC พระราม5", "LDC เพชรเกษม", "LITA Dental Clinic", "Love at first dental clinic", "M'JOY Dental Clinic", "M'Joy Dental Clinic", "MAX 50", "MDC", "Manhattan", "Manhattan Dental Clinic", "Manhatton", "Manhatton Dental", "Medtopia", "Mj Dental Clinic", "Mj Dental clinic", "Monday ลาดพร้าว101", "Moonsmile ลพบุรี", "NS clinic", "NTeeth ราม65", "Nattist บางพลี", "NewHome Dental", "NewHome Dental สาขาปากท่อ", "Nice Dental หลักสี่", "Nis Dental Image ภูเก็ต", "Ortho Smile", "P'Jane", "P'Jom", "PDC", "PSK Dental Center", "PSK dental center", "Perfect Dental", "Perfect dental", "Pop Smile Dental Clinic", "Pop Smile Dental Clinic ตลาดนำชัย", "Pop Smile Dental Clinic นำชัย", "Pop Smile Dental Clinic หัวตะเข้", "Prime Dental Clinic", "Prime dental", "Prime dental Clinic", "Prime dental Clinic เชียงใหม่", "Prodent", "Prodent lab", "ProudDent Dental Clinic", "Pt.", "RDC", "RDL", "Rabbit Dental Clinic", "Rimkhong Dental", "SOL Dental Clinic", "SOL dental clinic | คลินิกทันตกรรมโซล", "Sea Sky", "Seasky", "Sky dental clinic", "Smile & Co", "Smile & shine", "Smile Art Pattya", "Smile Craft", "Smile Crafter ราชเทวี", "Smile Crafters ราชเทวี", "Smile Dent", "Smile Dental Clinic พิษณุโลก", "Smile Phitsanulok", "Smile Room", "Smile Sai5", "Smile Studio Dental", "Smile again ศาลายา", "Smile room ลำพูน", "Smile room แม่ริม", "Smile&Style Dental studio", "SmileCenter", "Smiley ฉะเชิงเทรา", "Sriracha Smile", "Star smile ศรีราชา", "Summer Smile", "TDH Canvas", "TMD", "Tann Dental Clinic", "Tann dental Clinic", "Teema smile", "Teeth Talk  ฟิวเจอร์", "Teeth Time", "Teeth Time (งานส่วนตัวหมอ)", "Teeth Time งานส่วนตัว", "The Glass Smile Dental Clinic", "The Grand Dentist (คลองหลวง)", "The Grand Dentist (ฟิวเจอร์ปาร์ค รังสิต)", "The Grand คลองหลวง", "The dental center Sisaket", "The smile gallery phuket ส่งจากสนามบินภูเก็ต", "The smilist", "Tooth Melody", "Tooth Republic Dental Clinic", "Tooth Republic Dental Clinic คอนโดไลท์เฮ้าส์ เจริญนคร", "Tooth&Mood Dental Clinic", "ToothMelody", "Toothday จอหอ", "Toothday หัวทะเล", "Toothist", "Toothtist", "Toothtist Sea Sky", "Trust dental clinic สาขาซีคอนบางแค", "Vsmile มุกดาหาร", "Vsmileมุกดาหาร", "WE DENT Clinic", "Warmsmile Dental Care", "We are dentist clinic", "Well tooth", "Wellsmiles dental clinic", "White smile clinic lamphun", "Wisdom Dental clinic", "Wisdom Tooth", "Wisdom อนุสาวรีย์", "XDC", "YDC", "YDC กทม", "YDC กรุงเทพกรีฑา", "YDC ทาวน์อินทาวน์", "YDC สาขากรุงเทพกรีฑา", "Yes Tooth Clinic", "Yim Yim Dental Clinic", "Your Dental Clinic", "charm bangsaen clinic", "csmileyala clinic", "dental @ home", "dental at home นวมินทร์70", "dental world", "dentist i need you", "doctortanawat", "esse dental clinic", "feel good", "i-smile dental clinic", "iLike Dental Clinic", "iLike Dental Clinic พัทยา", "my condo ปิ่นเกล้า", "new smile phuket", "pa", "prodent", "scene smile", "sea sky", "sky dental clinic", "skytain อโศก", "smile desire dental clinic", "smile desire dental clinic ปัตตานี", "smile icon", "smile icon สมุทรปราการ", "smile room แม่ริม", "tooth & mood แบริ่ง35", "tooth republic ศาลายา", "vsmile dentel", "กาญจนาภิเษก KDC", "กาญจษาภิเษก KDC", "การ์เด้นทิสท์", "คงกระพันคลินิก", "คงกระพันสาย 5", "คณะ", "คณะทันต ม.พะเยา", "คณะทันต มอ.", "คณะทันตะ ม.นเรศวร", "คณะทันตะมอ.", "คณะทันตแพทยศาสตร์ มหาวิทยาลัยพะเยา", "คณะทันตแพทย์ มหาวิทยาลัยพะเยา", "ครอบครัวฟันดี ระยอง", "ครอบครัวฟันดีระยอง", "ครอบครัวฟันดีราชชุมพล", "ครอบไม่แนบ-จุดสบสูงมาก", "คลินิก Alpaca", "คลินิก Alpaca จรัญ13", "คลินิก Alpaca บางซื่อ", "คลินิก BPDC", "คลินิก sig32", "คลินิก ไอสมาย ลำลูกกา", "คลินิก105เด็นทัลโฮม ลาซาล14", "คลินิกpkdc(ปุณกันทันตแพทย์)", "คลินิกคชเนตตีทันตกรรม", "คลินิกชเนตต์ทันตแพทย์", "คลินิกดับเบิ้ลยู ตลิ่งชัน", "คลินิกทันตกรรม 108", "คลินิกทันตกรรม LDC Dental อุบล", "คลินิกทันตกรรม คลับเดนทอล", "คลินิกทันตกรรม108", "คลินิกทันตกรรมBA", "คลินิกทันตกรรมBA ปทุม", "คลินิกทันตกรรมกิฟไทม์ จันทบุรี", "คลินิกทันตกรรมจั่นเจา", "คลินิกทันตกรรมดีดูโอ้ สัตหีบ", "คลินิกทันตกรรมทันตแพทย์ประสิทธิ์", "คลินิกทันตกรรมนางรอง", "คลินิกทันตกรรมนานา หัวหิน", "คลินิกทันตกรรมนานา หัวหิน(Bewell)", "คลินิกทันตกรรมนิคม 304", "คลินิกทันตกรรมนิคมสไมล์ 304", "คลินิกทันตกรรมบลูทูธ", "คลินิกทันตกรรมบางปะอิน", "คลินิกทันตกรรมบางมด สาขาปิ่นเกล้า (งานส่วนตัว)", "คลินิกทันตกรรมบางมด สาขาเกษตร (งานส่วนตัว)", "คลินิกทันตกรรมบีเอ", "คลินิกทันตกรรมบ้านฟันยิ้ม", "คลินิกทันตกรรมบ้านหมอตั้ม", "คลินิกทันตกรรมพีพี", "คลินิกทันตกรรมฟ.ฟัน", "คลินิกทันตกรรมฟ.ฟัน กบินทร์บุรี", "คลินิกทันตกรรมฟ.ฟัน บุรีรัมย์", "คลินิกทันตกรรมมอร์นิ่ง", "คลินิกทันตกรรมมิตรสัมพันธ์", "คลินิกทันตกรรมยูสมายล์ (สาขาบางแสน)", "คลินิกทันตกรรมรักษ์ฟัน", "คลินิกทันตกรรมวนารมย์", "คลินิกทันตกรรมวอร์มเนส", "คลินิกทันตกรรมวีสไมล์ ราชบุรี", "คลินิกทันตกรรมสมายล์เจอร์นีย์ เอกชัย 69", "คลินิกทันตกรรมสไมล์รูม ลำพูน", "คลินิกทันตกรรมสไมล์ลาย พระราม5", "คลินิกทันตกรรมสไมล์ลี", "คลินิกทันตกรรมสไมล์ลี่", "คลินิกทันตกรรมสไมล์สายสาม", "คลินิกทันตกรรมหนองซาก", "คลินิกทันตกรรมหมอจั่นเจา", "คลินิกทันตกรรมหมอตั้มทันตะ ฉะเฉิงเทรา", "คลินิกทันตกรรมหมอตั้มทันตะ ฉะเชิงเทรา", "คลินิกทันตกรรมหมอตั้มทันตะฉะเชิงเทรา", "คลินิกทันตกรรมหมอธนดล", "คลินิกทันตกรรมหมอน้ำตาล", "คลินิกทันตกรรมหมอฝ้ายพิจิตร", "คลินิกทันตกรรมหมอฝ้ายพิจิตร(ทับคล้อ)", "คลินิกทันตกรรมหมอมด", "คลินิกทันตกรรมหมอสมาย", "คลินิกทันตกรรมหมอเจิ้น", "คลินิกทันตกรรมหมอแป้ง", "คลินิกทันตกรรมอมตะ", "คลินิกทันตกรรมอัลไพน์ พุทธมณฑลสาย2", "คลินิกทันตกรรมเคลียร์เด้นท์", "คลินิกทันตกรรมเดนทัลสไมล์ สระแก้ว", "คลินิกทันตกรรมเดนท์ ฟอร์ ยู", "คลินิกทันตกรรมเดนท์แอนด์สไมล์", "คลินิกทันตกรรมเดอะเทมส์", "คลินิกทันตกรรมเดอะแพททิส", "คลินิกทันตกรรมเพื่อนฟัน", "คลินิกทันตกรรมแต้มยิ้ม อารมณ์ดี พะเยา", "คลินิกทันตกรรมแพลนเนท", "คลินิกทันตกรรมแหลมฉบัง", "คลินิกทันตกรรมโกลด์ไนน์", "คลินิกทันตกรรมโปรเดนห์", "คลินิกทันตกรรมไฉไลทำฟัน", "คลินิกทันตกรรมไลท์สมายมีนบุรี", "คลินิกทันตกรรมไวท์สไมล์", "คลินิกทันตกรรมไฮซีซั่น", "คลินิกทันตแพทย์ณรงค์", "คลินิกทันตแพทย์บุญชู", "คลินิกทันตแพทย์ปกรณ์", "คลินิกทันตแพทย์วราภรณ์", "คลินิกทันตแพทย์สงวน", "คลินิกทันตแพทย์หมอชวนพิศ", "คลินิกทันตแพทย์อินอร", "คลินิกบัณฑิต10 คณะทันตแพทย์ มช.", "คลินิกบีเอ", "คลินิกบ้านหมอฟัน พญาไท", "คลินิกปารีนารถ ปิ่นเกล้า", "คลินิกพร้อมยิ้ม", "คลินิกฟ.ฟันดี", "คลินิกฟันดี", "คลินิกฟันดี กทม เสนา", "คลินิกมิตรสัมพันธ์", "คลินิกมิตรสัมพันธ์ ลาดพร้าว1", "คลินิกยิ้ม ยิ้ม ตลาดราชวัตร", "คลินิกวีสมายล์ ท่าโรงช้าง", "คลินิกศรีตรัง หาดใหญ่", "คลินิกสถานีฟันดี", "คลินิกสถานีฟันดีบ้านฉาง", "คลินิกสุขภาพฟัน DENTAL HEALTH CLINIC", "คลินิกสุขภาพฟัน(ออกบิลคนไข้)", "คลินิกสไมล์", "คลินิกหน้าตลาดวงศกร", "คลินิกหมอฝ้ายบีเอ", "คลินิกหมอฝ้ายบีเอ (พิจิต)", "คลินิกหมอฝ้ายพิจิตร", "คลินิกหมอฝ้ายพิจิตร (ตะพานหิน)", "คลินิกหมอฝ้ายพิจิตร (ทับคล้อ)", "คลินิกหมอฝ้ายพิจิตร(ตะพานหิน)", "คลินิกหมอสมาย จ.บึงกาฬ", "คลินิกหมอสุชาติกระทุ่มแบน", "คลินิกหมอสุมาย จ.บึงกาฬ", "คลินิกหมอเจริญ กำแพงเพชร", "คลินิกหมอเล้ง", "คลินิกอังสะนา", "คลินิกอุ่นใจทันตกรรม กวงฮั้ว", "คลินิกอุ่นใจทันตกรรม มาบตาพุด", "คลินิกเจริญ-วันเพ็ญ ทันตแพทย์", "คลินิกเจริญ-วันเพ็ญทันตแพทย์", "คลินิกเดนทัลเอ็มไพร์", "คลินิกเดนท์ ฟอร์ ยู", "คลินิกเอสซี เดนทัล", "คลินิกโก้สหคลินิก", "คลินิกไบร์ทสมาย", "คลินิคบ้านหมอหนึ่ง", "คลีนิค", "คลีนิคทันตแพทย์ปกรณ์", "คลีนิคบางกอกสไมล์ สาขาอโศก", "คาราเมล", "งานคุณหมอสลิล", "งานส่วนตัว", "งานส่วนตัวคุณหมอ", "งานส่วนตัวคุณหมอ(edelweiss)", "งานส่วนตัวหมอ", "งานหมอเปิ้ล", "จริยา เดนทัล", "จิรกานต์ทันตแพทย์", "จิรกานต์ทันตแพทย์คลินิก", "ชนนี Clinic", "ชนนีทันตกรรม", "ชวิส เด็นทอล คลินิก", "ชวิส เด็นทอลคลินิก", "ชเนตตีทันตแพทย์", "ชเนตตีทันตแพทย์ ราชบุรี", "ดับเบิ้ลยูเดนทัล", "ดี.ดี.เดนทัล", "ดี.ดี.เดนทัล (อ้อมน้อย)", "ดี.ดี.เดนทัล สาขาอ้อมน้อย", "ดี.ดี.เดนทัล สาขาอ้อมใหญ่", "ทรี เด็นทัลแล็บ", "ทองสไมล์ หาดใหญ่", "ทันตกรรมบางปะอิน", "ทันตกรรมบางปะอิิน", "ทันตกรรมบ้านย่า", "ทันตกรรมบ้านหมอยีน", "ทันตกรรมบ้านหมอโบว์", "ทันตกรรมพร้อมยิ้ม", "ทันตกรรมสนามบิน", "ทันตกรรมสูงเนิน", "ทันตกรรมสไมล์ลี่", "ทันตกรรมหมอจั่นเจา", "ทันตกรรมหมอธนดล สระบุรี", "ทันตกรรมเดอะเฟิสต์ บางบัวทอง", "ทันตกิจ", "ทันตแพทย์ประสิทธิ์ จันทบุรี", "ทันตแพทย์ภาวนา", "ทีธอะแนปคลินิก", "นานาหัวหิน", "นานาเดนทอลหัวหิน", "บริษัท เด็นทัล สตาร์ จำกัด สระบุรี", "บางกอกแกรนด์เดนทัล", "บูทีค เดนทัล", "บ่อวินสไมล์", "บ้านรักยิ้ม ปราจีน", "บ้านหมอฟัน ปราจีน", "บ้านหมอฟันดำเนิน", "บ้านหมอฟันดำเนินสะดวก", "บ้านหมอฟันนิคมสไมล์", "บ้านหมอฟันปราจีน", "บ้านหมอลม", "บ้านหมอลม อุบล", "บ้านหมอโบว์", "ปันยิ้ม ราชบุรี", "ปารีนารถ", "พราวเดนท์ คลินิกทันตกรรม ราชบุรี", "ฟ.ฟันดี สาขาเซฟวัน", "ฟอฟัน กาญจนบุรี", "ฟันดี", "ฟันดีคลินิก ปทุมธานี", "ฟันสไมล์ สาขาราชสีมาเซนเตอร์", "ฟันสไมล์ สาขาเเซฟวัน", "ภทรคลินิกทันตกรรม", "ม.นเรศวร", "มิตรสัมพันธ์ ลาดพร้าว", "มิราเคิล", "ยิ้มกว้างทันตกรรม", "ยิ้มพิมพ์ใจ", "ยิ้มหวาน อยุธยา", "ยิ้มหวานอยุธยา", "ยิ้มหวานอยุุธยา", "ยิ้้มยิ้มโชคชัย4", "รพ ราชบุรี", "รพ.กรุงเทพคริสเตียน", "รพ.นาดี", "รพ.พญาไทพหลโยธิน (เปาโลสะพานควาย)", "รพ.ราชบุรี", "รพ.ราชบุรี ส่งงานไบร์ทสมาย", "รพ.สมเด็จพระสังฆราชองค์ที่17", "รพ.สมเด็จยุพราชจอมบึง", "รพ.สระแก้ว", "รพ.สินแพทย์ เสรีรักษ์", "รพ.สุราษฎร์ธานี", "ริมโขงเชียงราย", "ศูนย์จัดฟัน รากฟันเทียม บูทีค เดนทัล", "ศูนย์ทันตกรรม love at", "ศูนย์ทันตกรรมคู้บอน ซอย4", "ศูนย์ทันตกรรมรัชดา", "ศููนย์ทันตกรรม รัชดา ทรัพย์สินดี", "สมาคมรากเทียมแห่งประเทศไทยนะครับ [TADI]", "สมายล์แกลอรี่ สุราษฎร์", "สสจ.นครราชสีมา", "สานัส พรานนก", "สานัส สำเหร่", "สไมล์ลาย พระราม5", "สไมล์สายสาม", "สไมล์อาร์ตคลินิก", "สไมล์อาร์ตคลินิก ชลบุรี", "สไมล์อาร์ตคลินิก พัทยา", "หมอตั้มทันตะ", "หมอตั้มทันตะ คลินิกทันตกรรม", "หมอตั้มทันตะ คลินิกทันตกรรม ฉะเชิงเทรา", "หมอตั้มทันตะ ฉะเฉิงเทรา", "หมอฝ้ายพิจิตร", "หมอเก้ หมอป่าน คลินิกทันตกรรม", "หมอเก้-หมอป่าน คลินิกทันตกรรม", "หมอเก้-หมอป่านคลินิกทันตกรรม", "หมอแป้งสไมล์คลับ", "อนุพันธ์", "อัญชนาเดนทัล", "อัลปาก้า", "อาร์เทคนา เดนทัล แลบ", "ฺBrightsmile", "เคดีแอล", "เคอิชิ", "เจนน้อย", "เดนทอลเวิลด์", "เดนทอลไวส์", "เดนทัล ดี", "เดนทัลโฮม", "เด็นทอลเวิล", "เด็นทัล ดี", "เด็นทัลครีเอชั่น", "เด็นทัลอิมเมจลาดพร้าว", "เด็นทัลโฮม", "เพื่อนฟัน สุพรรณบุรี", "เมก้าเจน", "เมดโทเปีย", "เมตาเดนเต้ บางกะปิ", "เมตาเดนเต้ บิ๊กซีอ่อนนุช", "เมตาเดนเต้ สำโรง", "แรบบิทเดนทัลคลินิก", "แหลมฉบังคลินิกทันตกรรม", "โก้สหคลินิก", "โรงพยาบาลค่ายธนะรัชต์", "โรงพยาบาลท่าศาลา", "โรงพยาบาลอุบลรักษ์ ธนบุรี", "โอมากาเสะ คลินิก", "ไพร์มเด็นทอลโซลูชั่น", "ไอสมาย ลำลูกกา"], "materials": ["3Shape", "Aidite", "Aidite+lisi", "Amber", "Amber Press", "BB", "Biomate  swiss", "Composite", "Custom ASC", "Design", "Digital Guide", "EMAX", "Emax", "Emax+PMMA", "Emax+Zirconia", "Emax,Zirconia", "Enamic", "File", "Full Metal", "Gmail", "Itero", "LISI", "Line", "Lisi", "Lisi press", "Lisipress", "Lithium", "Metal", "Meterial", "Mill Abutment", "Model", "Normal", "PAMA", "PMMA", "PMMA bridge", "Partial Denture", "Premill+model", "Print", "Print Model", "RTN", "Special Tray", "Temp PMMA", "Tibar", "Wax", "Waxing", "Zir+Emax", "Zir+Full", "Zir+Lisi", "Zir+Temp", "Zirconia", "Zirconia + Emax", "acrylic", "allon", "ceramic", "temporary", "zircon", "กลึงอบัตเมนต์", "ทำ PMMA temp crown", "รอยพิมพ์", "รายะเอียดทางไลน์", "วัสดุเลือกอีกที", "หมอไม่ปริ้น"], "systems": ["All-On", "Alpha Bio", "Alpha Dent", "Analog", "Ankylos", "Astra tech", "Bioconcept", "Biohorizon", "Biomet 3i", "Biotem", "Branemark", "Bridge", "Camlog", "Conelog", "Cowell", "Crown", "Dentis", "Dentium", "Dentsply", "Digital WAXUP", "Dio", "Endo CR", "Guide Stent เหงือก", "Hand Waxup", "Hiossen", "Implant", "Inlay/onlay", "Legacy", "MIS", "Marry land Bridge", "Megagen", "Model", "NORMAL", "Neobiotech", "Neodent", "Neoess", "Neoss", "Nobel", "Nuvo", "Onlay/Inlay", "Osstem", "Otakon", "PW Plus", "Point Implant", "Print", "Scan", "Screw Retained Crown", "Sic", "Smile Design & Mockup", "Straumann", "Study Model", "TYPE", "Tekka", "Temp", "Veneer", "Warantec", "Warratac", "Wego", "Xive", "Zeramex", "Zimmer", "all-on", "bridge", "conelog", "crown", "guide stent", "milling custom", "nobel", "overdenture", "point implant", "scan", "temp", "temporary", "veneer", "กลึงงานzr", "กลึงอาบัติเม้น"], "scan_systems": ["3Shape", "BIS Cloud", "CD", "EMS", "Flash drive", "Gmail", "Google Drive", "Itero", "Line", "Medi", "Medit", "Medit Link", "OneDrive", "Shining3D", "eighteeth", "shinning 3D", "พี่ตู่รับ", "รอยพิมพ์", "ส่งแมส"], "statuses": ["ชะลอเคส", "ยกเลิกเคส", "รับเข้าระบบ", "สถานะ", "ส่งแล้ว"], "delivery": ["EMS", "Grab", "Kerry", "พี่เต๋าส่ง", "รถตู้", "รถตู้เอกมัย", "รถทัวร์", "ส่งที่อิมเมจสาขาลาดพร้าว", "ส่งที่เดอะเด้นรัชโยธิน", "ส่งแมส"], "techs": ["(ใช้คูปอง zirงาน TGBIC-9", "1st", "3D", "3Shape", "Ao", "Ball", "CAD/CAM", "Gmail", "Itero", "Job", "Line", "Lita", "May", "Medit", "Medit Link", "Mint", "Mod-x", "Oil", "Shining3D", "Tao", "Tattoo", "Tawan", "Too", "Tum", "Wa", "X", "Yim", "aem", "ball", "chomp", "eighteeth", "oil", "shining 3D", "shinning 3D", "tatt", "tawan", "yim", "ช่างนอก", "ช่างโอ๋", "นโม", "นุ๊ก", "มาย", "รอยพิมพ์", "รอออกบิล", "ลิตา", "หน่อย", "หมอจ่ายค่าแลปแล้ว", "ออกบิลคนไข้", "อ๊อฟ", "เอม", "แม็ค", "โหน่ง"], "dep_statuses": ["รอดำเนินการ", "กำลังดำเนินการ", "เสร็จแล้ว", "ระงับชั่วคราว", "ยกเลิก", "ไม่เกี่ยวข้อง"], "departments": [{"key": "order_intake", "label": "รับออเดอร์ (Admin)"}, {"key": "scan", "label": "SCAN"}, {"key": "design", "label": "DESIGN"}, {"key": "abutment", "label": "Order Abutment (ถ้ามี)"}, {"key": "receive", "label": "รับของ (ถ้ามี)"}, {"key": "milling", "label": "MILLING"}, {"key": "all_ceramic", "label": "ALL CERAMIC (ทำสี)"}, {"key": "qc", "label": "QC"}, {"key": "billing", "label": "ออกบิล (Admin)"}, {"key": "delivery", "label": "DELIVERY"}], "case_types": ["ปกติ", "คูปอง"], "coupon_statuses": ["รออนุมัติ", "อนุมัติแล้ว", "ใช้คูปองแล้ว", "คูปองหมดอายุ/ยกเลิก"], "doctors": ["Dr.Thanet Sawangsiripol", "Dr.อัญชลี", "Dr.Suttaya", "Dr.Pitter", "Dr.Suchada", "Dr.นันท์นภัส ดุรงค์พงศ์เกษม", "Dr.สุชาติ ทันตสุวรรณ", "Dr.Piyawat", "Dr.สุพจน์", "Dr.ภูมิชาย", "Dr.win", "Dr.ธนัท สิทธิรัตน์", "Dr.สโรจินต์", "Dr.Cherdsak Tantasuwan", "Dr.กัลป์", "Dr.Thanadol", "Dr.", "Dr.Smon Manosoontorn", "Dr.Chariya", "Dr.Sukrit", "Dr.pat", "Dr.Alonsi", "Dr.Kittikun", "Dr.Thanatip Setthayon", "Dr.ธนพงษ์ ทันตสุวรรณ", "Dr.Sukrit Sermsri", "Dr.เคอิชิ", "Dr.Manita", "Dr.นุโลม", "Dr.Panchanit", "Dr.อนุพันธ์", "Dr.นิชาภา", "Dr.thanet", "Dr.Siwakorn Booncharoensinchai", "Dr.สุพิทย์ แข็งแรง", "Dr.Panpicha Maketone", "Dr.สปัน", "Dr.Anivat phunjinda", "Dr.ปารย์รวี ถนอมศักดิ์ชัย", "Dr.Peeraya", "Dr.ชิตพล", "Dr.หทัยภัทร ตระกูลสุข", "Dr.ดวิษา กำศิริพิมาน", "Dr.ปารย์รวี", "Dr.Panchanit Olarnrak", "Dr.วันจักร", "Dr.Pratya Tharatorn", "Dr.ขิง", "Dr.\tPanchanit Olarnrak", "Dr.Atipong", "Dr.สลิล ชำนาญเวช", "Dr.Viphak Chartiyanont", "Dr.Suneebhorn", "Dr.พีชญา", "Dr.Paramunee", "Dr.วรางค์รัตน์ เศวตศิลป์", "Dr.หทัยภัทร", "Dr.ปัจญลักษณ์", "Dr.Anivat", "Dr.Pongsakorn Phanthikaew", "Dr.Thewarit", "Dr.ปิยานันต์", "Dr.พงศกร อภิญสถานนท์", "Dr.Sicharinee Prakchinnawarn", "Dr.ฐานันด์ วิภาดาเกษม", "Dr.ประสิทธิ์ ชัยเจริญพงศ์", "Dr.Win", "Dr.Pongbhum Chinhathaiwat", "Dr.Fai", "Dr.ปัญจลักษณ์", "Dr.จิณห์นิภา โรจน์สวัสกดิ์สุข", "Dr.จิณห์นิภา โรจน์สวัสดิ์สุข", "Dr.Chinnapong Lertwannapong", "Dr.สรัล เทาศรีดี", "Dr.อาจรีย์", "Dr.ศริน จันทิพย์วงษ์", "Dr.ภูมิชาย จิตรรักษ์", "เคดีแอล", "Dr.ภูริตา จโนภาส", "Dr.ชัยพร", "Dr.นวรัตน์", "Dr.พิทักษ์", "Dr.จิราภา สุวรรณ", "Dr.กรรณิการ์", "Dr.ณัฐพล ป้อมศิลา", "Dr.สุภาภรณ์ พวงสุวรรณ", "Dr.ศุภกร อัศวราชันย์", "Dr.นิธิวุฒ กรรณาลงกรณ์", "Dr.will", "Dr.ภููมิชาย", "Dr.ธมนวรรณ", "Dr.ณัฐิกา กล้าหาญ", "Dr.ศศิณิษา", "Dr.Anivat Phanjinda", "Dr.Nisarat Sritha", "Dr.Tanasak", "Dr.Rasana Boonpeng", "Dr.วาทิศ เดชพงษ์", "Dr.\tWorapol Pruangprayoon", "Dr.ภาณุพงษ์ ภิญโญ", "Dr.พจนารถ", "Dr.ธนพล แสงอาสภวิริยะ", "Dr.เธียร ศรีกสิกุล", "Dr.Todsaphon Inprakhon", "Dr.ภานุพงษ์", "Dr.\tTodsaphon Inprakhon", "Dr.ธนิน", "Dr.Lalita", "Dr.เทพเทพินทร์ ตั้งศักดิ์สมหวัง", "Dr.Phattranit", "Dr.พีรภัทร ธรรมประสม", "Dr.Chisanu", "Dr.อัญจิดา ชวนะโรจนฤทธิ์", "Dr.กตัญญู", "Dr.Nalat", "Dr.ณัฐิกา", "Dr.Zamp", "Dr.akarapat rattananon", "Dr.RDL", "Dr.สลิล ชำนาญ", "Dr.zamp", "Dr.ศรัญชัย", "Dr.พัด", "Dr.ทพญ.ภาวนา สุวรรณกาฬ", "Dr.สิณิชา", "Dr.Sirinan Aranyawongsakorn", "Dr.ปัณชนิต", "Dr.สุพิทย์", "Dr.ธนพล", "Dr.Parin Jeeranun", "Dr.Suttaya Poosong", "Dr.junjao", "Dr.คล้ายจันทร์", "Dr.ณัฐกฤตา", "Dr.Sorrasit Laohapatcharin", "Dr.แซ้ม", "Dr.ปรางทิพย์", "Dr.Will", "Dr.วัชรพงศ์", "Dr.Cholada", "Dr.นนท์นที", "Dr.ชมภูนุช", "Dr.ภัทรพร ยั่นยง", "Dr.ทศพล อินประโคน", "Dr.วรวรรณ", "Dr.ปราณมาศ ธีรานุวัฒน์", "Dr..สรัล เทาศรีดี", "Dr.คนธ์พงษ์", "Dr.ฉัตรณรงค์ แพทย์พุฒิธรรม", "Dr.ปิยะนุช เชื้อบัณฑิต", "Dr.อนุุพันธ์", "Dr.อรณิชา", "Dr.Jeeraporn", "Dr.อธิพร ภูวราวุฒิพานิช", "Dr.อรณิชา กาญจนาพาที", "Dr.ยาวี", "Dr.สุภาภรณ์", "Dr.piyawat", "Dr.ชนรรค์ เล็กอุทัย", "Dr.เจริญ ทิพยโสตถิ", "Dr.Dr.Suttaya", "Dr.สุุพิทย์ แข็งแรง", "Dr.ชมพูนุช สุขชีพ", "Dr.ชลัมพล", "Dr.Supreeya", "Dr.Aurt", "Dr.ฉัตรณรงค์", "Dr.Nuch", "Dr.ฉัตรฤทัย", "Dr.ประพันธ์", "Dr.\tSuchada Olarnrak", "Dr.ปิยานันต์ สุขวรกิจวนิช", "Dr.ภัทรพร ยืนยง", "Dr.ศรัณย์ กิตติศุภกร", "Dr.Apaporn", "Dr. Yospat Rathirom", "Dr.เสกสรร พูดเถิด", "Dr.ศรัญญา หอมกลิ่นยา", "Dr.ฉัตรฤทัย กาญจนโสภณ", "Dr.ปิยะนุช", "Dr.worraned", "Dr.ธนกร", "Dr.ณัฐวุฒิ", "Dr.Sorrasit", "Dr.Pongsakorn Komutpol", "Dr.\tSukrit", "Dr.เสกสรร พูลเกิด", "Dr.Sabsidee", "Dr.ศริณ จันทิพย์วงษ์", "Dr.นันทรัตน์", "Dr.Thanatchaya", "Dr.Hataipar", "Dr.ฝน", "Dr.ทัตพร", "Dr.สุสมา บรรจงจิตร", "Dr.เอกชัย", "Dr.กรปวีณ์", "Dr.สิเรียม เทาศรีดี", "Dr.Anivat Phunjinda", "Dr.บุษกร อัครวัชรางกูร", "Dr.จิตติญา วัฒนกิตานนท์", "Dr.ดวงประทีป", "Dr.สุชานันท์", "Dr.เจนน้อย", "Dr.อนุพันธ์ สิทธิโชคชัยวุฒิ", "Dr.วัสยศ", "Dr.ณัฐพล", "Dr.Pranmas", "Dr.Thitiwadee Rukkhaphan", "Dr.พงศกร", "Dr.หทัยภัทร ตระกูล", "Dr.ณัฐกฤต", "Dr.ภููริตา", "Dr.นักสิทธิ์ จิตรตรง", "Dr.ธีรวัฒน์", "Dr.Parinya", "Dr.ยศวดี สิทธิศร", "Dr.จิรภัทร", "Dr.กตัญญู หลิมไชยกุล", "Dr.พีชญา จิตจาตุรันต์", "Dr.รวิภา", "Dr.ทพ.สราวุธ รจิตรบูรณะกุล", "Dr.Dittaya Charoenkijkajorn", "Dr.นิศารัตน์ ศรีทา", "Dr.Siriwadee Prathompat", "Dr.ปุณณดา เที่ยงตรง", "Dr.ปรินทร์", "Dr.จรัสวรรณ", "Dr.อาภาพร", "ชื่อแพทย์", "Dr.ปัณฑ์ชนิต", "Dr.ภูริตา จโนภาส (จ๋า)", "Dr.พงศ์กร พันธ์แก้ว", "Dr.สาละวิน", "Dr.Nattawat", "Dr.Dio", "Dr.วิบุลย์", "Dr.Non", "Dr.Worapol Pruangprayoon", "Dr.Sirirat", "Dr.ยาวี เมฆขำ", "Dr.ภาณุพงษ์", "Dr.setthapong", "Dr.กชกร บ่อคำ", "Dr.เจนวิทย์ บรรจงรุจกุล", "Dr.ชลชัย", "Dr.THANABAT YIAMPANOMKUN", "Dr.ภูมิพัฒน์", "Dr.Salil", "Dr.สลิล", "Dr.พริมา", "Dr.Poosit Thongsamak", "Dr.นัสวีน ตอแก", "Dr.อภิชญา บุญโสภา", "Dr.ธฤษวรรน", "Dr.tanawat", "Dr.ซิตพล", "Dr.ชมพูนุช", "Dr. แป้ง", "Dr.Parin", "Dr.Paporn on", "Dr.สัชชัย อานินตคุณ", "Dr.Mum", "Dr.Tui", "Dr.Nonthawat", "Dr.Pat", "Dr.สานเติม", "Dr.เอมวดี", "Dr.ต๊อบ", "Dr.วุฒิกา", "Dr.Wirawat", "Dr.พิมพมนต์ ภิรมย์รื่น", "Dr.ปาณาลี", "Dr.ดวิษา", "Dr.สุชาติ ทันตสุวรรณ(Dr.ประพันธ์)", "Dr.Yuttapol Pimpison", "Dr.อัญชิสา", "Dr.อรรถ", "Dr.จีรภัทร์", "Dr.ภาณุมาศ อินทะมน", "Dr.ต๊อป ปราณวดี", "Dr.คนธ์พงษ์ บุญขำ", "Dr.Salisa", "Dr.สมชาย", "Dr.อมรพงษ์", "Dr.ชมภูนุช ติยะวงศ์มานะ", "Dr.อมรพงษ์ วชิรมน", "Dr.ปิยานันต์ (หมอแอล)", "Dr.Nas", "Dr.คณิต", "Dr.\tPanpicha Maketone", "Dr.dear", "Dr.กัลยกร เจริญผล", "Dr.พัชร กุลโกวิท", "Dr.wut", "Dr.สุพจน์ (กวง)", "Dr.Nis", "Dr.Prakchinawan , Sicharinee", "Dr.ปาร์ยรวี", "Dr.นิด", "Dr.Thanathip", "Dr.mum", "Dr.alonsi", "Dr.วันเนส โฮม", "Dr.ยศวดี", "Dr.โชษิตา", "Dr.ญาณภัทร", "Dr.ปฏิภาณ", "Dr.Akarapat rattananon", "Dr.สสุมา", "Dr.เกื้อพงษ์", "Dr.กวี เด่นไพโรจน์ศักดิ์", "Dr.Kunlanun", "Dr.ภูริกา", "Dr.Alice", "Dr.เลิศศิริ", "Dr.อัญชนา", "Dr.พีชญชา", "Dr.จิตตยากร", "Dr.ณัฐดนัย", "Dr.ปัญญาวุธ", "Dr.ไอซ์", "Dr.ธร", "Dr.Prodent", "Dr.Dr.Pitter", "Dr.กีรติ", "Dr.JJ", "Dr.ณัฐวีร์ หวังพิริยะพาณิช", "Dr.เดียร์นา", "Dr.สาธิต ปราบริปูตลุย", "Dr.Yok", "Dr.ธิปก", "Dr.ติวเตอร์", "Dr.กัสมา", "Dr.ภัทรพร", "Dr.ฐานัส ลิ่ววัฒนากรณ์", "Dr.เดียร์นา เบญจมาพร", "Dr.ณัฏฐรัชพล อภิชนถิรพันธิ์", "Dr.Jeerapatr O.Baiyokvichit", "Dr.สมาคมรากเทียม tadi", "Dr.พรจิรา", "Dr.สุภาพร", "Dr.จิรายุ วิเวกเมธากร", "Dr.Supatsorn", "Dr.kanchirat", "Dr.พิชิต", "Dr. นิติโชติ นิลกำแหง", "Dr.ยุวนุช", "Dr.ณภัทร", "RDL", "Dr.อมรรัตน์", "ทพ.ธนัฎฐนนท์", "Dr.ภูวิพัฒน์", "Dr.กางเขน", "Dr..Manapon Wimonratmanorom", "Dr.Surapong Kanchanabat", "Dr.กิตตินันท์", "Dr.Pisit Suksuphan", "Dr.จิณตภา", "Dr.ศศิพินธ์ุ", "Dr.Sunee", "Dr. มยุรัชฎ์ พิพัฒภาสกร", "Dr.ชนม์นัฐฌา เจริญผล", "Dr.Suwit Limpattamapanee", "Dr.อดิศร", "Dr.Chompunuch", "Dr.ธนพล หนูมาน้อย", "Dr.เจริญ ทิพยโสถิ", "Dr.suchada", "Dr. Rukkhaphan, Thitiwadee", "Dr.ธนพจน์", "Dr.ธนพล แสง", "Dr.Top", "Dr.พงศกร พันธิ์แก้ว", "Sorrasit Laohapatcharin", "Dr.Yospat", "Dr.Todsaphon", "Dr.สิชารินีย์  หมอยีน", "Dr.พรรณพิชา (โอ๋)", "Dr.รุ่งโรจน์", "Dr.Ikanchirat", "Dr.yoky", "Dr.กตัญญ", "Dr.ภูริดา หมอจ๋าราชบุรี", "Dr.ปริศนา", "Dr.นที", "Dr.Pichaporn", "Dr.สุภสิทธิ์ นาคไร่ขิง", "Dr.กาย", "Dr.ศิริไพบูลย์", "Dr.พสธร", "Dr.วิสุณี", "Dr.กฤตภพ", "Dr.WORANIS PETCHSUPHAMIT", "Dr.เปิ้ล", "Dr.พรทิทา", "Dr.Pook", "Dr.Pek", "Dr.Kaew", "Dr.ทศพล", "Dr.พงษกร", "Dr.ธวัชชัย", "Dr.ตะวันฉาน", "Dr.อาทิตยา เชาวน์ทวี", "Dr. พงษภร", "Dr.ปณาลี", "Dr.ฐานันด์", "Dr.Jin", "Dr.ปรมุนี", "Dr.พงศกร อภิญสภานนท์", "Dr.เชาว์วรรธน์", "Dr.พรศักดิ์", "Dr.สุโชติ", "Dr.เมก้าเจน", "Dr.Komgrit", "Dr.พัสวี", "Dr.อัณณพิมพ์", "Dr.Sermsakul Wongtiraporn", "Dr.Kanokporn", "Dr.ท็อป", "Dr.สิริภัทร", "DR.kanokporn", "Dr.จิติพันธ์ อ.ใบหยกวิจิตร", "Dr.ชัยธนาธัชช์ ไตรญาณสิริ", "Dr.บุษรา TG-Bic10", "Dr.อรณิชา กาญจนพาที", "Dr..Parin Jeeranun", "Dr.\tPongsathorn Satjatham", "Dr.ญาสุมินทร์ วงศ์พันธุเศรษฐ์", "Dr.วิชาญ แตรกัล", "Dr.ปรางทิพย์ สุขศรีจักรวาล", "Dr.อัมพา", "Dr.Atipong Thammabuchit", "Dr.ศิริศักดิ์", "Dr.Jittayakorn Kasemsan", "Dr. สัมพันธ์", "Dr.วรัญญู", "Dr.ยงยุทธ", "Dr.สุทธิจิต", "Dr.ฐนกร", "Dr.เจฎฐพงศ์", "Dr.พงศ์ภูมิ", "Dr.Supaporn", "Dr.วิว", "Dr.ทรี เด็นทัลแล็บ", "Dr.อมรรัตน์ มรรคอนันตโชติ", "Dr. Salisa", "Dr.ช่างสมนึก", "Dr.ลลิล", "Dr.ภัควุฒินันท์", "Dr.พี่ตู่", "Dr.กตัญญูู", "Dr.คาราเมล", "Dr.เจน", "Dr.Siwakorn", "Dr.อาทิตย์ ศรีคชา", "Dr.นิติโชติ นิลกำแหง", "Dr.Anchana", "Dr.วินัย", "Dr.เทพเทพินทร์", "ทพ. สมชาย", "Dr.อุทุมพร", "Dr.Yonokpant", "Dr.ณิชาภา ธนาดลพิจิต", "Dr.สิริชัย วิริยจารี", "Dr.พลอยลดา", "ทพ.สมชาย/ทพ.ศักดิ์ชัย", "Dr.ศรันย์ โกศลจิตต์บุญ", "Dr.เบญญา", "Dr.เดนทอลเวิลด์", "Dr.James", "Dr.Dr.ฐานันด์ วิภาดาเกษม", "Dr.Rapeepat Sripila", "Dr.ธนัฏฐนนท์", "Dr.Thayika", "Dr.อิสริยา เล็กคุณา", "Dr.Poorita", "Dr.องอาจ", "หมอชิน", "Dr.มนภรณ์ วิมลรัชต์มโนรม", "Dr.Panpicha", "Dr.Oat", "Dr.วรนันต์ วนาสนันต์", "Dr.Watit", "Dr.พรรณพิชา", "Dr.Suwit Limpattamapane", "Dr.ปาจรีย์ แก้วภูมิแห่", "Dr.Sakanus Vijintanawan", "Dr.Amornpong", "Dr.ศริณ", "Dr.Thanatnon", "Dr.กรวิทย์", "Dr.Supit Khangrang", "Dr.\takarapat rattananon", "Dr.Chayakrit Taratikundech", "Dr.ปานวาด เฮงจีระจรัส", "Dr.Gamp", "Dr.นพรันต์ เอมจุ้ย", "Dr.หทัยภัทร หมออุ๋มอิ๋ม", "Dr.ชลัมพล เกตุพิชัย (หมอเบิร์ด)", "Dr.พจนารค", "Dr.Rukkhaphan", "Dr.ตอง", "Dr.ธนดล", "Dr.ธราปัฐพ์", "Dr.ศุภาพัชร ตรีเทพจุลยากูล", "Dr.watit", "Dr.song \tSukrit", "Dr.ชิน", "ระบบ Meisinger / Oktagon", "Dr.ทราย", "Dr.จริยา เจิดแจ่มจรัส", "Dr.Anuparb Aungsuvorapruek", "Dr.Arm", "prodent", "Dr.ทรัพย์สิดี", "Dr.chatnarong", "Dr.หมอชัยพร", "Dr.ปิยาวัฒน์ สุวรีดิลกกูล", "Dr.รศนา (นุ่น)", "คณะทันตแพทยศาสตร์ มหาวิทยาลัยพะเยา", "ทพญ.ปัณฑ์ชนิต โอฬารรักษ์", "ส่งกลึงอาบัติเม้น", "Dr.นิชาภา วรวีธราโรตี", "Dr.อะตอม", "Dr.charoen Tiyasothin", "ทันตกรรมหมอจั่นเจา", "Dr.pong", "Dr.Pitchaya Vadhanakrai", "Dr.Pongsathorn Satjatham", "Dr.Tanawan", "Dr.กษิดิศ", "Dr.Top สุธาสินี", "Dr.วิษณุ กีนติพงศ์ภักดี", "Dr.นุ่น", "ทพญ.กรรณิการ์", "ทพ.พงศกร พันธิแก้ว", "Dr.วัสยส", "กลึงอาบัติเม้น", "Dr.ธนัศ สิทธิรัตน์", "Dr.ชิษณุ", "Dr.fai (พิจิตร)", "Dr.Darunee", "Dr.สัณห์ชัย", "Dr.Hataipat", "Dr.กลัฟ", "Dr.เจริญ ทิพยโสถติ", "Dr.พิทัก", "Dr.วิษณุ กีรติพงศ์ภักดี", "Dr.Butsakorn", "Dr.แก๊ม", "Dr.จริยา", "เคดีเเอล", "Dr.pongsathorn"]}</script>
 <script>
 // ============================================================
 // CONFIG: paste your Google Apps Script Web App URL here (ends with /exec)
 // See GoogleAppsScript_Code.gs for setup instructions.
 const API_URL = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW72PIa_dXj--LRPBXGJupKbuI-ctWxmYADGJ7-Pwl6SVo5tKpFX/exec";
+const APP_VERSION = "2026-10-06 รุ่น 6 (ช่องติ๊ก ✓ + งานค้าง + เลขเคสอัตโนมัติ + สรุปหมอ/คลินิก)";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -587,6 +627,7 @@ document.querySelectorAll('nav.tabs button').forEach(btn=>{
     if(btn.dataset.tab==='rework') renderRework();
     if(btn.dataset.tab==='dept') renderDept();
     if(btn.dataset.tab==='pending') renderPending();
+    if(btn.dataset.tab==='report') renderReport();
   });
 });
 
@@ -617,6 +658,35 @@ const FORM_FIELDS = [
 
 function esc(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
+// ---------- Auto case number: YY(BE) + MM + running 4 digits, resets every month (e.g. 69100001) ----------
+function nextCaseId(dateStr){
+  const d = parseYmd(dateStr) || new Date();
+  const prefix = String((d.getFullYear() + 543) % 100).padStart(2,'0') + String(d.getMonth() + 1).padStart(2,'0');
+  const re = new RegExp('^' + prefix + '(\\d{4})$');
+  let max = 0;
+  NEW_ORDERS.concat(HISTORICAL).forEach(r=>{
+    const m = re.exec(String(r.case_id || '').trim());
+    if(m) max = Math.max(max, parseInt(m[1], 10));
+  });
+  return prefix + String(max + 1).padStart(4, '0');
+}
+function isReworkSelected(){
+  const el = document.getElementById('f_is_rework');
+  return !!el && el.value === 'งานแก้ (Rework)';
+}
+function refreshAutoCaseId(){
+  const cid = document.getElementById('f_case_id');
+  const dEl = document.getElementById('f_date_received');
+  if(!cid || cid.dataset.manual) return;
+  if(isReworkSelected()){
+    cid.value = '';
+    cid.placeholder = 'พิมพ์เลขเคสเดิม + Fix เช่น 69100001Fix1';
+  } else {
+    cid.placeholder = '';
+    cid.value = nextCaseId(dEl ? dEl.value : '');
+  }
+}
+
 function buildOrderForm(){
   const wrap = document.getElementById('order-form');
   wrap.innerHTML = '';
@@ -639,6 +709,13 @@ function buildOrderForm(){
     wrap.appendChild(div);
   });
   document.getElementById('f_date_received').valueAsDate = new Date();
+  document.getElementById('f_doctor').setAttribute('list', 'dl-doctors');
+  const cidEl = document.getElementById('f_case_id');
+  cidEl.parentElement.insertAdjacentHTML('beforeend', '<div class="note" style="margin:4px 0 0">รันอัตโนมัติ: ปี พ.ศ. 2 หลัก + เดือน + ลำดับ 4 หลัก (แก้เองได้)</div>');
+  cidEl.addEventListener('input', ()=>{ cidEl.dataset.manual = '1'; });
+  document.getElementById('f_date_received').addEventListener('change', refreshAutoCaseId);
+  document.getElementById('f_is_rework').addEventListener('change', refreshAutoCaseId);
+  refreshAutoCaseId();
   const matSel = document.getElementById('f_material');
   if(matSel) matSel.addEventListener('change', applyDeptRelevance);
   const abSel = document.getElementById('f_need_abutment');
@@ -699,13 +776,20 @@ function showToast(msg){
 }
 
 document.getElementById('save-order').addEventListener('click', async ()=>{
+  await loadNewOrders();   // pull everybody's latest orders first so numbers never collide
+  refreshAutoCaseId();
   const order = readForm();
   if(!order.case_id){ showToast('กรุณากรอกเลขเคส (CASE)'); return; }
+  if(NEW_ORDERS.concat(HISTORICAL).some(o=>String(o.case_id||'').trim() === String(order.case_id).trim())){
+    showToast('เลขเคส ' + order.case_id + ' มีอยู่แล้ว กรุณาใช้เลขอื่น');
+    return;
+  }
   NEW_ORDERS.unshift(order);
   await saveOrderToStorage(order);
+  document.getElementById('f_case_id').dataset.manual = '1';   // freeze this number so printing after saving shows the right one
   const k = monthKeyOf(order);
   if(SELECTED_MONTH !== 'all' && k !== SELECTED_MONTH){ SELECTED_MONTH = k; }
-  showToast('บันทึกออเดอร์ '+order.case_id+' แล้ว (เดือน'+monthLabel(k)+')');
+  showToast('บันทึกออเดอร์ '+order.case_id+' แล้ว (เดือน'+monthLabel(k)+') • กด "ล้างฟอร์ม" เพื่อเริ่มออเดอร์ถัดไป');
   renderRecentOrders();
   renderAll();
 });
@@ -826,6 +910,167 @@ function renderPending(){
 }
 document.getElementById('pd-scope').addEventListener('change', renderPending);
 document.getElementById('pd-carry').addEventListener('change', renderPending);
+
+// ---------- Doctor / clinic summary ----------
+function buildDoctorList(){
+  const dl = document.getElementById('dl-doctors');
+  if(!dl) return;
+  const seen = new Set(); const names = [];
+  NEW_ORDERS.forEach(o=>{ const v = String(o.doctor||'').trim(); if(v && !seen.has(v)){ seen.add(v); names.push(v); } });
+  (REFS.doctors || []).forEach(v=>{ if(!seen.has(v)){ seen.add(v); names.push(v); } });
+  dl.innerHTML = names.map(v=>`<option value="${esc(v)}"></option>`).join('');
+}
+let RP_SELECTED = null;      // normalised key of the selected doctor / clinic
+let RP_CSV_OVERVIEW = [];
+let RP_CSV_DETAIL = [];
+
+function shiftMonth(key, n){
+  const [y, m] = key.split('-').map(Number);
+  const d = new Date(y, m - 1 + n, 1);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+}
+function rpPeriod(){
+  const ref = (SELECTED_MONTH === 'all') ? currentMonthKey() : SELECTED_MONTH;
+  const p = document.getElementById('rp-period').value;
+  if(p === 'month') return {label: monthLabel(ref), test: k=>k === ref};
+  if(p === 'last3'){ const a = shiftMonth(ref,-2); return {label: monthLabel(a) + ' – ' + monthLabel(ref), test: k=>k !== 'unknown' && k >= a && k <= ref}; }
+  if(p === 'last6'){ const a = shiftMonth(ref,-5); return {label: monthLabel(a) + ' – ' + monthLabel(ref), test: k=>k !== 'unknown' && k >= a && k <= ref}; }
+  if(p === 'year'){ const y = ref.slice(0,4); return {label: 'ปี ' + (parseInt(y,10)+543), test: k=>k.slice(0,4) === y}; }
+  return {label: 'ทุกช่วงเวลา', test: ()=>true};
+}
+function rpMaterial(r){ return String(r.material || 'ไม่ระบุ').trim() || 'ไม่ระบุ'; }
+function rpName(r, by){
+  const v = String((by === 'doctor' ? r.doctor : r.clinic) || '').replace(/\s+/g,' ').trim();
+  return v || (by === 'doctor' ? '(ไม่ระบุหมอ)' : '(ไม่ระบุคลินิก)');
+}
+function rpAgg(list){
+  const a = {cases:0, qty:0, rework:0, coupon:0, delivered:0, pending:0, mats:{}};
+  list.forEach(r=>{
+    a.cases++;
+    a.qty += parseFloat(r.qty) || 0;
+    if(r.is_rework === true) a.rework++;
+    if(r.case_type === 'คูปอง') a.coupon++;
+    if(r.status === 'ส่งแล้ว') a.delivered++;
+    else if(r.status !== 'ยกเลิกเคส') a.pending++;
+    const m = rpMaterial(r);
+    a.mats[m] = (a.mats[m] || 0) + 1;
+  });
+  return a;
+}
+function downloadCsv(filename, rows){
+  const csv = '\ufeff' + rows.map(r=>r.map(v=>'"' + String(v ?? '').replace(/"/g,'""') + '"').join(',')).join('\r\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+}
+function rpRowCells(a, matCols, hasOther){
+  const cells = [a.cases, a.qty, a.rework, a.coupon, a.delivered, a.pending];
+  let other = 0;
+  const used = new Set(matCols);
+  Object.keys(a.mats).forEach(m=>{ if(!used.has(m)) other += a.mats[m]; });
+  matCols.forEach(m=>cells.push(a.mats[m] || 0));
+  if(hasOther) cells.push(other);
+  return cells;
+}
+
+function renderReport(){
+  const byEl = document.getElementById('rp-by');
+  if(!byEl) return;
+  const by = byEl.value;
+  const pd = rpPeriod();
+  const q = document.getElementById('rp-q').value.trim().toLowerCase();
+  const all = NEW_ORDERS.concat(HISTORICAL).map(withEffectiveStatus).filter(r=>pd.test(monthKeyOf(r)));
+
+  document.getElementById('rp-tag').textContent = pd.label;
+
+  // columns for the case types (materials): top 5 + "other"
+  const matTot = {};
+  all.forEach(r=>{ const m = rpMaterial(r); matTot[m] = (matTot[m] || 0) + 1; });
+  const sortedMats = Object.keys(matTot).sort((a,b)=>matTot[b] - matTot[a]);
+  const matCols = sortedMats.slice(0,5);
+  const hasOther = sortedMats.length > 5;
+  const head = ['เคส','ซี่','งานแก้','คูปอง','ส่งแล้ว','ค้าง'].concat(matCols).concat(hasOther ? ['วัสดุอื่นๆ'] : []);
+
+  // group
+  const groups = {};
+  all.forEach(r=>{
+    const name = rpName(r, by);
+    const key = name.toLowerCase();
+    (groups[key] = groups[key] || {key, name, rows:[]}).rows.push(r);
+  });
+  let list = Object.values(groups).map(g=>Object.assign(g, {agg: rpAgg(g.rows)}));
+  if(q) list = list.filter(g=>g.name.toLowerCase().includes(q));
+  list.sort((a,b)=>b.agg.cases - a.agg.cases || a.name.localeCompare(b.name));
+
+  const label = by === 'doctor' ? 'หมอ' : 'คลินิก';
+  document.getElementById('rp-note').textContent =
+    `${pd.label}: ${list.length.toLocaleString()} ${label} • ${all.length.toLocaleString()} เคส • คลิกที่แถวเพื่อดูรายเดือนและรายการเคส (ชื่อที่สะกดต่างกันจะนับแยกกัน)`;
+
+  const tbl = document.getElementById('rp-table');
+  RP_CSV_OVERVIEW = [[label].concat(head)];
+  if(!list.length){
+    tbl.innerHTML = '<tr><td class="empty">ยังไม่มีข้อมูลในช่วงเวลานี้</td></tr>';
+    document.getElementById('rp-detail-card').style.display = 'none';
+    return;
+  }
+  const total = rpAgg(list.reduce((acc,g)=>acc.concat(g.rows), []));
+  let html = '<tr><th>#</th><th>' + label + '</th>' + head.map(h=>`<th class="num">${esc(h)}</th>`).join('') + '</tr>';
+  list.slice(0,300).forEach((g,i)=>{
+    const cells = rpRowCells(g.agg, matCols, hasOther);
+    RP_CSV_OVERVIEW.push([g.name].concat(cells));
+    html += `<tr class="clickable ${RP_SELECTED === g.key ? 'sel' : ''}" data-key="${esc(g.key)}"><td>${i+1}</td><td><b>${esc(g.name)}</b></td>` +
+      cells.map(c=>`<td class="num">${c.toLocaleString()}</td>`).join('') + '</tr>';
+  });
+  const tc = rpRowCells(total, matCols, hasOther);
+  RP_CSV_OVERVIEW.push(['รวม'].concat(tc));
+  html += '<tr class="total"><td></td><td>รวม</td>' + tc.map(c=>`<td class="num">${c.toLocaleString()}</td>`).join('') + '</tr>';
+  tbl.innerHTML = html;
+  tbl.querySelectorAll('tr.clickable').forEach(tr=>tr.addEventListener('click', ()=>{ RP_SELECTED = tr.dataset.key; renderReport(); }));
+
+  // ----- detail for the selected name -----
+  const card = document.getElementById('rp-detail-card');
+  const g = RP_SELECTED ? groups[RP_SELECTED] : null;
+  if(!g){ card.style.display = 'none'; return; }
+  card.style.display = '';
+  document.getElementById('rp-detail-title').textContent = `${label}: ${g.name} (${pd.label})`;
+
+  const byMonth = {};
+  g.rows.forEach(r=>{ const k = monthKeyOf(r); (byMonth[k] = byMonth[k] || []).push(r); });
+  const mkeys = Object.keys(byMonth).sort();
+  RP_CSV_DETAIL = [['เดือน'].concat(head)];
+  let mh = '<tr><th>เดือน</th>' + head.map(h=>`<th class="num">${esc(h)}</th>`).join('') + '</tr>';
+  mkeys.forEach(k=>{
+    const cells = rpRowCells(rpAgg(byMonth[k]), matCols, hasOther);
+    RP_CSV_DETAIL.push([monthLabel(k)].concat(cells));
+    mh += `<tr><td><b>${esc(monthLabel(k))}</b></td>` + cells.map(c=>`<td class="num">${c.toLocaleString()}</td>`).join('') + '</tr>';
+  });
+  const gt = rpRowCells(g.agg, matCols, hasOther);
+  RP_CSV_DETAIL.push(['รวม'].concat(gt));
+  mh += '<tr class="total"><td>รวม</td>' + gt.map(c=>`<td class="num">${c.toLocaleString()}</td>`).join('') + '</tr>';
+  document.getElementById('rp-month-table').innerHTML = mh;
+
+  // related: a doctor works with which clinics / a clinic gets cases from which doctors
+  const relBy = by === 'doctor' ? 'clinic' : 'doctor';
+  const rel = {};
+  g.rows.forEach(r=>{ const n = rpName(r, relBy); const a = rel[n] = rel[n] || {n, cases:0, qty:0}; a.cases++; a.qty += parseFloat(r.qty) || 0; });
+  document.getElementById('rp-rel-title').textContent = by === 'doctor' ? 'ส่งงานผ่านคลินิกไหนบ้าง' : 'หมอที่ส่งงานเข้ามา';
+  document.getElementById('rp-rel-table').innerHTML =
+    `<tr><th>${by === 'doctor' ? 'คลินิก' : 'หมอ'}</th><th class="num">เคส</th><th class="num">ซี่</th></tr>` +
+    Object.values(rel).sort((a,b)=>b.cases - a.cases).map(x=>`<tr><td>${esc(x.n)}</td><td class="num">${x.cases}</td><td class="num">${x.qty.toLocaleString()}</td></tr>`).join('');
+
+  const cases = g.rows.slice().sort((a,b)=>String(b.date_received||'').localeCompare(String(a.date_received||''))).slice(0,200);
+  document.getElementById('rp-cases-table').innerHTML =
+    '<tr><th>เลขเคส</th><th>วันรับงาน</th><th>คนไข้</th><th>วัสดุ</th><th class="num">ซี่</th><th>ประเภท</th><th>สถานะ</th></tr>' +
+    cases.map(r=>{
+      const kind = [r.case_type === 'คูปอง' ? 'คูปอง' : 'ปกติ', r.is_rework === true ? 'งานแก้' : ''].filter(Boolean).join(' • ');
+      return `<tr><td>${esc(r.case_id ?? '-')}</td><td>${esc(fmtDate(r.date_received))}</td><td>${esc(r.patient ?? '-')}</td><td>${esc(rpMaterial(r))}</td><td class="num">${esc(r.qty ?? '-')}</td><td>${esc(kind)}</td><td><span class="badge ${STATUS_BADGE[r.status]||''}">${esc(r.status || '-')}</span></td></tr>`;
+    }).join('');
+}
+['rp-by','rp-period'].forEach(id=>document.getElementById(id).addEventListener('change', ()=>{ if(id==='rp-by') RP_SELECTED = null; renderReport(); }));
+document.getElementById('rp-q').addEventListener('input', renderReport);
+document.getElementById('rp-csv-overview').addEventListener('click', ()=>downloadCsv('สรุป-' + (document.getElementById('rp-by').value === 'doctor' ? 'หมอ' : 'คลินิก') + '.csv', RP_CSV_OVERVIEW));
+document.getElementById('rp-csv-detail').addEventListener('click', ()=>downloadCsv('สรุปรายเดือน.csv', RP_CSV_DETAIL));
 
 // ---------- Department Status tab ----------
 let CURRENT_DEPT = DEPARTMENTS[0].key;
@@ -1125,6 +1370,9 @@ function renderRework(){
 }
 
 function renderAll(){
+  refreshAutoCaseId();
+  buildDoctorList();
+  renderReport();
   buildMonthSelect();
   renderPending();
   renderRecentOrders();
@@ -1302,6 +1550,7 @@ function showApp(){
 }
 
 async function init(){
+  document.getElementById('app-version').textContent = 'เวอร์ชัน ' + APP_VERSION;
   buildOrderForm();
   buildDeptChips();
   populateFilterOptions();
