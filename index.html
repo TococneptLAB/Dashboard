@@ -413,7 +413,7 @@
         <label style="display:flex;gap:6px;align-items:center;margin:0;font-size:13px;color:var(--ink);font-weight:600"><input type="checkbox" id="bl-only-delivered" checked style="width:auto;margin:0"> เฉพาะงานที่ส่งแล้ว</label>
         <label style="display:flex;gap:6px;align-items:center;margin:0;font-size:13px;color:var(--ink);font-weight:600"><input type="checkbox" id="bl-free-coupon" checked style="width:auto;margin:0"> เคสคูปองคิด 0 บาท</label>
         <label style="display:flex;gap:6px;align-items:center;margin:0;font-size:13px;color:var(--ink);font-weight:600"><input type="checkbox" id="bl-free-rework" checked style="width:auto;margin:0"> งานแก้คิด 0 บาท</label>
-        <label style="display:flex;gap:6px;align-items:center;margin:0;font-size:13px;color:var(--ink);font-weight:600"><input type="checkbox" id="bl-vat" style="width:auto;margin:0"> VAT 7%</label>
+        <select id="bl-vat" title="ภาษีมูลค่าเพิ่ม"><option value="none">ไม่มี VAT</option><option value="v0">VAT 0%</option><option value="v7">VAT 7% (บวกเพิ่ม)</option></select>
       </div>
       <div class="filters"><button class="btn primary" id="bl-xlsx">⬇ Excel</button> <button class="btn primary" id="bl-pdf">🖨 PDF</button></div>
       <div class="note" id="bl-note"></div>
@@ -484,7 +484,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 // CONFIG: paste your Google Apps Script Web App URL here (ends with /exec)
 // See GoogleAppsScript_Code.gs for setup instructions.
 const API_URL = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW72PIa_dXj--LRPBXGJupKbuI-ctWxmYADGJ7-Pwl6SVo5tKpFX/exec";
-const APP_VERSION = "2026-10-06 รุ่น 14 (ล็อกอินปลอดภัย + สำรองข้อมูล)";
+const APP_VERSION = "2026-10-06 รุ่น 15 (ลบวัสดุ + VAT 0%/7%)";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -1834,8 +1834,8 @@ document.getElementById('sr-pdf').addEventListener('click', ()=>{
 let PRICES_WORK = null, BL_DIRTY = false, BL_EXTRA = [];
 function readPrices(){
   const rec = DEP_OVERRIDES['_settings'] && DEP_OVERRIDES['_settings']['prices'];
-  const p = {default:{}, clinics:{}};
-  if(rec && rec.status){ try{ const v = JSON.parse(rec.status); p.default = v.default || {}; p.clinics = v.clinics || {}; }catch(e){} }
+  const p = {default:{}, clinics:{}, hidden:[]};
+  if(rec && rec.status){ try{ const v = JSON.parse(rec.status); p.default = v.default || {}; p.clinics = v.clinics || {}; p.hidden = Array.isArray(v.hidden) ? v.hidden : []; }catch(e){} }
   return p;
 }
 function priceFor(prices, clinic, mat){
@@ -1864,7 +1864,8 @@ function billMaterials(prices){
   const set = new Set(['Zirconia','Emax','Print Model','Temp PMMA','Lisi','Zir+Emax','Digital Guide','Amber','Zir+Temp'].concat(Object.keys(cnt), Object.keys(prices.default), BL_EXTRA));
   Object.values(prices.clinics).forEach(o=>Object.keys(o).forEach(m=>set.add(m)));
   set.delete('ไม่ระบุ');
-  return Array.from(set).sort((a,b)=>(cnt[b]||0) - (cnt[a]||0) || a.localeCompare(b)).map(m=>({m, n:cnt[m] || 0}));
+  return Array.from(set).sort((a,b)=>(cnt[b]||0) - (cnt[a]||0) || a.localeCompare(b)).map(m=>({m, n:cnt[m] || 0}))
+    .filter(x=>x.n > 0 || !(prices.hidden || []).includes(x.m));
 }
 function buildBillingControls(){
   const sc = document.getElementById('bl-scope'), keep = sc.value;
@@ -1880,22 +1881,46 @@ function buildBillingControls(){
 }
 function buildPriceTable(){
   PRICES_WORK = JSON.parse(JSON.stringify(readPrices()));
+  renderPriceRows();
+}
+function renderPriceRows(){
+  if(!PRICES_WORK) PRICES_WORK = JSON.parse(JSON.stringify(readPrices()));
   const scope = document.getElementById('bl-scope').value;
   const list = billMaterials(PRICES_WORK);
   document.getElementById('bl-price-note').textContent = scope
-    ? `ราคาเฉพาะคลินิก "${scope}" — เว้นว่าง = ใช้ราคามาตรฐาน (ตัวเลขจางๆ คือราคามาตรฐาน)`
-    : 'ราคามาตรฐานต่อซี่ (บาท) ใช้กับทุกคลินิกที่ไม่ได้ตั้งราคาเฉพาะ — กรอกแล้วกด "บันทึกราคา"';
+    ? `ราคาเฉพาะคลินิก "${scope}" — เว้นว่าง = ใช้ราคามาตรฐาน (ตัวเลขจางๆ คือราคามาตรฐาน) • ปุ่ม "ล้างราคา" = ลบราคาเฉพาะของคลินิกนี้ • แก้แล้วกด "บันทึกราคา"`
+    : 'ราคามาตรฐานต่อซี่ (บาท) ใช้กับทุกคลินิกที่ไม่ได้ตั้งราคาเฉพาะ • วัสดุที่ยังไม่มีเคสลบทิ้งได้ (🗑) ส่วนวัสดุที่มีเคสแล้วลบได้แค่ราคา (ล้างราคา) • แก้แล้วกด "บันทึกราคา"';
   const t = document.getElementById('bl-price-table');
-  t.innerHTML = '<tr><th>วัสดุ</th><th>ราคา / ซี่ (บาท)</th><th>เคสในระบบ</th></tr>' + list.map(({m, n})=>{
+  t.innerHTML = '<tr><th>วัสดุ</th><th>ราคา / ซี่ (บาท)</th><th>เคสในระบบ</th><th></th></tr>' + list.map(({m, n})=>{
     const val = scope ? ((PRICES_WORK.clinics[scope] || {})[m] ?? '') : (PRICES_WORK.default[m] ?? '');
     const ph = scope ? (PRICES_WORK.default[m] ?? '') : '';
-    return `<tr><td>${esc(m)}</td><td><input type="number" min="0" step="any" data-mat="${esc(m)}" value="${esc(val)}" placeholder="${esc(ph)}" style="width:150px"></td><td>${n}</td></tr>`;
+    const label = (!scope && n === 0) ? '🗑 ลบ' : 'ล้างราคา';
+    return `<tr><td>${esc(m)}</td><td><input type="number" min="0" step="any" data-mat="${esc(m)}" value="${esc(val)}" placeholder="${esc(ph)}" style="width:150px"></td><td>${n}</td><td><button class="btn danger sm" data-del="${esc(m)}" data-n="${n}">${label}</button></td></tr>`;
   }).join('');
   t.querySelectorAll('input[data-mat]').forEach(inp=>inp.addEventListener('input', ()=>{
     BL_DIRTY = true;
     const m = inp.dataset.mat, v = inp.value === '' ? null : Number(inp.value);
     const target = scope ? (PRICES_WORK.clinics[scope] = PRICES_WORK.clinics[scope] || {}) : PRICES_WORK.default;
     if(v === null || !isFinite(v)) delete target[m]; else target[m] = v;
+  }));
+  t.querySelectorAll('button[data-del]').forEach(btn=>btn.addEventListener('click', ()=>{
+    const m = btn.dataset.del, n = Number(btn.dataset.n);
+    if(scope){
+      if(PRICES_WORK.clinics[scope]){ delete PRICES_WORK.clinics[scope][m]; if(!Object.keys(PRICES_WORK.clinics[scope]).length) delete PRICES_WORK.clinics[scope]; }
+      showToast('ล้างราคาเฉพาะของ "' + m + '" แล้ว (กด "บันทึกราคา" เพื่อยืนยัน)');
+    } else if(n === 0){
+      if(!window.confirm('ลบวัสดุ "' + m + '" ออกจากตารางราคา? (รวมราคาเฉพาะคลินิกของวัสดุนี้)')) return;
+      delete PRICES_WORK.default[m];
+      Object.keys(PRICES_WORK.clinics).forEach(c=>{ delete PRICES_WORK.clinics[c][m]; });
+      BL_EXTRA = BL_EXTRA.filter(x=>x !== m);
+      if(!PRICES_WORK.hidden.includes(m)) PRICES_WORK.hidden.push(m);
+      showToast('ลบ "' + m + '" แล้ว (กด "บันทึกราคา" เพื่อยืนยัน)');
+    } else {
+      delete PRICES_WORK.default[m];
+      showToast('ล้างราคา "' + m + '" แล้ว (กด "บันทึกราคา" เพื่อยืนยัน)');
+    }
+    BL_DIRTY = true;
+    renderPriceRows();
   }));
 }
 function invoiceData(clinic){
@@ -1920,8 +1945,9 @@ function invoiceData(clinic){
 }
 function invoiceTotals(subtotal){
   const disc = Math.min(Math.max(parseFloat(document.getElementById('bl-discount').value) || 0, 0), subtotal);
-  const vat = document.getElementById('bl-vat').checked ? round2((subtotal - disc) * 0.07) : 0;
-  return {disc: round2(disc), vat, total: round2(subtotal - disc + vat)};
+  const mode = document.getElementById('bl-vat').value;
+  const vat = mode === 'v7' ? round2((subtotal - disc) * 0.07) : 0;
+  return {disc: round2(disc), vat, mode, total: round2(subtotal - disc + vat)};
 }
 const INV_HEAD = ['เลขเคส','วันรับงาน','คนไข้','วัสดุ','ซี่','ราคา/ซี่','รวม (บาท)','หมายเหตุ'];
 function invoiceRows(clinic){
@@ -1929,17 +1955,25 @@ function invoiceRows(clinic){
   const rows = [INV_HEAD].concat(d.rows);
   rows.push(['','','','','','รวมเป็นเงิน', d.subtotal, '']);
   if(t.disc) rows.push(['','','','','','ส่วนลด', -t.disc, '']);
-  if(t.vat) rows.push(['','','','','','VAT 7%', t.vat, '']);
+  if(t.mode === 'v7') rows.push(['','','','','','VAT 7%', t.vat, '']);
+  else if(t.mode === 'v0') rows.push(['','','','','','VAT 0%', 0, '']);
   rows.push(['','','','','','ยอดสุทธิ', t.total, '']);
   return {rows, d, t};
 }
 function summaryAllRows(){
   const sel = document.getElementById('bl-clinic');
   const clinics = [...sel.options].map(o=>o.value).filter(v=>v !== '*');
-  const out = [['คลินิก','เคส','ซี่','ยอดรวม (บาท)','รายการที่ไม่มีราคา']];
-  let tot = 0, miss = 0;
-  clinics.forEach(c=>{ const d = invoiceData(c); if(!d.cases) return; out.push([c, d.cases, d.qty, d.subtotal, d.missing ? '⚠ ' + d.missing + ' รายการ' : '']); tot += d.subtotal; miss += d.missing; });
-  out.push(['รวม', '', '', round2(tot), miss ? '⚠ ' + miss + ' รายการ' : '']);
+  const mode = document.getElementById('bl-vat').value;
+  const vatCols = mode === 'v7' ? ['VAT 7% (บาท)', 'ยอดสุทธิ (บาท)'] : (mode === 'v0' ? ['VAT 0% (บาท)', 'ยอดสุทธิ (บาท)'] : []);
+  const out = [['คลินิก','เคส','ซี่','ยอดรวม (บาท)'].concat(vatCols, ['รายการที่ไม่มีราคา'])];
+  let tot = 0, totVat = 0, miss = 0;
+  clinics.forEach(c=>{
+    const d = invoiceData(c); if(!d.cases) return;
+    const vat = mode === 'v7' ? round2(d.subtotal * 0.07) : 0;
+    out.push([c, d.cases, d.qty, d.subtotal].concat(vatCols.length ? [vat, round2(d.subtotal + vat)] : [], [d.missing ? '⚠ ' + d.missing + ' รายการ' : '']));
+    tot += d.subtotal; totVat += vat; miss += d.missing;
+  });
+  out.push(['รวม', '', '', round2(tot)].concat(vatCols.length ? [round2(totVat), round2(tot + totVat)] : [], [miss ? '⚠ ' + miss + ' รายการ' : '']));
   return {rows: out, clinics};
 }
 function renderBilling(force){
@@ -1965,7 +1999,7 @@ function billingSheetsAndSections(){
   if(clinic === '*'){
     const a = summaryAllRows();
     if(a.rows.length <= 2){ return null; }
-    const sheets = [{name:'สรุปทุกคลินิก', rows: a.rows}], sections = [{heading:'สรุปยอดทุกคลินิก ' + monthLabel(month), rows: a.rows, moneyCols:[3]}];
+    const sheets = [{name:'สรุปทุกคลินิก', rows: a.rows}], sections = [{heading:'สรุปยอดทุกคลินิก ' + monthLabel(month), rows: a.rows, moneyCols: a.rows[0].map((h,i)=>/บาท/.test(h) ? i : -1).filter(i=>i >= 0)}];
     a.clinics.forEach(c=>{ const d = invoiceData(c); if(!d.cases) return; const inv = invoiceRows(c); sheets.push({name:c, rows: inv.rows}); sections.push({pageBreak:true, heading:'ใบแจ้งหนี้ ' + c, kpi: 'เดือน ' + monthLabel(month), rows: inv.rows, moneyCols:[5,6]}); });
     return {sheets: sheets.slice(0, 120), sections, name:'สรุปบิลทุกคลินิก ' + monthLabel(month), title:'สรุปใบแจ้งหนี้ ' + monthLabel(month)};
   }
@@ -1973,14 +2007,22 @@ function billingSheetsAndSections(){
   if(!inv.d.cases) return null;
   return {sheets:[{name:'ใบแจ้งหนี้', rows: inv.rows}], sections:[{heading:'ใบแจ้งหนี้ ' + clinic, kpi:'เดือน ' + monthLabel(month) + (invNo ? ' • เลขที่ ' + invNo : ''), rows: inv.rows, moneyCols:[5,6]}], name:'ใบแจ้งหนี้ ' + clinic + ' ' + monthLabel(month), title:'ใบแจ้งหนี้ ' + clinic};
 }
-document.getElementById('bl-scope').addEventListener('change', ()=>{ BL_DIRTY = false; buildPriceTable(); });
+let BL_SCOPE_PREV = '';
+document.getElementById('bl-scope').addEventListener('change', ()=>{
+  const sc = document.getElementById('bl-scope');
+  if(BL_DIRTY && !window.confirm('มีราคาที่ยังไม่ได้บันทึก ทิ้งการแก้ไขแล้วเปลี่ยนไปดูอีกชุดราคา?')){ sc.value = BL_SCOPE_PREV; return; }
+  BL_SCOPE_PREV = sc.value; BL_DIRTY = false; buildPriceTable();
+});
 ['bl-clinic','bl-only-delivered','bl-free-coupon','bl-free-rework','bl-vat','bl-discount'].forEach(id=>document.getElementById(id).addEventListener('input', ()=>renderBilling(false)));
 document.getElementById('bl-add-mat').addEventListener('click', ()=>{
   const v = document.getElementById('bl-new-mat').value.trim();
   if(!v) return;
+  if(!PRICES_WORK) PRICES_WORK = JSON.parse(JSON.stringify(readPrices()));
+  PRICES_WORK.hidden = (PRICES_WORK.hidden || []).filter(x=>x !== v);
   if(!BL_EXTRA.includes(v)) BL_EXTRA.push(v);
   document.getElementById('bl-new-mat').value = '';
-  BL_DIRTY = false; buildPriceTable();
+  BL_DIRTY = true;
+  renderPriceRows();
 });
 document.getElementById('bl-save-prices').addEventListener('click', async ()=>{
   if(!PRICES_WORK) return;
