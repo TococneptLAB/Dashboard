@@ -132,7 +132,7 @@
   .rp-doc h1{font-size:18px;margin:0 0 2px;}
   .rp-doc .rp-meta{font-size:10.5px;color:#444;margin-bottom:8px;}
   .rp-doc h2{font-size:13px;margin:14px 0 4px;}
-  .rp-doc .rp-kpi{font-size:11px;margin:2px 0 6px;}
+  .rp-doc .rp-kpi{font-size:11px;margin:2px 0 6px;white-space:pre-line;}
   .rp-doc table{width:100%;border-collapse:collapse;font-size:9px;margin-bottom:6px;}
   .rp-doc th,.rp-doc td{border:1px solid #888;padding:2px 4px;white-space:normal;vertical-align:top;}
   .rp-doc th{background:#E3EAE9;font-size:9px;position:static;}
@@ -227,6 +227,7 @@
       <button data-tab="dash">แดชบอร์ด</button>
       <button data-tab="report">สรุปหมอ / คลินิก</button>
       <button data-tab="billing">ราคา / บิล</button>
+      <button data-tab="contacts">ผู้ติดต่อ</button>
       <button data-tab="perm">สิทธิ์พนักงาน</button>
       <button data-tab="search">ค้นหา / ตรวจสอบงาน</button>
       <button data-tab="rework">งานแก้</button>
@@ -417,7 +418,49 @@
       </div>
       <div class="filters"><button class="btn primary" id="bl-xlsx">⬇ Excel</button> <button class="btn primary" id="bl-pdf">🖨 PDF</button></div>
       <div class="note" id="bl-note"></div>
+      <div class="note" id="bl-contact" style="color:var(--ink)"></div>
       <div class="tablewrap"><table id="bl-table"></table></div>
+    </div>
+  </section>
+
+  <!-- CONTACTS TAB -->
+  <section id="view-contacts" class="view">
+    <div class="card">
+      <h2>รายชื่อผู้ติดต่อ / ลูกค้า <span class="tag" id="ct-count">0</span></h2>
+      <div class="filters">
+        <input id="ct-q" placeholder="ค้นหา: ชื่อ / ชื่อที่ใช้ในออเดอร์ / เลขภาษี / โทร" style="min-width:280px">
+        <select id="ct-type"><option value="">ทุกประเภท</option><option value="ลูกค้า">ลูกค้า</option><option value="ซัพพลายเออร์">ซัพพลายเออร์</option><option value="อื่นๆ">อื่นๆ</option><option value="_none">ยังไม่จัดประเภท</option></select>
+        <button class="btn primary" id="ct-add">➕ เพิ่มผู้ติดต่อ</button>
+        <label class="btn ghost" for="ct-file" style="cursor:pointer;display:inline-block">📥 นำเข้าจาก PEAK (.xlsx)</label><input type="file" id="ct-file" accept=".xlsx" style="display:none">
+        <button class="btn ghost" id="ct-export">⬇ Excel</button>
+        <button class="btn ghost" id="ct-suggest-all" style="display:none"></button>
+      </div>
+      <div id="ct-import" class="cm-note" style="display:none"></div>
+      <div id="ct-form-wrap" class="cm-note" style="display:none">
+        <b id="ct-form-title"></b>
+        <div class="grid form" style="margin-top:8px">
+          <div class="field"><label>รหัสผู้ติดต่อ</label><input id="ctf_code"></div>
+          <div class="field"><label>ชื่อ (ตามกฎหมาย / ที่ใช้ออกบิล) *</label><input id="ctf_name"></div>
+          <div class="field"><label>ชื่อที่ใช้ในออเดอร์ (ชื่อเรียก/ชื่อย่อ)</label><input id="ctf_alias" list="dl-clinics"></div>
+          <div class="field"><label>ประเภท</label><select id="ctf_type"><option value="ลูกค้า">ลูกค้า</option><option value="ซัพพลายเออร์">ซัพพลายเออร์</option><option value="อื่นๆ">อื่นๆ</option><option value="">ยังไม่จัดประเภท</option></select></div>
+          <div class="field"><label>เลขประจำตัวผู้เสียภาษี</label><input id="ctf_tax"></div>
+          <div class="field"><label>สาขา (00000 = สำนักงานใหญ่)</label><input id="ctf_branch"></div>
+          <div class="field" style="grid-column:1/-1"><label>ที่อยู่</label><input id="ctf_address"></div>
+          <div class="field"><label>เบอร์โทร</label><input id="ctf_phone"></div>
+          <div class="field"><label>อีเมล</label><input id="ctf_email"></div>
+          <div class="field"><label>ผู้ติดต่อ</label><input id="ctf_person"></div>
+          <div class="field"><label>หมายเหตุ</label><input id="ctf_note"></div>
+        </div>
+        <div class="actions" style="margin-top:8px"><button class="btn primary" id="ctf-save">💾 บันทึก</button><button class="btn ghost" id="ctf-cancel">ยกเลิก</button></div>
+      </div>
+      <div class="filters" id="ct-bulk" style="display:none">
+        <span style="font-size:13px">เลือก <b id="ct-sel-n">0</b> รายการ:</span>
+        <select id="ct-bulk-type"><option value="ลูกค้า">ลูกค้า</option><option value="ซัพพลายเออร์">ซัพพลายเออร์</option><option value="อื่นๆ">อื่นๆ</option><option value="">ยังไม่จัดประเภท</option></select>
+        <button class="btn ghost sm" id="ct-bulk-apply">ตั้งประเภท</button>
+        <button class="btn danger sm" id="ct-bulk-del">🗑 ลบที่เลือก</button>
+      </div>
+      <div class="note">ชื่อที่ใช้ในออเดอร์ คือชื่อที่ช่างและแอดมินเรียก (เช่น "Teeth Time") ใช้เชื่อมกับเคสเก่า และดึงที่อยู่/เลขภาษีมาใส่ใบแจ้งหนี้ ส่วนประเภท "ซัพพลายเออร์/อื่นๆ" จะไม่แสดงในรายการเลือกคลินิกตอนสร้างออเดอร์</div>
+      <div class="tablewrap" style="max-height:560px"><table id="ct-table"></table></div>
     </div>
   </section>
 
@@ -471,6 +514,7 @@
 <div class="note" id="app-version" style="position:fixed;left:10px;bottom:6px;margin:0;font-size:11px;opacity:.7;z-index:5"></div>
 <div id="case-modal" style="display:none"><div class="cm-card"><div class="cm-head"><b id="cm-title"></b><button class="btn ghost sm" id="cm-close">✕ ปิด</button></div><div id="cm-body"></div></div></div>
 <datalist id="dl-doctors"></datalist>
+<datalist id="dl-clinics"></datalist>
 <div class="toast" id="toast"></div>
 
 <script id="data-blob" type="application/json">{"fields":["source_sheet","is_rework","case_type","coupon_status","case_id","date_received","clinic","doctor","patient","implant_system","detail","position","color","material","qty","unit_label","scan_system","delivery_method","notes","status","dep_design","dep_milling_zirconia","dep_milling_premill","dep_press","dep_porcelain","dep_qc","dep_packing","dep_delivery","sent_flag","date_sent","appointment_date","tech1","tech2"],"rows":[]}</script>
@@ -484,7 +528,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 // CONFIG: paste your Google Apps Script Web App URL here (ends with /exec)
 // See GoogleAppsScript_Code.gs for setup instructions.
 const API_URL = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW72PIa_dXj--LRPBXGJupKbuI-ctWxmYADGJ7-Pwl6SVo5tKpFX/exec";
-const APP_VERSION = "2026-10-06 รุ่น 15 (ลบวัสดุ + VAT 0%/7%)";
+const APP_VERSION = "2026-10-06 รุ่น 16 (รายชื่อผู้ติดต่อ + นำเข้า PEAK)";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -528,7 +572,7 @@ async function apiPost(body){
   if(r && r.ok === false && r.error === 'auth' && body.action !== 'login') doLogout('เซสชันหมดอายุ หรือ PIN ถูกเปลี่ยน กรุณาล็อกอินใหม่');
   return r;
 }
-const API_ERRORS = {forbidden:'ไม่มีสิทธิ์ทำรายการนี้', duplicate_case_id:'เลขเคสนี้มีอยู่แล้ว', duplicate_id:'ออเดอร์นี้ถูกบันทึกไปแล้ว', bad_link:'ลิงก์ต้องขึ้นต้นด้วย http:// หรือ https://', busy:'ระบบกำลังยุ่ง ลองใหม่อีกครั้ง', bad_status:'สถานะไม่ถูกต้อง', too_large:'ข้อมูลยาวเกินไป'};
+const API_ERRORS = {forbidden:'ไม่มีสิทธิ์ทำรายการนี้', duplicate_case_id:'เลขเคสนี้มีอยู่แล้ว', duplicate_id:'ออเดอร์นี้ถูกบันทึกไปแล้ว', bad_link:'ลิงก์ต้องขึ้นต้นด้วย http:// หรือ https://', busy:'ระบบกำลังยุ่ง ลองใหม่อีกครั้ง', duplicate_code:'รหัสผู้ติดต่อนี้มีอยู่แล้ว', bad_contact:'กรอกรหัสและชื่อให้ครบ', too_many:'มีผู้ติดต่อเต็มจำนวนแล้ว', bad_status:'สถานะไม่ถูกต้อง', too_large:'ข้อมูลยาวเกินไป'};
 function apiErrorText(r){ return API_ERRORS[r && r.error] || ('ผิดพลาด: ' + ((r && r.error) || 'ไม่ทราบสาเหตุ')); }
 
 function setSyncStatus(ok){
@@ -556,6 +600,7 @@ function clearEmployeeSession(){
 }
 
 // ---------- New orders (shared, via backend) ----------
+let CONTACTS = [], CONTACT_IDX = {};
 let NEW_ORDERS = [];       // live orders (edits applied, deleted ones removed)
 let DELETED_ORDERS = [];   // soft-deleted orders (kept in the sheet, can be restored)
 let RAW_ORDERS = [];       // orders exactly as saved in the sheet
@@ -586,6 +631,8 @@ async function loadNewOrders(){
     const r = await apiPost({action:'bootstrap'});
     if(r && r.ok){
       RAW_ORDERS = r.orders || [];
+      CONTACTS = r.contacts || [];
+      rebuildContactIndex();
       EMPLOYEE_LIST = r.employees || [];
       applyOverridesFromServer(r.overrides || []);
       rebuildOrders();
@@ -796,6 +843,7 @@ document.querySelectorAll('nav.tabs button').forEach(btn=>{
     if(btn.dataset.tab==='report') renderReport();
     if(btn.dataset.tab==='perm') renderPerm();
     if(btn.dataset.tab==='billing') renderBilling(true);
+    if(btn.dataset.tab==='contacts') renderContacts();
     if(btn.dataset.tab==='delivery') renderDelivery();
   });
 });
@@ -909,6 +957,7 @@ function buildOrderForm(){
       </div>`;
     dwrap.appendChild(div);
   });
+  refreshClinicSelect();
   applyDeptRelevance();
   const todayStr = new Date().toISOString().slice(0,10);
   const oiSel = document.getElementById('fd_order_intake');
@@ -1987,10 +2036,13 @@ function renderBilling(force){
   if(clinic === '*'){
     const a = summaryAllRows();
     tbl.innerHTML = rowsToTableHtml(a.rows);
+    document.getElementById('bl-contact').textContent = '';
     document.getElementById('bl-note').textContent = `สรุปทุกคลินิก เดือน ${monthLabel(month)} (นับตามวันรับงาน${onlyDel ? ' เฉพาะงานที่ส่งแล้ว' : ''}) • เลือกคลินิกด้านบนเพื่อดูใบแจ้งหนี้รายเคส • เปลี่ยนเดือนที่ตัวเลือกมุมขวาบน`;
   } else {
     const inv = invoiceRows(clinic);
     tbl.innerHTML = rowsToTableHtml(inv.rows);
+    const ct = contactFor(clinic);
+    document.getElementById('bl-contact').textContent = ct ? '👤 ' + contactLines(ct).join(' • ') : '⚠ ไม่พบ "' + clinic + '" ในรายชื่อผู้ติดต่อ — ใบแจ้งหนี้จะไม่มีที่อยู่/เลขภาษี (ไปแท็บ "ผู้ติดต่อ" เพื่อเพิ่ม หรือตั้ง "ชื่อที่ใช้ในออเดอร์")';
     document.getElementById('bl-note').textContent = `${clinic} • ${monthLabel(month)} • ${inv.d.cases} เคส ${inv.d.qty} ซี่` + (inv.d.missing ? ` • ⚠ ${inv.d.missing} รายการยังไม่มีราคา (ไปตั้งราคาด้านบนแล้วกดบันทึก)` : '');
   }
 }
@@ -2000,12 +2052,14 @@ function billingSheetsAndSections(){
     const a = summaryAllRows();
     if(a.rows.length <= 2){ return null; }
     const sheets = [{name:'สรุปทุกคลินิก', rows: a.rows}], sections = [{heading:'สรุปยอดทุกคลินิก ' + monthLabel(month), rows: a.rows, moneyCols: a.rows[0].map((h,i)=>/บาท/.test(h) ? i : -1).filter(i=>i >= 0)}];
-    a.clinics.forEach(c=>{ const d = invoiceData(c); if(!d.cases) return; const inv = invoiceRows(c); sheets.push({name:c, rows: inv.rows}); sections.push({pageBreak:true, heading:'ใบแจ้งหนี้ ' + c, kpi: 'เดือน ' + monthLabel(month), rows: inv.rows, moneyCols:[5,6]}); });
+    a.clinics.forEach(c=>{ const d = invoiceData(c); if(!d.cases) return; const inv = invoiceRows(c); sheets.push({name:c, rows: inv.rows}); sections.push({pageBreak:true, heading:'ใบแจ้งหนี้ ' + c, kpi: 'เดือน ' + monthLabel(month) + (contactFor(c) ? '\n' + contactLines(contactFor(c)).join('\n') : ''), rows: inv.rows, moneyCols:[5,6]}); });
     return {sheets: sheets.slice(0, 120), sections, name:'สรุปบิลทุกคลินิก ' + monthLabel(month), title:'สรุปใบแจ้งหนี้ ' + monthLabel(month)};
   }
   const inv = invoiceRows(clinic);
   if(!inv.d.cases) return null;
-  return {sheets:[{name:'ใบแจ้งหนี้', rows: inv.rows}], sections:[{heading:'ใบแจ้งหนี้ ' + clinic, kpi:'เดือน ' + monthLabel(month) + (invNo ? ' • เลขที่ ' + invNo : ''), rows: inv.rows, moneyCols:[5,6]}], name:'ใบแจ้งหนี้ ' + clinic + ' ' + monthLabel(month), title:'ใบแจ้งหนี้ ' + clinic};
+  const ctc = contactFor(clinic), cl = contactLines(ctc);
+  const infoSheet = ctc ? [{name:'ข้อมูลลูกค้า', rows:[['รายการ','ข้อมูล'], ['ชื่อ', ctc.name], ['เลขประจำตัวผู้เสียภาษี', ctc.tax_id], ['สาขา', ctc.branch === '00000' ? '00000 (สำนักงานใหญ่)' : ctc.branch], ['ที่อยู่', ctc.address], ['โทร', ctc.phone], ['อีเมล', ctc.email]]}] : [];
+  return {sheets:[{name:'ใบแจ้งหนี้', rows: inv.rows}].concat(infoSheet), sections:[{heading:'ใบแจ้งหนี้ ' + clinic, kpi:'เดือน ' + monthLabel(month) + (invNo ? ' • เลขที่ ' + invNo : '') + (cl.length ? '\n' + cl.join('\n') : ''), rows: inv.rows, moneyCols:[5,6]}], name:'ใบแจ้งหนี้ ' + clinic + ' ' + monthLabel(month), title:'ใบแจ้งหนี้ ' + clinic};
 }
 let BL_SCOPE_PREV = '';
 document.getElementById('bl-scope').addEventListener('change', ()=>{
@@ -2127,6 +2181,261 @@ function exportAllXlsx(){
   downloadXlsx('สำรองข้อมูลทั้งหมด ' + stamp + '.xlsx', [{name:'ออเดอร์', rows:oRows}, {name:'สถานะแผนก', rows:dRows}, {name:'โน้ต', rows:nRows}]);
 }
 document.getElementById('export-all').addEventListener('click', exportAllXlsx);
+
+// ---------- Contacts (PEAK import, add / edit / delete) ----------
+function normName(s){ return String(s || '').replace(/\s+/g, ' ').trim().toLowerCase(); }
+function rebuildContactIndex(){
+  CONTACT_IDX = {};
+  CONTACTS.forEach(c=>{ if(c.name) CONTACT_IDX[normName(c.name)] = c; });
+  CONTACTS.forEach(c=>{ if(c.alias) CONTACT_IDX[normName(c.alias)] = c; });     // alias wins over a legal name
+}
+function contactFor(clinicName){ return CONTACT_IDX[normName(clinicName)] || null; }
+function contactLines(c){
+  if(!c) return [];
+  const br = c.branch === '00000' ? ' (สำนักงานใหญ่)' : (c.branch ? ' สาขา ' + c.branch : '');
+  return [c.name + (c.tax_id ? ' • เลขประจำตัวผู้เสียภาษี ' + c.tax_id + br : ''), c.address, c.phone ? 'โทร ' + c.phone : ''].filter(Boolean);
+}
+function refreshClinicSelect(){
+  const sel = document.getElementById('f_clinic');
+  if(!sel) return;
+  const keep = sel.value, used = new Set(), seen = new Set();
+  const opt = (v, label) => `<option value="${esc(v)}">${esc(label)}</option>`;
+  const fromContacts = CONTACTS.filter(c=>c.type !== 'ซัพพลายเออร์' && c.type !== 'อื่นๆ').map(c=>({v: c.alias || c.name, label: c.alias ? c.alias + ' (' + c.name + ')' : c.name}))
+    .filter(x=>{ const k = normName(x.v); if(seen.has(k)) return false; seen.add(k); used.add(k); return true; });
+  const old = (REFS.clinics || []).filter(c=>!used.has(normName(c)));
+  sel.innerHTML = '<option value="">-- เลือก --</option>' +
+    (fromContacts.length ? '<optgroup label="ผู้ติดต่อ (PEAK / เพิ่มเอง)">' + fromContacts.map(x=>opt(x.v, x.label)).join('') + '</optgroup>' : '') +
+    '<optgroup label="รายชื่อเดิมจาก Excel">' + old.map(c=>opt(c, c)).join('') + '</optgroup>';
+  if(keep){
+    if(![...sel.options].some(o=>o.value === keep)) sel.add(new Option(keep, keep));
+    sel.value = keep;
+  }
+}
+
+// ---- reading the PEAK .xlsx in the browser (no library): zip + inflate + XML ----
+async function readXlsxRows(buf){
+  const u8 = new Uint8Array(buf), dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
+  let e = u8.length - 22;
+  while(e >= 0 && dv.getUint32(e, true) !== 0x06054b50) e--;
+  if(e < 0) throw new Error('ไม่ใช่ไฟล์ .xlsx');
+  const count = dv.getUint16(e + 10, true); let p = dv.getUint32(e + 16, true);
+  const files = {}, dec = new TextDecoder();
+  for(let i = 0; i < count && dv.getUint32(p, true) === 0x02014b50; i++){
+    const method = dv.getUint16(p + 10, true), csize = dv.getUint32(p + 20, true), nlen = dv.getUint16(p + 28, true), elen = dv.getUint16(p + 30, true), clen = dv.getUint16(p + 32, true), off = dv.getUint32(p + 42, true);
+    files[dec.decode(u8.subarray(p + 46, p + 46 + nlen))] = {method, csize, off};
+    p += 46 + nlen + elen + clen;
+  }
+  const read = async name => {
+    const f = files[name]; if(!f) return null;
+    const nlen = dv.getUint16(f.off + 26, true), elen = dv.getUint16(f.off + 28, true), st = f.off + 30 + nlen + elen;
+    const raw = u8.slice(st, st + f.csize);
+    if(f.method === 0) return dec.decode(raw);
+    if(typeof DecompressionStream === 'undefined') throw new Error('เบราว์เซอร์นี้อ่านไฟล์ .xlsx ไม่ได้ กรุณาใช้ Chrome / Edge / Safari รุ่นใหม่');
+    const stream = new Blob([raw]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+    return dec.decode(await new Response(stream).arrayBuffer());
+  };
+  const xml = t => new DOMParser().parseFromString(t, 'application/xml');
+  const wb = xml(await read('xl/workbook.xml'));
+  const sheet = wb.getElementsByTagName('sheet')[0];
+  const rid = sheet.getAttribute('r:id') || sheet.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id');
+  let target = 'worksheets/sheet1.xml';
+  const rels = await read('xl/_rels/workbook.xml.rels');
+  if(rels){ [...xml(rels).getElementsByTagName('Relationship')].forEach(r=>{ if(r.getAttribute('Id') === rid) target = r.getAttribute('Target'); }); }
+  const path = target.startsWith('/') ? target.slice(1) : 'xl/' + target;
+  const sst = await read('xl/sharedStrings.xml'), shared = [];
+  if(sst) [...xml(sst).getElementsByTagName('si')].forEach(si=>shared.push([...si.getElementsByTagName('t')].map(t=>t.textContent).join('')));
+  const doc = xml(await read(path)), rows = [];
+  [...doc.getElementsByTagName('row')].forEach(row=>{
+    const r = [];
+    [...row.getElementsByTagName('c')].forEach(c=>{
+      const ref = c.getAttribute('r') || '', letters = ref.replace(/[0-9]/g, '');
+      let ci = 0; for(const ch of letters) ci = ci * 26 + (ch.charCodeAt(0) - 64);
+      ci -= 1;
+      const t = c.getAttribute('t'), v = c.getElementsByTagName('v')[0];
+      let val = '';
+      if(t === 's' && v) val = shared[parseInt(v.textContent, 10)] ?? '';
+      else if(t === 'inlineStr') val = [...c.getElementsByTagName('t')].map(x=>x.textContent).join('');
+      else if(v) val = v.textContent;
+      r[ci] = val;
+    });
+    const ri = parseInt(row.getAttribute('r'), 10) - 1;
+    rows[isNaN(ri) ? rows.length : ri] = r;
+  });
+  return Array.from(rows, r=>r || []);
+}
+function parsePeakRows(rows){
+  const hi = rows.findIndex(r=>r && r[1] === 'รหัสผู้ติดต่อ');
+  if(hi < 0 || !rows[hi] || rows[hi][4] !== 'เลขทะเบียนภาษี' || rows[hi][12] !== 'ที่อยู่') return {error:'ไฟล์นี้ไม่ใช่รายงานผู้ติดต่อของ PEAK (ต้องมีคอลัมน์ รหัสผู้ติดต่อ / เลขทะเบียนภาษี / ที่อยู่)'};
+  const c = (r, i) => String(r[i] ?? '').replace(/[\u200b\u200c\u200d]/g, '').trim();
+  const out = [];
+  rows.slice(hi + 1).forEach(r=>{
+    const code = c(r, 1); if(!code) return;
+    const prefix = c(r, 8) === 'ไม่มี' ? '' : c(r, 8);
+    const name = [prefix, c(r, 9), c(r, 10)].filter(Boolean).join(' ');
+    if(!name) return;
+    const sub = c(r, 13), dist = c(r, 14), prov = c(r, 15), zip = c(r, 17), line = c(r, 12).replace(/\s+/g, ' ');
+    const bkk = /กรุงเทพ/.test(prov);
+    const area = [sub && (bkk ? 'แขวง' : 'ต.') + sub, dist && (bkk ? 'เขต' : 'อ.') + dist, prov && (bkk ? '' : 'จ.') + prov, zip].filter(Boolean).join(' ');
+    const person = c(r, 11) || [c(r, 40) === 'ไม่มี' ? '' : c(r, 40), c(r, 41), c(r, 42)].filter(Boolean).join(' ');
+    out.push({code, name, alias:'', type:'', tax_id:c(r, 4), branch: c(r, 5) === 'ไม่ระบุ' ? '' : c(r, 5), address: [line, area].filter(Boolean).join(' '),
+      phone: c(r, 25) || c(r, 44), email: c(r, 26) || c(r, 45), contact_person: person, note:'', source:'PEAK'});
+  });
+  return {contacts: out};
+}
+
+// ---- suggestions: PEAK legal name  ->  the short clinic name already used in orders ----
+const CT_STOP = ['คลินิกทันตกรรม','ทันตกรรม','คลินิก','ทันตแพทย์','ทันตะ','เด็นทัล','เดนทัล','เด็นตัล','เดนตัล','dentalclinic','dental','clinic','ศูนย์','หมอ','โรงพยาบาล','บริษัท','จำกัด','แลบ','lab'].sort((a,b)=>b.length - a.length);
+function ctNorm(x){ let t = String(x || '').toLowerCase().replace(/[\s.\-_()\/,]/g, ''); CT_STOP.forEach(w=>{ t = t.split(w).join(''); }); return t; }
+function ctCandidates(){
+  const set = new Set((REFS.clinics || []).concat(NEW_ORDERS.map(o=>o.clinic).filter(Boolean)));
+  const m = {};
+  set.forEach(n=>{ const k = ctNorm(n); if(k) (m[k] = m[k] || new Set()).add(n); });
+  return m;
+}
+function suggestionsMap(){
+  const cand = ctCandidates(), out = {};
+  CONTACTS.forEach(c=>{
+    if(c.alias) return;
+    const k = ctNorm(c.name), s = cand[k];
+    if(k && s && s.size === 1) out[c.code] = [...s][0];
+  });
+  return out;
+}
+
+let CT_SEL = new Set(), CT_EDIT = null, CT_PENDING = null;
+function ctOrderCounts(){ const m = {}; NEW_ORDERS.forEach(o=>{ const k = normName(o.clinic); if(k) m[k] = (m[k] || 0) + 1; }); return m; }
+function renderContacts(){
+  const t = document.getElementById('ct-table');
+  if(!t) return;
+  const q = normName(document.getElementById('ct-q').value), ty = document.getElementById('ct-type').value;
+  const sug = suggestionsMap(), cnt = ctOrderCounts();
+  let list = CONTACTS.filter(c=>{
+    if(ty === '_none' ? c.type !== '' : (ty && c.type !== ty)) return false;
+    if(!q) return true;
+    return [c.code, c.name, c.alias, c.tax_id, c.phone].some(v=>normName(v).includes(q));
+  });
+  document.getElementById('ct-count').textContent = CONTACTS.length;
+  const nSug = Object.keys(sug).length, sb = document.getElementById('ct-suggest-all');
+  sb.style.display = nSug ? '' : 'none'; sb.textContent = '✨ ใช้ชื่อที่แนะนำทั้งหมด (' + nSug + ')';
+  CT_SEL.forEach(code=>{ if(!CONTACTS.some(c=>c.code === code)) CT_SEL.delete(code); });
+  document.getElementById('ct-bulk').style.display = CT_SEL.size ? '' : 'none';
+  document.getElementById('ct-sel-n').textContent = CT_SEL.size;
+  if(!CONTACTS.length){ t.innerHTML = '<tr><td class="empty">ยังไม่มีรายชื่อ กด "นำเข้าจาก PEAK" หรือ "เพิ่มผู้ติดต่อ"</td></tr>'; return; }
+  const all = list.slice(0, 300), allChecked = all.length && all.every(c=>CT_SEL.has(c.code));
+  t.innerHTML = `<tr><th><input type="checkbox" id="ct-all" ${allChecked ? 'checked' : ''} style="width:auto"></th><th>รหัส</th><th>ชื่อ (ออกบิล)</th><th>ชื่อที่ใช้ในออเดอร์</th><th>ประเภท</th><th>เลขภาษี</th><th>โทร</th><th>เคส</th><th></th></tr>` +
+    all.map(c=>{
+      const n = (cnt[normName(c.alias)] || 0) + (c.alias && normName(c.alias) !== normName(c.name) ? (cnt[normName(c.name)] || 0) : (c.alias ? 0 : (cnt[normName(c.name)] || 0)));
+      const aliasCell = c.alias ? esc(c.alias) : (sug[c.code] ? `<a href="#" class="caselink" data-sug="${esc(c.code)}" title="กดเพื่อใช้ชื่อนี้">✨ แนะนำ: ${esc(sug[c.code])}</a>` : '<span style="color:#aaa">-</span>');
+      return `<tr><td><input type="checkbox" class="ct-sel" data-code="${esc(c.code)}" ${CT_SEL.has(c.code) ? 'checked' : ''} style="width:auto"></td>
+        <td>${esc(c.code)}</td><td style="white-space:normal;min-width:220px">${esc(c.name)}</td><td>${aliasCell}</td>
+        <td>${c.type ? esc(c.type) : '<span style="color:#aaa">ยังไม่จัด</span>'}</td><td>${esc(c.tax_id || '-')}</td><td>${esc(c.phone || '-')}</td><td>${n}</td>
+        <td style="white-space:nowrap"><button class="btn ghost sm" data-ct-edit="${esc(c.code)}">✏️ แก้ไข</button> <button class="btn danger sm" data-ct-del="${esc(c.code)}">🗑 ลบ</button></td></tr>`;
+    }).join('') + (list.length > 300 ? `<tr><td colspan="9" class="note">แสดง 300 รายการแรกจาก ${list.length} (ใช้ช่องค้นหาเพื่อกรอง)</td></tr>` : '');
+  const allBox = document.getElementById('ct-all');
+  if(allBox) allBox.addEventListener('change', ()=>{ all.forEach(c=>{ if(allBox.checked) CT_SEL.add(c.code); else CT_SEL.delete(c.code); }); renderContacts(); });
+  t.querySelectorAll('.ct-sel').forEach(cb=>cb.addEventListener('change', ()=>{ if(cb.checked) CT_SEL.add(cb.dataset.code); else CT_SEL.delete(cb.dataset.code); renderContacts(); }));
+  t.querySelectorAll('[data-ct-edit]').forEach(b=>b.addEventListener('click', ()=>openContactForm(b.dataset.ctEdit)));
+  t.querySelectorAll('[data-ct-del]').forEach(b=>b.addEventListener('click', ()=>deleteContactCodes([b.dataset.ctDel])));
+  t.querySelectorAll('[data-sug]').forEach(a=>a.addEventListener('click', async e=>{ e.preventDefault(); await updateContactFields([{code:a.dataset.sug, fields:{alias:sug[a.dataset.sug]}}], 'ตั้งชื่อที่ใช้ในออเดอร์แล้ว ✓'); }));
+  const dl = document.getElementById('dl-clinics');
+  if(dl && !dl.childElementCount) dl.innerHTML = (REFS.clinics || []).map(c=>`<option value="${esc(c)}"></option>`).join('');
+}
+async function reloadAfterContactChange(msg){
+  if(await loadNewOrders()){ rebuildOrders(); renderAll(); }
+  if(msg) showToast(msg);
+}
+async function updateContactFields(updates, msg){
+  const r = await apiPost({action:'updateContacts', updates});
+  if(!(r && r.ok)){ showToast(apiErrorText(r)); return; }
+  await reloadAfterContactChange(msg);
+}
+async function deleteContactCodes(codes){
+  const names = codes.map(c=>(CONTACTS.find(x=>x.code === c) || {}).name || c);
+  if(!window.confirm('ลบผู้ติดต่อ ' + (codes.length === 1 ? '"' + names[0] + '"' : codes.length + ' รายการ') + ' ?\n(เคสเก่าที่ใช้ชื่อนี้ยังอยู่ครบ แต่จะไม่มีที่อยู่/เลขภาษีในใบแจ้งหนี้)')) return;
+  const r = await apiPost({action:'deleteContacts', codes});
+  if(!(r && r.ok)){ showToast(apiErrorText(r)); return; }
+  codes.forEach(c=>CT_SEL.delete(c));
+  await reloadAfterContactChange('ลบแล้ว ' + r.deleted + ' รายการ');
+}
+function nextContactCode(){
+  let max = 0;
+  CONTACTS.forEach(c=>{ const m = /^M(\d+)$/.exec(c.code); if(m) max = Math.max(max, parseInt(m[1], 10)); });
+  return 'M' + String(max + 1).padStart(5, '0');
+}
+function openContactForm(code){
+  const c = code ? CONTACTS.find(x=>x.code === code) : null;
+  CT_EDIT = c ? c.code : '__new__';
+  const v = (id, val) => { document.getElementById(id).value = val ?? ''; };
+  document.getElementById('ct-form-title').textContent = c ? 'แก้ไขผู้ติดต่อ: ' + c.name : 'เพิ่มผู้ติดต่อใหม่';
+  v('ctf_code', c ? c.code : nextContactCode()); document.getElementById('ctf_code').readOnly = !!c;
+  v('ctf_name', c && c.name); v('ctf_alias', c && c.alias); v('ctf_type', c ? c.type : 'ลูกค้า'); v('ctf_tax', c && c.tax_id); v('ctf_branch', c && c.branch);
+  v('ctf_address', c && c.address); v('ctf_phone', c && c.phone); v('ctf_email', c && c.email); v('ctf_person', c && c.contact_person); v('ctf_note', c && c.note);
+  document.getElementById('ct-form-wrap').style.display = '';
+  document.getElementById('ct-form-wrap').scrollIntoView && document.getElementById('ct-form-wrap').scrollIntoView({behavior:'smooth', block:'center'});
+}
+async function saveContactForm(){
+  const g = id => document.getElementById(id).value.trim();
+  const contact = {code:g('ctf_code'), name:g('ctf_name'), alias:g('ctf_alias'), type:document.getElementById('ctf_type').value, tax_id:g('ctf_tax'), branch:g('ctf_branch'),
+    address:g('ctf_address'), phone:g('ctf_phone'), email:g('ctf_email'), contact_person:g('ctf_person'), note:g('ctf_note'), source:'manual'};
+  if(!contact.code || !contact.name){ showToast('กรอกรหัสและชื่อให้ครบ'); return; }
+  const r = await apiPost({action:'saveContact', contact, isNew: CT_EDIT === '__new__'});
+  if(!(r && r.ok)){ showToast(apiErrorText(r)); return; }
+  document.getElementById('ct-form-wrap').style.display = 'none'; CT_EDIT = null;
+  await reloadAfterContactChange('บันทึกผู้ติดต่อแล้ว ✓');
+}
+function showImportPreview(contacts, fileName){
+  CT_PENDING = contacts;
+  const have = new Set(CONTACTS.map(c=>c.code));
+  const nNew = contacts.filter(c=>!have.has(c.code)).length, nOld = contacts.length - nNew;
+  const noTax = contacts.filter(c=>!c.tax_id).length;
+  const box = document.getElementById('ct-import');
+  box.style.display = '';
+  box.innerHTML = `<b>ไฟล์ ${esc(fileName)}</b> — พบ ${contacts.length} ผู้ติดต่อ: <b>ใหม่ ${nNew}</b> • มีรหัสตรงกับที่มีอยู่แล้ว ${nOld} • ไม่มีเลขภาษี ${noTax}
+    <div style="margin:8px 0"><label style="display:flex;gap:6px;align-items:center;font-size:13px;color:var(--ink);font-weight:600;margin:0"><input type="radio" name="ct-mode" value="update" checked style="width:auto;margin:0"> อัปเดตรายการที่มีอยู่ด้วยข้อมูลจาก PEAK (ชื่อ/ที่อยู่/เลขภาษี/โทร) — ชื่อที่ใช้ในออเดอร์ ประเภท และหมายเหตุที่คุณตั้งไว้จะไม่ถูกทับ</label>
+    <label style="display:flex;gap:6px;align-items:center;font-size:13px;color:var(--ink);font-weight:600;margin:6px 0 0"><input type="radio" name="ct-mode" value="skip" style="width:auto;margin:0"> เพิ่มเฉพาะรายการใหม่ ข้ามรายการที่มีอยู่แล้ว</label></div>
+    <div class="actions"><button class="btn primary" id="ct-import-go">✓ นำเข้า ${contacts.length} รายการ</button><button class="btn ghost" id="ct-import-cancel">ยกเลิก</button></div>`;
+  document.getElementById('ct-import-cancel').addEventListener('click', ()=>{ box.style.display = 'none'; CT_PENDING = null; });
+  document.getElementById('ct-import-go').addEventListener('click', async ()=>{
+    const mode = box.querySelector('input[name="ct-mode"]:checked').value;
+    const btn = document.getElementById('ct-import-go'); btn.disabled = true; btn.textContent = 'กำลังนำเข้า...';
+    const r = await apiPost({action:'importContacts', contacts: CT_PENDING, mode});
+    if(!(r && r.ok)){ btn.disabled = false; btn.textContent = 'ลองใหม่'; showToast(apiErrorText(r)); return; }
+    box.style.display = 'none'; CT_PENDING = null;
+    await reloadAfterContactChange('นำเข้าแล้ว: ใหม่ ' + r.added + ' • อัปเดต ' + r.updated + (r.skipped ? ' • ข้าม ' + r.skipped : '') + (r.bad ? ' • ใช้ไม่ได้ ' + r.bad : ''));
+  });
+}
+async function handleContactFile(file){
+  try{
+    const buf = await (file.arrayBuffer ? file.arrayBuffer() : new Promise((ok, no)=>{ const fr = new FileReader(); fr.onload = ()=>ok(fr.result); fr.onerror = no; fr.readAsArrayBuffer(file); }));
+    const rows = await readXlsxRows(buf);
+    const res = parsePeakRows(rows);
+    if(res.error){ showToast(res.error); return; }
+    if(!res.contacts.length){ showToast('ไม่พบรายชื่อในไฟล์'); return; }
+    showImportPreview(res.contacts, file.name);
+  }catch(err){ console.warn(err); showToast('อ่านไฟล์ไม่ได้: ' + (err && err.message ? err.message : err)); }
+}
+function exportContactsXlsx(){
+  if(!CONTACTS.length){ showToast('ยังไม่มีรายชื่อ'); return; }
+  const head = ['รหัส','ชื่อ (ออกบิล)','ชื่อที่ใช้ในออเดอร์','ประเภท','เลขประจำตัวผู้เสียภาษี','สาขา','ที่อยู่','โทร','อีเมล','ผู้ติดต่อ','หมายเหตุ','ที่มา'];
+  downloadXlsx('รายชื่อผู้ติดต่อ ' + new Date().toISOString().slice(0,10) + '.xlsx', [{name:'ผู้ติดต่อ', rows:[head].concat(CONTACTS.map(c=>[c.code, c.name, c.alias, c.type, c.tax_id, c.branch, c.address, c.phone, c.email, c.contact_person, c.note, c.source]))}]);
+}
+document.getElementById('ct-q').addEventListener('input', renderContacts);
+document.getElementById('ct-type').addEventListener('change', renderContacts);
+document.getElementById('ct-add').addEventListener('click', ()=>openContactForm(null));
+document.getElementById('ctf-save').addEventListener('click', saveContactForm);
+document.getElementById('ctf-cancel').addEventListener('click', ()=>{ document.getElementById('ct-form-wrap').style.display = 'none'; CT_EDIT = null; });
+document.getElementById('ct-file').addEventListener('change', async e=>{ const f = e.target.files[0]; if(f) await handleContactFile(f); e.target.value = ''; });
+document.getElementById('ct-export').addEventListener('click', exportContactsXlsx);
+document.getElementById('ct-bulk-apply').addEventListener('click', ()=>{
+  const type = document.getElementById('ct-bulk-type').value;
+  updateContactFields([...CT_SEL].map(code=>({code, fields:{type}})), 'ตั้งประเภทให้ ' + CT_SEL.size + ' รายการแล้ว ✓');
+});
+document.getElementById('ct-bulk-del').addEventListener('click', ()=>deleteContactCodes([...CT_SEL]));
+document.getElementById('ct-suggest-all').addEventListener('click', ()=>{
+  const sug = suggestionsMap(), n = Object.keys(sug).length;
+  if(!n || !window.confirm('ตั้ง "ชื่อที่ใช้ในออเดอร์" ตามที่ระบบแนะนำ ' + n + ' รายการ? (ตรวจในตารางก่อนได้ ผิดรายการไหนแก้ทีหลังได้)')) return;
+  updateContactFields(Object.keys(sug).map(code=>({code, fields:{alias:sug[code]}})), 'ตั้งชื่อที่ใช้ในออเดอร์ ' + n + ' รายการแล้ว ✓');
+});
 
 // ---------- Department Status tab ----------
 let CURRENT_DEPT = DEPARTMENTS[0].key;
@@ -2430,6 +2739,8 @@ function renderRework(){
 }
 
 function renderAll(){
+  refreshClinicSelect();
+  renderContacts();
   renderBilling(false);
   renderDelivery();
   if(CASE_OPEN_ID && !document.getElementById('case-modal').contains(document.activeElement)) renderCase();
