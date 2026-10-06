@@ -207,13 +207,18 @@
       <div class="filters">
         <input id="dep-f-text" placeholder="ค้นหา: เลขเคส / คนไข้ / คลินิก" style="min-width:240px">
         <select id="dep-f-status"><option value="">สถานะแผนกทั้งหมด</option></select>
-        <label style="display:flex;gap:6px;align-items:center;margin:0;font-size:13px;color:var(--ink);font-weight:600;cursor:pointer"><input type="checkbox" id="dep-f-mine" checked style="width:auto;margin:0"> เฉพาะงานที่ถึงแผนกนี้แล้ว (ยังไม่เสร็จ)</label>
+<select id="dep-f-view" title="มุมมองงาน">
+          <option value="queue">งานรอทำ (ถึงแผนกนี้แล้ว)</option>
+          <option value="done">ทำเสร็จแล้ว (แผนกนี้)</option>
+          <option value="mine">ที่ฉันกดเสร็จเอง</option>
+          <option value="all">ทั้งหมด</option>
+        </select>
         <button class="btn ghost" id="dep-f-reset">ล้างตัวกรอง</button>
       </div>
       <div class="note progress-legend"></div>
       <div class="note" id="dept-count-note"></div>
       <div class="tablewrap"><table id="dept-table"></table></div>
-      <div class="note">เปลี่ยนสถานะได้โดยเลือกจาก dropdown ในแต่ละแถว ระบบบันทึกอัตโนมัติและทุกคนเห็นตรงกัน (แสดงเฉพาะเดือนที่เลือกด้านบน • ติ๊ก "เฉพาะงานที่ถึงแผนกนี้แล้ว" ออกถ้าอยากเห็นงานที่เสร็จไปแล้วหรือยังไม่ถึงแผนกนี้)</div>
+      <div class="note">ติ๊ก ✓ ที่ช่องหน้าแถวเมื่อแผนกของคุณทำงานนั้นเสร็จ ระบบบันทึกชื่อและวันที่ให้ทันที งานจะย้ายไปอยู่ที่มุมมอง "ทำเสร็จแล้ว" (ติ๊กผิดกดซ้ำเพื่อยกเลิกได้) ใช้ dropdown เมื่ออยากตั้งสถานะอื่น เช่น กำลังทำ / ระงับ / ยกเลิก</div>
     </div>
   </section>
 
@@ -413,6 +418,7 @@ function depRecord(row, deptKey){
     status: ov.status || row['dep_'+deptKey] || 'ไม่เกี่ยวข้อง',
     start: ov.start || row['dep_'+deptKey+'_start'] || '',
     end: ov.end || row['dep_'+deptKey+'_end'] || '',
+    by: ov.updated_by || '',
   };
 }
 function depValue(row, deptKey){ return depRecord(row, deptKey).status; }
@@ -767,17 +773,25 @@ function renderDept(){
   rows = rows.filter(x=>x.rec.status !== 'ไม่เกี่ยวข้อง' || stFilter==='ไม่เกี่ยวข้อง');
   if(q) rows = rows.filter(x=>[x.r.case_id,x.r.patient,x.r.clinic].some(v=>v && String(v).toLowerCase().includes(q)));
   if(stFilter) rows = rows.filter(x=>x.rec.status===stFilter);
-  if(document.getElementById('dep-f-mine').checked) rows = rows.filter(x=>currentDeptOf(x.r).key === CURRENT_DEPT);
+  const queueN = rows.filter(x=>currentDeptOf(x.r).key === CURRENT_DEPT).length;
+  const doneN = rows.filter(x=>x.rec.status === 'เสร็จแล้ว').length;
+  const myName = CURRENT_EMPLOYEE ? CURRENT_EMPLOYEE.name : '';
+  const view = document.getElementById('dep-f-view').value;
+  if(view === 'queue') rows = rows.filter(x=>currentDeptOf(x.r).key === CURRENT_DEPT);
+  else if(view === 'done') rows = rows.filter(x=>x.rec.status === 'เสร็จแล้ว');
+  else if(view === 'mine') rows = rows.filter(x=>x.rec.status === 'เสร็จแล้ว' && x.rec.by === myName);
   const overdueN = rows.filter(x=>isOverdue(x.r) && !['เสร็จแล้ว','ยกเลิก'].includes(x.rec.status)).length;
-  document.getElementById('dept-count-note').textContent = `${DEPARTMENTS.find(d=>d.key===CURRENT_DEPT).label}: พบ ${rows.length.toLocaleString()} เคส${overdueN?` • เกินกำหนด ${overdueN} เคส`:''} (แสดงสูงสุด 300 แถวแรก)`;
+  document.getElementById('dept-count-note').textContent = `${DEPARTMENTS.find(d=>d.key===CURRENT_DEPT).label}: รอทำ ${queueN} • ทำเสร็จแล้ว ${doneN} • แสดง ${rows.length.toLocaleString()} เคส${overdueN?` • เกินกำหนด ${overdueN} เคส`:''} (แสดงสูงสุด 300 แถวแรก)`;
 
   const t = document.getElementById('dept-table');
   if(!rows.length){ t.innerHTML = '<tr><td class="empty">ไม่มีเคสที่เกี่ยวข้องกับแผนกนี้ตามเงื่อนไข</td></tr>'; return; }
-  const header = ['เลขเคส','คลินิก','คนไข้','วัสดุ','จำนวน','วันรับงาน','วันนัด (deadline)','ค้างในแผนก','ความคืบหน้า','สถานะแผนกนี้','วันเริ่ม','วันเสร็จ',''];
+  const header = ['ทำแล้ว ✓','เลขเคส','คลินิก','คนไข้','วัสดุ','จำนวน','วันรับงาน','วันนัด (deadline)','ค้างในแผนก','ความคืบหน้า','สถานะแผนกนี้','วันเริ่ม','วันเสร็จ','ทำโดย',''];
   let html = '<tr>'+header.map(h=>`<th>${h}</th>`).join('')+'</tr>';
   rows.slice(0,300).forEach(({r,rec})=>{
     const overdue = isOverdue(r) && !['เสร็จแล้ว','ยกเลิก'].includes(rec.status);
+    const isDone = rec.status === 'เสร็จแล้ว';
     html += `<tr>
+      <td style="text-align:center"><input type="checkbox" class="dep-tick" data-id="${esc(r._id)}" ${isDone?'checked':''} title="ติ๊กเมื่อแผนกคุณทำงานนี้เสร็จแล้ว" style="width:22px;height:22px;cursor:pointer;accent-color:#0E6E6E"></td>
       <td>${esc(r.case_id??'-')}</td>
       <td>${esc(r.clinic??'-')}</td>
       <td>${esc(r.patient??'-')}</td>
@@ -790,6 +804,7 @@ function renderDept(){
       <td><select class="dep-row-select" data-id="${esc(r._id)}">${DEP_STATUSES.map(s=>`<option value="${esc(s)}" ${s===rec.status?'selected':''}>${esc(s)}</option>`).join('')}</select></td>
       <td><input type="date" class="dep-row-start" data-id="${esc(r._id)}" value="${toDateInputVal(rec.start)}" style="font-size:12px;padding:4px"></td>
       <td><input type="date" class="dep-row-end" data-id="${esc(r._id)}" value="${toDateInputVal(rec.end)}" style="font-size:12px;padding:4px"></td>
+      <td>${isDone ? esc(rec.by || '-') : '-'}</td>
       <td>${overdue?'<span class="badge b-hold">เกินกำหนด</span>':''}</td>
     </tr>`;
   });
@@ -812,6 +827,20 @@ function renderDept(){
       renderDept();
     });
   });
+  t.querySelectorAll('.dep-tick').forEach(cb=>{
+    cb.addEventListener('change', async ()=>{
+      const today = new Date().toISOString().slice(0,10);
+      if(cb.checked){
+        await setDeptRecord(cb.dataset.id, CURRENT_DEPT, {status:'เสร็จแล้ว', end: today});
+        showToast('✓ บันทึกว่าทำเสร็จแล้ว (ดูได้ที่มุมมอง "ทำเสร็จแล้ว")');
+      } else {
+        await setDeptRecord(cb.dataset.id, CURRENT_DEPT, {status:'รอดำเนินการ', end:''});
+        showToast('ยกเลิกเครื่องหมายแล้ว งานกลับไปรอทำ');
+      }
+      renderDash();
+      renderDept();
+    });
+  });
   t.querySelectorAll('.dep-row-start').forEach(inp=>{
     inp.addEventListener('change', async ()=>{ await setDeptRecord(inp.dataset.id, CURRENT_DEPT, {start: inp.value}); });
   });
@@ -821,11 +850,11 @@ function renderDept(){
 }
 document.getElementById('dep-f-text').addEventListener('input', renderDept);
 document.getElementById('dep-f-status').addEventListener('change', renderDept);
-document.getElementById('dep-f-mine').addEventListener('change', renderDept);
+document.getElementById('dep-f-view').addEventListener('change', renderDept);
 document.getElementById('dep-f-reset').addEventListener('click', ()=>{
   document.getElementById('dep-f-text').value='';
   document.getElementById('dep-f-status').value='';
-  document.getElementById('dep-f-mine').checked = true;
+  document.getElementById('dep-f-view').value = 'queue';
   renderDept();
 });
 
