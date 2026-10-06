@@ -383,7 +383,7 @@ let EMPLOYEE_LIST = [];
 function startPolling(){
   setInterval(async ()=>{
     const ok = await loadNewOrders();
-    if(ok){ renderAll(); }
+    if(ok){ applyRole(); renderAll(); }
   }, 20000);
 }
 
@@ -856,12 +856,41 @@ document.getElementById('logout-btn').addEventListener('click', ()=>{
   document.getElementById('login-pin').value = '';
 });
 
+// Roles: admin = all tabs | everyone else = only "search" (ตรวจสอบงาน) + "dept" (สถานะแผนก)
+// A person counts as admin if role = admin, or (role blank and department = Admin)
+const NORMAL_TABS = ['search', 'dept'];
+function isAdminUser(emp){
+  if(!emp) return false;
+  const role = String(emp.role || '').trim().toLowerCase();
+  const dep = String(emp.department || '').trim().toLowerCase();
+  return role === 'admin' || (role === '' && dep === 'admin');
+}
+function applyRole(){
+  // refresh from server list so role changes in the sheet apply without re-login
+  if(CURRENT_EMPLOYEE){
+    const fresh = EMPLOYEE_LIST.find(e=>e.name===CURRENT_EMPLOYEE.name);
+    if(fresh){ CURRENT_EMPLOYEE.role = fresh.role || ''; CURRENT_EMPLOYEE.department = fresh.department || ''; }
+  }
+  const admin = isAdminUser(CURRENT_EMPLOYEE);
+  document.querySelectorAll('nav.tabs button').forEach(b=>{
+    b.style.display = (!admin && !NORMAL_TABS.includes(b.dataset.tab)) ? 'none' : '';
+  });
+  if(!admin){
+    const activeBtn = document.querySelector('nav.tabs button.active');
+    if(!activeBtn || !NORMAL_TABS.includes(activeBtn.dataset.tab)){
+      document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab==='dept'));
+      document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active', v.id==='view-dept'));
+    }
+  }
+}
+
 function showApp(){
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('setup-screen').style.display = 'none';
   document.querySelector('.app').style.display = '';
   document.getElementById('user-chip').style.display = 'flex';
   document.getElementById('user-name-display').textContent = CURRENT_EMPLOYEE ? CURRENT_EMPLOYEE.name : '';
+  applyRole();
   renderAll();
 }
 
