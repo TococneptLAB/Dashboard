@@ -121,6 +121,8 @@
   .pg i.s-na{background:transparent;color:#C9D2D0;font-weight:400;}
   .pg i.cur{border-color:var(--ink);}
   .days-warn{color:var(--rose);font-weight:700;}
+  .btn.sm{padding:5px 10px;font-size:12.5px;border-radius:6px;}
+  .btn.danger{background:#fff;color:var(--rose);border:1px solid var(--rose);}
   .sub{font-size:14px;font-weight:700;margin:18px 0 8px;}
   tr.clickable{cursor:pointer;}
   tr.clickable.sel td{background:#E4F3E9;}
@@ -181,6 +183,7 @@
       <button data-tab="dept">สถานะแผนก</button>
       <button data-tab="dash">แดชบอร์ด</button>
       <button data-tab="report">สรุปหมอ / คลินิก</button>
+      <button data-tab="perm">สิทธิ์พนักงาน</button>
       <button data-tab="search">ค้นหา / ตรวจสอบงาน</button>
       <button data-tab="rework">งานแก้</button>
     </nav>
@@ -190,18 +193,21 @@
   <section id="view-order" class="view active">
     <div class="card">
       <h2>สร้างใบออเดอร์งานใหม่ <span class="tag">NEW ORDER</span></h2>
+      <div id="edit-banner" style="display:none;background:#FCEFDD;border:1px solid #E9C48A;color:#7a4a00;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:13.5px;font-weight:600"></div>
       <div class="grid form" id="order-form"></div>
-      <h2 style="margin-top:18px">สถานะเริ่มต้นแต่ละแผนก</h2>
+      <h2 id="order-dept-title" style="margin-top:18px">สถานะเริ่มต้นแต่ละแผนก</h2>
       <div class="grid form" id="order-dept-form"></div>
       <div class="actions">
         <button class="btn primary" id="save-order">💾 บันทึกออเดอร์</button>
         <button class="btn ghost" id="print-order">🖨️ พิมพ์ใบออเดอร์</button>
         <button class="btn ghost" id="clear-order">ล้างฟอร์ม</button>
+        <button class="btn ghost" id="cancel-edit" style="display:none">✖ ยกเลิกการแก้ไข</button>
       </div>
       <div class="note">ออเดอร์ที่บันทึกจะเก็บไว้ในเบราว์เซอร์นี้ และแสดงในแท็บ "สถานะแผนก" / "ค้นหา" / "แดชบอร์ด" ทันที</div>
     </div>
     <div class="card">
-      <h2>ออเดอร์ที่บันทึกล่าสุด (ในระบบนี้)</h2>
+      <h2>จัดการออเดอร์ (แก้ไข / ลบ) <span class="tag" id="orders-month-tag"></span></h2>
+      <div class="filters"><label style="display:flex;gap:6px;align-items:center;margin:0;font-size:13px;color:var(--ink);font-weight:600;cursor:pointer"><input type="checkbox" id="show-trash" style="width:auto;margin:0"> แสดงที่ลบแล้ว (ถังขยะ) เพื่อกู้คืน</label></div>
       <div class="tablewrap"><table id="recent-orders-table"></table></div>
     </div>
   </section>
@@ -321,6 +327,16 @@
     </div>
   </section>
 
+  <!-- PERMISSIONS TAB -->
+  <section id="view-perm" class="view">
+    <div class="card">
+      <h2>ใครทำอะไรได้บ้าง <span class="tag">สิทธิ์พนักงาน</span></h2>
+      <div class="note" style="margin:0 0 12px">ตารางนี้อ่านจากชีท <b>Employees</b> ใน Google Sheet แบบสด หากต้องการเปลี่ยนสิทธิ์ ให้แก้ที่ชีทนั้น: คอลัมน์ <b>role</b> (ใส่ <code>admin</code> = แอดมิน, ว่าง = พนักงานทั่วไป) และคอลัมน์ <b>depts</b> (แผนกที่รับผิดชอบ เช่น <code>CADCAM</code>, <code>All ceramic, QC</code>, <code>Admin</code>) มีผลภายในประมาณ 20 วินาที ไม่ต้องล็อกอินใหม่ ไม่ต้องแก้โค้ด</div>
+      <div class="tablewrap"><table id="perm-table"></table></div>
+      <div class="note">✓ = ทำได้ | – = ทำไม่ได้ | "แก้สถานะแผนก" = ติ๊ก ✓ / เปลี่ยนสถานะ / ใส่วันที่ เฉพาะแผนกที่ระบุไว้ในช่องถัดไป</div>
+    </div>
+  </section>
+
   <!-- SEARCH TAB -->
   <section id="view-search" class="view">
     <div class="card">
@@ -360,7 +376,7 @@
 // CONFIG: paste your Google Apps Script Web App URL here (ends with /exec)
 // See GoogleAppsScript_Code.gs for setup instructions.
 const API_URL = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW72PIa_dXj--LRPBXGJupKbuI-ctWxmYADGJ7-Pwl6SVo5tKpFX/exec";
-const APP_VERSION = "2026-10-06 รุ่น 6 (ช่องติ๊ก ✓ + งานค้าง + เลขเคสอัตโนมัติ + สรุปหมอ/คลินิก)";
+const APP_VERSION = "2026-10-06 รุ่น 8 (+ แก้ไข/ลบออเดอร์ + หน้าสิทธิ์พนักงาน)";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -426,14 +442,38 @@ function clearEmployeeSession(){
 }
 
 // ---------- New orders (shared, via backend) ----------
-let NEW_ORDERS = [];
+let NEW_ORDERS = [];       // live orders (edits applied, deleted ones removed)
+let DELETED_ORDERS = [];   // soft-deleted orders (kept in the sheet, can be restored)
+let RAW_ORDERS = [];       // orders exactly as saved in the sheet
+function orderEditOf(id){
+  const rec = DEP_OVERRIDES[id] && DEP_OVERRIDES[id]['_edit'];
+  if(!rec || !rec.status) return null;
+  try{ return JSON.parse(rec.status); }catch(e){ return null; }
+}
+function isDeletedOrder(id){
+  const rec = DEP_OVERRIDES[id] && DEP_OVERRIDES[id]['_deleted'];
+  return !!rec && String(rec.status) === '1';
+}
+function rebuildOrders(){
+  const ts = o => parseInt(String(o._id || '').split('__').pop(), 10) || 0;
+  const live = [], gone = [];
+  RAW_ORDERS.forEach(o=>{
+    const ed = orderEditOf(o._id);
+    const merged = ed ? Object.assign({}, o, ed) : o;
+    (isDeletedOrder(o._id) ? gone : live).push(merged);
+  });
+  live.sort((a,b)=>ts(b) - ts(a));
+  gone.sort((a,b)=>ts(b) - ts(a));
+  NEW_ORDERS = live; DELETED_ORDERS = gone;
+}
 async function loadNewOrders(){
   try{
     const r = await apiGet({action:'bootstrap'});
     if(r && r.ok){
-      NEW_ORDERS = r.orders || [];
+      RAW_ORDERS = r.orders || [];
       EMPLOYEE_LIST = r.employees || [];
       applyOverridesFromServer(r.overrides || []);
+      rebuildOrders();
       setSyncStatus(true);
       return true;
     }
@@ -628,6 +668,7 @@ document.querySelectorAll('nav.tabs button').forEach(btn=>{
     if(btn.dataset.tab==='dept') renderDept();
     if(btn.dataset.tab==='pending') renderPending();
     if(btn.dataset.tab==='report') renderReport();
+    if(btn.dataset.tab==='perm') renderPerm();
   });
 });
 
@@ -650,7 +691,7 @@ const FORM_FIELDS = [
   {key:'delivery_method', label:'วิธีจัดส่ง', type:'list', opts:REFS.delivery},
   {key:'tech1', label:'ช่าง CAD/CAM', type:'list', opts:REFS.techs},
   {key:'tech2', label:'ช่าง Porcelain', type:'list', opts:REFS.techs},
-  {key:'status', label:'สถานะรวม', type:'list', opts:REFS.statuses, default:'รับเข้าระบบ'},
+  {key:'status', label:'สถานะรวม', type:'list', opts:REFS.statuses.filter(x=>x !== 'สถานะ'), default:'รับเข้าระบบ'},
   {key:'appointment_date', label:'วันนัดคนไข้', type:'date'},
   {key:'is_rework', label:'ประเภทงาน', type:'select2', opts:['งานปกติ','งานแก้ (Rework)']},
   {key:'detail', label:'รายละเอียดงานแก้ / หมายเหตุ', type:'textarea'},
@@ -664,7 +705,7 @@ function nextCaseId(dateStr){
   const prefix = String((d.getFullYear() + 543) % 100).padStart(2,'0') + String(d.getMonth() + 1).padStart(2,'0');
   const re = new RegExp('^' + prefix + '(\\d{4})$');
   let max = 0;
-  NEW_ORDERS.concat(HISTORICAL).forEach(r=>{
+  NEW_ORDERS.concat(DELETED_ORDERS, HISTORICAL).forEach(r=>{
     const m = re.exec(String(r.case_id || '').trim());
     if(m) max = Math.max(max, parseInt(m[1], 10));
   });
@@ -688,6 +729,8 @@ function refreshAutoCaseId(){
 }
 
 function buildOrderForm(){
+  EDIT_ID = null;
+  if(document.getElementById('edit-banner')) setEditUi(false);
   const wrap = document.getElementById('order-form');
   wrap.innerHTML = '';
   FORM_FIELDS.forEach(f=>{
@@ -709,6 +752,7 @@ function buildOrderForm(){
     wrap.appendChild(div);
   });
   document.getElementById('f_date_received').valueAsDate = new Date();
+  FORM_FIELDS.forEach(f=>{ if(f.default){ const el = document.getElementById('f_' + f.key); if(el) el.value = f.default; } });   // e.g. สถานะรวม = รับเข้าระบบ, ประเภทเคส = ปกติ
   document.getElementById('f_doctor').setAttribute('list', 'dl-doctors');
   const cidEl = document.getElementById('f_case_id');
   cidEl.parentElement.insertAdjacentHTML('beforeend', '<div class="note" style="margin:4px 0 0">รันอัตโนมัติ: ปี พ.ศ. 2 หลัก + เดือน + ลำดับ 4 หลัก (แก้เองได้)</div>');
@@ -776,15 +820,17 @@ function showToast(msg){
 }
 
 document.getElementById('save-order').addEventListener('click', async ()=>{
+  if(EDIT_ID){ await saveEdit(); return; }
   await loadNewOrders();   // pull everybody's latest orders first so numbers never collide
   refreshAutoCaseId();
   const order = readForm();
   if(!order.case_id){ showToast('กรุณากรอกเลขเคส (CASE)'); return; }
-  if(NEW_ORDERS.concat(HISTORICAL).some(o=>String(o.case_id||'').trim() === String(order.case_id).trim())){
+  if(NEW_ORDERS.concat(DELETED_ORDERS, HISTORICAL).some(o=>String(o.case_id||'').trim() === String(order.case_id).trim())){
     showToast('เลขเคส ' + order.case_id + ' มีอยู่แล้ว กรุณาใช้เลขอื่น');
     return;
   }
-  NEW_ORDERS.unshift(order);
+  RAW_ORDERS.push(order);
+  rebuildOrders();
   await saveOrderToStorage(order);
   document.getElementById('f_case_id').dataset.manual = '1';   // freeze this number so printing after saving shows the right one
   const k = monthKeyOf(order);
@@ -830,14 +876,109 @@ document.getElementById('print-order').addEventListener('click', ()=>{
   window.print();
 });
 
+// ---------- Edit / delete orders ----------
+let EDIT_ID = null;
+function setEditUi(on, caseId){
+  document.getElementById('edit-banner').style.display = on ? '' : 'none';
+  document.getElementById('edit-banner').textContent = on ? ('✏️ กำลังแก้ไขเคส ' + caseId + ' (สถานะของแต่ละแผนกให้แก้ที่แท็บ "สถานะแผนก" ถ้าจะเปิดงานที่ส่งแล้วอีกครั้ง ให้เอาติ๊ก DELIVERY ออกที่แท็บนั้น)') : '';
+  document.getElementById('cancel-edit').style.display = on ? '' : 'none';
+  document.getElementById('save-order').textContent = on ? '💾 บันทึกการแก้ไข' : '💾 บันทึกออเดอร์';
+  document.getElementById('order-dept-form').style.display = on ? 'none' : '';
+  document.getElementById('order-dept-title').style.display = on ? 'none' : '';
+}
+function startEdit(id){
+  const o = NEW_ORDERS.find(x=>x._id === id);
+  if(!o) return;
+  buildOrderForm();                      // fresh form (also leaves any previous edit)
+  EDIT_ID = id;
+  FORM_FIELDS.forEach(f=>{
+    const el = document.getElementById('f_' + f.key);
+    if(!el) return;
+    let v = o[f.key];
+    if(f.key === 'is_rework') v = (o.is_rework === true) ? 'งานแก้ (Rework)' : 'งานปกติ';
+    if(f.key === 'need_abutment' && !v) v = 'ไม่ต้อง';
+    if(f.type === 'date') v = /^\d{4}-\d{2}-\d{2}/.test(String(v || '')) ? String(v).slice(0,10) : '';
+    if(v === undefined || v === null) v = '';
+    if(el.tagName === 'SELECT' && v !== '' && ![...el.options].some(op=>op.value === String(v))) el.add(new Option(String(v), String(v)));
+    el.value = v;
+  });
+  document.getElementById('f_case_id').dataset.manual = '1';
+  setEditUi(true, o.case_id);
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function exitEdit(){ EDIT_ID = null; setEditUi(false); }
+document.getElementById('cancel-edit').addEventListener('click', ()=>{ buildOrderForm(); });
+
+async function saveEdit(){
+  const cur = NEW_ORDERS.find(x=>x._id === EDIT_ID);
+  if(!cur){ showToast('ไม่พบออเดอร์นี้แล้ว (อาจถูกลบ)'); buildOrderForm(); return; }
+  const nv = readForm();
+  const patch = {};
+  const norm = (k, v)=>{
+    if(k === 'is_rework') return String(v === true);
+    if(k === 'need_abutment' && !v) return 'ไม่ต้อง';
+    if(k === 'case_type' && !v) return 'ปกติ';
+    return String(v ?? '');
+  };
+  FORM_FIELDS.forEach(f=>{
+    const k = f.key;
+    if(norm(k, nv[k]) !== norm(k, cur[k])) patch[k] = nv[k];
+  });
+  if(Object.keys(patch).length === 0){ showToast('ไม่มีการเปลี่ยนแปลง'); return; }
+  if(patch.case_id !== undefined){
+    if(!String(patch.case_id).trim()){ showToast('เลขเคสห้ามว่าง'); return; }
+    const dup = NEW_ORDERS.concat(DELETED_ORDERS, HISTORICAL).some(o=>o._id !== EDIT_ID && String(o.case_id||'').trim() === String(patch.case_id).trim());
+    if(dup){ showToast('เลขเคส ' + patch.case_id + ' มีอยู่แล้ว'); return; }
+  }
+  const merged = Object.assign({}, orderEditOf(EDIT_ID) || {}, patch);
+  await setDeptRecord(EDIT_ID, '_edit', {status: JSON.stringify(merged)});
+  rebuildOrders();
+  showToast('✓ บันทึกการแก้ไขเคส ' + (merged.case_id || cur.case_id) + ' แล้ว');
+  buildOrderForm();
+  renderAll();
+}
+async function deleteOrder(id){
+  const o = NEW_ORDERS.find(x=>x._id === id);
+  if(!o) return;
+  if(!window.confirm('ลบเคส ' + o.case_id + ' ?\n(ย้ายไปถังขยะ กู้คืนได้ภายหลัง และเลขเคสนี้จะไม่ถูกนำกลับมาใช้ซ้ำ)')) return;
+  await setDeptRecord(id, '_deleted', {status:'1'});
+  rebuildOrders();
+  showToast('ลบเคส ' + o.case_id + ' แล้ว (กู้คืนได้ที่ "แสดงที่ลบแล้ว")');
+  if(EDIT_ID === id) buildOrderForm();
+  renderAll();
+}
+async function restoreOrder(id){
+  const o = DELETED_ORDERS.find(x=>x._id === id);
+  await setDeptRecord(id, '_deleted', {status:'0'});
+  rebuildOrders();
+  showToast('กู้คืนเคส ' + (o ? o.case_id : '') + ' แล้ว');
+  renderAll();
+}
+
 function renderRecentOrders(){
   const t = document.getElementById('recent-orders-table');
-  if(!monthFiltered(NEW_ORDERS).length){ t.innerHTML = '<tr><td class="empty">ยังไม่มีออเดอร์ในเดือนนี้</td></tr>'; return; }
-  const cols = ['case_id','clinic','patient','material','qty','status','date_received'];
-  const labels = ['เลขเคส','คลินิก','คนไข้','วัสดุ','จำนวน','สถานะรวม','วันรับงาน'];
-  t.innerHTML = '<tr>'+labels.map(l=>`<th>${l}</th>`).join('')+'</tr>' +
-    monthFiltered(NEW_ORDERS).slice(0,30).map(o=>'<tr>'+cols.map(c=>`<td>${esc(o[c]??'-')}</td>`).join('')+'</tr>').join('');
+  const trash = document.getElementById('show-trash').checked;
+  document.getElementById('orders-month-tag').textContent = monthLabel(SELECTED_MONTH);
+  const list = monthFiltered(trash ? DELETED_ORDERS : NEW_ORDERS).map(withEffectiveStatus);
+  if(!list.length){ t.innerHTML = '<tr><td class="empty">' + (trash ? 'ถังขยะว่าง' : 'ยังไม่มีออเดอร์ในเดือนนี้') + '</td></tr>'; return; }
+  const labels = ['เลขเคส','คลินิก','หมอ','คนไข้','วัสดุ','ซี่','สถานะรวม','วันรับงาน',''];
+  t.innerHTML = '<tr>' + labels.map(l=>`<th>${l}</th>`).join('') + '</tr>' +
+    list.slice(0,100).map(o=>`<tr>
+      <td><b>${esc(o.case_id ?? '-')}</b></td><td>${esc(o.clinic ?? '-')}</td><td>${esc(o.doctor ?? '-')}</td><td>${esc(o.patient ?? '-')}</td>
+      <td>${esc(o.material ?? '-')}</td><td>${esc(o.qty ?? '-')}</td>
+      <td><span class="badge ${STATUS_BADGE[o.status]||''}">${esc(o.status || '-')}</span></td><td>${esc(fmtDate(o.date_received))}</td>
+      <td style="white-space:nowrap">${trash
+        ? `<button class="btn ghost sm" data-act="restore" data-id="${esc(o._id)}">↩ กู้คืน</button>`
+        : `<button class="btn ghost sm" data-act="edit" data-id="${esc(o._id)}">✏️ แก้ไข</button> <button class="btn danger sm" data-act="delete" data-id="${esc(o._id)}">🗑 ลบ</button>`}</td>
+    </tr>`).join('');
+  t.querySelectorAll('button[data-act]').forEach(btn=>btn.addEventListener('click', ()=>{
+    const id = btn.dataset.id;
+    if(btn.dataset.act === 'edit') startEdit(id);
+    else if(btn.dataset.act === 'delete') deleteOrder(id);
+    else if(btn.dataset.act === 'restore') restoreOrder(id);
+  }));
 }
+document.getElementById('show-trash').addEventListener('change', renderRecentOrders);
 
 // ---------- Pending tab: what is still open this month ----------
 function pendingBase(){
@@ -1071,6 +1212,33 @@ function renderReport(){
 document.getElementById('rp-q').addEventListener('input', renderReport);
 document.getElementById('rp-csv-overview').addEventListener('click', ()=>downloadCsv('สรุป-' + (document.getElementById('rp-by').value === 'doctor' ? 'หมอ' : 'คลินิก') + '.csv', RP_CSV_OVERVIEW));
 document.getElementById('rp-csv-detail').addEventListener('click', ()=>downloadCsv('สรุปรายเดือน.csv', RP_CSV_DETAIL));
+
+// ---------- Permissions overview (admin) ----------
+function renderPerm(){
+  const t = document.getElementById('perm-table');
+  if(!t) return;
+  if(!EMPLOYEE_LIST.length){ t.innerHTML = '<tr><td class="empty">ยังไม่มีรายชื่อพนักงาน</td></tr>'; return; }
+  const labelOf = k => (DEPARTMENTS.find(d=>d.key === k) || {label:k}).label;
+  const yes = '<b style="color:#2F7D4F">✓</b>', no = '<span style="color:#aaa">–</span>';
+  const head = ['พนักงาน','ทีม (department)','ระดับ','เมนูที่เห็น','สร้างออเดอร์','แก้ไข / ลบออเดอร์','สรุปหมอ / คลินิก / แดชบอร์ด','แก้สถานะแผนก (เฉพาะแผนกนี้)'];
+  const rows = EMPLOYEE_LIST.map(e=>{
+    const admin = isAdminUser(e);
+    const ex = explicitDeptKeys(e);
+    let depTxt;
+    if(admin) depTxt = 'ทุกแผนก (แอดมิน)';
+    else if(ex === null) depTxt = 'ทุกแผนก <span style="color:#D98A2B">(ยังไม่ได้กำหนด depts)</span>';
+    else if(ex.length === 0) depTxt = '<span style="color:#C0453A;font-weight:700">⚠ ชื่อในช่อง depts ไม่ตรงกับแผนกใด: "' + esc(e.depts) + '"</span>';
+    else depTxt = esc(allowedDeptKeys(e).map(labelOf).join(', '));
+    const menus = admin ? 'ทั้งหมด (สร้างออเดอร์, งานค้าง, สถานะแผนก, แดชบอร์ด, สรุปหมอ/คลินิก, สิทธิ์, ค้นหา, งานแก้)' : 'งานค้าง, สถานะแผนก, ค้นหา / ตรวจสอบงาน';
+    return `<tr>
+      <td><b>${esc(e.name)}</b></td><td>${esc(e.department || '-')}</td>
+      <td><span class="badge ${admin ? 'b-done' : 'b-wait'}">${admin ? 'แอดมิน' : 'พนักงาน'}</span></td>
+      <td style="white-space:normal;min-width:200px">${esc(menus)}</td>
+      <td style="text-align:center">${admin ? yes : no}</td><td style="text-align:center">${admin ? yes : no}</td><td style="text-align:center">${admin ? yes : no}</td>
+      <td style="white-space:normal;min-width:220px">${depTxt}</td></tr>`;
+  });
+  t.innerHTML = '<tr>' + head.map(h=>`<th>${h}</th>`).join('') + '</tr>' + rows.join('');
+}
 
 // ---------- Department Status tab ----------
 let CURRENT_DEPT = DEPARTMENTS[0].key;
@@ -1371,6 +1539,7 @@ function renderRework(){
 
 function renderAll(){
   refreshAutoCaseId();
+  renderPerm();
   buildDoctorList();
   renderReport();
   buildMonthSelect();
