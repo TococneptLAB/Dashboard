@@ -172,6 +172,7 @@
     </div>
     <nav class="tabs">
       <button data-tab="order" class="active">สร้างออเดอร์</button>
+      <button data-tab="pending">งานค้าง</button>
       <button data-tab="dept">สถานะแผนก</button>
       <button data-tab="dash">แดชบอร์ด</button>
       <button data-tab="search">ค้นหา / ตรวจสอบงาน</button>
@@ -196,6 +197,30 @@
     <div class="card">
       <h2>ออเดอร์ที่บันทึกล่าสุด (ในระบบนี้)</h2>
       <div class="tablewrap"><table id="recent-orders-table"></table></div>
+    </div>
+  </section>
+
+  <!-- PENDING TAB -->
+  <section id="view-pending" class="view">
+    <div class="card">
+      <h2>งานค้าง <span class="tag" id="pending-month-tag"></span></h2>
+      <div class="filters">
+        <select id="pd-scope" title="ขอบเขต">
+          <option value="all">งานค้างทั้งแล็บ</option>
+          <option value="mine">เฉพาะแผนกของฉัน</option>
+        </select>
+        <label style="display:flex;gap:6px;align-items:center;margin:0;font-size:13px;color:var(--ink);font-weight:600;cursor:pointer"><input type="checkbox" id="pd-carry" style="width:auto;margin:0"> รวมงานค้างที่ยกมาจากเดือนก่อนด้วย</label>
+      </div>
+      <div class="kpis" id="pd-kpis"></div>
+      <div class="note progress-legend"></div>
+    </div>
+    <div class="card">
+      <h2>งานค้างอยู่ที่แผนกไหน</h2>
+      <div class="tablewrap"><table id="pd-dept-table"></table></div>
+    </div>
+    <div class="card">
+      <h2>รายการงานค้าง <span class="note" style="margin:0">(เรียงจากค้างนานที่สุดก่อน)</span></h2>
+      <div class="tablewrap"><table id="pd-table"></table></div>
     </div>
   </section>
 
@@ -561,6 +586,7 @@ document.querySelectorAll('nav.tabs button').forEach(btn=>{
     if(btn.dataset.tab==='search') renderSearch();
     if(btn.dataset.tab==='rework') renderRework();
     if(btn.dataset.tab==='dept') renderDept();
+    if(btn.dataset.tab==='pending') renderPending();
   });
 });
 
@@ -728,6 +754,78 @@ function renderRecentOrders(){
   t.innerHTML = '<tr>'+labels.map(l=>`<th>${l}</th>`).join('')+'</tr>' +
     monthFiltered(NEW_ORDERS).slice(0,30).map(o=>'<tr>'+cols.map(c=>`<td>${esc(o[c]??'-')}</td>`).join('')+'</tr>').join('');
 }
+
+// ---------- Pending tab: what is still open this month ----------
+function pendingBase(){
+  return NEW_ORDERS.concat(HISTORICAL).map(withEffectiveStatus)
+    .filter(r=>r.status !== 'ส่งแล้ว' && r.status !== 'ยกเลิกเคส');
+}
+function renderPending(){
+  const scopeEl = document.getElementById('pd-scope');
+  if(!scopeEl) return;
+  const scope = scopeEl.value;
+  const carryOn = document.getElementById('pd-carry').checked;
+  const myKeys = allowedDeptKeys();
+  const isMine = r => myKeys.includes(currentDeptOf(r).key);
+  const sel = SELECTED_MONTH;
+  const pend = pendingBase();
+  const inMonth = sel === 'all' ? pend : pend.filter(r=>monthKeyOf(r) === sel);
+  const carryAll = sel === 'all' ? [] : pend.filter(r=>{ const k = monthKeyOf(r); return k !== 'unknown' && k < sel; });
+  const carry = scope === 'mine' ? carryAll.filter(isMine) : carryAll;
+  let list = carryOn ? inMonth.concat(carryAll) : inMonth;
+  if(scope === 'mine') list = list.filter(isMine);
+  const carryIds = new Set(carryAll.map(r=>r._id));
+
+  document.getElementById('pending-month-tag').textContent = monthLabel(sel);
+  const deliveredN = monthFiltered(NEW_ORDERS.concat(HISTORICAL)).map(withEffectiveStatus).filter(r=>r.status === 'ส่งแล้ว').length;
+  const kp = [
+    {label:'งานค้าง' + (scope==='mine' ? ' (แผนกฉัน)' : ''), val:list.length, cls:'warn'},
+    {label:'เกินกำหนด (วันนัด)', val:list.filter(isOverdue).length, cls:'danger'},
+    {label:'ค้างยกมาจากเดือนก่อน' + (carryOn ? ' (รวมแล้ว)' : ''), val:carry.length, cls:''},
+    {label:'ส่งแล้วในเดือนนี้', val:deliveredN, cls:''},
+  ];
+  document.getElementById('pd-kpis').innerHTML = kp.map(k=>`<div class="kpi ${k.cls}"><div class="num">${k.val.toLocaleString()}</div><div class="lbl">${k.label}</div></div>`).join('');
+
+  // grouped by the department that currently holds the job
+  const groups = {};
+  list.forEach(r=>{
+    const d = currentDeptOf(r);
+    const g = groups[d.key] = groups[d.key] || {label:d.label, key:d.key, n:0, maxDays:-1};
+    g.n++;
+    const dd = currentDays(r);
+    if(dd !== '' && dd > g.maxDays) g.maxDays = dd;
+  });
+  const order = DEPARTMENTS.map(d=>d.key);
+  const gl = Object.values(groups).sort((a,b)=>order.indexOf(a.key) - order.indexOf(b.key));
+  const gt = document.getElementById('pd-dept-table');
+  gt.innerHTML = gl.length
+    ? '<tr><th>แผนก</th><th>งานค้างอยู่ที่แผนกนี้</th><th>ค้างนานสุด</th><th>ผู้รับผิดชอบ</th></tr>' +
+      gl.map(g=>`<tr><td><b>${esc(g.label)}</b></td><td>${g.n.toLocaleString()} เคส</td><td>${g.maxDays >= 0 ? daysCell(g.maxDays) : '-'}</td><td>${esc(g.key.startsWith('_') ? '-' : responsibleFor(g.key))}</td></tr>`).join('')
+    : '<tr><td class="empty">ไม่มีงานค้าง 🎉</td></tr>';
+
+  const sorted = list.slice().sort((a,b)=>{
+    const x = currentDays(a), y = currentDays(b);
+    return (y === '' ? -1 : y) - (x === '' ? -1 : x);
+  });
+  const t = document.getElementById('pd-table');
+  if(!sorted.length){ t.innerHTML = '<tr><td class="empty">ไม่มีงานค้างในเดือนนี้ 🎉</td></tr>'; return; }
+  const head = ['เลขเคส','คลินิก','คนไข้','วัสดุ','วันรับงาน','วันนัด','ตอนนี้อยู่ที่แผนก','ค้างในแผนก','ความคืบหน้า','ผู้รับผิดชอบ'];
+  t.innerHTML = '<tr>' + head.map(h=>`<th>${h}</th>`).join('') + '</tr>' +
+    sorted.slice(0,200).map(r=>`<tr>
+      <td>${esc(r.case_id ?? '-')} ${carryIds.has(r._id) ? '<span class="badge b-hold">ยกมา</span>' : ''}</td>
+      <td>${esc(r.clinic ?? '-')}</td>
+      <td>${esc(r.patient ?? '-')}</td>
+      <td>${esc(r.material ?? '-')}</td>
+      <td>${esc(fmtDate(r.date_received))}</td>
+      <td>${esc(fmtDate(r.appointment_date))}</td>
+      <td>${esc(currentDeptLabel(r))}</td>
+      <td>${daysCell(currentDays(r))}</td>
+      <td>${progressStrip(r)}</td>
+      <td>${esc(currentPeople(r))}</td>
+    </tr>`).join('');
+}
+document.getElementById('pd-scope').addEventListener('change', renderPending);
+document.getElementById('pd-carry').addEventListener('change', renderPending);
 
 // ---------- Department Status tab ----------
 let CURRENT_DEPT = DEPARTMENTS[0].key;
@@ -1028,6 +1126,7 @@ function renderRework(){
 
 function renderAll(){
   buildMonthSelect();
+  renderPending();
   renderRecentOrders();
   renderDash();
   renderSearch();
@@ -1070,7 +1169,7 @@ document.getElementById('logout-btn').addEventListener('click', ()=>{
 
 // Roles: admin = all tabs | everyone else = only "search" (ตรวจสอบงาน) + "dept" (สถานะแผนก)
 // A person counts as admin if role = admin, or (role blank and department = Admin)
-const NORMAL_TABS = ['search', 'dept'];
+const NORMAL_TABS = ['pending', 'search', 'dept'];
 function isAdminUser(emp){
   if(!emp) return false;
   const role = String(emp.role || '').trim().toLowerCase();
@@ -1175,8 +1274,8 @@ function applyRole(){
   if(!admin){
     const activeBtn = document.querySelector('nav.tabs button.active');
     if(!activeBtn || !NORMAL_TABS.includes(activeBtn.dataset.tab)){
-      document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab==='dept'));
-      document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active', v.id==='view-dept'));
+      document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab==='pending'));
+      document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active', v.id==='view-pending'));
     }
   }
 
@@ -1197,6 +1296,8 @@ function showApp(){
   document.getElementById('month-pick').style.display = 'flex';
   document.getElementById('user-name-display').textContent = CURRENT_EMPLOYEE ? CURRENT_EMPLOYEE.name : '';
   applyRole();
+  const scopeSel = document.getElementById('pd-scope');
+  if(scopeSel) scopeSel.value = (!isAdminUser(CURRENT_EMPLOYEE) && explicitDeptKeys(CURRENT_EMPLOYEE) !== null) ? 'mine' : 'all';
   renderAll();
 }
 
