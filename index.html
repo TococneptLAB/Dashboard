@@ -128,6 +128,22 @@
   tr.clickable.sel td{background:#E4F3E9;}
   td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
   tr.total td{font-weight:700;background:#EEF3F2;}
+  .rp-doc{font-family:'Noto Sans Thai','Loma','Tahoma',sans-serif;color:#000;}
+  .rp-doc h1{font-size:18px;margin:0 0 2px;}
+  .rp-doc .rp-meta{font-size:10.5px;color:#444;margin-bottom:8px;}
+  .rp-doc h2{font-size:13px;margin:14px 0 4px;}
+  .rp-doc .rp-kpi{font-size:11px;margin:2px 0 6px;}
+  .rp-doc table{width:100%;border-collapse:collapse;font-size:9px;margin-bottom:6px;}
+  .rp-doc th,.rp-doc td{border:1px solid #888;padding:2px 4px;white-space:normal;vertical-align:top;}
+  .rp-doc th{background:#E3EAE9;font-size:9px;position:static;}
+  .rp-doc thead{display:table-header-group;}
+  .rp-doc tr{page-break-inside:avoid;}
+  .rp-doc td.num{text-align:right;}
+  .rp-doc .rp-break{page-break-before:always;}
+  @media print{
+    body.printing-report > *:not(.print-order){display:none !important;}
+    body.printing-report .print-order{position:static !important;padding:0 !important;}
+  }
 </style>
 </head>
 <body>
@@ -233,7 +249,7 @@
     </div>
     <div class="card">
       <h2>รายการงานค้าง <span class="note" style="margin:0">(เรียงจากค้างนานที่สุดก่อน)</span></h2>
-      <div class="filters"><button class="btn ghost sm" id="pd-copy-table">📋 คัดลอกตาราง (วางใน Excel)</button> <button class="btn ghost sm" id="pd-xlsx">⬇ ดาวน์โหลด Excel</button></div>
+      <div class="filters"><button class="btn ghost sm" id="pd-copy-table">📋 คัดลอกตาราง (วางใน Excel)</button> <button class="btn ghost sm" id="pd-xlsx">⬇ ดาวน์โหลด Excel</button> <button class="btn ghost sm" id="pd-pdf">🖨 PDF</button></div>
       <div class="tablewrap"><table id="pd-table"></table></div>
     </div>
   </section>
@@ -314,14 +330,17 @@
         <input id="rp-q" placeholder="ค้นหาชื่อ">
         <button class="btn primary" id="rp-xlsx-overview">⬇ Excel: สรุปทั้งหมด</button>
         <button class="btn ghost" id="rp-xlsx-each">⬇ Excel: แยกชีทต่อคน</button>
+        <button class="btn primary" id="rp-pdf-overview">🖨 PDF: สรุปทั้งหมด</button>
+        <button class="btn ghost" id="rp-pdf-each">🖨 PDF: แยกหน้าต่อคน</button>
         <button class="btn ghost" id="rp-csv-overview">⬇ ดาวน์โหลด CSV (ภาพรวม)</button>
       </div>
+      <div class="note">ปุ่ม 🖨 PDF จะเปิดหน้าต่างพิมพ์ ให้เลือก <b>ปลายทาง (Destination) = บันทึกเป็น PDF (Save as PDF)</b> แล้วกดบันทึก</div>
       <div class="note" id="rp-note"></div>
       <div class="tablewrap"><table id="rp-table"></table></div>
     </div>
     <div class="card" id="rp-detail-card" style="display:none">
       <h2 id="rp-detail-title"></h2>
-      <div class="filters"><button class="btn primary" id="rp-xlsx-detail">⬇ Excel: สรุปคนนี้ (รายเดือน + รายการเคส)</button> <button class="btn ghost" id="rp-csv-detail">⬇ CSV (รายเดือน)</button></div>
+      <div class="filters"><button class="btn primary" id="rp-xlsx-detail">⬇ Excel: สรุปคนนี้ (รายเดือน + รายการเคส)</button> <button class="btn primary" id="rp-pdf-detail">🖨 PDF: สรุปคนนี้</button> <button class="btn ghost" id="rp-csv-detail">⬇ CSV (รายเดือน)</button></div>
       <div class="sub">แต่ละเดือนทำอะไรไปบ้าง</div>
       <div class="tablewrap"><table id="rp-month-table"></table></div>
       <div class="sub" id="rp-rel-title"></div>
@@ -353,7 +372,7 @@
         <button class="btn ghost" id="f-reset">ล้างตัวกรอง</button>
       </div>
       <div class="note progress-legend"></div>
-      <div class="filters"><button class="btn ghost sm" id="sr-copy-table">📋 คัดลอกตารางที่กรองอยู่ (วางใน Excel)</button> <button class="btn ghost sm" id="sr-xlsx">⬇ ดาวน์โหลด Excel</button></div>
+      <div class="filters"><button class="btn ghost sm" id="sr-copy-table">📋 คัดลอกตารางที่กรองอยู่ (วางใน Excel)</button> <button class="btn ghost sm" id="sr-xlsx">⬇ ดาวน์โหลด Excel</button> <button class="btn ghost sm" id="sr-pdf">🖨 PDF</button></div>
       <div class="note" id="search-count"></div>
       <div class="tablewrap"><table id="search-table"></table></div>
     </div>
@@ -381,7 +400,7 @@
 // CONFIG: paste your Google Apps Script Web App URL here (ends with /exec)
 // See GoogleAppsScript_Code.gs for setup instructions.
 const API_URL = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW72PIa_dXj--LRPBXGJupKbuI-ctWxmYADGJ7-Pwl6SVo5tKpFX/exec";
-const APP_VERSION = "2026-10-06 รุ่น 10 (+ Export Excel)";
+const APP_VERSION = "2026-10-06 รุ่น 11 (+ Export PDF)";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -1327,13 +1346,14 @@ function renderReport(){
     const cells = rpRowCells(g.agg, matCols, hasOther);
     RP_CSV_OVERVIEW.push([g.name].concat(cells));
     html += `<tr class="clickable ${RP_SELECTED === g.key ? 'sel' : ''}" data-key="${esc(g.key)}"><td>${i+1}</td><td><b>${esc(g.name)}</b></td>` +
-      cells.map(c=>`<td class="num">${c.toLocaleString()}</td>`).join('') + `<td><button class="btn ghost sm" data-exp="${esc(g.key)}">⬇ Excel</button></td></tr>`;
+      cells.map(c=>`<td class="num">${c.toLocaleString()}</td>`).join('') + `<td style="white-space:nowrap"><button class="btn ghost sm" data-exp="${esc(g.key)}">⬇ Excel</button> <button class="btn ghost sm" data-pdf="${esc(g.key)}">🖨 PDF</button></td></tr>`;
   });
   const tc = rpRowCells(total, matCols, hasOther);
   RP_CSV_OVERVIEW.push(['รวม'].concat(tc));
   html += '<tr class="total"><td></td><td>รวม</td>' + tc.map(c=>`<td class="num">${c.toLocaleString()}</td>`).join('') + '<td></td></tr>';
   tbl.innerHTML = html;
   tbl.querySelectorAll('button[data-exp]').forEach(b=>b.addEventListener('click', e=>{ e.stopPropagation(); exportPersonXlsx(b.dataset.exp); }));
+  tbl.querySelectorAll('button[data-pdf]').forEach(b=>b.addEventListener('click', e=>{ e.stopPropagation(); pdfPerson(b.dataset.pdf); }));
   tbl.querySelectorAll('tr.clickable').forEach(tr=>tr.addEventListener('click', ()=>{ RP_SELECTED = tr.dataset.key; renderReport(); }));
 
   // ----- detail for the selected name -----
@@ -1408,6 +1428,46 @@ function renderPerm(){
 }
 
 
+// ---------- PDF: report layout -> browser print dialog ("Save as PDF") ----------
+function buildReportHtml(title, meta, sections){
+  const cellHtml = (v, isHead) => {
+    if(!isHead && typeof v === 'number' && isFinite(v)) return `<td class="num">${esc(v.toLocaleString())}</td>`;
+    let t = String(v ?? '');
+    if(!isHead && t.length > 140) t = t.slice(0, 140) + '…';
+    return isHead ? `<th>${esc(t)}</th>` : `<td>${esc(t)}</td>`;
+  };
+  const table = rows => {
+    if(!rows || !rows.length) return '<div class="rp-meta">(ไม่มีข้อมูล)</div>';
+    return '<table><thead><tr>' + rows[0].map(v=>cellHtml(v, true)).join('') + '</tr></thead><tbody>' +
+      rows.slice(1).map(r=>'<tr>' + r.map(v=>cellHtml(v, false)).join('') + '</tr>').join('') + '</tbody></table>';
+  };
+  return '<div class="rp-doc"><h1>' + esc(title) + '</h1><div class="rp-meta">' + esc(meta) + '</div>' +
+    sections.map((sec, i)=>`<div class="${sec.pageBreak && i > 0 ? 'rp-break' : ''}">` +
+      (sec.heading ? `<h2>${esc(sec.heading)}</h2>` : '') +
+      (sec.kpi ? `<div class="rp-kpi">${esc(sec.kpi)}</div>` : '') + table(sec.rows) + '</div>').join('') + '</div>';
+}
+function printPdf(filename, title, sections){
+  const who = CURRENT_EMPLOYEE ? CURRENT_EMPLOYEE.name : '';
+  const meta = 'TOTU Concept • พิมพ์เมื่อ ' + new Date().toLocaleString('th-TH') + (who ? ' • โดย ' + who : '');
+  const el = document.getElementById('print-order-el');
+  el.innerHTML = buildReportHtml(title, meta, sections);
+  let st = document.getElementById('print-page-style');
+  if(!st){ st = document.createElement('style'); st.id = 'print-page-style'; document.head.appendChild(st); }
+  st.textContent = '@page{size:A4 landscape;margin:10mm}';
+  const oldTitle = document.title;
+  document.title = filename;                       // Chrome suggests this as the PDF file name
+  document.body.classList.add('printing-report');
+  const done = ()=>{
+    document.title = oldTitle; document.body.classList.remove('printing-report');
+    st.textContent = ''; el.innerHTML = '';
+    window.removeEventListener('afterprint', done);
+  };
+  window.addEventListener('afterprint', done);
+  showToast('เลือก ปลายทาง = บันทึกเป็น PDF ในหน้าต่างพิมพ์');
+  window.print();
+}
+function kpiLine(a){ return `เคส ${a.cases.toLocaleString()} • ซี่ ${a.qty.toLocaleString()} • งานแก้ ${a.rework} • คูปอง ${a.coupon} • ส่งแล้ว ${a.delivered} • ค้าง ${a.pending}`; }
+
 // ---- Excel exports for the summary ----
 function rpCaseRows(rows){
   const clean = v => String(v ?? '').replace(/[\r\n]+/g, ' ').trim();
@@ -1458,6 +1518,41 @@ function exportEachXlsx(){
 document.getElementById('rp-xlsx-overview').addEventListener('click', exportOverviewXlsx);
 document.getElementById('rp-xlsx-each').addEventListener('click', exportEachXlsx);
 document.getElementById('rp-xlsx-detail').addEventListener('click', ()=>{ if(RP_SELECTED) exportPersonXlsx(RP_SELECTED); });
+
+
+function pdfPerson(key){
+  if(!RP_CTX || !RP_CTX.groups[key]) return;
+  const g = RP_CTX.groups[key], c = RP_CTX;
+  printPdf(safeFileName('สรุป ' + g.name + ' ' + c.pd.label), c.label + ': ' + g.name + ' (' + c.pd.label + ')', [
+    {heading:'สรุปรายเดือน', kpi: kpiLine(g.agg), rows: rpMonthlyRows(g)},
+    {heading: c.by === 'doctor' ? 'ส่งงานผ่านคลินิก' : 'หมอที่ส่งงาน', rows: rpRelatedRows(g)},
+    {heading:'รายการเคส', rows: rpCaseRows(g.rows)},
+  ]);
+}
+function pdfOverview(){
+  if(!RP_CTX || !RP_CTX.list.length){ showToast('ยังไม่มีข้อมูลในช่วงเวลานี้'); return; }
+  const c = RP_CTX;
+  printPdf(safeFileName('สรุป' + c.label + ' ' + c.pd.label), 'สรุปตาม' + c.label + ' (' + c.pd.label + ')',
+    [{rows: RP_CSV_OVERVIEW}]);
+}
+function pdfEach(){
+  if(!RP_CTX || !RP_CTX.list.length){ showToast('ยังไม่มีข้อมูลในช่วงเวลานี้'); return; }
+  const c = RP_CTX;
+  const secs = [{heading:'ภาพรวม', rows: RP_CSV_OVERVIEW}];
+  c.list.slice(0, 60).forEach(g=>secs.push({pageBreak:true, heading: c.label + ': ' + g.name, kpi: kpiLine(g.agg), rows: rpCaseRows(g.rows)}));
+  printPdf(safeFileName('แยกตาม' + c.label + ' ' + c.pd.label), 'รายงานแยกตาม' + c.label + ' (' + c.pd.label + ')', secs);
+}
+document.getElementById('rp-pdf-overview').addEventListener('click', pdfOverview);
+document.getElementById('rp-pdf-each').addEventListener('click', pdfEach);
+document.getElementById('rp-pdf-detail').addEventListener('click', ()=>{ if(RP_SELECTED) pdfPerson(RP_SELECTED); });
+document.getElementById('pd-pdf').addEventListener('click', ()=>{
+  if(!LAST_PENDING_LIST.length){ showToast('ไม่มีรายการให้พิมพ์'); return; }
+  printPdf(safeFileName('งานค้าง ' + monthLabel(SELECTED_MONTH)), 'งานค้าง ' + monthLabel(SELECTED_MONTH), [{rows: exportRows(LAST_PENDING_LIST, true)}]);
+});
+document.getElementById('sr-pdf').addEventListener('click', ()=>{
+  if(!LAST_SEARCH_LIST.length){ showToast('ไม่มีรายการให้พิมพ์'); return; }
+  printPdf(safeFileName('ผลค้นหา ' + monthLabel(SELECTED_MONTH)), 'ผลค้นหา / ตรวจสอบงาน ' + monthLabel(SELECTED_MONTH), [{rows: exportRows(LAST_SEARCH_LIST, true)}]);
+});
 
 // ---------- Department Status tab ----------
 let CURRENT_DEPT = DEPARTMENTS[0].key;
