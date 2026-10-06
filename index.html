@@ -252,6 +252,7 @@
     </div>
     <div class="card">
       <h2>จัดการออเดอร์ (แก้ไข / ลบ) <span class="tag" id="orders-month-tag"></span></h2>
+      <div class="filters"><button class="btn ghost sm" id="export-all">⬇ สำรองข้อมูลทั้งหมด (Excel)</button></div>
       <div class="filters"><label style="display:flex;gap:6px;align-items:center;margin:0;font-size:13px;color:var(--ink);font-weight:600;cursor:pointer"><input type="checkbox" id="show-trash" style="width:auto;margin:0"> แสดงที่ลบแล้ว (ถังขยะ) เพื่อกู้คืน</label></div>
       <div class="tablewrap"><table id="recent-orders-table"></table></div>
     </div>
@@ -483,7 +484,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 // CONFIG: paste your Google Apps Script Web App URL here (ends with /exec)
 // See GoogleAppsScript_Code.gs for setup instructions.
 const API_URL = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW72PIa_dXj--LRPBXGJupKbuI-ctWxmYADGJ7-Pwl6SVo5tKpFX/exec";
-const APP_VERSION = "2026-10-06 รุ่น 13 (+ ราคา/บิล + ใบนำส่ง)";
+const APP_VERSION = "2026-10-06 รุ่น 14 (ล็อกอินปลอดภัย + สำรองข้อมูล)";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -517,13 +518,18 @@ async function apiGet(params){
 }
 async function apiPost(body){
   // text/plain avoids a CORS preflight against Apps Script
+  const tok = CURRENT_EMPLOYEE && CURRENT_EMPLOYEE.token;
   const res = await fetch(API_URL, {
     method: 'POST',
     headers: {'Content-Type': 'text/plain;charset=utf-8'},
-    body: JSON.stringify(body),
+    body: JSON.stringify(Object.assign({}, body, tok ? {token: tok} : {})),
   });
-  return res.json();
+  const r = await res.json();
+  if(r && r.ok === false && r.error === 'auth' && body.action !== 'login') doLogout('เซสชันหมดอายุ หรือ PIN ถูกเปลี่ยน กรุณาล็อกอินใหม่');
+  return r;
 }
+const API_ERRORS = {forbidden:'ไม่มีสิทธิ์ทำรายการนี้', duplicate_case_id:'เลขเคสนี้มีอยู่แล้ว', duplicate_id:'ออเดอร์นี้ถูกบันทึกไปแล้ว', bad_link:'ลิงก์ต้องขึ้นต้นด้วย http:// หรือ https://', busy:'ระบบกำลังยุ่ง ลองใหม่อีกครั้ง', bad_status:'สถานะไม่ถูกต้อง', too_large:'ข้อมูลยาวเกินไป'};
+function apiErrorText(r){ return API_ERRORS[r && r.error] || ('ผิดพลาด: ' + ((r && r.error) || 'ไม่ทราบสาเหตุ')); }
 
 function setSyncStatus(ok){
   const dot = document.getElementById('sync-dot');
@@ -537,6 +543,7 @@ function loadEmployeeSession(){
     const raw = localStorage.getItem('totu_employee');
     if(raw) CURRENT_EMPLOYEE = JSON.parse(raw);
   }catch(e){}
+  if(CURRENT_EMPLOYEE && !CURRENT_EMPLOYEE.token){ clearEmployeeSession(); }   // old sessions (before server-side login) must sign in again
   return CURRENT_EMPLOYEE;
 }
 function saveEmployeeSession(emp){
@@ -574,8 +581,9 @@ function rebuildOrders(){
   NEW_ORDERS = live; DELETED_ORDERS = gone;
 }
 async function loadNewOrders(){
+  if(!CURRENT_EMPLOYEE || !CURRENT_EMPLOYEE.token) return false;
   try{
-    const r = await apiGet({action:'bootstrap'});
+    const r = await apiPost({action:'bootstrap'});
     if(r && r.ok){
       RAW_ORDERS = r.orders || [];
       EMPLOYEE_LIST = r.employees || [];
@@ -588,8 +596,12 @@ async function loadNewOrders(){
   return false;
 }
 async function saveOrderToStorage(order){
-  try{ await apiPost({action:'addOrder', order}); }
-  catch(e){ console.warn('addOrder failed', e); setSyncStatus(false); }
+  try{
+    const r = await apiPost({action:'addOrder', order});
+    if(r && r.ok) return true;
+    showToast(apiErrorText(r));
+    return false;
+  }catch(e){ console.warn('addOrder failed', e); setSyncStatus(false); showToast('บันทึกไม่สำเร็จ ตรวจสอบอินเทอร์เน็ต'); return false; }
 }
 
 // ---------- Department status overrides (shared, via backend) ----------
@@ -609,16 +621,23 @@ async function setDeptRecord(id, deptKey, rec){
   const merged = Object.assign({}, prev, rec, {updated_by: CURRENT_EMPLOYEE ? CURRENT_EMPLOYEE.name : ''});
   DEP_OVERRIDES[id][deptKey] = merged;
   try{
-    await apiPost({action:'setDept', id, deptKey, status: merged.status, start: merged.start, end: merged.end, updated_by: merged.updated_by});
-    setSyncStatus(true);
-  }catch(e){ console.warn('setDept failed', e); setSyncStatus(false); }
+    const r = await apiPost({action:'setDept', id, deptKey, status: merged.status, start: merged.start, end: merged.end});
+    if(r && r.ok){ setSyncStatus(true); }
+    else if(!(r && r.error === 'auth')){
+      showToast(apiErrorText(r));
+      if(await loadNewOrders()){ rebuildOrders(); renderAll(); }      // drop the change that the server refused
+    }
+  }catch(e){ console.warn('setDept failed', e); setSyncStatus(false); showToast('บันทึกไม่สำเร็จ ตรวจสอบอินเทอร์เน็ต'); }
   return merged;
 }
 
 // ---------- Poll for live-ish sync every 20s ----------
 let EMPLOYEE_LIST = [];
+let POLL_TIMER = null;
 function startPolling(){
-  setInterval(async ()=>{
+  if(POLL_TIMER) return;
+  POLL_TIMER = setInterval(async ()=>{
+    if(!CURRENT_EMPLOYEE) return;
     const ok = await loadNewOrders();
     if(ok){ applyRole(); renderAll(); }
   }, 20000);
@@ -942,9 +961,10 @@ async function doSaveOrder(){
     showToast('เลขเคส ' + order.case_id + ' มีอยู่แล้ว กรุณาใช้เลขอื่น');
     return;
   }
+  const saved = await saveOrderToStorage(order);
+  if(!saved){ if(await loadNewOrders()){ rebuildOrders(); renderAll(); } refreshAutoCaseId(); return; }
   RAW_ORDERS.push(order);
   rebuildOrders();
-  await saveOrderToStorage(order);
   document.getElementById('f_case_id').dataset.manual = '1';   // freeze this number so printing after saving shows the right one
   const k = monthKeyOf(order);
   if(SELECTED_MONTH !== 'all' && k !== SELECTED_MONTH){ SELECTED_MONTH = k; }
@@ -1090,6 +1110,7 @@ async function setStep(id, deptKey, action){
   else if(action === 'done') await setDeptRecord(id, deptKey, {status:'เสร็จแล้ว', end: today});
   else if(action === 'undo') await setDeptRecord(id, deptKey, {status:'รอดำเนินการ', end:''});
 }
+function safeUrl(u){ return /^https?:\/\//i.test(String(u || '')) ? String(u) : ''; }
 function caseLink(r){
   return `<a href="#" class="caselink" data-open-case="${esc(r._id)}" title="เปิดรายละเอียดเคส">${esc(r.case_id ?? '-')}</a>`;
 }
@@ -1179,7 +1200,7 @@ function renderCase(){
         <div class="field"><label>เลขพัสดุ / Tracking (${esc(o.delivery_method || 'ยังไม่ระบุวิธีส่ง')})</label><input id="cm-track" value="${esc(o.tracking_no || '')}" placeholder="เช่น EB123456789TH"></div>
       </div>
       <div class="actions" style="margin-top:8px"><button class="btn ghost sm" id="cm-save-links">💾 บันทึกลิงก์/เลขพัสดุ</button>
-        ${o.file_link ? `<a class="btn ghost sm" style="text-decoration:none;display:inline-block" href="${esc(o.file_link)}" target="_blank" rel="noopener">🔗 เปิดไฟล์</a>` : ''}</div>
+        ${safeUrl(o.file_link) ? `<a class="btn ghost sm" style="text-decoration:none;display:inline-block" href="${esc(safeUrl(o.file_link))}" target="_blank" rel="noopener noreferrer">🔗 เปิดไฟล์</a>` : ''}</div>
     </div>
     <div class="cm-sec"><h3>โน้ตในเคส (${notes.length})</h3>
       ${notes.map(n=>`<div class="cm-note"><small>${esc(n.by || '-')} • ${esc(fmtStamp(n.t))}${admin ? ` • <a href="#" data-del-note="${esc(n.key)}">ลบ</a>` : ''}</small>${esc(n.text)}</div>`).join('') || '<div class="note">ยังไม่มีโน้ต</div>'}
@@ -2048,6 +2069,23 @@ document.getElementById('dv-xlsx').addEventListener('click', ()=>{
   downloadXlsx(safeFileName('ใบนำส่ง ' + x.date) + '.xlsx', x.secs.map(sc=>({name: sc.heading.split(' — ')[0], rows: sc.rows})));
 });
 
+// ---------- Export everything (manual backup, admin) ----------
+function exportAllXlsx(){
+  const all = NEW_ORDERS.concat(DELETED_ORDERS).map(withEffectiveStatus);
+  const delSet = new Set(DELETED_ORDERS.map(o=>o._id));
+  const oRows = [['เลขเคส','วันรับงาน','คลินิก','หมอ','คนไข้','ระบบรากฟัน','ตำแหน่งฟัน','สี','วัสดุ','ซี่','ระบบสแกน','วิธีส่ง','เลขพัสดุ','วันนัด','ประเภทเคส','สถานะคูปอง','งานแก้','สถานะรวม','ลบแล้ว','คีย์โดย','ลิงก์ไฟล์','รายละเอียด']]
+    .concat(all.map(o=>[o.case_id, fmtCE(o.date_received), o.clinic, o.doctor, o.patient, o.implant_system, o.position, o.color, o.material, parseFloat(o.qty) || 0,
+      o.scan_system, o.delivery_method, o.tracking_no, o.appointment_date ? fmtCE(o.appointment_date) : '', o.case_type === 'คูปอง' ? 'คูปอง' : 'ปกติ', o.coupon_status,
+      o.is_rework === true ? 'ใช่' : '', o.status, delSet.has(o._id) ? 'ใช่' : '', o.created_by, o.file_link, o.detail].map(v=>typeof v === 'number' ? v : String(v ?? '').replace(/[\r\n]+/g, ' '))));
+  const dRows = [['เลขเคส','แผนก','สถานะ','วันเริ่ม','วันเสร็จ','ผู้ทำ']];
+  all.forEach(o=>DEPARTMENTS.forEach(d=>{ const r = depRecord(o, d.key); if(r.status !== 'ไม่เกี่ยวข้อง') dRows.push([String(o.case_id ?? ''), d.label, r.status, r.start || '', r.end || '', r.by || '']); }));
+  const nRows = [['เลขเคส','เวลา','ผู้เขียน','โน้ต']];
+  all.forEach(o=>notesOf(o._id).forEach(n=>nRows.push([String(o.case_id ?? ''), fmtStamp(n.t), n.by || '', n.text])));
+  const stamp = new Date().toISOString().slice(0,10);
+  downloadXlsx('สำรองข้อมูลทั้งหมด ' + stamp + '.xlsx', [{name:'ออเดอร์', rows:oRows}, {name:'สถานะแผนก', rows:dRows}, {name:'โน้ต', rows:nRows}]);
+}
+document.getElementById('export-all').addEventListener('click', exportAllXlsx);
+
 // ---------- Department Status tab ----------
 let CURRENT_DEPT = DEPARTMENTS[0].key;
 function buildDeptChips(){
@@ -2367,11 +2405,27 @@ function renderAll(){
 }
 
 // ---------- Login screen ----------
-async function populateLoginDropdown(){
+let NAMES_LIST = [];
+function populateLoginDropdown(){
   const sel = document.getElementById('login-name');
-  sel.innerHTML = EMPLOYEE_LIST.length
-    ? EMPLOYEE_LIST.map(e=>`<option value="${esc(e.name)}">${esc(e.name)}${e.department?` (${esc(e.department)})`:''}</option>`).join('')
+  sel.innerHTML = NAMES_LIST.length
+    ? NAMES_LIST.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('')
     : '<option value="">-- ไม่มีรายชื่อพนักงาน ให้เพิ่มใน Google Sheet ชีท Employees ก่อน --</option>';
+}
+function showLogin(msg){
+  document.querySelector('.app').style.display = 'none';
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-pin').value = '';
+  document.getElementById('month-pick').style.display = 'none';
+  document.getElementById('user-chip').style.display = 'none';
+  document.getElementById('login-error').textContent = msg || '';
+  populateLoginDropdown();
+}
+function doLogout(msg){
+  clearEmployeeSession();
+  if(typeof closeCase === 'function') closeCase();
+  showLogin(msg);
 }
 document.getElementById('login-btn').addEventListener('click', async ()=>{
   const name = document.getElementById('login-name').value;
@@ -2382,8 +2436,11 @@ document.getElementById('login-btn').addEventListener('click', async ()=>{
   try{
     const r = await apiPost({action:'login', name, pin});
     if(r && r.ok){
-      saveEmployeeSession(r.employee);
-      showApp();
+      saveEmployeeSession(Object.assign({}, r.employee, {token: r.token}));
+      if(await loadNewOrders()){ showApp(); startPolling(); }
+      else { errEl.textContent = 'เข้าสู่ระบบได้ แต่ดึงข้อมูลไม่สำเร็จ ลองใหม่อีกครั้ง'; clearEmployeeSession(); }
+    } else if(r && r.error === 'locked'){
+      errEl.textContent = 'ใส่ PIN ผิดหลายครั้ง ถูกล็อกชั่วคราว 15 นาที';
     } else {
       errEl.textContent = 'ชื่อหรือ PIN ไม่ถูกต้อง';
     }
@@ -2391,13 +2448,7 @@ document.getElementById('login-btn').addEventListener('click', async ()=>{
     errEl.textContent = 'เชื่อมต่อฐานข้อมูลไม่ได้ ลองใหม่อีกครั้ง';
   }
 });
-document.getElementById('logout-btn').addEventListener('click', ()=>{
-  clearEmployeeSession();
-  document.getElementById('login-screen').style.display = 'flex';
-  document.querySelector('.app').style.display = 'none';
-  document.getElementById('login-pin').value = '';
-  document.getElementById('month-pick').style.display = 'none';
-});
+document.getElementById('logout-btn').addEventListener('click', ()=>doLogout(''));
 
 // Roles: admin = all tabs | everyone else = only "search" (ตรวจสอบงาน) + "dept" (สถานะแผนก)
 // A person counts as admin if role = admin, or (role blank and department = Admin)
@@ -2552,24 +2603,23 @@ async function init(){
   }
 
   document.querySelector('.app').style.display = 'none';
-  const ok = await loadNewOrders();
-  if(!ok){
-    document.getElementById('login-error').textContent = '';
-    document.getElementById('login-screen').style.display = 'flex';
-    await populateLoginDropdown();
-    document.getElementById('login-error').textContent = 'เชื่อมต่อฐานข้อมูลไม่ได้ ตรวจสอบ API_URL และการ Deploy ของ Apps Script';
+  try{
+    const r = await apiGet({action:'names'});
+    NAMES_LIST = (r && r.names) || [];
+  }catch(e){
+    showLogin('เชื่อมต่อฐานข้อมูลไม่ได้ ตรวจสอบอินเทอร์เน็ต หรือ API_URL / การ Deploy ของ Apps Script');
     return;
   }
-  await populateLoginDropdown();
 
   loadEmployeeSession();
   if(CURRENT_EMPLOYEE){
-    showApp();
-  } else {
-    document.getElementById('login-screen').style.display = 'flex';
+    if(await loadNewOrders()){ showApp(); startPolling(); return; }
+    if(CURRENT_EMPLOYEE){ showLogin('เชื่อมต่อไม่ได้ ลองใหม่อีกครั้ง'); return; }   // network problem: keep the session
+    return;                                                                       // 'auth' already sent the user to the login screen
   }
-  startPolling();
+  showLogin('');
 }
+
 init();
 
 </script>
