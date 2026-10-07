@@ -739,7 +739,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-06 รุ่น 37 (ลบถาวรในถังขยะ ใช้เลขเคสเดิมใหม่ได้)";
+const APP_VERSION = "2026-10-06 รุ่น 38 (ไฟล์ถึง 300 MB + เพิ่มลิงก์ไฟล์ใหญ่)";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -1537,9 +1537,9 @@ function renderCase(){
         <div class="field"><label>โน้ตของไฟล์ (ถ้ามี)</label><input id="cm-file-note" maxlength="300" placeholder="เช่น สแกนฟันบนซ้าย"></div>
       </div>
       ${extraUp ? '<div class="note" style="margin:10px 0 4px">อัปโหลดเข้าขั้นตอนอื่นได้ (คุณมีสิทธิ์อัปโหลดไฟล์ทุกขั้นตอน):</div><div class="actions">' + extraUp + '</div>' : ''}
-      <div class="actions" style="margin-top:8px"><label class="btn ghost" for="cm-file-cam" style="cursor:pointer">📷 ถ่ายรูป</label><input id="cm-file-cam" type="file" accept="image/*" capture="environment" style="display:none"><label class="btn primary" for="cm-file-pick" style="cursor:pointer">📎 เลือกไฟล์ (หลายไฟล์ได้)</label><input id="cm-file-pick" type="file" multiple style="display:none"></div>
+      <div class="actions" style="margin-top:8px"><label class="btn ghost" for="cm-file-cam" style="cursor:pointer">📷 ถ่ายรูป</label><input id="cm-file-cam" type="file" accept="image/*" capture="environment" style="display:none"><label class="btn primary" for="cm-file-pick" style="cursor:pointer">📎 เลือกไฟล์ (หลายไฟล์ได้)</label><input id="cm-file-pick" type="file" multiple style="display:none"><button type="button" class="btn ghost" id="cm-file-link" title="สำหรับไฟล์ใหญ่มาก: อัปโหลดเองไป Google Drive / WeTransfer / OneDrive แล้วแปะลิงก์ที่นี่">🔗 เพิ่มลิงก์ไฟล์</button></div>
       <div id="cm-upload-progress" style="margin-top:8px"></div>
-      <div class="note">ไฟล์ละไม่เกิน 100 MB (ไฟล์ใหญ่ระบบแบ่งส่งให้เอง อาจใช้เวลาสักพัก อย่าปิดหน้านี้ระหว่างอัปโหลด) • รูปจะถูกย่อให้อัตโนมัติ • ${SERVER_VER >= DIRECT_MIN && !DIRECT_BROKEN ? 'ไฟล์เก็บเป็นไฟล์เดียวใน Google Drive ของร้าน <b>ใครมีลิงก์ก็เปิดได้</b> (อย่าส่งลิงก์ให้คนนอกร้าน)' : 'ไฟล์เก็บใน Google Drive ของร้าน เปิดดูได้เฉพาะคนที่ล็อกอินในระบบนี้'}</div>
+      <div class="note">ไฟล์ละไม่เกิน ${maxFileMb()} MB (ไฟล์ใหญ่ระบบแบ่งส่งให้เอง ใช้เวลานาน อย่าปิดหน้านี้ระหว่างอัปโหลด) • ใหญ่กว่านี้ใช้ปุ่ม "🔗 เพิ่มลิงก์ไฟล์" • รูปจะถูกย่อให้อัตโนมัติ • ${SERVER_VER >= DIRECT_MIN && !DIRECT_BROKEN ? 'ไฟล์เก็บเป็นไฟล์เดียวใน Google Drive ของร้าน <b>ใครมีลิงก์ก็เปิดได้</b> (อย่าส่งลิงก์ให้คนนอกร้าน)' : 'ไฟล์เก็บใน Google Drive ของร้าน เปิดดูได้เฉพาะคนที่ล็อกอินในระบบนี้'}</div>
     </div>
     <div class="cm-sec"><h3>โน้ตในเคส (${notes.length})</h3>
       ${notes.map(n=>`<div class="cm-note"><small>${esc(n.by || '-')} • ${esc(fmtStamp(n.t))}${admin ? ` • <a href="#" data-del-note="${esc(n.key)}">ลบ</a>` : ''}</small>${esc(n.text)}</div>`).join('') || '<div class="note">ยังไม่มีโน้ต</div>'}
@@ -1598,7 +1598,10 @@ function openCaseFromHash(){
 window.addEventListener('hashchange', ()=>{ if(document.querySelector('.app').style.display !== 'none') openCaseFromHash(); });
 
 // ---------- Case files: upload / list / open / delete (stored in Google Drive through Apps Script) ----------
-const MAX_FILE_BYTES = 100 * 1024 * 1024;
+// one file: 300 MB when the server can write a single Drive file (v11), 240 MB with the old split-parts way
+function maxFileBytes(){ return (SERVER_VER >= DIRECT_MIN && !DIRECT_BROKEN ? 300 : 240) * 1024 * 1024; }
+function maxFileMb(){ return Math.round(maxFileBytes() / 1048576); }
+function bigNote(f){ return f.name + ' ใหญ่เกิน ' + maxFileMb() + ' MB — ใช้ปุ่ม "🔗 เพิ่มลิงก์ไฟล์" ในหน้าเคส (อัปโหลดเองไป Google Drive / WeTransfer แล้วแปะลิงก์)'; }
 const FILE_ICON = {scan3d:'🧊', photo:'🖼️', doc:'📄', other:'📦'};
 function fileKindOf(name, mime){
   const n = String(name || '').toLowerCase(), m = String(mime || '');
@@ -1692,7 +1695,8 @@ async function uploadCaseFiles(orderId, files, dept, note, boxId){
   let okN = 0;
   try{
     for(const f0 of files){
-      if(f0.size > MAX_FILE_BYTES){ showToast(f0.name + ' ใหญ่เกิน 100 MB (ย่อ/บีบเป็น ZIP หรือใส่ลิงก์ไฟล์แทน)'); continue; }
+      if(f0.size > maxFileBytes()){ showToast(bigNote(f0)); continue; }
+      if(f0.size > 60 * 1048576){ const mb = Math.round(f0.size / 1048576); if(!window.confirm('ไฟล์ใหญ่ ' + mb + ' MB ใช้เวลาประมาณ ' + Math.ceil(mb / 30) + '-' + Math.ceil(mb / 15) + ' นาที (ขึ้นกับอินเทอร์เน็ต)\nห้ามปิดหน้านี้หรือเปลี่ยนแท็บเบราว์เซอร์ระหว่างอัปโหลด\n\nอัปโหลดต่อไหม?')) continue; }
       if(!f0.size){ showToast(f0.name + ' เป็นไฟล์ว่าง'); continue; }
       const id = 'up' + Math.random().toString(36).slice(2, 8);
       const row = document.createElement('div');
@@ -1735,7 +1739,7 @@ async function downloadAllFiles(list, btn){
   try{
     for(let i = 0; i < list.length; i++){
       if(btn) btn.textContent = '⏳ ' + (i + 1) + '/' + list.length;
-      if(list[i].drive_id){ const a = document.createElement('a'); a.href = driveDownloadUrl(list[i]); a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove(); }
+      if(list[i].link){ const a = document.createElement('a'); a.href = driveDownloadUrl(list[i]); a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove(); }
       else saveBlob(await fetchFileBlob(list[i]), list[i].name);
       await sleepMs(500);
     }
@@ -1765,11 +1769,14 @@ function renderFilesList(){
   list.filter(f=>!keys.includes(f.dept || 'general')).forEach(f=>{ const g = groups.find(x=>x.k === 'general'); if(g) g.files.push(f); else groups.push({k:'general', files:[f]}); });
   const row = f=>{
     const isImg = f.kind === 'photo' || /^image\//.test(f.mime), canEdit = admin || f.uploaded_by === me;
-    const btns = f.link
+    const ext = f.link && !f.drive_id;
+    const btns = ext
+      ? `<a class="btn primary sm" href="${esc(f.link)}" target="_blank" rel="noopener" style="text-decoration:none">🔗 เปิดลิงก์</a><button class="btn ghost sm" data-file-copy="${esc(f.id)}">📋 คัดลอกลิงก์</button>`
+      : f.link
       ? `${isImg ? `<button class="btn ghost sm" data-file-open="${esc(f.id)}">👁 ดูรูป</button>` : ''}<a class="btn primary sm" href="${esc(driveDownloadUrl(f))}" target="_blank" rel="noopener" style="text-decoration:none">⬇ ดาวน์โหลด</a><a class="btn ghost sm" href="${esc(f.link)}" target="_blank" rel="noopener" style="text-decoration:none">🔗 เปิดใน Drive</a><button class="btn ghost sm" data-file-copy="${esc(f.id)}">📋 คัดลอกลิงก์</button>`
       : `<button class="btn ghost sm" data-file-open="${esc(f.id)}">${isImg ? '👁 ดูรูป' : '⬇ ดาวน์โหลด'}</button>${(SERVER_VER >= DIRECT_MIN && canEdit) ? `<button class="btn ghost sm" data-file-convert="${esc(f.id)}" title="รวมเป็นไฟล์เดียวใน Google Drive แล้วได้ลิงก์ให้กด">🔗 แปลงเป็นไฟล์เดียว</button>` : ''}`;
     return `<div class="fl-row"><span class="ic">${FILE_ICON[f.kind] || '📦'}</span><div class="grow"><div class="nm">${esc(f.name)}</div>
-      <div class="meta">${esc(KIND_LABEL_TH[f.kind] || '')} • ${esc(fmtSize(f.size))} • ${esc(f.uploaded_by)} • ${esc(fmtStamp(f.uploaded_at))}${f.note ? ' • ' + esc(f.note) : ''}</div></div>
+      <div class="meta">${esc(KIND_LABEL_TH[f.kind] || '')} • ${ext ? 'ลิงก์ภายนอก' : esc(fmtSize(f.size))} • ${esc(f.uploaded_by)} • ${esc(fmtStamp(f.uploaded_at))}${f.note ? ' • ' + esc(f.note) : ''}</div></div>
       ${btns}${canEdit ? `<button class="btn danger sm" data-file-del="${esc(f.id)}">🗑</button>` : ''}</div>`;
   };
   el.innerHTML = (list.length > 1 ? `<div class="actions" style="margin:0 0 8px"><button class="btn ghost sm" data-dl-all="*">⬇ ดาวน์โหลดทั้งหมด (${list.length} ไฟล์)</button></div>` : '') +
@@ -1831,6 +1838,20 @@ async function openCaseFile(f, btn){
 }
 document.getElementById('lb-close').addEventListener('click', ()=>{ document.getElementById('img-lightbox').style.display = 'none'; document.getElementById('lb-img').removeAttribute('src'); });
 document.getElementById('img-lightbox').addEventListener('click', e=>{ if(e.target.id === 'img-lightbox') document.getElementById('lb-close').click(); });
+async function addFileLinkFlow(orderId){
+  const order = orderById(orderId);
+  if(!order) return;
+  const url = String(window.prompt('วางลิงก์ไฟล์ที่อัปโหลดไว้เอง (Google Drive / OneDrive / WeTransfer / Dropbox ...)\n\nใช้กับไฟล์ที่ใหญ่เกิน ' + maxFileMb() + ' MB หรือไฟล์ที่อัปโหลดไว้ที่อื่นอยู่แล้ว') || '').trim();
+  if(!url) return;
+  if(!/^https?:\/\//i.test(url)){ showToast('ลิงก์ต้องขึ้นต้นด้วย http:// หรือ https://'); return; }
+  let guess = 'ไฟล์จากลิงก์';
+  try{ guess = decodeURIComponent(url.split('?')[0].split('/').filter(Boolean).pop() || guess).slice(0, 80); }catch(e){}
+  const name = String(window.prompt('ชื่อที่จะแสดงในรายการไฟล์', guess) || '').trim() || guess;
+  const r = await apiPost({action:'addFileLink', order_id:orderId, case_id:String(order.case_id || orderId), name, url, dept:document.getElementById('cm-file-dept').value, kind:fileKindOf(name, ''), note:document.getElementById('cm-file-note').value.trim()});
+  if(!(r && r.ok)){ showToast(apiErrorText(r)); return; }
+  showToast('เพิ่มลิงก์ไฟล์แล้ว ✓');
+  await loadNewOrders(); await loadCaseFiles(orderId);
+}
 function bindFileSection(o){
   const orderId = o._id;
   document.querySelectorAll('input[data-su]').forEach(inp=>inp.addEventListener('change', async e=>{
@@ -1845,6 +1866,7 @@ function bindFileSection(o){
     await uploadCaseFiles(orderId, files, document.getElementById('cm-file-dept').value, document.getElementById('cm-file-note').value.trim());
   };
   document.getElementById('cm-file-pick').addEventListener('change', go);
+  document.getElementById('cm-file-link').addEventListener('click', ()=>addFileLinkFlow(orderId));
   document.getElementById('cm-file-cam').addEventListener('change', go);
 }
 
@@ -1860,7 +1882,7 @@ function renderPendingFiles(){
 }
 function addPendingFiles(files){
   files.forEach(f=>{
-    if(f.size > MAX_FILE_BYTES){ showToast(f.name + ' ใหญ่เกิน 100 MB (บีบเป็น ZIP หรือใส่ลิงก์ไฟล์แทน)'); return; }
+    if(f.size > maxFileBytes()){ showToast(bigNote(f)); return; }
     if(!f.size){ showToast(f.name + ' เป็นไฟล์ว่าง'); return; }
     PENDING_FILES.push(f);
   });
