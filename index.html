@@ -230,6 +230,10 @@
   .dropzone{border:2px dashed #9BB5B2;border-radius:12px;padding:12px 14px;background:#F4F9F8;margin:6px 0 16px;transition:background .15s,border-color .15s;}
   .dropzone.over{background:#DDF1EC;border-color:var(--teal);}
   .bell{position:relative;background:#fff;border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:16px;cursor:pointer;margin-right:8px;}
+  .bell #remind-n{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;border-radius:9px;background:#8A8F8E;color:#fff;font-size:11px;font-weight:700;line-height:18px;text-align:center;padding:0 4px;display:none;}
+  .bell.has #remind-n{display:block;background:#E0A21B;} .bell.hot #remind-n{display:block;background:#D64535;}
+  #remind-panel{position:fixed;top:64px;right:16px;width:min(470px,calc(100vw - 24px));max-height:78vh;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.22);z-index:91;padding:12px 14px;}
+  #remind-panel details{border:1px solid var(--line);border-radius:10px;margin:8px 0;padding:6px 10px;} #remind-panel summary{cursor:pointer;font-weight:700;font-size:14px;} #remind-panel .al-row{display:flex;gap:8px;padding:6px 8px;border-radius:8px;cursor:pointer;font-size:13.5px;} #remind-panel .al-row:hover{background:#EEF3F2;} #remind-panel .al-row.dim{opacity:.6;}
   .bell #bell-n{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;border-radius:9px;background:#8A8F8E;color:#fff;font-size:11px;font-weight:700;line-height:18px;text-align:center;padding:0 4px;display:none;}
   .bell.has #bell-n{display:block;background:#E0A21B;} .bell.hot #bell-n{display:block;background:#D64535;} .bell.hot{animation:bellring 1.6s ease-in-out infinite;}
   @keyframes bellring{0%,88%,100%{transform:rotate(0)}91%{transform:rotate(14deg)}94%{transform:rotate(-12deg)}97%{transform:rotate(8deg)}}
@@ -298,12 +302,13 @@
     </div>
     <div class="month-pick" id="month-pick"><label for="month-select" style="margin:0">เดือน</label><select id="month-select"></select></div>
     <div class="user-chip" id="user-chip" style="display:none">
-      <button id="setup-btn" class="btn ghost sm" type="button" style="display:none;margin-right:6px" title="สร้างลิงก์ส่งให้พนักงาน: เครื่องที่เปิดลิงก์จะเปลี่ยนมาใช้ระบบหลังบ้านตัวเดียวกับเครื่องนี้">📲 ตั้งค่าเครื่องพนักงาน</button><button id="bell" class="bell" title="แจ้งเตือน: สิ่งที่ต้องทำ" type="button">🔔<span id="bell-n"></span></button><span class="sync-dot" id="sync-dot"></span><span id="sync-ms" style="font-size:11px;color:var(--muted);margin-left:4px"></span>
+      <button id="setup-btn" class="btn ghost sm" type="button" style="display:none;margin-right:6px" title="สร้างลิงก์ส่งให้พนักงาน: เครื่องที่เปิดลิงก์จะเปลี่ยนมาใช้ระบบหลังบ้านตัวเดียวกับเครื่องนี้">📲 ตั้งค่าเครื่องพนักงาน</button><button id="remind-btn" class="bell" type="button" style="display:none" title="อย่าลืม: งานที่ต้องสั่ง/กลึง">📌<span id="remind-n"></span></button><button id="bell" class="bell" title="แจ้งเตือน: สิ่งที่ต้องทำ" type="button">🔔<span id="bell-n"></span></button><span class="sync-dot" id="sync-dot"></span><span id="sync-ms" style="font-size:11px;color:var(--muted);margin-left:4px"></span>
       <span>สวัสดี, <b id="user-name-display"></b></span>
       <button id="logout-btn">ออกจากระบบ</button>
     </div>
     <div id="server-banner"></div>
   <div id="alert-panel" style="display:none"></div>
+  <div id="remind-panel" style="display:none"></div>
   <nav class="tabs">
       <button data-tab="order" class="active">สร้างออเดอร์</button>
       <button data-tab="pending">งานค้าง</button>
@@ -757,7 +762,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-06 รุ่น 43 (ลิงก์ตั้งค่าเครื่องพนักงาน)";
+const APP_VERSION = "2026-10-06 รุ่น 44 (ปุ่ม 📌 อย่าลืมสั่ง Abutment / กลึง Premill / กลึง Zirconia)";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -2130,7 +2135,7 @@ function toggleAlertPanel(open){
   const p = document.getElementById('alert-panel');
   const show = open === undefined ? p.style.display === 'none' : open;
   p.style.display = show ? 'block' : 'none';
-  if(show) renderAlertPanel();
+  if(show){ document.getElementById('remind-panel').style.display = 'none'; renderAlertPanel(); }
 }
 document.getElementById('bell').addEventListener('click', e=>{ e.stopPropagation(); toggleAlertPanel(); });
 document.addEventListener('click', e=>{
@@ -2173,6 +2178,63 @@ async function applySetupLink(u){
   if(!API_URL_OK.test(u)){ setTimeout(()=>window.alert('ลิงก์ตั้งค่าไม่ถูกต้อง แจ้งแอดมินให้ส่งใหม่'), 200); return; }
   setTimeout(()=>applySetupLink(u), 400);
 })();
+
+// ---------- 📌 "Don't forget": standing reminders worked out from the cases (order abutment / mill Premill / mill Zirconia) ----------
+const REMINDER_RULES = [
+  {key:'abut', icon:'🔩', text:'อย่าลืมสั่ง Abutment', step:'abutment', hint:'ยังไม่ได้สั่ง', visible:()=>canManageAbutment(), match:o=>true},
+  {key:'premill', icon:'⚙️', text:'อย่าลืมกลึง Premill', step:'milling', hint:'ยังไม่ได้กลึง', visible:()=>canDoStep('milling'), match:o=>/premill/i.test([o.material, o.detail, o.implant_system].join(' '))},
+  {key:'zir', icon:'⚙️', text:'อย่าลืมกลึง Zirconia', step:'milling', hint:'ยังไม่ได้กลึง', visible:()=>canDoStep('milling'), match:o=>/zir/i.test(String(o.material || ''))},
+];
+function canDoStep(key){ return isAdminUser(CURRENT_EMPLOYEE) || allowedDeptKeys().includes(key); }
+function reminderGroups(){
+  if(!CURRENT_EMPLOYEE) return [];
+  const live = NEW_ORDERS.map(withEffectiveStatus).filter(o=>o.status !== 'ส่งแล้ว' && o.status !== 'ยกเลิกเคส');
+  return REMINDER_RULES.filter(r=>r.visible()).map(r=>{
+    const items = live.filter(o=>{ const v = depValue(o, r.step); return v !== 'ไม่เกี่ยวข้อง' && !DONE_STATES.includes(v) && r.match(o); })
+      .map(o=>({o, ready: activeDeptsOf(o).some(d=>d.key === r.step), days: Number(daysAtDept(o, r.step)) || 0}))
+      .sort((a, b)=>(b.ready - a.ready) || (urgencyOf(b.o) - urgencyOf(a.o)) || (b.days - a.days));
+    return Object.assign({}, r, {items, ready: items.filter(i=>i.ready).length});
+  });
+}
+function renderReminders(){
+  const btn = document.getElementById('remind-btn');
+  if(!btn) return;
+  const groups = reminderGroups();
+  btn.style.display = groups.length ? '' : 'none';
+  const n = groups.reduce((a, g)=>a + g.ready, 0);
+  const hot = groups.some(g=>g.items.some(i=>i.ready && (urgencyOf(i.o) || i.days >= WARN_DAYS)));
+  document.getElementById('remind-n').textContent = n > 99 ? '99+' : String(n);
+  btn.classList.toggle('has', n > 0 && !hot); btn.classList.toggle('hot', hot);
+  btn.title = n ? 'อย่าลืม: มี ' + n + ' เคสที่ถึงคิวแล้ว' : 'ไม่มีเคสที่ต้องจำ';
+  if(document.getElementById('remind-panel').style.display !== 'none') renderRemindPanel(groups);
+}
+function renderRemindPanel(groups){
+  groups = groups || reminderGroups();
+  const p = document.getElementById('remind-panel');
+  const row = i=>{
+    const o = i.o, parts = [o.clinic && rpName(o, 'clinic'), o.position && 'ซี่ ' + o.position, o.material].filter(Boolean).join(' • ');
+    return `<div class="al-row ${i.ready ? '' : 'dim'}" data-open-case="${esc(o._id)}"><span>${i.ready ? '👉' : '⏳'}</span><span><b>${esc(o.case_id || '')}</b> ${esc(o.patient || '')} ${urgBadge(o)}<br><small style="color:var(--muted)">${esc(parts)}${i.ready ? (i.days ? ' • ค้าง ' + i.days + ' วัน' : '') : ' • ยังไม่ถึงคิว (' + esc(currentDeptLabel(o)) + ')'}</small></span></div>`;
+  };
+  p.innerHTML = `<div style="display:flex;align-items:center;gap:8px"><b style="font-size:15px">📌 อย่าลืม</b><button type="button" class="btn ghost sm" id="rm-close" style="margin-left:auto">✕</button></div>` +
+    (groups.length ? groups.map(g=>`<details ${g.ready ? 'open' : ''}><summary>${g.icon} ${esc(g.text)} — <span style="color:${g.ready ? '#C0453A' : 'var(--muted)'}">${g.ready} เคสถึงคิวแล้ว</span>${g.items.length - g.ready ? ' <small style="color:var(--muted);font-weight:400">(+' + (g.items.length - g.ready) + ' เคสยังไม่ถึงคิว)</small>' : ''}</summary>${g.items.length ? g.items.slice(0, 40).map(row).join('') : '<div class="note" style="margin:6px 0">ไม่มีเคสค้าง ✓</div>'}</details>`).join('') : '<div class="note" style="margin:12px 0">ไม่มีเรื่องที่ต้องจำสำหรับแผนกของคุณ</div>') +
+    '<div class="note" style="margin:8px 0 0">นับจากข้อมูลเคสให้อัตโนมัติ: Premill = วัสดุ/รายละเอียดมีคำว่า Premill • Zirconia = วัสดุมี Zir (Zirconia, Zir+Emax ...) • Abutment = เคสที่ติ๊กต้องสั่งและยังไม่ได้สั่ง</div>';
+  document.getElementById('rm-close').addEventListener('click', ()=>toggleRemindPanel(false));
+}
+function toggleRemindPanel(open){
+  const p = document.getElementById('remind-panel');
+  const show = open === undefined ? p.style.display === 'none' : open;
+  if(show){ document.getElementById('alert-panel').style.display = 'none'; }
+  p.style.display = show ? 'block' : 'none';
+  if(show) renderRemindPanel();
+}
+document.getElementById('remind-btn').addEventListener('click', e=>{ e.stopPropagation(); toggleRemindPanel(); });
+document.addEventListener('click', e=>{
+  const p = document.getElementById('remind-panel');
+  if(p.style.display === 'none') return;
+  if(e.target.closest && e.target.closest('#remind-panel') && !e.target.closest('[data-open-case]')) return;
+  if(e.target.closest && e.target.closest('#remind-btn')) return;
+  p.style.display = 'none';
+});
 
 // ---------- Copy: LINE-style case text + tables for Excel ----------
 function fmtCE(v){
@@ -4523,6 +4585,7 @@ function activeTabName(){ const b = document.querySelector('nav.tabs button.acti
 // only the tab you are looking at is drawn (the others are drawn when you open them): keeps refreshes fast with thousands of orders
 function renderAll(){
   renderServerBanner();
+  renderReminders();
   renderSetupBtn();
   renderAlerts();
   renderAbutTab();
