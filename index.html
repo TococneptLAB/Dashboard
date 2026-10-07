@@ -222,6 +222,11 @@
   .ab-card{background:#FBF7EE;border:1px solid #E9D9B0;border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:13.5px;}
   .ab-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:4px 14px;margin:6px 0;}
   @media(max-width:600px){.ab-grid{grid-template-columns:1fr;}}
+  #clinic-picker{border:1px solid var(--line);border-radius:10px;background:#fff;padding:8px;margin-top:6px;box-shadow:0 4px 14px rgba(0,0,0,.08);}
+  #clinic-picker .cp-list{max-height:260px;overflow:auto;margin-top:6px;}
+  #clinic-picker .cp-row{padding:7px 10px;border-radius:8px;cursor:pointer;font-size:14px;}
+  #clinic-picker .cp-row:hover{background:#EEF3F2;}
+  #clinic-picker .cp-row small{color:var(--muted);display:block;font-size:12px;}
 </style>
 </head>
 <body>
@@ -277,7 +282,7 @@
     </div>
     <div class="month-pick" id="month-pick"><label for="month-select" style="margin:0">เดือน</label><select id="month-select"></select></div>
     <div class="user-chip" id="user-chip" style="display:none">
-      <span class="sync-dot" id="sync-dot"></span>
+      <span class="sync-dot" id="sync-dot"></span><span id="sync-ms" style="font-size:11px;color:var(--muted);margin-left:4px"></span>
       <span>สวัสดี, <b id="user-name-display"></b></span>
       <button id="logout-btn">ออกจากระบบ</button>
     </div>
@@ -709,6 +714,7 @@
 <div id="img-lightbox"><img id="lb-img" alt=""><div><a class="btn primary" id="lb-save" style="text-decoration:none;display:inline-block">⬇ บันทึกรูป</a> <button class="btn ghost" id="lb-close" style="background:#fff">✕ ปิด</button></div></div>
 <datalist id="dl-doctors"></datalist>
 <datalist id="dl-clinics"></datalist>
+<datalist id="dl-clinic-form"></datalist>
 <datalist id="dl-systems"></datalist>
 <datalist id="dl-provinces"><option value="กระบี่"><option value="กรุงเทพมหานคร"><option value="กาญจนบุรี"><option value="กาฬสินธุ์"><option value="กำแพงเพชร"><option value="ขอนแก่น"><option value="จันทบุรี"><option value="ฉะเชิงเทรา"><option value="ชลบุรี"><option value="ชัยนาท"><option value="ชัยภูมิ"><option value="ชุมพร"><option value="เชียงราย"><option value="เชียงใหม่"><option value="ตรัง"><option value="ตราด"><option value="ตาก"><option value="นครนายก"><option value="นครปฐม"><option value="นครพนม"><option value="นครราชสีมา"><option value="นครศรีธรรมราช"><option value="นครสวรรค์"><option value="นนทบุรี"><option value="นราธิวาส"><option value="น่าน"><option value="บึงกาฬ"><option value="บุรีรัมย์"><option value="ปทุมธานี"><option value="ประจวบคีรีขันธ์"><option value="ปราจีนบุรี"><option value="ปัตตานี"><option value="พระนครศรีอยุธยา"><option value="พะเยา"><option value="พังงา"><option value="พัทลุง"><option value="พิจิตร"><option value="พิษณุโลก"><option value="เพชรบุรี"><option value="เพชรบูรณ์"><option value="แพร่"><option value="ภูเก็ต"><option value="มหาสารคาม"><option value="มุกดาหาร"><option value="แม่ฮ่องสอน"><option value="ยโสธร"><option value="ยะลา"><option value="ร้อยเอ็ด"><option value="ระนอง"><option value="ระยอง"><option value="ราชบุรี"><option value="ลพบุรี"><option value="ลำปาง"><option value="ลำพูน"><option value="เลย"><option value="ศรีสะเกษ"><option value="สกลนคร"><option value="สงขลา"><option value="สตูล"><option value="สมุทรปราการ"><option value="สมุทรสงคราม"><option value="สมุทรสาคร"><option value="สระแก้ว"><option value="สระบุรี"><option value="สิงห์บุรี"><option value="สุโขทัย"><option value="สุพรรณบุรี"><option value="สุราษฎร์ธานี"><option value="สุรินทร์"><option value="หนองคาย"><option value="หนองบัวลำภู"><option value="อ่างทอง"><option value="อำนาจเจริญ"><option value="อุดรธานี"><option value="อุตรดิตถ์"><option value="อุทัยธานี"><option value="อุบลราชธานี"></datalist>
 <div class="toast" id="toast"></div>
@@ -727,7 +733,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-06 รุ่น 32 (วางลิงก์ Apps Script ใหม่ในหน้าเว็บได้)";
+const APP_VERSION = "2026-10-06 รุ่น 35 (ช่องคลินิกพิมพ์ค้นหา/พิมพ์เองได้)";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -776,9 +782,11 @@ function apiErrorText(r){
   if(r && r.error === 'unknown_action') return 'Apps Script ที่ Deploy อยู่เก่ากว่าหน้าเว็บ (ไม่รู้จักคำสั่งนี้) — วางโค้ด GoogleAppsScript_Code_v' + NEEDED_SERVER + '.gs แล้ว Deploy เวอร์ชันใหม่';
   return API_ERRORS[r && r.error] || ('ผิดพลาด: ' + ((r && r.error) || 'ไม่ทราบสาเหตุ')); }
 
-function setSyncStatus(ok){
+function setSyncStatus(ok, ms){
   const dot = document.getElementById('sync-dot');
   if(dot) dot.classList.toggle('off', !ok);
+  const el = document.getElementById('sync-ms');
+  if(el && ms !== undefined){ el.textContent = (ms / 1000).toFixed(1) + ' วิ'; el.style.color = ms > 4000 ? '#C0453A' : ms > 2000 ? '#D98A2B' : ''; el.title = 'เวลาที่เซิร์ฟเวอร์ (Apps Script) ตอบกลับล่าสุด'; }
 }
 
 // ---------- Current logged-in employee ----------
@@ -832,11 +840,17 @@ function rebuildOrders(){
   gone.sort((a,b)=>ts(b) - ts(a));
   NEW_ORDERS = live; DELETED_ORDERS = gone;
 }
-async function loadNewOrders(){
+let LAST_SIG = '';
+function quickSig(r){ try{ return JSON.stringify([r.orders, r.overrides, r.contacts, r.invoices, r.abutments, r.file_counts, r.employees, r.server_version]); }catch(e){ return String(Math.random()); } }
+async function loadNewOrders(skipIfSame){
   if(!CURRENT_EMPLOYEE || !CURRENT_EMPLOYEE.token) return false;
   try{
+    const t0 = Date.now();
     const r = await apiPost({action:'bootstrap'});
+    const ms = Date.now() - t0;
+    if(r && r.ok && skipIfSame && quickSig(r) === LAST_SIG){ setSyncStatus(true, ms); return 'same'; }
     if(r && r.ok){
+      LAST_SIG = quickSig(r);
       RAW_ORDERS = r.orders || [];
       CONTACTS = r.contacts || [];
       INVOICES = r.invoices || [];
@@ -847,7 +861,7 @@ async function loadNewOrders(){
       EMPLOYEE_LIST = r.employees || [];
       applyOverridesFromServer(r.overrides || []);
       rebuildOrders();
-      setSyncStatus(true);
+      setSyncStatus(true, ms);
       return true;
     }
   }catch(e){ console.warn('bootstrap failed', e); setSyncStatus(false); }
@@ -894,12 +908,19 @@ let EMPLOYEE_LIST = [];
 let POLL_TIMER = null;
 function startPolling(){
   if(POLL_TIMER) return;
-  POLL_TIMER = setInterval(async ()=>{
-    if(!CURRENT_EMPLOYEE) return;
-    const ok = await loadNewOrders();
-    if(ok){ applyRole(); renderAll(); }
-  }, 20000);
+  const tick = async ()=>{
+    if(!CURRENT_EMPLOYEE || document.hidden || POLLING) return;
+    POLLING = true;
+    try{
+      const ok = await loadNewOrders(true);
+      if(ok === true){ applyRole(); renderAll(); }
+    } finally { POLLING = false; LAST_POLL = Date.now(); }
+  };
+  POLL_TIMER = setInterval(tick, 30000);
+  // coming back to the tab: refresh at once if the data is older than 20 s
+  document.addEventListener('visibilitychange', ()=>{ if(!document.hidden && CURRENT_EMPLOYEE && Date.now() - LAST_POLL > 20000) tick(); });
 }
+let POLLING = false, LAST_POLL = Date.now();
 
 function depRecord(row, deptKey){
   const ov = (DEP_OVERRIDES[row._id] && DEP_OVERRIDES[row._id][deptKey]) || {};
@@ -1048,18 +1069,7 @@ document.querySelectorAll('nav.tabs button').forEach(btn=>{
     document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('view-'+btn.dataset.tab).classList.add('active');
-    if(btn.dataset.tab==='dash') renderDash();
-    if(btn.dataset.tab==='search') renderSearch();
-    if(btn.dataset.tab==='rework') renderRework();
-    if(btn.dataset.tab==='dept') renderDept();
-    if(btn.dataset.tab==='pending') renderPending();
-    if(btn.dataset.tab==='report') renderReport();
-    if(btn.dataset.tab==='perm') renderPerm();
-    if(btn.dataset.tab==='billing') renderBilling(true);
-    if(btn.dataset.tab==='contacts') renderContacts();
-    if(btn.dataset.tab==='abutment') renderAbutTab();
-    if(btn.dataset.tab==='overview') renderOverview();
-    if(btn.dataset.tab==='delivery') renderDelivery();
+    if(btn.dataset.tab === 'billing') renderBilling(true); else if(TAB_RENDERERS[btn.dataset.tab]) TAB_RENDERERS[btn.dataset.tab]();
   });
 });
 
@@ -1069,7 +1079,7 @@ const FORM_FIELDS = [
   {key:'case_id', label:'เลขเคส (CASE)', type:'text'},
   {key:'case_type', label:'ประเภทเคส', type:'list', opts:REFS.case_types, default:'ปกติ'},
   {key:'coupon_status', label:'สถานะคูปอง (ถ้าเป็นคูปอง)', type:'list', opts:REFS.coupon_statuses},
-  {key:'clinic', label:'คลินิก', type:'list', opts:REFS.clinics},
+  {key:'clinic', label:'คลินิก (พิมพ์ค้นหา หรือพิมพ์ชื่อเองได้)', type:'combo'},
   {key:'doctor', label:'แพทย์', type:'text'},
   {key:'patient', label:'คนไข้', type:'text'},
   {key:'implant_system', label:'ระบบรากฟันเทียม (TYPE)', type:'list', opts:REFS.systems},
@@ -1137,6 +1147,8 @@ function buildOrderForm(){
         ? '<optgroup label="ยี่ห้อรากฟันเทียม">' + (f.opts||[]).map(o2).join('') + '</optgroup><optgroup label="ชนิดงาน / อื่นๆ">' + REFS.system_types.map(o2).join('') + '</optgroup>'
         : (f.opts||[]).map(o2).join('');
       inner += `<select id="f_${f.key}"><option value="">-- เลือก --</option>` + body + `</select>`;
+    } else if(f.type==='combo'){
+      inner += `<div style="display:flex;gap:8px"><input id="f_${f.key}" list="dl-clinic-form" autocomplete="off" placeholder="พิมพ์ชื่อคลินิก เช่น teeth / ลาดพร้าว" style="flex:1"><button type="button" class="btn ghost sm" id="clinic-search-btn" style="white-space:nowrap">🔍 ค้นหา</button></div><div id="clinic-picker" style="display:none"></div><div id="clinic-hint" class="note" style="margin:4px 0 0"></div>`;
     } else if(f.type==='select2'){
       inner += `<select id="f_${f.key}">` + (f.opts||[]).map(o=>`<option value="${esc(o)}">${esc(o)}</option>`).join('') + `</select>`;
     } else if(f.type==='textarea'){
@@ -1161,8 +1173,12 @@ function buildOrderForm(){
   document.getElementById('f_scan_system').addEventListener('change', autoScan);
   document.getElementById('f_file_link').addEventListener('input', autoScan);
   document.getElementById('f_position').addEventListener('input', ()=>parseToothFromText());
-  document.getElementById('f_clinic').parentElement.insertAdjacentHTML('beforeend', '<a href="#" id="clinic-quick-add" class="caselink" style="font-size:12px;display:inline-block;margin-top:4px">＋ เพิ่มคลินิกใหม่</a>');
+  document.getElementById('f_clinic').closest('.field').insertAdjacentHTML('beforeend', '<a href="#" id="clinic-quick-add" class="caselink" style="font-size:12px;display:inline-block;margin-top:4px">＋ เพิ่มคลินิกใหม่</a>');
+  document.getElementById('f_clinic').addEventListener('change', clinicCanonicalise);
+  document.getElementById('f_clinic').addEventListener('input', clinicHint);
+  document.getElementById('clinic-search-btn').addEventListener('click', toggleClinicPicker);
   document.getElementById('clinic-quick-add').addEventListener('click', e=>{ e.preventDefault(); quickAddClinic(); });
+  refreshClinicSelect();
   bindOrderFiles();
   TOOTH = {}; buildToothUi();
   document.getElementById('f_color').placeholder = 'เช่น คอฟัน 3M3 กลางถึงปลายฟัน 3M2';
@@ -1516,7 +1532,7 @@ function renderCase(){
       ${extraUp ? '<div class="note" style="margin:10px 0 4px">อัปโหลดเข้าขั้นตอนอื่นได้ (คุณมีสิทธิ์อัปโหลดไฟล์ทุกขั้นตอน):</div><div class="actions">' + extraUp + '</div>' : ''}
       <div class="actions" style="margin-top:8px"><label class="btn ghost" for="cm-file-cam" style="cursor:pointer">📷 ถ่ายรูป</label><input id="cm-file-cam" type="file" accept="image/*" capture="environment" style="display:none"><label class="btn primary" for="cm-file-pick" style="cursor:pointer">📎 เลือกไฟล์ (หลายไฟล์ได้)</label><input id="cm-file-pick" type="file" multiple style="display:none"></div>
       <div id="cm-upload-progress" style="margin-top:8px"></div>
-      <div class="note">ไฟล์ละไม่เกิน 100 MB (ไฟล์ใหญ่ระบบแบ่งส่งให้เอง อาจใช้เวลาสักพัก อย่าปิดหน้านี้ระหว่างอัปโหลด) • รูปจะถูกย่อให้อัตโนมัติ • ไฟล์เก็บใน Google Drive ของร้าน เปิดดูได้เฉพาะคนที่ล็อกอินในระบบนี้</div>
+      <div class="note">ไฟล์ละไม่เกิน 100 MB (ไฟล์ใหญ่ระบบแบ่งส่งให้เอง อาจใช้เวลาสักพัก อย่าปิดหน้านี้ระหว่างอัปโหลด) • รูปจะถูกย่อให้อัตโนมัติ • ${SERVER_VER >= DIRECT_MIN && !DIRECT_BROKEN ? 'ไฟล์เก็บเป็นไฟล์เดียวใน Google Drive ของร้าน <b>ใครมีลิงก์ก็เปิดได้</b> (อย่าส่งลิงก์ให้คนนอกร้าน)' : 'ไฟล์เก็บใน Google Drive ของร้าน เปิดดูได้เฉพาะคนที่ล็อกอินในระบบนี้'}</div>
     </div>
     <div class="cm-sec"><h3>โน้ตในเคส (${notes.length})</h3>
       ${notes.map(n=>`<div class="cm-note"><small>${esc(n.by || '-')} • ${esc(fmtStamp(n.t))}${admin ? ` • <a href="#" data-del-note="${esc(n.key)}">ลบ</a>` : ''}</small>${esc(n.text)}</div>`).join('') || '<div class="note">ยังไม่มีโน้ต</div>'}
@@ -1615,7 +1631,34 @@ async function callWithRetry(body){
   }
   return r;
 }
+const DIRECT_MIN = 11;
+let DIRECT_BROKEN = false;
+async function uploadDirect(order, file, dept, note, onProgress){
+  const uid = randomId(), n = Math.max(1, Math.ceil(file.size / FILE_CHUNK));
+  const base = {mode:'direct', upload_id:uid, order_id:order._id, case_id:String(order.case_id || order._id), total_size:file.size, name:file.name, mime:file.type || 'application/octet-stream', dept, kind:fileKindOf(file.name, file.type), note};
+  let last = null;
+  for(let i = 0; i < n; i++){
+    const off = i * FILE_CHUNK, data = await readB64(file.slice(off, off + FILE_CHUNK));
+    const r = await callWithRetry(Object.assign({action:'uploadChunk', offset:off, data}, base));
+    if(!(r && r.ok)){ const e = new Error(r && r.error === 'network' ? 'อินเทอร์เน็ตหลุด' : apiErrorText(r)); e.code = r && r.error; e.first = (i === 0); throw e; }
+    onProgress((i + 1) / n, i + 1, n); last = r;
+  }
+  if(!(last && last.done)) throw new Error('อัปโหลดไม่ครบ ลองใหม่อีกครั้ง');
+  return last;
+}
 async function uploadOne(order, file, dept, note, onProgress){
+  if(SERVER_VER >= DIRECT_MIN && !DIRECT_BROKEN){
+    try{ return await uploadDirect(order, file, dept, note, onProgress); }
+    catch(err){
+      if(err.first && ['no_drive_api', 'bad_request', 'unknown_action'].includes(err.code)){
+        DIRECT_BROKEN = true;
+        showToast('อัปโหลดแบบไฟล์เดียวยังใช้ไม่ได้ (Apps Script ยังไม่ได้อนุญาตสิทธิ์เพิ่ม — เรียกใช้ authorizeNow) ใช้วิธีแบ่งส่วนแทนไปก่อน');
+      } else throw err;
+    }
+  }
+  return uploadMultipart(order, file, dept, note, onProgress);
+}
+async function uploadMultipart(order, file, dept, note, onProgress){
   const uid = randomId(), n = Math.max(1, Math.ceil(file.size / FILE_CHUNK)), ids = [];
   const base = {upload_id: uid, order_id: order._id, case_id: String(order.case_id || order._id)};
   try{
@@ -1663,7 +1706,7 @@ async function uploadCaseFiles(orderId, files, dept, note, boxId){
       }
     }
   } finally { UPLOADING = false; }
-  if(okN){ showToast('อัปโหลดแล้ว ' + okN + ' ไฟล์ ✓'); await loadNewOrders(); }
+  if(okN){ showToast('อัปโหลดแล้ว ' + okN + ' ไฟล์ ✓' + (SERVER_VER >= DIRECT_MIN && DIRECT_BROKEN ? ' (ใช้วิธีแบ่งส่วนไปก่อน: ยังไม่ได้เรียกใช้ authorizeNow ใน Apps Script จึงยังไม่ได้ลิงก์ไฟล์เดียว)' : '')); await loadNewOrders(); }
   await loadCaseFiles(orderId);
 }
 async function loadCaseFiles(orderId){
@@ -1673,6 +1716,7 @@ async function loadCaseFiles(orderId){
   }catch(e){ /* keep cache */ }
   if(CASE_OPEN_ID === orderId) renderFilesList();
 }
+function driveDownloadUrl(f){ return f.drive_id ? 'https://drive.google.com/uc?export=download&id=' + encodeURIComponent(f.drive_id) : (f.link || '#'); }
 function stepStatusOf(order, key){
   if(!order || !DEPARTMENTS.some(d=>d.key === key)) return '';
   const st = depRecord(order, key).status;
@@ -1684,8 +1728,9 @@ async function downloadAllFiles(list, btn){
   try{
     for(let i = 0; i < list.length; i++){
       if(btn) btn.textContent = '⏳ ' + (i + 1) + '/' + list.length;
-      saveBlob(await fetchFileBlob(list[i]), list[i].name);
-      await sleepMs(350);
+      if(list[i].drive_id){ const a = document.createElement('a'); a.href = driveDownloadUrl(list[i]); a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove(); }
+      else saveBlob(await fetchFileBlob(list[i]), list[i].name);
+      await sleepMs(500);
     }
     showToast('ดาวน์โหลด ' + list.length + ' ไฟล์แล้ว (ถ้าเบราว์เซอร์ถามให้อนุญาตหลายไฟล์ กดอนุญาต)');
   }catch(err){ showToast('ดาวน์โหลดไม่สำเร็จ: ' + (err && err.message ? err.message : err)); }
@@ -1712,16 +1757,29 @@ function renderFilesList(){
   const groups = keys.map(k=>({k, files: list.filter(f=>(f.dept || 'general') === k)})).filter(g=>g.files.length);
   list.filter(f=>!keys.includes(f.dept || 'general')).forEach(f=>{ const g = groups.find(x=>x.k === 'general'); if(g) g.files.push(f); else groups.push({k:'general', files:[f]}); });
   const row = f=>{
-    const isImg = f.kind === 'photo' || /^image\//.test(f.mime);
+    const isImg = f.kind === 'photo' || /^image\//.test(f.mime), canEdit = admin || f.uploaded_by === me;
+    const btns = f.link
+      ? `${isImg ? `<button class="btn ghost sm" data-file-open="${esc(f.id)}">👁 ดูรูป</button>` : ''}<a class="btn primary sm" href="${esc(driveDownloadUrl(f))}" target="_blank" rel="noopener" style="text-decoration:none">⬇ ดาวน์โหลด</a><a class="btn ghost sm" href="${esc(f.link)}" target="_blank" rel="noopener" style="text-decoration:none">🔗 เปิดใน Drive</a><button class="btn ghost sm" data-file-copy="${esc(f.id)}">📋 คัดลอกลิงก์</button>`
+      : `<button class="btn ghost sm" data-file-open="${esc(f.id)}">${isImg ? '👁 ดูรูป' : '⬇ ดาวน์โหลด'}</button>${(SERVER_VER >= DIRECT_MIN && canEdit) ? `<button class="btn ghost sm" data-file-convert="${esc(f.id)}" title="รวมเป็นไฟล์เดียวใน Google Drive แล้วได้ลิงก์ให้กด">🔗 แปลงเป็นไฟล์เดียว</button>` : ''}`;
     return `<div class="fl-row"><span class="ic">${FILE_ICON[f.kind] || '📦'}</span><div class="grow"><div class="nm">${esc(f.name)}</div>
       <div class="meta">${esc(KIND_LABEL_TH[f.kind] || '')} • ${esc(fmtSize(f.size))} • ${esc(f.uploaded_by)} • ${esc(fmtStamp(f.uploaded_at))}${f.note ? ' • ' + esc(f.note) : ''}</div></div>
-      <button class="btn ghost sm" data-file-open="${esc(f.id)}">${isImg ? '👁 ดูรูป' : '⬇ ดาวน์โหลด'}</button>
-      ${(admin || f.uploaded_by === me) ? `<button class="btn danger sm" data-file-del="${esc(f.id)}">🗑</button>` : ''}</div>`;
+      ${btns}${canEdit ? `<button class="btn danger sm" data-file-del="${esc(f.id)}">🗑</button>` : ''}</div>`;
   };
   el.innerHTML = (list.length > 1 ? `<div class="actions" style="margin:0 0 8px"><button class="btn ghost sm" data-dl-all="*">⬇ ดาวน์โหลดทั้งหมด (${list.length} ไฟล์)</button></div>` : '') +
     groups.map(g=>`<div class="fl-grp"><div class="fl-head"><b>${esc(labelOf(g.k))}</b> <span class="meta">${esc(stepStatusOf(order, g.k))} • ${g.files.length} ไฟล์</span>${g.files.length > 1 ? `<button class="btn ghost sm" data-dl-all="${esc(g.k)}" style="margin-left:auto">⬇ ทั้งหมดของขั้นนี้</button>` : ''}</div>${g.files.map(row).join('')}</div>`).join('');
   el.querySelectorAll('[data-dl-all]').forEach(b=>b.addEventListener('click', ()=>downloadAllFiles(b.dataset.dlAll === '*' ? list : (groups.find(g=>g.k === b.dataset.dlAll) || {files:[]}).files, b)));
   el.querySelectorAll('[data-file-open]').forEach(b=>b.addEventListener('click', ()=>openCaseFile(list.find(x=>x.id === b.dataset.fileOpen), b)));
+  el.querySelectorAll('[data-file-copy]').forEach(b=>b.addEventListener('click', ()=>copyText((list.find(x=>x.id === b.dataset.fileCopy) || {}).link || '', 'คัดลอกลิงก์แล้ว ✓ วางใน LINE ได้เลย')));
+  el.querySelectorAll('[data-file-convert]').forEach(b=>b.addEventListener('click', async ()=>{
+    if(!window.confirm('แปลงไฟล์นี้เป็นไฟล์เดียวใน Google Drive? (ไฟล์ใหญ่ใช้เวลาประมาณครึ่งนาที ห้ามปิดหน้านี้)')) return;
+    const old = b.textContent; b.disabled = true; b.textContent = '⏳ กำลังแปลง...';
+    try{
+      const r = await apiPost({action:'convertFile', id:b.dataset.fileConvert});
+      if(r && r.ok){ showToast('แปลงเป็นไฟล์เดียวแล้ว ✓ มีลิงก์ให้กดแล้ว'); await loadCaseFiles(CASE_OPEN_ID); return; }
+      showToast(r && r.error === 'no_drive_api' ? 'ยังแปลงไม่ได้: Apps Script ยังไม่ได้อนุญาตสิทธิ์เพิ่ม (เรียกใช้ authorizeNow ก่อน)' : apiErrorText(r));
+    }catch(e){ showToast('แปลงไม่สำเร็จ ลองใหม่อีกครั้ง'); }
+    b.disabled = false; b.textContent = old;
+  }));
   el.querySelectorAll('[data-file-del]').forEach(b=>b.addEventListener('click', async ()=>{
     const f = list.find(x=>x.id === b.dataset.fileDel);
     if(!window.confirm('ลบไฟล์ "' + f.name + '" ?\n(ไฟล์จะถูกย้ายไปถังขยะของ Google Drive)')) return;
@@ -3057,22 +3115,66 @@ function refreshSystemList(){
   const dl = document.getElementById('dl-systems');
   if(dl && !dl.childElementCount) dl.innerHTML = (REFS.systems || []).map(x=>`<option value="${esc(x)}"></option>`).join('');
 }
+function clinicChoices(){
+  const seen = new Set(), out = [];
+  CONTACTS.filter(c=>c.type !== 'ซัพพลายเออร์' && c.type !== 'อื่นๆ').forEach(c=>{
+    const v = (c.alias || c.name || '').trim(), k = normName(v);
+    if(!v || seen.has(k)) return;
+    seen.add(k);
+    out.push({v, legal: c.alias ? c.name : '', former: String(c.former_names || ''), tax: String(c.tax_id || ''), src: 'contact', key: normKey([v, c.name, c.former_names, c.tax_id].join(' '))});
+  });
+  if(!readPrices().clinics_imported) (REFS.clinics || []).forEach(n=>{ const k = normName(n); if(seen.has(k)) return; seen.add(k); out.push({v:n, legal:'', former:'', tax:'', src:'excel', key:normKey(n)}); });
+  return out;
+}
 function refreshClinicSelect(){
   refreshSystemList();
-  const sel = document.getElementById('f_clinic');
-  if(!sel) return;
-  const keep = sel.value, used = new Set(), seen = new Set();
-  const opt = (v, label) => `<option value="${esc(v)}">${esc(label)}</option>`;
-  const fromContacts = CONTACTS.filter(c=>c.type !== 'ซัพพลายเออร์' && c.type !== 'อื่นๆ').map(c=>({v: c.alias || c.name, label: c.alias ? c.alias + ' (' + c.name + ')' : c.name}))
-    .filter(x=>{ const k = normName(x.v); if(seen.has(k)) return false; seen.add(k); used.add(k); return true; });
-  const old = readPrices().clinics_imported ? [] : (REFS.clinics || []).filter(c=>!used.has(normName(c)));
-  sel.innerHTML = '<option value="">-- เลือก --</option>' +
-    (fromContacts.length ? '<optgroup label="ผู้ติดต่อ (PEAK / เพิ่มเอง)">' + fromContacts.map(x=>opt(x.v, x.label)).join('') + '</optgroup>' : '') +
-    (old.length ? '<optgroup label="รายชื่อเดิมจาก Excel (ยังไม่ได้นำเข้าเป็นผู้ติดต่อ)">' + old.map(c=>opt(c, c)).join('') + '</optgroup>' : '');
-  if(keep){
-    if(![...sel.options].some(o=>o.value === keep)) sel.add(new Option(keep, keep));
-    sel.value = keep;
-  }
+  const dl = document.getElementById('dl-clinic-form');
+  if(!dl) return;
+  const sig = readPrices().clinics_imported + '|' + CONTACTS.map(c=>c.code + '~' + c.alias + '~' + c.name + '~' + c.type + '~' + c.former_names).join(';');
+  if(dl.dataset.sig === sig && dl.childElementCount) return;     // same list as last time: nothing to redraw
+  dl.dataset.sig = sig;
+  dl.innerHTML = clinicChoices().map(c=>`<option value="${esc(c.v)}" label="${esc(c.legal || (c.src === 'excel' ? 'รายชื่อเดิมจาก Excel' : ''))}"></option>`).join('');
+}
+function clinicHint(){
+  const inp = document.getElementById('f_clinic'), box = document.getElementById('clinic-hint');
+  if(!inp || !box) return;
+  const v = inp.value.trim();
+  if(!v){ box.innerHTML = ''; return; }
+  const hit = clinicChoices().find(c=>normKey(c.v) === normKey(canonName('clinics', v)));
+  box.innerHTML = hit ? '' : 'ชื่อนี้ยังไม่มีในรายชื่อ (ใช้บันทึกออเดอร์ได้เลย) • <a href="#" id="clinic-add-typed" class="caselink">＋ เพิ่ม "' + esc(v) + '" เป็นคลินิกใหม่ในรายชื่อ</a>';
+  const lnk = document.getElementById('clinic-add-typed');
+  if(lnk) lnk.addEventListener('click', e=>{ e.preventDefault(); quickAddClinic(v); });
+}
+function clinicCanonicalise(){
+  const inp = document.getElementById('f_clinic');
+  if(!inp) return;
+  const v = inp.value.trim();
+  if(v){ const c = canonName('clinics', v); if(c && c !== v && clinicChoices().some(x=>x.v === c)) inp.value = c; }
+  clinicHint();
+}
+function renderClinicPicker(){
+  const box = document.getElementById('clinic-picker'), q = (document.getElementById('cp-q') || {}).value || '';
+  if(!box) return;
+  const k = normKey(q), all = clinicChoices(), hits = (k ? all.filter(c=>c.key.includes(k)) : all);
+  const list = box.querySelector('.cp-list');
+  list.innerHTML = (hits.slice(0, 40).map(c=>`<div class="cp-row" data-pick="${esc(c.v)}"><b>${esc(c.v)}</b>${c.legal ? `<small>${esc(c.legal)}${c.tax ? ' • ภาษี ' + esc(c.tax) : ''}</small>` : ''}</div>`).join('') || '<div class="note">ไม่พบในรายชื่อ</div>')
+    + (q.trim() && !all.some(c=>normKey(c.v) === k) ? `<div class="cp-row" data-new="${esc(q.trim())}" style="color:var(--teal)"><b>＋ ใช้ชื่อ "${esc(q.trim())}" / เพิ่มเป็นคลินิกใหม่</b></div>` : '');
+  box.querySelector('.cp-count').textContent = 'พบ ' + hits.length + ' จาก ' + all.length + ' รายการ' + (hits.length > 40 ? ' (แสดง 40 แรก พิมพ์เพิ่มเพื่อกรอง)' : '');
+  list.querySelectorAll('[data-pick]').forEach(r=>r.addEventListener('click', ()=>{
+    const inp = document.getElementById('f_clinic'); inp.value = r.dataset.pick; box.style.display = 'none';
+    inp.dispatchEvent(new Event('change', {bubbles:true})); clinicHint();
+  }));
+  list.querySelectorAll('[data-new]').forEach(r=>r.addEventListener('click', ()=>{ box.style.display = 'none'; quickAddClinic(r.dataset.new); }));
+}
+function toggleClinicPicker(){
+  const box = document.getElementById('clinic-picker');
+  if(!box) return;
+  if(box.style.display !== 'none'){ box.style.display = 'none'; return; }
+  box.innerHTML = '<input id="cp-q" placeholder="🔍 พิมพ์ชื่อคลินิก / ชื่อบริษัท / เลขภาษี" autocomplete="off" style="width:100%"><div class="note cp-count" style="margin:4px 0 0"></div><div class="cp-list"></div>';
+  box.style.display = '';
+  const q = document.getElementById('cp-q');
+  q.value = document.getElementById('f_clinic').value; q.addEventListener('input', renderClinicPicker); q.focus();
+  renderClinicPicker();
 }
 
 // ---------- Contact form helpers (PEAK-style) ----------
@@ -3425,18 +3527,17 @@ async function importOldClinics(){
 }
 document.getElementById('ct-import-old').addEventListener('click', importOldClinics);
 // add a clinic that is missing, straight from the order form
-async function quickAddClinic(){
-  const sel = document.getElementById('f_clinic');
-  const name = String(window.prompt('ชื่อคลินิกใหม่ (ชื่อที่ใช้เรียกในออเดอร์)') || '').replace(/\s+/g, ' ').trim();
+async function quickAddClinic(prefill){
+  const inp = document.getElementById('f_clinic');
+  const name = String(prefill !== undefined ? prefill : (window.prompt('ชื่อคลินิกใหม่ (ชื่อที่ใช้เรียกในออเดอร์)') || '')).replace(/\s+/g, ' ').trim();
   if(!name) return;
-  const canon = canonName('clinics', name), hit = [...sel.options].find(o=>o.value && normKey(o.value) === normKey(canon));
-  if(hit){ sel.value = hit.value; showToast('มีคลินิก "' + hit.value + '" อยู่แล้ว เลือกให้แล้ว'); return; }
+  const canon = canonName('clinics', name), hit = clinicChoices().find(c=>normKey(c.v) === normKey(canon));
+  if(hit){ inp.value = hit.v; clinicHint(); showToast('มีคลินิก "' + hit.v + '" อยู่แล้ว เลือกให้แล้ว'); return; }
   const r = await apiPost({action:'saveContact', isNew:true, contact:{code: nextContactCode('M'), name, alias:name, type:'ลูกค้า', source:'manual', note:'เพิ่มจากหน้าสร้างออเดอร์'}});
   if(!(r && r.ok)){ showToast(apiErrorText(r)); return; }
   await reloadAfterContactChange('เพิ่มคลินิก "' + name + '" แล้ว ✓ (เติมที่อยู่/เลขภาษีได้ในแท็บ "ผู้ติดต่อ")');
   const again = document.getElementById('f_clinic');
-  if(![...again.options].some(o=>o.value === name)) again.add(new Option(name, name));
-  again.value = name;
+  again.value = name; clinicHint();
 }
 document.getElementById('ct-q').addEventListener('input', renderContacts);
 document.getElementById('ct-type').addEventListener('change', renderContacts);
@@ -4065,26 +4166,23 @@ function renderServerBanner(){
   const rs = document.getElementById('api-reset');
   if(rs) rs.addEventListener('click', e=>{ e.preventDefault(); try{ localStorage.removeItem('totu_api_url'); }catch(x){} location.reload(); });
 }
+const TAB_RENDERERS = {
+  order: ()=>{ refreshClinicSelect(); renderRecentOrders(); }, pending: ()=>renderPending(), delivery: ()=>renderDelivery(), dept: ()=>renderDept(), dash: ()=>renderDash(),
+  overview: ()=>renderOverview(), report: ()=>renderReport(), billing: ()=>renderBilling(false), contacts: ()=>renderContacts(), perm: ()=>renderPerm(),
+  search: ()=>renderSearch(), rework: ()=>renderRework(), abutment: ()=>renderAbutTab()
+};
+function activeTabName(){ const b = document.querySelector('nav.tabs button.active'); return b ? b.dataset.tab : 'order'; }
+// only the tab you are looking at is drawn (the others are drawn when you open them): keeps refreshes fast with thousands of orders
 function renderAll(){
   renderServerBanner();
   renderAbutTab();
-  renderOverview();
-  refreshClinicSelect();
-  renderContacts();
-  renderBilling(false);
-  renderDelivery();
   if(CASE_OPEN_ID && !UPLOADING && !document.getElementById('case-modal').contains(document.activeElement)) renderCase();
   refreshAutoCaseId();
-  renderPerm();
   buildDoctorList();
-  renderReport();
   buildMonthSelect();
-  renderPending();
-  renderRecentOrders();
-  renderDash();
-  renderSearch();
-  renderRework();
-  renderDept();
+  refreshClinicSelect();
+  const f = TAB_RENDERERS[activeTabName()];
+  if(f) f();
 }
 
 // ---------- Login screen ----------
