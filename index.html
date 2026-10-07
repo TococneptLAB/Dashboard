@@ -229,6 +229,18 @@
   #clinic-picker .cp-row small{color:var(--muted);display:block;font-size:12px;}
   .dropzone{border:2px dashed #9BB5B2;border-radius:12px;padding:12px 14px;background:#F4F9F8;margin:6px 0 16px;transition:background .15s,border-color .15s;}
   .dropzone.over{background:#DDF1EC;border-color:var(--teal);}
+  .bell{position:relative;background:#fff;border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:16px;cursor:pointer;margin-right:8px;}
+  .bell #bell-n{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;border-radius:9px;background:#8A8F8E;color:#fff;font-size:11px;font-weight:700;line-height:18px;text-align:center;padding:0 4px;display:none;}
+  .bell.has #bell-n{display:block;background:#E0A21B;} .bell.hot #bell-n{display:block;background:#D64535;} .bell.hot{animation:bellring 1.6s ease-in-out infinite;}
+  @keyframes bellring{0%,88%,100%{transform:rotate(0)}91%{transform:rotate(14deg)}94%{transform:rotate(-12deg)}97%{transform:rotate(8deg)}}
+  #alert-panel{position:fixed;top:64px;right:16px;width:min(440px,calc(100vw - 24px));max-height:78vh;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.22);z-index:90;padding:12px 14px;}
+  #alert-panel h3{margin:10px 0 6px;font-size:13.5px;} #alert-panel .al-row{display:flex;gap:8px;padding:7px 8px;border-radius:8px;cursor:pointer;font-size:13.5px;line-height:1.4;} #alert-panel .al-row:hover{background:#EEF3F2;}
+  #alert-panel .al-row.l3{background:#FDECEA;} #alert-panel .al-row.l2{background:#FFF6E0;} #alert-panel .al-row.l1{color:var(--muted);}
+  .alert-chips{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px;} .alert-chips .chip{border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:13px;font-weight:700;background:#fff;cursor:pointer;}
+  .alert-chips .chip.red{background:#FDECEA;border-color:#E5A39B;color:#A12B1F;} .alert-chips .chip.amber{background:#FFF6E0;border-color:#E9D9B0;color:#8A5A00;}
+  .urg{display:inline-block;margin-left:5px;padding:1px 7px;border-radius:999px;font-size:11px;font-weight:800;white-space:nowrap;vertical-align:middle;} .urg1{background:#FFE3D6;color:#B3420F;border:1px solid #F0B49B;} .urg2{background:#D64535;color:#fff;}
+  tr:has(.urg2){background:#FDE8E6;} tr:has(.urg1){background:#FFF1EA;}
+  .urg-box{border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin:8px 0;display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:14px;} .urg-box.on{background:#FDECEA;border-color:#E5A39B;color:#8A2B1F;} .urg-box .urg-ctl{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;}
 </style>
 </head>
 <body>
@@ -284,11 +296,12 @@
     </div>
     <div class="month-pick" id="month-pick"><label for="month-select" style="margin:0">เดือน</label><select id="month-select"></select></div>
     <div class="user-chip" id="user-chip" style="display:none">
-      <span class="sync-dot" id="sync-dot"></span><span id="sync-ms" style="font-size:11px;color:var(--muted);margin-left:4px"></span>
+      <button id="bell" class="bell" title="แจ้งเตือน: สิ่งที่ต้องทำ" type="button">🔔<span id="bell-n"></span></button><span class="sync-dot" id="sync-dot"></span><span id="sync-ms" style="font-size:11px;color:var(--muted);margin-left:4px"></span>
       <span>สวัสดี, <b id="user-name-display"></b></span>
       <button id="logout-btn">ออกจากระบบ</button>
     </div>
     <div id="server-banner"></div>
+  <div id="alert-panel" style="display:none"></div>
   <nav class="tabs">
       <button data-tab="order" class="active">สร้างออเดอร์</button>
       <button data-tab="pending">งานค้าง</button>
@@ -360,6 +373,7 @@
         </select>
         <label style="display:flex;gap:6px;align-items:center;margin:0;font-size:13px;color:var(--ink);font-weight:600;cursor:pointer"><input type="checkbox" id="pd-carry" style="width:auto;margin:0"> รวมงานค้างที่ยกมาจากเดือนก่อนด้วย</label>
       </div>
+      <div id="pd-alert-chips" class="alert-chips"></div>
       <div class="kpis" id="pd-kpis"></div>
       <div class="note progress-legend"></div>
     </div>
@@ -378,6 +392,7 @@
   <section id="view-dept" class="view">
     <div class="card">
       <h2>สถานะแผนก <span class="tag">DEPARTMENT STATUS</span></h2>
+      <div id="dp-alert-chips" class="alert-chips"></div>
       <div class="dep-cards" id="dept-chips"></div>
       <div class="filters">
         <input id="dep-f-text" placeholder="ค้นหา: เลขเคส / คนไข้ / คลินิก" style="min-width:240px">
@@ -739,7 +754,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-06 รุ่น 38 (ไฟล์ถึง 300 MB + เพิ่มลิงก์ไฟล์ใหญ่)";
+const APP_VERSION = "2026-10-06 รุ่น 39 (เคสด่วน + ศูนย์แจ้งเตือน 🔔)";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -1084,6 +1099,8 @@ const FORM_FIELDS = [
   {key:'date_received', label:'วันรับงาน', type:'date'},
   {key:'case_id', label:'เลขเคส (CASE)', type:'text'},
   {key:'case_type', label:'ประเภทเคส', type:'list', opts:REFS.case_types, default:'ปกติ'},
+  {key:'priority', label:'ความเร่งด่วน (เว้นว่าง = ปกติ)', type:'list', opts:['ด่วน', 'ด่วนมาก']},
+  {key:'urgent_note', label:'ข้อความถึงทีม (เช่น คนไข้รอ / หมอนัดพรุ่งนี้)', type:'text'},
   {key:'coupon_status', label:'สถานะคูปอง (ถ้าเป็นคูปอง)', type:'list', opts:REFS.coupon_statuses},
   {key:'clinic', label:'คลินิก (พิมพ์ค้นหา หรือพิมพ์ชื่อเองได้)', type:'combo'},
   {key:'doctor', label:'แพทย์', type:'text'},
@@ -1382,6 +1399,7 @@ function ticketHtml(o){
       <div class="po-title" style="text-align:left">ใบออเดอร์งาน (WORK ORDER)</div>
       <div class="po-sub" style="text-align:left">TOTU Concept Dental Lab &nbsp;•&nbsp; วันที่ออกใบ ${new Date().toLocaleDateString('th-TH')}</div></div>
       <div class="po-qr">${qrSvg(caseUrl(o.case_id), 96)}<div>สแกนเพื่ออัปเดตสถานะ</div><div><b>${esc(o.case_id || '')}</b></div></div></div>
+    ${urgencyOf(o) ? `<div style="border:3px solid #000;padding:6px 10px;margin:8px 0;font-size:18px;font-weight:800">${urgencyOf(o) === 2 ? '🚨 ด่วนมาก' : '🔥 ด่วน'}${o.urgent_note ? ' — ' + esc(o.urgent_note) : ''}</div>` : ''}
     <div class="po-grid">
       <div><b>วันรับงาน</b>${esc(o.date_received||'-')}</div>
       <div><b>เลขเคส</b>${esc(o.case_id||'-')}</div>
@@ -1427,9 +1445,11 @@ async function setStep(id, deptKey, action){
   else if(action === 'skip') await setDeptRecord(id, deptKey, {status:'ไม่เกี่ยวข้อง'});
 }
 function safeUrl(u){ return /^https?:\/\//i.test(String(u || '')) ? String(u) : ''; }
+function urgencyOf(o){ const p = String((o && o.priority) || ''); return p === 'ด่วนมาก' ? 2 : p === 'ด่วน' ? 1 : 0; }
+function urgBadge(o){ const u = urgencyOf(o); return u === 2 ? `<span class="urg urg2" title="${esc(o.urgent_note || '')}">🚨 ด่วนมาก</span>` : u === 1 ? `<span class="urg urg1" title="${esc(o.urgent_note || '')}">🔥 ด่วน</span>` : ''; }
 function caseLink(r){
   const n = FILE_COUNTS[r._id];
-  return `<a href="#" class="caselink" data-open-case="${esc(r._id)}" title="เปิดรายละเอียดเคส">${esc(r.case_id ?? '-')}</a>` + (n ? ` <span title="มีไฟล์แนบ ${n} ไฟล์" style="font-size:11px;color:var(--muted);white-space:nowrap">📎${n}</span>` : '');
+  return `<a href="#" class="caselink" data-open-case="${esc(r._id)}" title="เปิดรายละเอียดเคส">${esc(r.case_id ?? '-')}</a>` + urgBadge(r) + (n ? ` <span title="มีไฟล์แนบ ${n} ไฟล์" style="font-size:11px;color:var(--muted);white-space:nowrap">📎${n}</span>` : '');
 }
 function notesOf(id){
   const out = [];
@@ -1520,7 +1540,7 @@ function renderCase(){
       <button class="btn ghost sm" id="cm-print">🖨 พิมพ์ใบงาน (มี QR)</button>
       ${admin ? '<button class="btn ghost sm" id="cm-edit">✏️ แก้ไขเคส</button>' : ''}
     </div>
-    <div class="cm-sec"><h3>ขั้นตอนของคุณ</h3>${stepHtml}${skippedHtml}</div>
+    <div class="cm-sec">${urgentBoxHtml(o)}<h3>ขั้นตอนของคุณ</h3>${stepHtml}${skippedHtml}</div>
     ${abutSectionHtml(o)}
     <div class="cm-sec"><h3>ไฟล์ / การจัดส่ง</h3>
       <div class="grid form">
@@ -1559,6 +1579,7 @@ function renderCase(){
   }));
   bindFileSection(o);
   bindAbutSection(o);
+  bindUrgentBox(o);
   document.getElementById('cm-copy').addEventListener('click', ()=>copyText(caseText(o), 'คัดลอกรายละเอียดแล้ว ✓'));
   document.getElementById('cm-print').addEventListener('click', ()=>printTicket(o));
   const ed = document.getElementById('cm-edit');
@@ -1913,6 +1934,141 @@ document.addEventListener('paste', e=>{
   addPendingFiles(fl.map((f, i)=>(f.name && !/^image\.(png|jpe?g)$/i.test(f.name)) ? f : new File([f], 'รูปที่วาง-' + stamp + (i ? '-' + (i + 1) : '') + '.' + ((f.type.split('/')[1] || 'png').replace('jpeg', 'jpg')), {type:f.type})));
   showToast('วางรูป/ไฟล์แล้ว ✓ จะอัปโหลดตอนกดบันทึกออเดอร์');
 });
+// ---------- Urgent flag + alert centre (🔔): what needs doing, by whom ----------
+function urgentBoxHtml(o){
+  const u = urgencyOf(o), admin = isAdminUser(CURRENT_EMPLOYEE);
+  const label = u === 2 ? '🚨 ด่วนมาก' : u === 1 ? '🔥 ด่วน' : 'ความเร่งด่วน: ปกติ';
+  return `<div class="urg-box ${u ? 'on' : ''}" id="urg-box"><b>${label}</b>${u && o.urgent_note ? '<span>' + esc(o.urgent_note) + '</span>' : ''}${admin ? `<span class="urg-ctl"><button type="button" class="btn ghost sm" data-urg="ด่วน">🔥 ด่วน</button><button type="button" class="btn ghost sm" data-urg="ด่วนมาก">🚨 ด่วนมาก</button>${u ? '<button type="button" class="btn ghost sm" data-urg="">ยกเลิกด่วน</button>' : ''}</span>` : ''}</div>`;
+}
+function bindUrgentBox(o){
+  document.querySelectorAll('#urg-box [data-urg]').forEach(b=>b.addEventListener('click', async ()=>{
+    const v = b.dataset.urg;
+    let note = '';
+    if(v){ const a = window.prompt('ข้อความถึงทีม (เช่น คนไข้รอ / หมอนัดพรุ่งนี้) เว้นว่างได้', o.urgent_note || ''); if(a === null) return; note = String(a).trim(); }
+    await patchOrder(o._id, {priority: v, urgent_note: v ? note : ''});
+    showToast(v ? (v === 'ด่วนมาก' ? '🚨 ตั้งเป็นด่วนมากแล้ว ทีมจะเห็นแจ้งเตือน' : '🔥 ตั้งเป็นด่วนแล้ว ทีมจะเห็นแจ้งเตือน') : 'ยกเลิกสถานะด่วนแล้ว');
+    renderAll();
+  }));
+}
+function stampToDate(v){
+  if(!v) return null;
+  const s = String(v);
+  const d = /T\d{2}:\d{2}/.test(s) ? new Date(s) : parseYmd(s);
+  return d && !isNaN(d) ? d : null;
+}
+// when the case reached this step (end of the step before, with the time when known)
+function arrivalStamp(r, deptKey){
+  let best = null;
+  const target = DEPARTMENTS.find(x=>x.key === deptKey) || {};
+  for(const d of DEPARTMENTS){
+    if(d.key === deptKey) break;
+    if(d.parallel && !target.join) continue;
+    const rec = depRecord(r, d.key);
+    if(rec.status === 'เสร็จแล้ว' && rec.end){ const t = stampToDate(rec.end); if(t && (!best || t > best)) best = t; }
+  }
+  return best;
+}
+const ALERT_BASE_TITLE = document.title;
+let ALERT_ITEMS = [], LAST_ALERT_IDS = null;
+function alertSeenKey(){ return 'totu_seen_' + (CURRENT_EMPLOYEE ? CURRENT_EMPLOYEE.name : ''); }
+function alertSeenAt(){ try{ return +localStorage.getItem(alertSeenKey()) || 0; }catch(e){ return 0; } }
+function computeAlerts(){
+  if(!CURRENT_EMPLOYEE) return [];
+  const admin = isAdminUser(CURRENT_EMPLOYEE), mine = allowedDeptKeys(), seenAt = alertSeenAt(), out = [];
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  let toBill = 0, toShip = 0;
+  NEW_ORDERS.map(withEffectiveStatus).forEach(o=>{
+    const act = activeDeptsOf(o);
+    if(!act.length) return;
+    if(admin){ if(act.some(d=>d.key === 'billing')) toBill++; if(act.some(d=>d.key === 'delivery')) toShip++; }
+    const my = admin ? act : act.filter(d=>mine.includes(d.key));
+    if(!my.length) return;
+    const where = my.map(d=>d.label).join(' + '), tag = String(o.case_id || '') + (o.patient ? ' (' + o.patient + ')' : '');
+    const add = (kind, level, icon, text)=>out.push({id: kind + ':' + o._id, kind, level, icon, text, orderId: o._id});
+    const u = urgencyOf(o);
+    if(u) add('urgent', 3, u === 2 ? '🚨' : '🔥', (u === 2 ? 'ด่วนมาก ' : 'ด่วน ') + tag + ' — รอ ' + where + (o.urgent_note ? ' • ' + o.urgent_note : ''));
+    const ap = parseYmd(o.appointment_date);
+    if(ap){
+      const diff = Math.round((ap - today) / 86400000);
+      if(diff < 0) add('overdue', 3, '⏰', tag + ' เลยวันนัด ' + (-diff) + ' วัน — อยู่ที่ ' + where);
+      else if(diff <= 1) add('soon', 2, '📅', tag + ' นัดคนไข้' + (diff === 0 ? 'วันนี้' : 'พรุ่งนี้') + ' — อยู่ที่ ' + where);
+    }
+    const days = currentDays(o);
+    if(days !== '' && days >= WARN_DAYS) add('stuck', 2, '🐢', tag + ' ค้างที่ ' + where + ' ' + days + ' วัน');
+    if(!admin){ const t = arrivalStamp(o, my[0].key); if(t && t.getTime() > seenAt) add('new', 1, '🆕', tag + ' ถึงขั้น ' + where + ' แล้ว (ถึงคิวคุณ)'); }
+  });
+  if(canManageAbutment()){
+    ABUTMENTS.filter(a=>a.status === 'requested' || a.status === 'ordered').forEach(a=>{
+      const o = orderById(a.order_id); if(!o) return;
+      const od = abutOverdue(a), days = abutDays(a), tag = String(o.case_id || '');
+      if(od) out.push({id:'abutlate:' + a.order_id, kind:'abutlate', level:3, icon:'🔩', text:'Abutment เคส ' + tag + ' เลยวันที่คาดว่าจะมา ' + od + ' วัน', orderId:a.order_id});
+      else if(a.status === 'requested') out.push({id:'abutreq:' + a.order_id, kind:'abutreq', level:2, icon:'🔩', text:'รอสั่ง Abutment เคส ' + tag + (days ? ' (ขอมา ' + days + ' วัน)' : '') + (a.note ? ' • ' + a.note : ''), orderId:a.order_id});
+    });
+  }
+  if(admin){
+    if(toBill) out.push({id:'sum:bill', kind:'sum', level:1, icon:'🧾', text:'รอออกบิล ' + toBill + ' เคส'});
+    if(toShip) out.push({id:'sum:ship', kind:'sum', level:1, icon:'📦', text:'พร้อมส่ง/รอส่งมอบ ' + toShip + ' เคส'});
+  }
+  return out.sort((a, b)=>(b.level - a.level) || a.text.localeCompare(b.text, 'th'));
+}
+function notifyNewAlerts(items){
+  const ids = new Set(items.map(i=>i.id));
+  if(LAST_ALERT_IDS){
+    const fresh = items.filter(i=>i.level >= 3 && !LAST_ALERT_IDS.has(i.id));
+    if(fresh.length){
+      showToast('🔔 แจ้งเตือนด่วนใหม่ ' + fresh.length + ' รายการ: ' + fresh[0].text);
+      try{
+        if(typeof Notification !== 'undefined' && Notification.permission === 'granted' && document.hidden) new Notification('TOTU Concept — แจ้งเตือนด่วน ' + fresh.length + ' รายการ', {body: fresh.slice(0, 3).map(f=>f.text).join('\n'), tag: 'totu-alert'});
+        if(navigator.vibrate) navigator.vibrate(200);
+      }catch(e){ /* not supported here */ }
+    }
+  }
+  LAST_ALERT_IDS = ids;
+}
+function renderAlerts(){
+  const bell = document.getElementById('bell');
+  if(!bell) return;
+  if(!CURRENT_EMPLOYEE){ LAST_ALERT_IDS = null; return; }
+  ALERT_ITEMS = computeAlerts();
+  const n = ALERT_ITEMS.filter(i=>i.level >= 2).length, hot = ALERT_ITEMS.some(i=>i.level >= 3);
+  const bn = document.getElementById('bell-n'); bn.textContent = n > 99 ? '99+' : String(n);
+  bell.classList.toggle('has', n > 0 && !hot); bell.classList.toggle('hot', hot);
+  bell.title = n ? 'มี ' + n + ' เรื่องที่ต้องทำ' + (hot ? ' (มีเรื่องด่วน)' : '') : 'ไม่มีเรื่องค้าง';
+  document.title = (n ? '(' + n + ') ' : '') + ALERT_BASE_TITLE;
+  const c = k=>ALERT_ITEMS.filter(i=>i.kind === k).length;
+  const chips = [['urgent', 'red', '🔥 ด่วน'], ['overdue', 'red', '⏰ เลยวันนัด'], ['soon', 'amber', '📅 นัดวันนี้/พรุ่งนี้'], ['stuck', 'amber', '🐢 ค้างนาน']].filter(x=>c(x[0])).map(x=>`<button type="button" class="chip ${x[1]}" data-open-bell>${x[2]} ${c(x[0])}</button>`).join('');
+  ['pd-alert-chips', 'dp-alert-chips'].forEach(id=>{ const el = document.getElementById(id); if(el){ el.innerHTML = chips; el.querySelectorAll('[data-open-bell]').forEach(b=>b.addEventListener('click', ()=>toggleAlertPanel(true))); } });
+  notifyNewAlerts(ALERT_ITEMS);
+  if(document.getElementById('alert-panel').style.display !== 'none') renderAlertPanel();
+}
+function renderAlertPanel(){
+  const p = document.getElementById('alert-panel');
+  const sec = (title, lvl)=>{ const l = ALERT_ITEMS.filter(i=>i.level === lvl).slice(0, 60); return l.length ? `<h3>${title} (${ALERT_ITEMS.filter(i=>i.level === lvl).length})</h3>` + l.map(i=>`<div class="al-row l${i.level}" ${i.orderId ? `data-open-case="${esc(i.orderId)}"` : ''}><span>${i.icon}</span><span>${esc(i.text)}</span></div>`).join('') : ''; };
+  const perm = (typeof Notification !== 'undefined') ? Notification.permission : 'unsupported';
+  p.innerHTML = `<div style="display:flex;align-items:center;gap:8px"><b style="font-size:15px">🔔 สิ่งที่ต้องทำ</b><button type="button" class="btn ghost sm" id="al-close" style="margin-left:auto">✕</button></div>` +
+    (ALERT_ITEMS.length ? sec('ด่วน / เลยกำหนด — ทำก่อน', 3) + sec('ใกล้กำหนด / ค้างนาน', 2) + sec('ใหม่ / ข้อมูล', 1) : '<div class="note" style="margin:12px 0">ไม่มีเรื่องค้าง ✓ เยี่ยมมาก</div>') +
+    `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button type="button" class="btn ghost sm" id="al-read">✓ อ่านแล้ว (ล้างรายการ "ใหม่")</button>${perm === 'default' ? '<button type="button" class="btn primary sm" id="al-notify">🔔 เปิดแจ้งเตือนบนเครื่องนี้</button>' : ''}</div>` +
+    (perm === 'granted' ? '<div class="note" style="margin:6px 0 0">แจ้งเตือนบนเครื่องนี้เปิดอยู่ (เด้งเมื่อมีเรื่องด่วนใหม่ขณะเปิดเว็บค้างไว้)</div>' : perm === 'denied' ? '<div class="note" style="margin:6px 0 0">เบราว์เซอร์บล็อกการแจ้งเตือน เปิดได้ที่การตั้งค่าเว็บไซต์</div>' : '');
+  document.getElementById('al-close').addEventListener('click', ()=>toggleAlertPanel(false));
+  document.getElementById('al-read').addEventListener('click', ()=>{ try{ localStorage.setItem(alertSeenKey(), String(Date.now())); }catch(e){} renderAlerts(); showToast('ล้างรายการ "ใหม่" แล้ว'); });
+  const nb = document.getElementById('al-notify');
+  if(nb) nb.addEventListener('click', async ()=>{ try{ await Notification.requestPermission(); }catch(e){} renderAlertPanel(); });
+}
+function toggleAlertPanel(open){
+  const p = document.getElementById('alert-panel');
+  const show = open === undefined ? p.style.display === 'none' : open;
+  p.style.display = show ? 'block' : 'none';
+  if(show) renderAlertPanel();
+}
+document.getElementById('bell').addEventListener('click', e=>{ e.stopPropagation(); toggleAlertPanel(); });
+document.addEventListener('click', e=>{
+  const p = document.getElementById('alert-panel');
+  if(p.style.display === 'none') return;
+  if(e.target.closest && (e.target.closest('#alert-panel') && !e.target.closest('[data-open-case]'))) return;
+  if(e.target.closest && e.target.closest('#bell, [data-open-bell]')) return;
+  p.style.display = 'none';
+});
+
 // ---------- Copy: LINE-style case text + tables for Excel ----------
 function fmtCE(v){
   const d = parseYmd(v);
@@ -1934,6 +2090,7 @@ function caseText(o){
   const l4 = [body, t(o.material), qty && qty !== 'NaN' ? qty + ' ซี่' : ''].filter(Boolean).join(' ');
   const l5 = t(o.scan_system);
   let text = [l1, l2, l3, l4, l5].filter(Boolean).join('\n');
+  if(urgencyOf(o)) text = (urgencyOf(o) === 2 ? '🚨 ด่วนมาก' : '🔥 ด่วน') + (t(o.urgent_note) ? ' — ' + t(o.urgent_note) : '') + '\n' + text;
   const note = t(o.detail);
   if(note) text += '\n\n' + note;
   return text;
@@ -2455,6 +2612,8 @@ function renderPending(){
     : '<tr><td class="empty">ไม่มีงานค้าง 🎉</td></tr>';
 
   const sorted = list.slice().sort((a,b)=>{
+    const u = urgencyOf(b) - urgencyOf(a);
+    if(u) return u;
     const x = currentDays(a), y = currentDays(b);
     return (y === '' ? -1 : y) - (x === '' ? -1 : x);
   });
@@ -4237,6 +4396,7 @@ function activeTabName(){ const b = document.querySelector('nav.tabs button.acti
 // only the tab you are looking at is drawn (the others are drawn when you open them): keeps refreshes fast with thousands of orders
 function renderAll(){
   renderServerBanner();
+  renderAlerts();
   renderAbutTab();
   if(CASE_OPEN_ID && !UPLOADING && !document.getElementById('case-modal').contains(document.activeElement)) renderCase();
   refreshAutoCaseId();
