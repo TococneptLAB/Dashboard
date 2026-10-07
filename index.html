@@ -262,7 +262,7 @@
     </div>
     <div class="field">
       <label for="login-pin">PIN</label>
-      <input id="login-pin" type="password" inputmode="numeric" placeholder="••••">
+      <input id="login-pin" type="password" autocomplete="current-password" placeholder="รหัส PIN (ตัวเลขหรือตัวอักษร)">
     </div>
     <div class="actions"><button class="btn primary" id="login-btn" style="width:100%">เข้าสู่ระบบ</button></div>
     <div class="error" id="login-error"></div>
@@ -724,7 +724,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 // CONFIG: paste your Google Apps Script Web App URL here (ends with /exec)
 // See GoogleAppsScript_Code.gs for setup instructions.
 const API_URL = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW72PIa_dXj--LRPBXGJupKbuI-ctWxmYADGJ7-Pwl6SVo5tKpFX/exec";
-const APP_VERSION = "2026-10-06 รุ่น 30 (สิทธิ์อัปโหลดไฟล์ Files)";
+const APP_VERSION = "2026-10-06 รุ่น 31 (PIN พิมพ์ตัวอักษรได้บนมือถือ)";
 // ============================================================
 
 // ---------- Load embedded data ----------
