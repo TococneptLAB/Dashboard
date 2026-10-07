@@ -739,7 +739,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-06 รุ่น 36 (แนบไฟล์/รูปที่ด้านบนหน้าสร้างออเดอร์ + ลากวาง/Ctrl+V)";
+const APP_VERSION = "2026-10-06 รุ่น 37 (ลบถาวรในถังขยะ ใช้เลขเคสเดิมใหม่ได้)";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -783,7 +783,7 @@ async function apiPost(body){
   if(r && r.ok === false && r.error === 'auth' && body.action !== 'login') doLogout('เซสชันหมดอายุ หรือ PIN ถูกเปลี่ยน กรุณาล็อกอินใหม่');
   return r;
 }
-const API_ERRORS = {forbidden:'ไม่มีสิทธิ์ทำรายการนี้', duplicate_case_id:'เลขเคสนี้มีอยู่แล้ว', duplicate_id:'ออเดอร์นี้ถูกบันทึกไปแล้ว', bad_link:'ลิงก์ต้องขึ้นต้นด้วย http:// หรือ https://', busy:'ระบบกำลังยุ่ง ลองใหม่อีกครั้ง', bad_date:'วันที่/เวลาไม่ถูกต้อง',  bad_parts:'ส่งไฟล์ไม่ครบ ลองอัปโหลดใหม่', no_order:'ไม่พบออเดอร์นี้ในระบบ', too_many:'เคสนี้มีไฟล์แนบเต็มจำนวนแล้ว', not_found:'ไม่พบไฟล์นี้แล้ว', duplicate_code:'รหัสผู้ติดต่อนี้มีอยู่แล้ว', bad_contact:'กรอกรหัสและชื่อให้ครบ', bad_invoice:'ข้อมูลบิลไม่ถูกต้อง (ตรวจวันที่/ยอดเงิน)', too_many:'มีผู้ติดต่อเต็มจำนวนแล้ว', bad_status:'สถานะไม่ถูกต้อง', too_large:'ข้อมูลยาวเกินไป'};
+const API_ERRORS = {forbidden:'ไม่มีสิทธิ์ทำรายการนี้', duplicate_case_id:'เลขเคสนี้มีอยู่แล้ว', duplicate_id:'ออเดอร์นี้ถูกบันทึกไปแล้ว', bad_link:'ลิงก์ต้องขึ้นต้นด้วย http:// หรือ https://', busy:'ระบบกำลังยุ่ง ลองใหม่อีกครั้ง', bad_date:'วันที่/เวลาไม่ถูกต้อง', not_in_trash:'ต้องอยู่ในถังขยะก่อนจึงลบถาวรได้',  bad_parts:'ส่งไฟล์ไม่ครบ ลองอัปโหลดใหม่', no_order:'ไม่พบออเดอร์นี้ในระบบ', too_many:'เคสนี้มีไฟล์แนบเต็มจำนวนแล้ว', not_found:'ไม่พบไฟล์นี้แล้ว', duplicate_code:'รหัสผู้ติดต่อนี้มีอยู่แล้ว', bad_contact:'กรอกรหัสและชื่อให้ครบ', bad_invoice:'ข้อมูลบิลไม่ถูกต้อง (ตรวจวันที่/ยอดเงิน)', too_many:'มีผู้ติดต่อเต็มจำนวนแล้ว', bad_status:'สถานะไม่ถูกต้อง', too_large:'ข้อมูลยาวเกินไป'};
 function apiErrorText(r){
   if(r && r.error === 'unknown_action') return 'Apps Script ที่ Deploy อยู่เก่ากว่าหน้าเว็บ (ไม่รู้จักคำสั่งนี้) — วางโค้ด GoogleAppsScript_Code_v' + NEEDED_SERVER + '.gs แล้ว Deploy เวอร์ชันใหม่';
   return API_ERRORS[r && r.error] || ('ผิดพลาด: ' + ((r && r.error) || 'ไม่ทราบสาเหตุ')); }
@@ -1264,7 +1264,8 @@ async function doSaveOrder(){
   const order = readForm();
   if(!order.case_id){ showToast('กรุณากรอกเลขเคส (CASE)'); return; }
   if(NEW_ORDERS.concat(DELETED_ORDERS, HISTORICAL).some(o=>String(o.case_id||'').trim() === String(order.case_id).trim())){
-    showToast('เลขเคส ' + order.case_id + ' มีอยู่แล้ว กรุณาใช้เลขอื่น');
+    const inTrash = DELETED_ORDERS.some(o=>String(o.case_id||'').trim() === String(order.case_id).trim());
+    showToast(inTrash ? 'เลขเคส ' + order.case_id + ' ถูกใช้โดยเคสที่ลบไปแล้ว (อยู่ในถังขยะ) — กู้คืนเคสนั้น หรือไปที่ถังขยะแล้วกด "ลบถาวร" เพื่อใช้เลขนี้ใหม่' : 'เลขเคส ' + order.case_id + ' มีอยู่แล้ว กรุณาใช้เลขอื่น');
     return;
   }
   const saved = await saveOrderToStorage(order);
@@ -2303,7 +2304,7 @@ async function saveEdit(){
   if(patch.case_id !== undefined){
     if(!String(patch.case_id).trim()){ showToast('เลขเคสห้ามว่าง'); return; }
     const dup = NEW_ORDERS.concat(DELETED_ORDERS, HISTORICAL).some(o=>o._id !== EDIT_ID && String(o.case_id||'').trim() === String(patch.case_id).trim());
-    if(dup){ showToast('เลขเคส ' + patch.case_id + ' มีอยู่แล้ว'); return; }
+    if(dup){ showToast('เลขเคส ' + patch.case_id + ' มีอยู่แล้ว (อาจอยู่ในถังขยะ — ลบถาวรได้ที่ "แสดงที่ลบแล้ว")'); return; }
   }
   const merged = Object.assign({}, orderEditOf(EDIT_ID) || {}, patch);
   await setDeptRecord(EDIT_ID, '_edit', {status: JSON.stringify(merged)});
@@ -2321,6 +2322,18 @@ async function deleteOrder(id){
   showToast('ลบเคส ' + o.case_id + ' แล้ว (กู้คืนได้ที่ "แสดงที่ลบแล้ว")');
   if(EDIT_ID === id) buildOrderForm();
   renderAll();
+}
+async function purgeOrder(id){
+  const o = DELETED_ORDERS.find(x=>x._id === id);
+  if(!o) return;
+  const typed = window.prompt('ลบเคส ' + o.case_id + ' ถาวร?\n\n• กู้คืนไม่ได้อีก (ข้อมูลเคส สถานะ โน้ต ไฟล์แนบใน Drive จะถูกลบ)\n• หลังลบ ใช้เลขเคส ' + o.case_id + ' สร้างใหม่ได้\n\nพิมพ์เลขเคส ' + o.case_id + ' เพื่อยืนยัน');
+  if(typed === null) return;
+  if(String(typed).trim() !== String(o.case_id).trim()){ showToast('พิมพ์เลขเคสไม่ตรง ยกเลิกการลบ'); return; }
+  const r = await apiPost({action:'purgeOrder', id});
+  if(!(r && r.ok)){ showToast(apiErrorText(r)); return; }
+  await loadNewOrders();
+  renderAll();
+  showToast('ลบเคส ' + o.case_id + ' ถาวรแล้ว — ใช้เลขนี้สร้างใหม่ได้');
 }
 async function restoreOrder(id){
   const o = DELETED_ORDERS.find(x=>x._id === id);
@@ -2343,7 +2356,7 @@ function renderRecentOrders(){
       <td>${esc(o.material ?? '-')}</td><td>${esc(o.qty ?? '-')}</td>
       <td><span class="badge ${STATUS_BADGE[o.status]||''}">${esc(o.status || '-')}</span></td><td>${esc(fmtDate(o.date_received))}</td>
       <td style="white-space:nowrap">${copyBtn(o._id)} ${trash
-        ? `<button class="btn ghost sm" data-act="restore" data-id="${esc(o._id)}">↩ กู้คืน</button>`
+        ? `<button class="btn ghost sm" data-act="restore" data-id="${esc(o._id)}">↩ กู้คืน</button> <button class="btn danger sm" data-act="purge" data-id="${esc(o._id)}" title="ลบถาวร กู้คืนไม่ได้ ใช้เลขเคสนี้สร้างใหม่ได้">🗑 ลบถาวร</button>`
         : `<button class="btn ghost sm" data-act="edit" data-id="${esc(o._id)}">✏️ แก้ไข</button> <button class="btn danger sm" data-act="delete" data-id="${esc(o._id)}">🗑 ลบ</button> <button class="btn ghost sm" data-act="attach" data-id="${esc(o._id)}" title="แนบไฟล์ / รูป เพิ่มให้ออเดอร์นี้">📎 แนบไฟล์</button>`}</td>
     </tr>`).join('');
   bindCopyButtons(t);
@@ -2352,6 +2365,7 @@ function renderRecentOrders(){
     if(btn.dataset.act === 'edit') startEdit(id);
     else if(btn.dataset.act === 'delete') deleteOrder(id);
     else if(btn.dataset.act === 'restore') restoreOrder(id);
+    else if(btn.dataset.act === 'purge') purgeOrder(id);
     else if(btn.dataset.act === 'attach'){ openCase(id); setTimeout(()=>{ const f = document.getElementById('cm-files-list'); if(f && f.scrollIntoView) f.scrollIntoView({block:'center'}); }, 80); }
   }));
 }
