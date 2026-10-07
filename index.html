@@ -724,7 +724,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 // CONFIG: paste your Google Apps Script Web App URL here (ends with /exec)
 // See GoogleAppsScript_Code.gs for setup instructions.
 const API_URL = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW72PIa_dXj--LRPBXGJupKbuI-ctWxmYADGJ7-Pwl6SVo5tKpFX/exec";
-const APP_VERSION = "2026-10-06 รุ่น 28 (สั่ง Abutment)";
+const APP_VERSION = "2026-10-06 รุ่น 30 (สิทธิ์อัปโหลดไฟล์ Files)";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -800,7 +800,8 @@ function clearEmployeeSession(){
 // ---------- New orders (shared, via backend) ----------
 let CONTACTS = [], CONTACT_IDX = {};
 let INVOICES = [];
-const NEEDED_SERVER = 9;
+const NEEDED_SERVER = 10;
+const FILE_ANY_TOKENS = ['files', 'file', 'upload', 'ไฟล์', 'อัปโหลด', 'อัพโหลด'];
 let SERVER_VER = NEEDED_SERVER;
 let ABUTMENTS = [];
 let FILE_COUNTS = {}, CASE_FILES = {}, UPLOADING = false, FILE_CHUNK = 6 * 1024 * 1024;
@@ -1455,6 +1456,9 @@ function renderCase(){
   const f = (label, v) => `<div><b>${esc(label)}</b>${esc(v === undefined || v === null || v === '' ? '-' : v)}</div>`;
   const steps = DEPARTMENTS.filter(d=>mine.includes(d.key) && depRecord(o, d.key).status !== 'ไม่เกี่ยวข้อง');
   const skipped = DEPARTMENTS.filter(d=>mine.includes(d.key) && depRecord(o, d.key).status === 'ไม่เกี่ยวข้อง');
+  const upAny = canUploadAnyStep();
+  const upDepts = DEPARTMENTS.filter(d=>mine.includes(d.key) || (upAny && depRecord(o, d.key).status !== 'ไม่เกี่ยวข้อง'));
+  const extraUp = upAny ? upDepts.filter(d=>!mine.includes(d.key)).map(d=>`<label class="btn ghost sm" for="su-${esc(d.key)}" data-su-label="${esc(d.key)}" data-su-text="📎 ${esc(d.label)}" style="cursor:pointer">📎 ${esc(d.label)}</label><input type="file" multiple id="su-${esc(d.key)}" data-su="${esc(d.key)}" style="display:none">`).join(' ') : '';
   const SU_TEXT = {abutment:'📎 ใบสั่งซื้อ', receive:'📎 รูปของที่มาถึง'};
   const stepUp = d => `<label class="btn ghost sm" for="su-${esc(d.key)}" data-su-label="${esc(d.key)}" data-su-text="${esc(SU_TEXT[d.key] || '📎 ไฟล์')}" style="cursor:pointer" title="อัปโหลดไฟล์ของขั้นตอนนี้ (รูป / สแกน / เอกสาร) ทีมถัดไปดาวน์โหลดได้">${esc(SU_TEXT[d.key] || '📎 ไฟล์')}</label><input type="file" multiple id="su-${esc(d.key)}" data-su="${esc(d.key)}" style="display:none">`;
   const DONE_LABEL = {delivery:'✓ ส่งมอบแล้ว', receive:'✓ รับของแล้ว', abutment:'✓ สั่งแล้ว', billing:'✓ ออกบิลแล้ว', model_printing:'✓ พิมพ์เสร็จ'};
@@ -1503,9 +1507,10 @@ function renderCase(){
     <div class="cm-sec"><h3>ไฟล์แนบเคส <span class="note" style="margin:0 0 0 6px;font-weight:400">รูป / ไฟล์สแกน / เอกสาร</span></h3>
       <div id="cm-files-list"><div class="note">กำลังโหลดรายการไฟล์...</div></div>
       <div class="grid form" style="margin-top:8px">
-        <div class="field"><label>เป็นไฟล์ของขั้นตอน</label><select id="cm-file-dept"><option value="general">ทั่วไป (ทั้งเคส)</option>${DEPARTMENTS.filter(d=>mine.includes(d.key)).map(d=>`<option value="${esc(d.key)}" ${curKeys.has(d.key) ? 'selected' : ''}>${esc(d.label)}</option>`).join('')}</select></div>
+        <div class="field"><label>เป็นไฟล์ของขั้นตอน</label><select id="cm-file-dept"><option value="general">ทั่วไป (ทั้งเคส)</option>${upDepts.map(d=>`<option value="${esc(d.key)}" ${curKeys.has(d.key) ? 'selected' : ''}>${esc(d.label)}</option>`).join('')}</select></div>
         <div class="field"><label>โน้ตของไฟล์ (ถ้ามี)</label><input id="cm-file-note" maxlength="300" placeholder="เช่น สแกนฟันบนซ้าย"></div>
       </div>
+      ${extraUp ? '<div class="note" style="margin:10px 0 4px">อัปโหลดเข้าขั้นตอนอื่นได้ (คุณมีสิทธิ์อัปโหลดไฟล์ทุกขั้นตอน):</div><div class="actions">' + extraUp + '</div>' : ''}
       <div class="actions" style="margin-top:8px"><label class="btn ghost" for="cm-file-cam" style="cursor:pointer">📷 ถ่ายรูป</label><input id="cm-file-cam" type="file" accept="image/*" capture="environment" style="display:none"><label class="btn primary" for="cm-file-pick" style="cursor:pointer">📎 เลือกไฟล์ (หลายไฟล์ได้)</label><input id="cm-file-pick" type="file" multiple style="display:none"></div>
       <div id="cm-upload-progress" style="margin-top:8px"></div>
       <div class="note">ไฟล์ละไม่เกิน 100 MB (ไฟล์ใหญ่ระบบแบ่งส่งให้เอง อาจใช้เวลาสักพัก อย่าปิดหน้านี้ระหว่างอัปโหลด) • รูปจะถูกย่อให้อัตโนมัติ • ไฟล์เก็บใน Google Drive ของร้าน เปิดดูได้เฉพาะคนที่ล็อกอินในระบบนี้</div>
@@ -2017,6 +2022,10 @@ function parseToothFromText(){
 const AB_STATUS = {requested:'รอสั่ง', ordered:'สั่งแล้ว รอของ', received:'ได้รับของแล้ว', cancelled:'ยกเลิก'};
 const AB_BADGE = {requested:'b-wait', ordered:'b-prog', received:'b-done', cancelled:'b-hold'};
 function abutOf(orderId){ return ABUTMENTS.find(a=>a.order_id === orderId) || null; }
+function canUploadAnyStep(emp){
+  const e = emp === undefined ? CURRENT_EMPLOYEE : emp;
+  return !!e && (isAdminUser(e) || tokensOf(e.depts).some(t=>FILE_ANY_TOKENS.includes(t)));
+}
 function canManageAbutment(){ return isAdminUser(CURRENT_EMPLOYEE) || allowedDeptKeys().some(k=>k === 'abutment' || k === 'receive'); }
 function abutDays(a){
   const from = a.status === 'ordered' ? (a.ordered_at || a.requested_at) : a.requested_at;
@@ -2525,15 +2534,16 @@ function renderPerm(){
   const gapEl = document.getElementById('perm-gaps');
   if(gapEl){
     const gaps = DEPARTMENTS.filter(d=>d.key !== 'order_intake' && !EMPLOYEE_LIST.some(e=>!isAdminUser(e) && allowedDeptKeys(e).includes(d.key)));
-    gapEl.innerHTML = gaps.length ? '<div class="note" style="color:var(--rose);font-weight:600;margin:0 0 10px">⚠ แผนกที่ยังไม่มีพนักงานทั่วไปรับผิดชอบ (มีแต่แอดมินที่กดได้): ' + gaps.map(d=>esc(d.label)).join(', ') + ' — เพิ่มชื่อพนักงานในชีท Employees แล้วใส่แผนกในช่อง depts (เช่น <code>Delivery</code> สำหรับคนส่งของ)</div>' : '';
+    gapEl.innerHTML = '<div class="note" style="margin:0 0 10px">💡 ให้ใครอัปโหลดรูป/ไฟล์ได้<b>ทุกขั้นตอน</b>: ใส่คำว่า <code>Files</code> ต่อท้ายในช่อง depts ของคนนั้น เช่น <code>CADCAM, Files</code> (ไม่ได้สิทธิ์ติ๊กขั้นตอนของแผนกอื่นเพิ่ม)</div>' + (gaps.length ? '<div class="note" style="color:var(--rose);font-weight:600;margin:0 0 10px">⚠ แผนกที่ยังไม่มีพนักงานทั่วไปรับผิดชอบ (มีแต่แอดมินที่กดได้): ' + gaps.map(d=>esc(d.label)).join(', ') + ' — เพิ่มชื่อพนักงานในชีท Employees แล้วใส่แผนกในช่อง depts (เช่น <code>Delivery</code> สำหรับคนส่งของ)</div>' : '');
   }
-  const head = ['พนักงาน','ทีม (department)','ระดับ','เมนูที่เห็น','สร้างออเดอร์','แก้ไข / ลบออเดอร์','สรุปหมอ / คลินิก / แดชบอร์ด','แก้สถานะแผนก (เฉพาะแผนกนี้)'];
+  const head = ['พนักงาน','ทีม (department)','ระดับ','เมนูที่เห็น','สร้างออเดอร์','แก้ไข / ลบออเดอร์','สรุปหมอ / คลินิก / แดชบอร์ด','แก้สถานะแผนก (เฉพาะแผนกนี้)','อัปโหลดไฟล์'];
   const rows = EMPLOYEE_LIST.map(e=>{
     const admin = isAdminUser(e);
     const ex = explicitDeptKeys(e);
     let depTxt;
     if(admin) depTxt = 'ทุกแผนก (แอดมิน)';
     else if(ex === null) depTxt = 'ทุกแผนก <span style="color:#D98A2B">(ยังไม่ได้กำหนด depts)</span>';
+    else if(ex.length === 0 && tokensOf(e.depts).every(t=>FILE_ANY_TOKENS.includes(t))) depTxt = '<span style="color:#888">ไม่มีสิทธิ์ติ๊กขั้นตอน (อัปโหลดไฟล์อย่างเดียว)</span>';
     else if(ex.length === 0) depTxt = '<span style="color:#C0453A;font-weight:700">⚠ ชื่อในช่อง depts ไม่ตรงกับแผนกใด: "' + esc(e.depts) + '"</span>';
     else depTxt = esc(allowedDeptKeys(e).map(labelOf).join(', '));
     const menus = admin ? 'ทั้งหมด (สร้างออเดอร์, งานค้าง, สถานะแผนก, แดชบอร์ด, สรุปหมอ/คลินิก, สิทธิ์, ค้นหา, งานแก้)' : 'งานค้าง, สถานะแผนก, ค้นหา / ตรวจสอบงาน';
@@ -2542,7 +2552,8 @@ function renderPerm(){
       <td><span class="badge ${admin ? 'b-done' : 'b-wait'}">${admin ? 'แอดมิน' : 'พนักงาน'}</span></td>
       <td style="white-space:normal;min-width:200px">${esc(menus)}</td>
       <td style="text-align:center">${admin ? yes : no}</td><td style="text-align:center">${admin ? yes : no}</td><td style="text-align:center">${admin ? yes : no}</td>
-      <td style="white-space:normal;min-width:220px">${depTxt}</td></tr>`;
+      <td style="white-space:normal;min-width:220px">${depTxt}</td>
+      <td style="white-space:normal;min-width:150px">${canUploadAnyStep(e) ? '<b style="color:#2F7D4F">ทุกขั้นตอน</b>' + (admin ? '' : ' (Files)') : 'ขั้นของตัวเอง + ทั่วไป'}</td></tr>`;
   });
   t.innerHTML = '<tr>' + head.map(h=>`<th>${h}</th>`).join('') + '</tr>' + rows.join('');
 }
@@ -4024,7 +4035,7 @@ function renderServerBanner(){
   if(!el) return;
   const bad = isAdminUser(CURRENT_EMPLOYEE) && SERVER_VER < NEEDED_SERVER;
   el.style.display = bad ? 'block' : 'none';
-  if(bad) el.innerHTML = '⚠ Apps Script (หลังบ้าน) ยังเป็น' + (SERVER_VER ? 'เวอร์ชัน ' + SERVER_VER : 'เวอร์ชันเก่ามาก') + ' แต่หน้าเว็บนี้ต้องใช้เวอร์ชัน ' + NEEDED_SERVER + ' — ปุ่ม ผู้ติดต่อ / ไฟล์แนบ / ราคา-บิล บางอย่างจะขึ้น "unknown_action" จนกว่าจะวางโค้ด <u>GoogleAppsScript_Code_v' + NEEDED_SERVER + '.gs</u> ทับใน Apps Script แล้ว Deploy → เวอร์ชันใหม่ (ลิงก์เดิมใช้ต่อได้)';
+  if(bad) el.innerHTML = '⚠ Apps Script (หลังบ้าน) ยังเป็น' + (SERVER_VER ? 'เวอร์ชัน ' + SERVER_VER : 'เวอร์ชันเก่ามาก') + ' แต่หน้าเว็บนี้ต้องใช้เวอร์ชัน ' + NEEDED_SERVER + ' — ปุ่ม ผู้ติดต่อ / ไฟล์แนบ / ราคา-บิล บางอย่างจะขึ้น "unknown_action" จนกว่าจะวางโค้ด <u>GoogleAppsScript_Code_v' + NEEDED_SERVER + '.gs</u> ทับใน Apps Script แล้ว Deploy → เวอร์ชันใหม่ (ลิงก์เดิมใช้ต่อได้)<br><span style="font-weight:400">ตรวจว่า Deploy แล้วหรือยัง: <a href="' + API_URL + '?action=names" target="_blank" rel="noopener">เปิดลิงก์ตรวจเวอร์ชัน</a> → ต้องเห็น <code>"version":' + NEEDED_SERVER + '</code> ถ้าไม่เห็นเลข version แปลว่าลิงก์นี้ยังใช้โค้ดเก่าอยู่ (ยังไม่ได้ Deploy เวอร์ชันใหม่ หรือ Deploy ผิดตัว)</span>';
 }
 function renderAll(){
   renderServerBanner();
