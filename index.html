@@ -227,6 +227,8 @@
   #clinic-picker .cp-row{padding:7px 10px;border-radius:8px;cursor:pointer;font-size:14px;}
   #clinic-picker .cp-row:hover{background:#EEF3F2;}
   #clinic-picker .cp-row small{color:var(--muted);display:block;font-size:12px;}
+  .dropzone{border:2px dashed #9BB5B2;border-radius:12px;padding:12px 14px;background:#F4F9F8;margin:6px 0 16px;transition:background .15s,border-color .15s;}
+  .dropzone.over{background:#DDF1EC;border-color:var(--teal);}
 </style>
 </head>
 <body>
@@ -309,6 +311,16 @@
     <div class="card">
       <h2>สร้างใบออเดอร์งานใหม่ <span class="tag">NEW ORDER</span></h2>
       <div id="edit-banner" style="display:none;background:#FCEFDD;border:1px solid #E9C48A;color:#7a4a00;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:13.5px;font-weight:600"></div>
+      <div id="order-files-block" class="dropzone">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <b style="font-size:15px">📎 แนบไฟล์ / รูปภาพ</b><span class="tag">UPLOAD</span>
+          <label class="btn primary" for="of-pick" style="cursor:pointer">📎 เลือกไฟล์ (หลายไฟล์ได้)</label><input id="of-pick" type="file" multiple style="display:none">
+          <label class="btn ghost" for="of-cam" style="cursor:pointer">📷 ถ่ายรูป</label><input id="of-cam" type="file" accept="image/*" capture="environment" style="display:none">
+        </div>
+        <div class="note" style="margin:6px 0 0"><b>ลากไฟล์ / รูปมาวางในกรอบนี้</b> หรือคัดลอกรูปแล้วกด <b>Ctrl+V</b> (เช่นรูปจาก LINE / จอ) • ไฟล์สแกน STL / PLY / OBJ ใช้ได้ ระบบเปิดขั้น MODEL PRINTING ให้เอง • อัปโหลดขึ้น Google Drive ตอนกด "บันทึกออเดอร์" ทีมถัดไปดาวน์โหลดได้จากหน้าเคส</div>
+        <div id="of-list" style="margin-top:8px"></div>
+        <div id="order-upload-progress" style="margin-top:6px"></div>
+      </div>
       <div class="grid form" id="order-form"></div>
       <div id="tooth-block" style="margin:16px 0 4px">
         <h2 style="font-size:15px;margin:0 0 4px">ผังฟัน / ชนิดงาน <span class="tag">TOOTH CHART</span></h2>
@@ -317,15 +329,9 @@
         <div class="tt-wrap"><div id="tooth-chart"></div></div>
         <div id="tooth-summary" class="note" style="margin-top:6px"></div>
       </div>
-      <div id="order-files-block" style="margin:18px 0 4px">
-        <h2 style="font-size:15px;margin:0 0 4px">ไฟล์แนบออเดอร์ <span class="tag">UPLOAD</span></h2>
-        <div class="note" style="margin:0 0 8px">แนบไฟล์สแกน (STL / PLY / OBJ) รูป ใบสั่งงาน หรือ PDF ที่ได้จากคลินิก ระบบอัปโหลดขึ้น Google Drive ให้เมื่อกด "บันทึกออเดอร์" ทีมถัดไปเปิดเคส (หรือสแกน QR) แล้วดาวน์โหลดไปใช้ได้เลย • แนบเพิ่มทีหลังได้ในหน้าเคส • ถ้ามีไฟล์สแกน ระบบเปิดขั้น MODEL PRINTING ให้อัตโนมัติ</div>
-        <div class="actions"><label class="btn ghost" for="of-cam" style="cursor:pointer">📷 ถ่ายรูป</label><input id="of-cam" type="file" accept="image/*" capture="environment" style="display:none"><label class="btn primary" for="of-pick" style="cursor:pointer">📎 เลือกไฟล์ (หลายไฟล์ได้)</label><input id="of-pick" type="file" multiple style="display:none"></div>
-        <div id="of-list" style="margin-top:8px"></div>
-        <div id="order-upload-progress" style="margin-top:6px"></div>
-      </div>
       <h2 id="order-dept-title" style="margin-top:18px">สถานะเริ่มต้นแต่ละแผนก</h2>
       <div class="grid form" id="order-dept-form"></div>
+      <div id="of-save-note" class="note" style="margin:10px 0 0;font-weight:600"></div>
       <div class="actions">
         <button class="btn primary" id="save-order">💾 บันทึกออเดอร์</button>
         <button class="btn ghost" id="print-order">🖨️ พิมพ์ใบออเดอร์</button>
@@ -733,7 +739,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-06 รุ่น 35 (ช่องคลินิกพิมพ์ค้นหา/พิมพ์เองได้)";
+const APP_VERSION = "2026-10-06 รุ่น 36 (แนบไฟล์/รูปที่ด้านบนหน้าสร้างออเดอร์ + ลากวาง/Ctrl+V)";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -1846,6 +1852,8 @@ let PENDING_FILES = [];
 function renderPendingFiles(){
   const el = document.getElementById('of-list');
   if(!el) return;
+  const note = document.getElementById('of-save-note');
+  if(note) note.textContent = PENDING_FILES.length ? '📎 แนบไว้ ' + PENDING_FILES.length + ' ไฟล์ (' + fmtSize(PENDING_FILES.reduce((a, f)=>a + f.size, 0)) + ') จะอัปโหลดขึ้น Drive เมื่อกด "บันทึกออเดอร์"' : '';
   el.innerHTML = PENDING_FILES.length ? PENDING_FILES.map((f, i)=>`<div class="fl-row"><span class="ic">${FILE_ICON[fileKindOf(f.name, f.type)] || '📦'}</span><div class="grow"><div class="nm">${esc(f.name)}</div><div class="meta">${esc(KIND_LABEL_TH[fileKindOf(f.name, f.type)] || '')} • ${esc(fmtSize(f.size))} • จะอัปโหลดตอนกดบันทึกออเดอร์</div></div><button type="button" class="btn danger sm" data-of-rm="${i}">✕ เอาออก</button></div>`).join('') : '';
   el.querySelectorAll('[data-of-rm]').forEach(b=>b.addEventListener('click', ()=>{ PENDING_FILES.splice(+b.dataset.ofRm, 1); renderPendingFiles(); }));
 }
@@ -1864,7 +1872,24 @@ function bindOrderFiles(){
   PENDING_FILES = []; renderPendingFiles();
   ['of-pick', 'of-cam'].forEach(id=>{ const inp = document.getElementById(id); if(inp && !inp.dataset.bound){ inp.dataset.bound = '1'; inp.addEventListener('change', e=>{ addPendingFiles(Array.from(e.target.files || [])); e.target.value = ''; }); } });
   const box = document.getElementById('order-upload-progress'); if(box) box.innerHTML = '';
+  const zone = document.getElementById('order-files-block');
+  if(zone && !zone.dataset.bound){
+    zone.dataset.bound = '1';
+    ['dragenter', 'dragover'].forEach(t=>zone.addEventListener(t, e=>{ e.preventDefault(); zone.classList.add('over'); }));
+    ['dragleave', 'drop'].forEach(t=>zone.addEventListener(t, e=>{ e.preventDefault(); zone.classList.remove('over'); }));
+    zone.addEventListener('drop', e=>{ const fl = Array.from((e.dataTransfer && e.dataTransfer.files) || []); if(fl.length) addPendingFiles(fl); });
+  }
 }
+// Ctrl+V on the create-order page: pasted pictures / files become attachments
+document.addEventListener('paste', e=>{
+  if(!CURRENT_EMPLOYEE || !isAdminUser(CURRENT_EMPLOYEE) || activeTabName() !== 'order') return;
+  const fl = Array.from((e.clipboardData && e.clipboardData.files) || []);
+  if(!fl.length) return;
+  e.preventDefault();
+  const stamp = nowStamp().replace(/[-:T]/g, '');
+  addPendingFiles(fl.map((f, i)=>(f.name && !/^image\.(png|jpe?g)$/i.test(f.name)) ? f : new File([f], 'รูปที่วาง-' + stamp + (i ? '-' + (i + 1) : '') + '.' + ((f.type.split('/')[1] || 'png').replace('jpeg', 'jpg')), {type:f.type})));
+  showToast('วางรูป/ไฟล์แล้ว ✓ จะอัปโหลดตอนกดบันทึกออเดอร์');
+});
 // ---------- Copy: LINE-style case text + tables for Excel ----------
 function fmtCE(v){
   const d = parseYmd(v);
@@ -2319,7 +2344,7 @@ function renderRecentOrders(){
       <td><span class="badge ${STATUS_BADGE[o.status]||''}">${esc(o.status || '-')}</span></td><td>${esc(fmtDate(o.date_received))}</td>
       <td style="white-space:nowrap">${copyBtn(o._id)} ${trash
         ? `<button class="btn ghost sm" data-act="restore" data-id="${esc(o._id)}">↩ กู้คืน</button>`
-        : `<button class="btn ghost sm" data-act="edit" data-id="${esc(o._id)}">✏️ แก้ไข</button> <button class="btn danger sm" data-act="delete" data-id="${esc(o._id)}">🗑 ลบ</button>`}</td>
+        : `<button class="btn ghost sm" data-act="edit" data-id="${esc(o._id)}">✏️ แก้ไข</button> <button class="btn danger sm" data-act="delete" data-id="${esc(o._id)}">🗑 ลบ</button> <button class="btn ghost sm" data-act="attach" data-id="${esc(o._id)}" title="แนบไฟล์ / รูป เพิ่มให้ออเดอร์นี้">📎 แนบไฟล์</button>`}</td>
     </tr>`).join('');
   bindCopyButtons(t);
   t.querySelectorAll('button[data-act]').forEach(btn=>btn.addEventListener('click', ()=>{
@@ -2327,6 +2352,7 @@ function renderRecentOrders(){
     if(btn.dataset.act === 'edit') startEdit(id);
     else if(btn.dataset.act === 'delete') deleteOrder(id);
     else if(btn.dataset.act === 'restore') restoreOrder(id);
+    else if(btn.dataset.act === 'attach'){ openCase(id); setTimeout(()=>{ const f = document.getElementById('cm-files-list'); if(f && f.scrollIntoView) f.scrollIntoView({block:'center'}); }, 80); }
   }));
 }
 document.getElementById('show-trash').addEventListener('change', renderRecentOrders);
