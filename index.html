@@ -723,8 +723,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 // ============================================================
 // CONFIG: paste your Google Apps Script Web App URL here (ends with /exec)
 // See GoogleAppsScript_Code.gs for setup instructions.
-const API_URL = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW72PIa_dXj--LRPBXGJupKbuI-ctWxmYADGJ7-Pwl6SVo5tKpFX/exec";
-const APP_VERSION = "2026-10-06 รุ่น 31 (PIN พิมพ์ตัวอักษรได้บนมือถือ)";
+const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW72PIa_dXj--LRPBXGJupKbuI-ctWxmYADGJ7-Pwl6SVo5tKpFX/exec";
+let API_URL = API_URL_BUILT;
+const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
+try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
+const APP_VERSION = "2026-10-06 รุ่น 32 (วางลิงก์ Apps Script ใหม่ในหน้าเว็บได้)";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -4035,7 +4038,32 @@ function renderServerBanner(){
   if(!el) return;
   const bad = isAdminUser(CURRENT_EMPLOYEE) && SERVER_VER < NEEDED_SERVER;
   el.style.display = bad ? 'block' : 'none';
-  if(bad) el.innerHTML = '⚠ Apps Script (หลังบ้าน) ยังเป็น' + (SERVER_VER ? 'เวอร์ชัน ' + SERVER_VER : 'เวอร์ชันเก่ามาก') + ' แต่หน้าเว็บนี้ต้องใช้เวอร์ชัน ' + NEEDED_SERVER + ' — ปุ่ม ผู้ติดต่อ / ไฟล์แนบ / ราคา-บิล บางอย่างจะขึ้น "unknown_action" จนกว่าจะวางโค้ด <u>GoogleAppsScript_Code_v' + NEEDED_SERVER + '.gs</u> ทับใน Apps Script แล้ว Deploy → เวอร์ชันใหม่ (ลิงก์เดิมใช้ต่อได้)<br><span style="font-weight:400">ตรวจว่า Deploy แล้วหรือยัง: <a href="' + API_URL + '?action=names" target="_blank" rel="noopener">เปิดลิงก์ตรวจเวอร์ชัน</a> → ต้องเห็น <code>"version":' + NEEDED_SERVER + '</code> ถ้าไม่เห็นเลข version แปลว่าลิงก์นี้ยังใช้โค้ดเก่าอยู่ (ยังไม่ได้ Deploy เวอร์ชันใหม่ หรือ Deploy ผิดตัว)</span>';
+  if(!bad){ el.dataset.key = ''; return; }
+  const key = SERVER_VER + '|' + API_URL;
+  if(el.dataset.key === key) return;          // do not rebuild while the admin is typing / pasting
+  el.dataset.key = key;
+  el.innerHTML = '⚠ Apps Script (หลังบ้าน) ที่หน้าเว็บนี้ใช้อยู่ยัง' + (SERVER_VER ? 'เป็นเวอร์ชัน ' + SERVER_VER : 'เป็นเวอร์ชันเก่ามาก') + ' แต่ต้องใช้เวอร์ชัน ' + NEEDED_SERVER + ' (โค้ดไฟล์ <u>GoogleAppsScript_Code_v' + NEEDED_SERVER + '.gs</u>) — ปุ่ม ผู้ติดต่อ / ไฟล์แนบ / สั่ง Abutment บางอย่างจะขึ้น "unknown_action" จนกว่าจะแก้' +
+    '<div style="font-weight:400;margin-top:6px">ถ้าคุณ Deploy Apps Script ใหม่แล้ว <b>วางลิงก์เว็บแอปใหม่ (ลงท้าย /exec)</b> ที่ช่องนี้ แล้วกด "ใช้ลิงก์นี้":</div>' +
+    '<div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap"><input id="api-new" placeholder="https://script.google.com/macros/s/.../exec" style="flex:1;min-width:260px;font-size:13px;padding:6px 8px"><button class="btn primary sm" id="api-use">ใช้ลิงก์นี้</button></div>' +
+    '<div id="api-msg" style="font-weight:600;margin-top:6px"></div>' +
+    '<div style="font-weight:400;margin-top:6px;font-size:12.5px">ลิงก์ที่หน้าเว็บใช้อยู่ตอนนี้ลงท้ายด้วย <code>…' + esc(API_URL.slice(-14)) + '</code> • <a href="#" id="api-copy">คัดลอกลิงก์ที่ใช้อยู่</a> • <a href="' + esc(API_URL) + '?action=names" target="_blank" rel="noopener">เปิดตรวจเวอร์ชัน</a> (ต้องเห็น <code>"version":' + NEEDED_SERVER + '</code>)' + (API_URL !== API_URL_BUILT ? ' • <a href="#" id="api-reset">กลับไปใช้ลิงก์เดิมในไฟล์</a>' : '') + '</div>';
+  const msg = t => { document.getElementById('api-msg').textContent = t; };
+  document.getElementById('api-use').addEventListener('click', async ()=>{
+    const u = document.getElementById('api-new').value.trim();
+    if(!API_URL_OK.test(u)){ msg('ลิงก์ไม่ถูกต้อง ต้องขึ้นต้นด้วย https://script.google.com/macros/s/ และลงท้ายด้วย /exec (คัดลอกจาก "URL ของเว็บแอป" ในหน้าจัดการการทำให้ใช้งานได้)'); return; }
+    msg('กำลังตรวจลิงก์...');
+    try{
+      const r = await (await fetch(u + '?action=names')).json();
+      if(!r || !r.ok && r.error !== 'use_post'){ msg('ลิงก์นี้ตอบกลับไม่ถูกต้อง ตรวจว่าตั้ง "ผู้ที่มีสิทธิ์เข้าถึง = ทุกคน"'); return; }
+      if(!(r.version >= NEEDED_SERVER)){ msg('ลิงก์นี้ใช้งานได้ แต่ยังเป็นโค้ดเวอร์ชัน ' + (r.version || 'เก่า') + ' (ต้อง ' + NEEDED_SERVER + ') — ลิงก์นี้ยังไม่ได้ Deploy โค้ดใหม่'); return; }
+      localStorage.setItem('totu_api_url', u);
+      msg('✓ ลิงก์นี้เป็นเวอร์ชัน ' + r.version + ' กำลังเปลี่ยนไปใช้ลิงก์ใหม่ (ต้องล็อกอินใหม่หนึ่งครั้ง)...');
+      setTimeout(()=>location.reload(), 900);
+    }catch(e){ msg('เปิดลิงก์นี้ไม่ได้ ตรวจว่าคัดลอกครบและเน็ตปกติ'); }
+  });
+  document.getElementById('api-copy').addEventListener('click', e=>{ e.preventDefault(); copyText(API_URL, 'คัดลอกลิงก์แล้ว ✓ นำไปวางในแชทได้เลย'); });
+  const rs = document.getElementById('api-reset');
+  if(rs) rs.addEventListener('click', e=>{ e.preventDefault(); try{ localStorage.removeItem('totu_api_url'); }catch(x){} location.reload(); });
 }
 function renderAll(){
   renderServerBanner();
