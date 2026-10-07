@@ -247,6 +247,8 @@
   .urg-box{border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin:8px 0;display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:14px;} .urg-box.on{background:#FDECEA;border-color:#E5A39B;color:#8A2B1F;} .urg-box .urg-ctl{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;}
   .step-in-box{margin:-2px 0 10px;padding:7px 10px;border:1px dashed #9BB5B2;border-radius:8px;background:#F4F9F8;font-size:13px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
   .step-in-box small{color:var(--muted);margin-left:3px;}
+  .tg{display:inline-block;margin-right:5px;padding:1px 8px;border-radius:999px;font-size:11.5px;font-weight:800;white-space:nowrap;vertical-align:middle;border:1px solid transparent;}
+  .tg-abut{background:#E9E4F7;color:#4B3A8C;border-color:#CFC4EE;} .tg-zir{background:#E1F0F0;color:#0E6E6E;border-color:#B6DADA;} .tg-pre{background:#E3EDF9;color:#1F5E9E;border-color:#BAD0EC;} .tg-emax{background:#FBEBD9;color:#A35A0A;border-color:#EFCDA3;}
 </style>
 </head>
 <body>
@@ -318,6 +320,7 @@
       <button data-tab="dash">แดชบอร์ด</button>
       <button data-tab="overview">ภาพรวมรายได้</button>
       <button data-tab="report">สรุปหมอ / คลินิก</button>
+      <button data-tab="perf">ผลงานรายคน</button>
       <button data-tab="billing">ราคา / บิล</button>
       <button data-tab="contacts">ผู้ติดต่อ</button>
       <button data-tab="perm">สิทธิ์พนักงาน</button>
@@ -676,6 +679,23 @@
     </div>
   </section>
 
+  <!-- PERFORMANCE TAB -->
+  <section id="view-perf" class="view">
+    <div class="card">
+      <h2>ผลงานรายคน <span class="tag">PERFORMANCE</span></h2>
+      <div class="filters">
+        <select id="pf-period"><option value="today">วันนี้</option><option value="yesterday">เมื่อวาน</option><option value="d7">7 วันล่าสุด</option><option value="d30">30 วันล่าสุด</option><option value="month" selected>เดือนที่เลือกด้านบน</option><option value="year">ปีนี้</option><option value="all">ทั้งหมด</option><option value="custom">กำหนดเอง...</option></select>
+        <input type="date" id="pf-from" style="display:none"><input type="date" id="pf-to" style="display:none">
+        <select id="pf-dept"><option value="">ทุกขั้นตอน</option></select>
+        <button class="btn primary sm" id="pf-xlsx">⬇ Excel</button> <button class="btn ghost sm" id="pf-pdf">🖨 PDF</button>
+      </div>
+      <div class="kpis" id="pf-kpis"></div>
+      <div class="tablewrap" style="max-height:560px"><table id="pf-table"></table></div>
+      <div id="pf-detail"></div>
+      <div class="note">นับจาก <b>ชื่อผู้ใช้ที่กดติ๊กขั้นตอนเป็น "เสร็จแล้ว"</b> และเวลาที่กด ถ้าแอดมินติ๊กแทนช่าง จะนับเป็นของแอดมิน และถ้ามีคนแก้วันที่ของขั้นนั้นทีหลัง จะนับเป็นของคนที่แก้ล่าสุด • "ซี่ที่ผ่านมือ" = จำนวนซี่ของเคสในแต่ละขั้นที่เสร็จ (เคสเดียวผ่านหลายขั้นจะนับหลายครั้ง) • "ทำจริง" = เวลาเริ่ม→เสร็จ (ต้องมีการกด "เริ่มทำ") • "รอ→เสร็จ" = ตั้งแต่เคสถึงคิวจนเสร็จ รวมเวลารอ • เวลาเฉลี่ยคิดเฉพาะข้อมูลที่บันทึกเวลาไว้ (ข้อมูลเก่าก่อนมีเวลาจะไม่นับ) • ใช้เป็นข้อมูลประกอบ ไม่ควรใช้ตัดสินคนเดียว เพราะงานแต่ละประเภทยากง่ายต่างกัน</div>
+    </div>
+  </section>
+
   <!-- ABUTMENT TAB -->
   <section id="view-abutment" class="view">
     <div class="card">
@@ -762,7 +782,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-06 รุ่น 44 (ปุ่ม 📌 อย่าลืมสั่ง Abutment / กลึง Premill / กลึง Zirconia)";
+const APP_VERSION = "2026-10-06 รุ่น 47 (ผลงานรายคน)";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -1109,6 +1129,7 @@ const FORM_FIELDS = [
   {key:'case_type', label:'ประเภทเคส', type:'list', opts:REFS.case_types, default:'ปกติ'},
   {key:'priority', label:'ความเร่งด่วน (เว้นว่าง = ปกติ)', type:'list', opts:['ด่วน', 'ด่วนมาก']},
   {key:'urgent_note', label:'ข้อความถึงทีม (เช่น คนไข้รอ / หมอนัดพรุ่งนี้)', type:'text'},
+  {key:'tasks', label:'ป้ายงานกลึง (ติ๊กได้หลายอัน)', type:'tasks'},
   {key:'coupon_status', label:'สถานะคูปอง (ถ้าเป็นคูปอง)', type:'list', opts:REFS.coupon_statuses},
   {key:'clinic', label:'คลินิก (พิมพ์ค้นหา หรือพิมพ์ชื่อเองได้)', type:'combo'},
   {key:'doctor', label:'แพทย์', type:'text'},
@@ -1178,6 +1199,8 @@ function buildOrderForm(){
         ? '<optgroup label="ยี่ห้อรากฟันเทียม">' + (f.opts||[]).map(o2).join('') + '</optgroup><optgroup label="ชนิดงาน / อื่นๆ">' + REFS.system_types.map(o2).join('') + '</optgroup>'
         : (f.opts||[]).map(o2).join('');
       inner += `<select id="f_${f.key}"><option value="">-- เลือก --</option>` + body + `</select>`;
+    } else if(f.type==='tasks'){
+      inner += `<div class="ct-radios" id="f_tasks_boxes" style="margin:4px 0">${TASK_DEFS.filter(t=>t.key !== 'abut').map(t=>`<label><input type="checkbox" data-tk="${t.key}"> ${t.icon} ${t.label}</label>`).join('')}</div><input type="hidden" id="f_${f.key}">`;
     } else if(f.type==='combo'){
       inner += `<div style="display:flex;gap:8px"><input id="f_${f.key}" list="dl-clinic-form" autocomplete="off" placeholder="พิมพ์ชื่อคลินิก เช่น teeth / ลาดพร้าว" style="flex:1"><button type="button" class="btn ghost sm" id="clinic-search-btn" style="white-space:nowrap">🔍 ค้นหา</button></div><div id="clinic-picker" style="display:none"></div><div id="clinic-hint" class="note" style="margin:4px 0 0"></div>`;
     } else if(f.type==='select2'){
@@ -1211,6 +1234,7 @@ function buildOrderForm(){
   document.getElementById('clinic-quick-add').addEventListener('click', e=>{ e.preventDefault(); quickAddClinic(); });
   refreshClinicSelect();
   bindOrderFiles();
+  bindTaskBoxes();
   TOOTH = {}; buildToothUi();
   document.getElementById('f_color').placeholder = 'เช่น คอฟัน 3M3 กลางถึงปลายฟัน 3M2';
   document.getElementById('f_position').placeholder = 'เช่น 26';
@@ -1530,7 +1554,7 @@ function renderCase(){
   const tl = timelineOf(o);
   document.getElementById('cm-body').innerHTML = `
     <div class="filters" style="margin:0 0 6px">
-      <span class="badge ${STATUS_BADGE[o.status]||''}">${esc(o.status || '-')}</span>
+      ${statusBadge(o)}
       <span style="font-size:13px">ตอนนี้อยู่ที่ <b>${esc(currentDeptLabel(o))}</b> • ผู้รับผิดชอบ ${esc(currentPeople(o))} • ค้าง ${daysCell(currentDays(o))}</span>
     </div>
     <div>${progressStrip(o)}</div>
@@ -1548,7 +1572,7 @@ function renderCase(){
       <button class="btn ghost sm" id="cm-print">🖨 พิมพ์ใบงาน (มี QR)</button>
       ${admin ? '<button class="btn ghost sm" id="cm-edit">✏️ แก้ไขเคส</button>' : ''}
     </div>
-    <div class="cm-sec"><div id="cm-file-strip"></div>${urgentBoxHtml(o)}<h3>ขั้นตอนของคุณ</h3>${stepHtml}${skippedHtml}</div>
+    <div class="cm-sec"><div id="cm-file-strip"></div>${urgentBoxHtml(o)}${taskBoxHtml(o)}<h3>ขั้นตอนของคุณ</h3>${stepHtml}${skippedHtml}</div>
     ${abutSectionHtml(o)}
     <div class="cm-sec"><h3>ไฟล์ / การจัดส่ง</h3>
       <div class="grid form">
@@ -1601,6 +1625,7 @@ function renderCase(){
   bindFileSection(o);
   bindAbutSection(o);
   bindUrgentBox(o);
+  bindTaskBox(o);
   document.getElementById('cm-copy').addEventListener('click', ()=>copyText(caseText(o), 'คัดลอกรายละเอียดแล้ว ✓'));
   document.getElementById('cm-print').addEventListener('click', ()=>printTicket(o));
   const ed = document.getElementById('cm-edit');
@@ -2034,34 +2059,37 @@ function stampToDate(v){
   return d && !isNaN(d) ? d : null;
 }
 // when the case reached this step (end of the step before, with the time when known)
-function arrivalStamp(r, deptKey){
-  let best = null;
+function arrivalInfo(r, deptKey){
+  let best = null, raw = '';
   const target = DEPARTMENTS.find(x=>x.key === deptKey) || {};
   for(const d of DEPARTMENTS){
     if(d.key === deptKey) break;
     if(d.parallel && !target.join) continue;
     const rec = depRecord(r, d.key);
-    if(rec.status === 'เสร็จแล้ว' && rec.end){ const t = stampToDate(rec.end); if(t && (!best || t > best)) best = t; }
+    if(rec.status === 'เสร็จแล้ว' && rec.end){ const t = stampToDate(rec.end); if(t && (!best || t > best)){ best = t; raw = String(rec.end); } }
   }
-  return best;
+  return {date: best, raw};
 }
+function arrivalStamp(r, deptKey){ return arrivalInfo(r, deptKey).date; }
 const ALERT_BASE_TITLE = document.title;
 let ALERT_ITEMS = [], LAST_ALERT_IDS = null;
 function alertSeenKey(){ return 'totu_seen_' + (CURRENT_EMPLOYEE ? CURRENT_EMPLOYEE.name : ''); }
 function alertSeenAt(){ try{ return +localStorage.getItem(alertSeenKey()) || 0; }catch(e){ return 0; } }
 function computeAlerts(){
   if(!CURRENT_EMPLOYEE) return [];
-  const admin = isAdminUser(CURRENT_EMPLOYEE), mine = allowedDeptKeys(), seenAt = alertSeenAt(), out = [];
+  const admin = isAdminUser(CURRENT_EMPLOYEE), mine = allowedDeptKeys(), seenAt = alertSeenAt(), out = [], shared = readPrices().share_all;
   const today = new Date(); today.setHours(0, 0, 0, 0);
   let toBill = 0, toShip = 0;
   NEW_ORDERS.map(withEffectiveStatus).forEach(o=>{
     const act = activeDeptsOf(o);
     if(!act.length) return;
     if(admin){ if(act.some(d=>d.key === 'billing')) toBill++; if(act.some(d=>d.key === 'delivery')) toShip++; }
-    const my = admin ? act : act.filter(d=>mine.includes(d.key));
-    if(!my.length) return;
+    const mineAct = act.filter(d=>mine.includes(d.key));
+    const foreign = !admin && !mineAct.length;
+    if(foreign && !shared) return;
+    const my = (admin || foreign) ? act : mineAct;
     const where = my.map(d=>d.label).join(' + '), tag = String(o.case_id || '') + (o.patient ? ' (' + o.patient + ')' : '');
-    const add = (kind, level, icon, text)=>out.push({id: kind + ':' + o._id, kind, level, icon, text, orderId: o._id});
+    const add = (kind, level, icon, text)=>{ if(foreign && level < 3) return; out.push({id: kind + ':' + o._id, kind, level, icon, text, orderId: o._id}); };
     const u = urgencyOf(o);
     if(u) add('urgent', 3, u === 2 ? '🚨' : '🔥', (u === 2 ? 'ด่วนมาก ' : 'ด่วน ') + tag + ' — รอ ' + where + (o.urgent_note ? ' • ' + o.urgent_note : ''));
     const ap = parseYmd(o.appointment_date);
@@ -2072,7 +2100,7 @@ function computeAlerts(){
     }
     const days = currentDays(o);
     if(days !== '' && days >= WARN_DAYS) add('stuck', 2, '🐢', tag + ' ค้างที่ ' + where + ' ' + days + ' วัน');
-    if(!admin){ const t = arrivalStamp(o, my[0].key); if(t && t.getTime() > seenAt) add('new', 1, '🆕', tag + ' ถึงขั้น ' + where + ' แล้ว (ถึงคิวคุณ)' + (FILE_COUNTS[o._id] ? ' • มีไฟล์แนบรอ ' + FILE_COUNTS[o._id] + ' ไฟล์' : '')); }
+    if(!admin && !foreign){ const t = arrivalStamp(o, my[0].key); if(t && t.getTime() > seenAt) add('new', 1, '🆕', tag + ' ถึงขั้น ' + where + ' แล้ว (ถึงคิวคุณ)' + (FILE_COUNTS[o._id] ? ' • มีไฟล์แนบรอ ' + FILE_COUNTS[o._id] + ' ไฟล์' : '')); }
   });
   if(canManageAbutment()){
     ABUTMENTS.filter(a=>a.status === 'requested' || a.status === 'ordered').forEach(a=>{
@@ -2182,14 +2210,16 @@ async function applySetupLink(u){
 // ---------- 📌 "Don't forget": standing reminders worked out from the cases (order abutment / mill Premill / mill Zirconia) ----------
 const REMINDER_RULES = [
   {key:'abut', icon:'🔩', text:'อย่าลืมสั่ง Abutment', step:'abutment', hint:'ยังไม่ได้สั่ง', visible:()=>canManageAbutment(), match:o=>true},
-  {key:'premill', icon:'⚙️', text:'อย่าลืมกลึง Premill', step:'milling', hint:'ยังไม่ได้กลึง', visible:()=>canDoStep('milling'), match:o=>/premill/i.test([o.material, o.detail, o.implant_system].join(' '))},
-  {key:'zir', icon:'⚙️', text:'อย่าลืมกลึง Zirconia', step:'milling', hint:'ยังไม่ได้กลึง', visible:()=>canDoStep('milling'), match:o=>/zir/i.test(String(o.material || ''))},
+  {key:'premill', icon:'⚙️', text:'อย่าลืมกลึง Premill', step:'milling', hint:'ยังไม่ได้กลึง', visible:()=>canDoStep('milling'), match:o=>hasTask(o, 'premill') || /premill/i.test([o.material, o.detail, o.implant_system].join(' '))},
+  {key:'zir', icon:'⚙️', text:'อย่าลืมกลึง Zirconia', step:'milling', hint:'ยังไม่ได้กลึง', visible:()=>canDoStep('milling'), match:o=>hasTask(o, 'zir') || /zir/i.test(String(o.material || ''))},
+  {key:'emax', icon:'⚙️', text:'อย่าลืมกลึง Emax', step:'milling', hint:'ยังไม่ได้กลึง', visible:()=>canDoStep('milling'), match:o=>hasTask(o, 'emax') || /emax/i.test(String(o.material || ''))},
 ];
 function canDoStep(key){ return isAdminUser(CURRENT_EMPLOYEE) || allowedDeptKeys().includes(key); }
 function reminderGroups(){
   if(!CURRENT_EMPLOYEE) return [];
   const live = NEW_ORDERS.map(withEffectiveStatus).filter(o=>o.status !== 'ส่งแล้ว' && o.status !== 'ยกเลิกเคส');
-  return REMINDER_RULES.filter(r=>r.visible()).map(r=>{
+  const shared = readPrices().share_all;
+  return REMINDER_RULES.filter(r=>shared || r.visible()).map(r=>{
     const items = live.filter(o=>{ const v = depValue(o, r.step); return v !== 'ไม่เกี่ยวข้อง' && !DONE_STATES.includes(v) && r.match(o); })
       .map(o=>({o, ready: activeDeptsOf(o).some(d=>d.key === r.step), days: Number(daysAtDept(o, r.step)) || 0}))
       .sort((a, b)=>(b.ready - a.ready) || (urgencyOf(b.o) - urgencyOf(a.o)) || (b.days - a.days));
@@ -2217,8 +2247,11 @@ function renderRemindPanel(groups){
   };
   p.innerHTML = `<div style="display:flex;align-items:center;gap:8px"><b style="font-size:15px">📌 อย่าลืม</b><button type="button" class="btn ghost sm" id="rm-close" style="margin-left:auto">✕</button></div>` +
     (groups.length ? groups.map(g=>`<details ${g.ready ? 'open' : ''}><summary>${g.icon} ${esc(g.text)} — <span style="color:${g.ready ? '#C0453A' : 'var(--muted)'}">${g.ready} เคสถึงคิวแล้ว</span>${g.items.length - g.ready ? ' <small style="color:var(--muted);font-weight:400">(+' + (g.items.length - g.ready) + ' เคสยังไม่ถึงคิว)</small>' : ''}</summary>${g.items.length ? g.items.slice(0, 40).map(row).join('') : '<div class="note" style="margin:6px 0">ไม่มีเคสค้าง ✓</div>'}</details>`).join('') : '<div class="note" style="margin:12px 0">ไม่มีเรื่องที่ต้องจำสำหรับแผนกของคุณ</div>') +
-    '<div class="note" style="margin:8px 0 0">นับจากข้อมูลเคสให้อัตโนมัติ: Premill = วัสดุ/รายละเอียดมีคำว่า Premill • Zirconia = วัสดุมี Zir (Zirconia, Zir+Emax ...) • Abutment = เคสที่ติ๊กต้องสั่งและยังไม่ได้สั่ง</div>';
+    (isAdminUser(CURRENT_EMPLOYEE) ? `<label style="display:flex;gap:8px;align-items:center;margin:10px 0 0;font-size:13.5px;font-weight:700;cursor:pointer"><input type="checkbox" id="rm-share" style="width:auto;margin:0" ${readPrices().share_all ? 'checked' : ''}> 👥 ให้ทุกคนเห็นเหมือนกัน (ทั้งแล็บ)</label><div class="note" style="margin:2px 0 0">เปิด = ทุกแผนกเห็นครบ 3 หัวข้อและเห็นเคสด่วน/เลยกำหนดของทั้งแล็บ • ปิด = ต่างคนต่างเห็นเฉพาะงานของแผนกตัวเอง</div>` : '') +
+    '<div class="note" style="margin:8px 0 0">นับจากข้อมูลเคสให้อัตโนมัติ: Premill / Zirconia / Emax = เคสที่ติดป้ายงานกลึง หรือวัสดุมีคำนั้น (Zir..., Emax, Premill) • Abutment = เคสที่ติดป้ายสั่ง Abutment/ติ๊กต้องสั่ง และยังไม่ได้สั่ง</div>';
   document.getElementById('rm-close').addEventListener('click', ()=>toggleRemindPanel(false));
+  const sh = document.getElementById('rm-share');
+  if(sh) sh.addEventListener('change', async ()=>{ await saveSettingsPatch(c=>{ c.share_all = sh.checked; }); showToast(sh.checked ? '👥 ทุกคนเห็นเหมือนกันแล้ว (มีผลภายใน ~30 วินาที)' : 'กลับไปแยกตามแผนกแล้ว'); renderAll(); });
 }
 function toggleRemindPanel(open){
   const p = document.getElementById('remind-panel');
@@ -2235,6 +2268,162 @@ document.addEventListener('click', e=>{
   if(e.target.closest && e.target.closest('#remind-btn')) return;
   p.style.display = 'none';
 });
+
+// ---------- Job tags (like ด่วน/ด่วนมาก): สั่ง Abutment / กลึง Zirconia / กลึง Premill / กลึง Emax ----------
+const TASK_DEFS = [
+  {key:'abut', icon:'🔩', label:'สั่ง Abutment', cls:'tg-abut'},
+  {key:'zir', icon:'⚙️', label:'กลึง Zirconia', cls:'tg-zir'},
+  {key:'premill', icon:'⚙️', label:'กลึง Premill', cls:'tg-pre'},
+  {key:'emax', icon:'⚙️', label:'กลึง Emax', cls:'tg-emax'},
+];
+function taskKeysOf(o){ const raw = o && o.tasks; return (Array.isArray(raw) ? raw : String(raw || '').split(',')).map(x=>String(x).trim()).filter(Boolean); }
+function abutOpen(o){ const a = ABUTMENTS.find(x=>x.order_id === o._id); return !!a && (a.status === 'requested' || a.status === 'ordered'); }
+function hasTask(o, key){ return key === 'abut' ? abutOpen(o) : taskKeysOf(o).includes(key); }
+function taskBadges(o){ return TASK_DEFS.filter(t=>hasTask(o, t.key)).map(t=>`<span class="tg ${t.cls}" title="ป้ายงาน: ${t.label}">${t.icon} ${t.label}</span>`).join(''); }
+function statusBadge(o){ return taskBadges(o) + `<span class="badge ${STATUS_BADGE[o.status] || ''}">${esc(o.status || '-')}</span>`; }
+function taskBoxHtml(o){
+  const admin = isAdminUser(CURRENT_EMPLOYEE);
+  const btns = TASK_DEFS.map(t=>{
+    const on = hasTask(o, t.key), can = t.key === 'abut' ? (on ? canManageAbutment() : true) : admin;
+    return `<button type="button" class="btn ${on ? 'primary' : 'ghost'} sm" data-task="${t.key}" ${can ? '' : 'disabled'} title="${on ? 'กดอีกครั้งเพื่อยกเลิก' : 'กดเพื่อติดป้าย'}">${t.icon} ${t.label}${on ? ' ✓' : ''}</button>`;
+  }).join('');
+  const anyMill = taskKeysOf(o).length > 0;
+  return `<div class="urg-box" id="task-box"><b>ป้ายงาน</b><span class="urg-ctl" style="margin-left:0">${btns}${admin && anyMill ? '<button type="button" class="btn ghost sm" data-task="_clear">ยกเลิกป้ายกลึงทั้งหมด</button>' : ''}</span></div>`;
+}
+function bindTaskBox(o){
+  document.querySelectorAll('#task-box [data-task]').forEach(b=>b.addEventListener('click', async ()=>{
+    const k = b.dataset.task, id = o._id;
+    if(k === 'abut'){
+      if(hasTask(o, 'abut')){
+        if(!window.confirm('ยกเลิกการสั่ง Abutment ของเคสนี้? (ขั้นสั่งและรับของจะถูกข้าม)')) return;
+        await abutCall({action:'saveAbutment', order_id:id, case_id:String(o.case_id || ''), fields:{status:'cancelled'}}, 'ยกเลิกป้ายสั่ง Abutment แล้ว');
+      } else {
+        await abutCall({action:'requestAbutment', order_id:id, case_id:String(o.case_id || ''), note:'ตั้งจากป้ายงาน'}, '🔩 ติดป้าย "สั่ง Abutment" แล้ว ขั้นตอนสั่ง/รับของเปิดให้เคสนี้');
+      }
+      return;
+    }
+    let list = taskKeysOf(o);
+    if(k === '_clear') list = [];
+    else list = list.includes(k) ? list.filter(x=>x !== k) : list.concat(k);
+    await patchOrder(id, {tasks: list.join(',')});
+    showToast(k === '_clear' ? 'ยกเลิกป้ายกลึงทั้งหมดแล้ว' : (list.includes(k) ? '✓ ติดป้าย "' + TASK_DEFS.find(t=>t.key === k).label + '" แล้ว' : 'ยกเลิกป้าย "' + TASK_DEFS.find(t=>t.key === k).label + '" แล้ว'));
+    renderAll(); renderCase();
+  }));
+}
+// order form: tick the tags when creating / editing
+function syncTaskBoxes(){
+  const hid = document.getElementById('f_tasks');
+  if(!hid) return;
+  const keys = hid.value.split(',').map(x=>x.trim());
+  document.querySelectorAll('#f_tasks_boxes [data-tk]').forEach(c=>{ c.checked = keys.includes(c.dataset.tk); });
+}
+function bindTaskBoxes(){
+  document.querySelectorAll('#f_tasks_boxes [data-tk]').forEach(c=>c.addEventListener('change', ()=>{
+    document.getElementById('f_tasks').value = [...document.querySelectorAll('#f_tasks_boxes [data-tk]')].filter(x=>x.checked).map(x=>x.dataset.tk).join(',');
+  }));
+  syncTaskBoxes();
+}
+
+// ---------- Performance per person (owner / head / admin) ----------
+const REPORT_TOKENS = ['report', 'lead', 'หัวหน้า', 'รายงาน', 'ผลงาน'];
+function canSeePerformance(){ return !!CURRENT_EMPLOYEE && (isAdminUser(CURRENT_EMPLOYEE) || tokensOf(CURRENT_EMPLOYEE.depts).some(t=>REPORT_TOKENS.includes(t))); }
+function perfRange(){
+  const v = document.getElementById('pf-period').value, t0 = new Date(); t0.setHours(0, 0, 0, 0);
+  const day = n=>{ const d = new Date(t0); d.setDate(d.getDate() + n); return d; };
+  const end = d=>{ const e = new Date(d); e.setHours(23, 59, 59, 999); return e; };
+  if(v === 'today') return {from:t0, to:end(t0), label:'วันนี้'};
+  if(v === 'yesterday') return {from:day(-1), to:end(day(-1)), label:'เมื่อวาน'};
+  if(v === 'd7') return {from:day(-6), to:end(t0), label:'7 วันล่าสุด'};
+  if(v === 'd30') return {from:day(-29), to:end(t0), label:'30 วันล่าสุด'};
+  if(v === 'year') return {from:new Date(t0.getFullYear(), 0, 1), to:end(t0), label:'ปี ' + (t0.getFullYear() + 543)};
+  if(v === 'month'){
+    const mk = SELECTED_MONTH === 'all' ? currentMonthKey() : SELECTED_MONTH, [y, m] = mk.split('-').map(Number);
+    return {from:new Date(y, m - 1, 1), to:new Date(y, m, 0, 23, 59, 59, 999), label:'เดือน ' + MONTHS_SHORT[m - 1] + ' ' + (y + 543)};
+  }
+  if(v === 'custom'){
+    const f = parseYmd(document.getElementById('pf-from').value), t = parseYmd(document.getElementById('pf-to').value);
+    return {from:f, to:t ? end(t) : null, label:'ช่วงที่กำหนด'};
+  }
+  return {from:null, to:null, label:'ทั้งหมด'};
+}
+function perfCompute(range, deptKey){
+  const people = {};
+  const P = (name, e)=>people[name] || (people[name] = {name, dept:(e && e.department) || '', total:0, orders:new Set(), units:0, byStep:{}, work:[], wait:[], days:new Set(), urgent:0, details:[]});
+  EMPLOYEE_LIST.forEach(e=>P(String(e.name).trim(), e));
+  NEW_ORDERS.forEach(o=>{
+    DEPARTMENTS.forEach(d=>{
+      if(deptKey && d.key !== deptKey) return;
+      const rec = depRecord(o, d.key);
+      if(rec.status !== 'เสร็จแล้ว') return;
+      const endAt = stampToDate(rec.end);
+      if(range.from || range.to){ if(!endAt) return; if(range.from && endAt < range.from) return; if(range.to && endAt > range.to) return; }
+      const by = String(rec.by || '').trim() || '(ไม่ระบุชื่อ)', p = P(by);
+      const units = Number(o.qty) || 0, hasTime = s=>/T\d{2}:\d{2}/.test(String(s || ''));
+      p.total++; p.orders.add(o._id); p.units += units; p.byStep[d.key] = (p.byStep[d.key] || 0) + 1;
+      if(urgencyOf(o)) p.urgent++;
+      if(endAt) p.days.add(ymdLocal(endAt));
+      if(hasTime(rec.start) && hasTime(rec.end)){ const w = endAt - stampToDate(rec.start); if(w >= 0) p.work.push(w); }
+      const arr = arrivalInfo(o, d.key);
+      if(arr.date && hasTime(arr.raw) && hasTime(rec.end) && endAt >= arr.date) p.wait.push(endAt - arr.date);
+      p.details.push({orderId:o._id, case_id:o.case_id, patient:o.patient, clinic:rpName(o, 'clinic'), step:d.label, stepKey:d.key, at:endAt, units, urgent:urgencyOf(o), start:rec.start});
+    });
+  });
+  return Object.values(people);
+}
+function fmtDur(ms){
+  if(!ms && ms !== 0) return '-';
+  const h = ms / 3600000;
+  return h < 1 ? Math.max(1, Math.round(ms / 60000)) + ' นาที' : h < 48 ? h.toFixed(1) + ' ชม.' : (h / 24).toFixed(1) + ' วัน';
+}
+const avg = a=>a.length ? a.reduce((x, y)=>x + y, 0) / a.length : null;
+let PF_SELECTED = null;
+function renderPerf(){
+  const tbl = document.getElementById('pf-table');
+  if(!tbl || !canSeePerformance()) return;
+  const dsel = document.getElementById('pf-dept');
+  if(dsel.options.length <= 1) DEPARTMENTS.forEach(d=>dsel.add(new Option(d.label, d.key)));
+  const range = perfRange(), deptKey = dsel.value, list = perfCompute(range, deptKey).filter(p=>p.total > 0 || EMPLOYEE_LIST.some(e=>String(e.name).trim() === p.name))
+    .sort((a, b)=>(b.total - a.total) || a.name.localeCompare(b.name, 'th'));
+  const total = list.reduce((a, p)=>a + p.total, 0), units = list.reduce((a, p)=>a + p.units, 0), active = list.filter(p=>p.total > 0).length;
+  const cases = new Set(); list.forEach(p=>p.orders.forEach(x=>cases.add(x)));
+  const allWork = [].concat(...list.map(p=>p.work)), allWait = [].concat(...list.map(p=>p.wait));
+  const k = (n, l, c)=>`<div class="kpi ${c || ''}"><div class="num">${n}</div><div class="lbl">${l}</div></div>`;
+  document.getElementById('pf-kpis').innerHTML = k(total, 'ขั้นตอนที่เสร็จ (' + esc(range.label) + ')') + k(cases.size, 'เคสที่เกี่ยวข้อง') + k(units, 'ซี่ที่ผ่านมือ') + k(active, 'คนที่มีผลงาน') + k(fmtDur(avg(allWork)), 'ทำจริงเฉลี่ย/ขั้น') + k(fmtDur(avg(allWait)), 'รอ→เสร็จเฉลี่ย/ขั้น');
+  const stepCols = DEPARTMENTS.filter(d=>list.some(p=>p.byStep[d.key]));
+  const short = l=>String(l).replace(/ \(.*/, '').replace(/^พอชเลน \/ /, '');
+  const max = Math.max(1, ...list.map(p=>p.total));
+  if(!list.length){ tbl.innerHTML = '<tr><td class="empty">ยังไม่มีข้อมูลในช่วงนี้</td></tr>'; document.getElementById('pf-detail').innerHTML = ''; return; }
+  tbl.innerHTML = '<tr><th>#</th><th>ชื่อ</th><th>แผนก</th><th>ขั้นเสร็จ</th><th style="min-width:110px"></th><th>เคส</th><th>ซี่</th>' + stepCols.map(d=>`<th title="${esc(d.label)}">${esc(short(d.label))}</th>`).join('') + '<th>วันที่มีผลงาน</th><th>เฉลี่ย/วัน</th><th>ทำจริง</th><th>รอ→เสร็จ</th><th>ด่วน</th></tr>' +
+    list.map((p, i)=>`<tr class="${PF_SELECTED === p.name ? 'sel' : ''}"><td>${p.total ? i + 1 : '-'}</td><td><a href="#" data-pf="${esc(p.name)}" class="caselink">${esc(p.name)}</a></td><td>${esc(p.dept || '-')}</td><td class="num"><b>${p.total}</b></td><td><div style="height:8px;border-radius:4px;background:#EEF3F2"><div style="height:8px;border-radius:4px;background:var(--teal);width:${Math.round(p.total / max * 100)}%"></div></div></td><td class="num">${p.orders.size}</td><td class="num">${p.units}</td>` +
+      stepCols.map(d=>`<td class="num">${p.byStep[d.key] || '-'}</td>`).join('') + `<td class="num">${p.days.size || '-'}</td><td class="num">${p.days.size ? (p.total / p.days.size).toFixed(1) : '-'}</td><td>${fmtDur(avg(p.work))}</td><td>${fmtDur(avg(p.wait))}</td><td class="num">${p.urgent || '-'}</td></tr>`).join('');
+  tbl.querySelectorAll('[data-pf]').forEach(a=>a.addEventListener('click', e=>{ e.preventDefault(); PF_SELECTED = a.dataset.pf; renderPerf(); }));
+  const sel = list.find(p=>p.name === PF_SELECTED), det = document.getElementById('pf-detail');
+  if(!sel){ det.innerHTML = '<div class="note" style="margin-top:10px">กดชื่อคนในตารางเพื่อดูรายละเอียดเคสที่ทำ</div>'; return; }
+  const byDay = {}; sel.details.forEach(x=>{ const kd = x.at ? ymdLocal(x.at) : 'ไม่มีวันที่'; byDay[kd] = (byDay[kd] || 0) + 1; });
+  const dmax = Math.max(1, ...Object.values(byDay));
+  det.innerHTML = `<h3 style="margin:14px 0 6px">รายละเอียด: ${esc(sel.name)} <small style="color:var(--muted);font-weight:400">(${sel.total} ขั้นตอน)</small> <button class="btn ghost sm" id="pf-clear">ปิด</button></h3>` +
+    '<div style="display:flex;gap:3px;align-items:flex-end;height:60px;margin-bottom:8px;overflow-x:auto">' + Object.keys(byDay).sort().map(kd=>`<div title="${esc(kd)}: ${byDay[kd]} ขั้น" style="flex:0 0 14px;background:var(--teal);height:${Math.max(4, Math.round(byDay[kd] / dmax * 56))}px;border-radius:3px 3px 0 0"></div>`).join('') + '</div>' +
+    '<div class="tablewrap" style="max-height:340px"><table><tr><th>เสร็จเมื่อ</th><th>เลขเคส</th><th>ขั้นตอน</th><th>คลินิก</th><th>คนไข้</th><th>ซี่</th></tr>' +
+    sel.details.slice().sort((a, b)=>(b.at || 0) - (a.at || 0)).slice(0, 200).map(x=>`<tr><td>${esc(x.at ? fmtStamp(ymdLocal(x.at) + 'T' + String(x.at.getHours()).padStart(2, '0') + ':' + String(x.at.getMinutes()).padStart(2, '0')) : '-')}</td><td><a href="#" class="caselink" data-open-case="${esc(x.orderId)}">${esc(x.case_id)}</a>${x.urgent ? ' <span class="urg urg1">🔥</span>' : ''}</td><td>${esc(short(x.step))}</td><td>${esc(x.clinic)}</td><td>${esc(x.patient || '-')}</td><td class="num">${x.units || '-'}</td></tr>`).join('') + '</table></div>';
+  document.getElementById('pf-clear').addEventListener('click', ()=>{ PF_SELECTED = null; renderPerf(); });
+}
+function perfExportRows(){
+  const range = perfRange(), deptKey = document.getElementById('pf-dept').value, list = perfCompute(range, deptKey).filter(p=>p.total > 0).sort((a, b)=>b.total - a.total);
+  const stepCols = DEPARTMENTS.filter(d=>list.some(p=>p.byStep[d.key]));
+  const head = ['อันดับ', 'ชื่อ', 'แผนก', 'ขั้นตอนที่เสร็จ', 'เคส', 'ซี่ที่ผ่านมือ'].concat(stepCols.map(d=>d.label), ['จำนวนวันที่มีผลงาน', 'เฉลี่ยต่อวัน', 'ทำจริงเฉลี่ย (ชม.)', 'รอ→เสร็จเฉลี่ย (ชม.)', 'เคสด่วน']);
+  const h = ms=>ms === null ? '' : Math.round(ms / 36000) / 100;
+  const rows = [head].concat(list.map((p, i)=>[i + 1, p.name, p.dept, p.total, p.orders.size, p.units].concat(stepCols.map(d=>p.byStep[d.key] || 0), [p.days.size, p.days.size ? Math.round(p.total / p.days.size * 10) / 10 : '', h(avg(p.work)), h(avg(p.wait)), p.urgent])));
+  const det = [['ชื่อ', 'เลขเคส', 'ขั้นตอน', 'เสร็จเมื่อ', 'คลินิก', 'คนไข้', 'ซี่', 'เคสด่วน']];
+  list.forEach(p=>p.details.slice().sort((a, b)=>(b.at || 0) - (a.at || 0)).forEach(x=>det.push([p.name, String(x.case_id ?? ''), x.step, x.at ? fmtStamp(ymdLocal(x.at) + 'T' + String(x.at.getHours()).padStart(2, '0') + ':' + String(x.at.getMinutes()).padStart(2, '0')) : '', x.clinic, String(x.patient ?? ''), x.units, x.urgent ? 'ด่วน' : ''])));
+  return {range, rows, det};
+}
+['pf-period', 'pf-dept', 'pf-from', 'pf-to'].forEach(id=>document.getElementById(id).addEventListener('change', ()=>{
+  const c = document.getElementById('pf-period').value === 'custom';
+  document.getElementById('pf-from').style.display = document.getElementById('pf-to').style.display = c ? '' : 'none';
+  PF_SELECTED = null; renderPerf();
+}));
+document.getElementById('pf-xlsx').addEventListener('click', ()=>{ const x = perfExportRows(); if(x.rows.length < 2){ showToast('ไม่มีข้อมูลในช่วงนี้'); return; } downloadXlsx('ผลงานรายคน ' + safeFileName(x.range.label) + '.xlsx', [{name:'สรุปรายคน', rows:x.rows}, {name:'รายละเอียดเคส', rows:x.det}]); });
+document.getElementById('pf-pdf').addEventListener('click', ()=>{ const x = perfExportRows(); if(x.rows.length < 2){ showToast('ไม่มีข้อมูลในช่วงนี้'); return; } printPdf(safeFileName('ผลงานรายคน ' + x.range.label), 'ผลงานรายคน — ' + x.range.label, [{rows:x.rows}]); });
 
 // ---------- Copy: LINE-style case text + tables for Excel ----------
 function fmtCE(v){
@@ -2624,6 +2813,7 @@ function startEdit(id){
   });
   document.getElementById('f_case_id').dataset.manual = '1';
   document.getElementById('f_has_scan').dataset.manual = '1';
+  syncTaskBoxes();
   TOOTH = toothFromString(o.tooth_types); buildToothUi();
   setEditUi(true, o.case_id);
   window.scrollTo({top:0, behavior:'smooth'});
@@ -2702,7 +2892,7 @@ function renderRecentOrders(){
     list.slice(0,100).map(o=>`<tr>
       <td><b>${caseLink(o)}</b></td><td>${esc(o.clinic ?? '-')}</td><td>${esc(o.doctor ?? '-')}</td><td>${esc(o.patient ?? '-')}</td>
       <td>${esc(o.material ?? '-')}</td><td>${esc(o.qty ?? '-')}</td>
-      <td><span class="badge ${STATUS_BADGE[o.status]||''}">${esc(o.status || '-')}</span></td><td>${esc(fmtDate(o.date_received))}</td>
+      <td>${statusBadge(o)}</td><td>${esc(fmtDate(o.date_received))}</td>
       <td style="white-space:nowrap">${copyBtn(o._id)} ${trash
         ? `<button class="btn ghost sm" data-act="restore" data-id="${esc(o._id)}">↩ กู้คืน</button> <button class="btn danger sm" data-act="purge" data-id="${esc(o._id)}" title="ลบถาวร กู้คืนไม่ได้ ใช้เลขเคสนี้สร้างใหม่ได้">🗑 ลบถาวร</button>`
         : `<button class="btn ghost sm" data-act="edit" data-id="${esc(o._id)}">✏️ แก้ไข</button> <button class="btn danger sm" data-act="delete" data-id="${esc(o._id)}">🗑 ลบ</button> <button class="btn ghost sm" data-act="attach" data-id="${esc(o._id)}" title="แนบไฟล์ / รูป เพิ่มให้ออเดอร์นี้">📎 แนบไฟล์</button>`}</td>
@@ -2967,7 +3157,7 @@ function renderReport(){
     '<tr><th>เลขเคส</th><th>วันรับงาน</th><th>คนไข้</th><th>วัสดุ</th><th class="num">ซี่</th><th>ประเภท</th><th>สถานะ</th></tr>' +
     cases.map(r=>{
       const kind = [r.case_type === 'คูปอง' ? 'คูปอง' : 'ปกติ', r.is_rework === true ? 'งานแก้' : ''].filter(Boolean).join(' • ');
-      return `<tr><td>${caseLink(r)}</td><td>${esc(fmtDate(r.date_received))}</td><td>${esc(r.patient ?? '-')}</td><td>${esc(rpMaterial(r))}</td><td class="num">${esc(r.qty ?? '-')}</td><td>${esc(kind)}</td><td><span class="badge ${STATUS_BADGE[r.status]||''}">${esc(r.status || '-')}</span></td></tr>`;
+      return `<tr><td>${caseLink(r)}</td><td>${esc(fmtDate(r.date_received))}</td><td>${esc(r.patient ?? '-')}</td><td>${esc(rpMaterial(r))}</td><td class="num">${esc(r.qty ?? '-')}</td><td>${esc(kind)}</td><td>${statusBadge(r)}</td></tr>`;
     }).join('');
 }
 ['rp-by','rp-period'].forEach(id=>document.getElementById(id).addEventListener('change', ()=>{ if(id==='rp-by') RP_SELECTED = null; renderReport(); }));
@@ -3009,7 +3199,7 @@ function renderPerm(){
     let depTxt;
     if(admin) depTxt = 'ทุกแผนก (แอดมิน)';
     else if(ex === null) depTxt = 'ทุกแผนก <span style="color:#D98A2B">(ยังไม่ได้กำหนด depts)</span>';
-    else if(ex.length === 0 && tokensOf(e.depts).every(t=>FILE_ANY_TOKENS.includes(t))) depTxt = '<span style="color:#888">ไม่มีสิทธิ์ติ๊กขั้นตอน (อัปโหลดไฟล์อย่างเดียว)</span>';
+    else if(ex.length === 0 && tokensOf(e.depts).every(t=>FILE_ANY_TOKENS.includes(t) || REPORT_TOKENS.includes(t))) depTxt = '<span style="color:#888">ไม่มีสิทธิ์ติ๊กขั้นตอน (' + (tokensOf(e.depts).some(t=>REPORT_TOKENS.includes(t)) ? 'ดูผลงานรายคนอย่างเดียว' : 'อัปโหลดไฟล์อย่างเดียว') + ')</span>';
     else if(ex.length === 0) depTxt = '<span style="color:#C0453A;font-weight:700">⚠ ชื่อในช่อง depts ไม่ตรงกับแผนกใด: "' + esc(e.depts) + '"</span>';
     else depTxt = esc(allowedDeptKeys(e).map(labelOf).join(', '));
     const menus = admin ? 'ทั้งหมด (สร้างออเดอร์, งานค้าง, สถานะแผนก, แดชบอร์ด, สรุปหมอ/คลินิก, สิทธิ์, ค้นหา, งานแก้)' : 'งานค้าง, สถานะแผนก, ค้นหา / ตรวจสอบงาน';
@@ -3155,8 +3345,8 @@ document.getElementById('sr-pdf').addEventListener('click', ()=>{
 let PRICES_WORK = null, BL_DIRTY = false, BL_EXTRA = [];
 function readPrices(){
   const rec = DEP_OVERRIDES['_settings'] && DEP_OVERRIDES['_settings']['prices'];
-  const p = {default:{}, clinics:{}, hidden:[], targets:{}, credit_days:0, clinics_imported:false};
-  if(rec && rec.status){ try{ const v = JSON.parse(rec.status); p.default = v.default || {}; p.clinics = v.clinics || {}; p.hidden = Array.isArray(v.hidden) ? v.hidden : []; p.targets = (v.targets && typeof v.targets === 'object') ? v.targets : {}; p.credit_days = Number(v.credit_days) > 0 ? Number(v.credit_days) : 0; p.clinics_imported = !!v.clinics_imported; }catch(e){} }
+  const p = {default:{}, clinics:{}, hidden:[], targets:{}, credit_days:0, clinics_imported:false, share_all:true};
+  if(rec && rec.status){ try{ const v = JSON.parse(rec.status); p.default = v.default || {}; p.clinics = v.clinics || {}; p.hidden = Array.isArray(v.hidden) ? v.hidden : []; p.targets = (v.targets && typeof v.targets === 'object') ? v.targets : {}; p.credit_days = Number(v.credit_days) > 0 ? Number(v.credit_days) : 0; p.clinics_imported = !!v.clinics_imported; p.share_all = v.share_all === undefined ? true : !!v.share_all; }catch(e){} }
   return p;
 }
 async function saveSettingsPatch(fn){
@@ -4438,7 +4628,7 @@ function renderDash(){
     const olabels=['เลขเคส','คลินิก','คนไข้','วัสดุ','สถานะรวม','วันนัด'];
     ot.innerHTML = '<tr>'+olabels.map(l=>`<th>${l}</th>`).join('')+'</tr>' +
       overdueRows.slice(0,100).map(r=>'<tr>'+ocols.map(c=>{
-        if(c==='status') return `<td><span class="badge ${STATUS_BADGE[r.status]||''}">${esc(r.status||'-')}</span></td>`;
+        if(c==='status') return `<td>${statusBadge(r)}</td>`;
         if(c==='appointment_date') return `<td>${esc(fmtDate(r[c]))}</td>`;
         return `<td>${esc(r[c]??'-')}</td>`;
       }).join('')+'</tr>').join('');
@@ -4459,7 +4649,7 @@ function renderDash(){
   if(!pending.length){ pt.innerHTML='<tr><td class="empty">ไม่มีงานค้าง 🎉</td></tr>'; }
   else{
     pt.innerHTML = '<tr>'+labels.map(l=>`<th>${l}</th>`).join('')+'</tr>' +
-      pending.slice(0,200).map(r=>'<tr>'+cols.map(c=>c==='status'?`<td><span class="badge ${STATUS_BADGE[r.status]||''}">${esc(r.status||'-')}</span></td>`:`<td>${esc(c==='date_received'?fmtDate(r[c]):(r[c]??'-'))}</td>`).join('')+'</tr>').join('');
+      pending.slice(0,200).map(r=>'<tr>'+cols.map(c=>c==='status'?`<td>${statusBadge(r)}</td>`:`<td>${esc(c==='date_received'?fmtDate(r[c]):(r[c]??'-'))}</td>`).join('')+'</tr>').join('');
   }
 }
 function drawBars(elId, obj, topN){
@@ -4500,7 +4690,7 @@ function renderSearch(){
   if(!data.length){ t.innerHTML='<tr><td class="empty">ไม่พบข้อมูลตามเงื่อนไข</td></tr>'; return; }
   t.innerHTML = '<tr>'+labels.map(l=>`<th>${l}</th>`).join('')+'</tr>' +
     data.slice(0,300).map(r0=>{ const r = Object.assign({}, r0, {cur_dept: currentDeptLabel(r0), cur_people: currentPeople(r0), cur_days: currentDays(r0), date_delivered: deliveredDate(r0)}); return '<tr>'+cols.map(c=>{
-      if(c==='status') return `<td><span class="badge ${STATUS_BADGE[r.status]||''}">${esc(r.status||'-')}</span></td>`;
+      if(c==='status') return `<td>${statusBadge(r)}</td>`;
       if(c==='date_received') return `<td>${esc(fmtDate(r[c]))}</td>`;
       if(c==='date_delivered') return `<td>${esc(r[c] ? fmtStamp(r[c]) : '-')}</td>`;
       if(c==='progress') return `<td>${progressStrip(r)}</td>`;
@@ -4533,7 +4723,7 @@ function renderRework(){
   if(!data.length){ t.innerHTML='<tr><td class="empty">ไม่มีงานแก้ในช่วงข้อมูลนี้</td></tr>'; return; }
   t.innerHTML = '<tr>'+labels.map(l=>`<th>${l}</th>`).join('')+'</tr>' +
     data.slice(0,300).map(r=>'<tr>'+cols.map(c=>{
-      if(c==='status') return `<td><span class="badge ${STATUS_BADGE[r.status]||''}">${esc(r.status||'-')}</span></td>`;
+      if(c==='status') return `<td>${statusBadge(r)}</td>`;
       if(c==='date_received') return `<td>${esc(fmtDate(r[c]))}</td>`;
       return `<td>${esc(r[c]??'-')}</td>`;
     }).join('')+'</tr>').join('');
@@ -4579,7 +4769,7 @@ function renderServerBanner(){
 const TAB_RENDERERS = {
   order: ()=>{ refreshClinicSelect(); renderRecentOrders(); }, pending: ()=>renderPending(), delivery: ()=>renderDelivery(), dept: ()=>renderDept(), dash: ()=>renderDash(),
   overview: ()=>renderOverview(), report: ()=>renderReport(), billing: ()=>renderBilling(false), contacts: ()=>renderContacts(), perm: ()=>renderPerm(),
-  search: ()=>renderSearch(), rework: ()=>renderRework(), abutment: ()=>renderAbutTab()
+  search: ()=>renderSearch(), rework: ()=>renderRework(), abutment: ()=>renderAbutTab(), perf: ()=>renderPerf()
 };
 function activeTabName(){ const b = document.querySelector('nav.tabs button.active'); return b ? b.dataset.tab : 'order'; }
 // only the tab you are looking at is drawn (the others are drawn when you open them): keeps refreshes fast with thousands of orders
@@ -4759,6 +4949,7 @@ let LAST_DEPT_SIG = null;
 function tabAllowed(tab){
   if(isAdminUser(CURRENT_EMPLOYEE) || NORMAL_TABS.includes(tab)) return true;
   if(tab === 'abutment') return canManageAbutment();
+  if(tab === 'perf') return canSeePerformance();
   return tab === 'delivery' && allowedDeptKeys().includes('delivery');
 }
 function applyRole(){
