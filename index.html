@@ -298,7 +298,7 @@
     </div>
     <div class="month-pick" id="month-pick"><label for="month-select" style="margin:0">เดือน</label><select id="month-select"></select></div>
     <div class="user-chip" id="user-chip" style="display:none">
-      <button id="bell" class="bell" title="แจ้งเตือน: สิ่งที่ต้องทำ" type="button">🔔<span id="bell-n"></span></button><span class="sync-dot" id="sync-dot"></span><span id="sync-ms" style="font-size:11px;color:var(--muted);margin-left:4px"></span>
+      <button id="setup-btn" class="btn ghost sm" type="button" style="display:none;margin-right:6px" title="สร้างลิงก์ส่งให้พนักงาน: เครื่องที่เปิดลิงก์จะเปลี่ยนมาใช้ระบบหลังบ้านตัวเดียวกับเครื่องนี้">📲 ตั้งค่าเครื่องพนักงาน</button><button id="bell" class="bell" title="แจ้งเตือน: สิ่งที่ต้องทำ" type="button">🔔<span id="bell-n"></span></button><span class="sync-dot" id="sync-dot"></span><span id="sync-ms" style="font-size:11px;color:var(--muted);margin-left:4px"></span>
       <span>สวัสดี, <b id="user-name-display"></b></span>
       <button id="logout-btn">ออกจากระบบ</button>
     </div>
@@ -757,7 +757,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-06 รุ่น 42 (ส่งต่อไฟล์ให้ขั้นถัดไป)";
+const APP_VERSION = "2026-10-06 รุ่น 43 (ลิงก์ตั้งค่าเครื่องพนักงาน)";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -2141,6 +2141,39 @@ document.addEventListener('click', e=>{
   p.style.display = 'none';
 });
 
+// ---------- One-tap setup link for staff computers: they switch to the same backend as this (working) admin PC ----------
+function setupLinkFor(url){ return location.origin + location.pathname + '?v=' + Date.now() + '#api=' + encodeURIComponent(url); }
+function renderSetupBtn(){
+  const b = document.getElementById('setup-btn');
+  if(b) b.style.display = (CURRENT_EMPLOYEE && isAdminUser(CURRENT_EMPLOYEE) && SERVER_VER >= NEEDED_SERVER) ? '' : 'none';
+}
+document.getElementById('setup-btn').addEventListener('click', ()=>{
+  const link = setupLinkFor(API_URL);
+  copyText(link, 'คัดลอกลิงก์ตั้งค่าแล้ว ✓ ส่งให้พนักงานเปิดได้เลย');
+  window.prompt('ลิงก์ตั้งค่าเครื่องพนักงาน (กด Ctrl+C เพื่อคัดลอก ถ้ายังไม่ได้คัดลอกอัตโนมัติ)\n\nส่งลิงก์นี้ให้พนักงานเปิดในคอมของเขา 1 ครั้ง เครื่องนั้นจะเปลี่ยนมาใช้ระบบหลังบ้านตัวเดียวกับเครื่องคุณ (เห็นไฟล์แนบ / ผู้ติดต่อ / งานสั่ง Abutment)', link);
+});
+async function applySetupLink(u){
+  const tail = u.slice(-10);
+  if(!window.confirm('ตั้งค่าเครื่องนี้ให้เชื่อมต่อระบบหลังบ้านตัวใหม่ (รหัสลงท้าย …' + tail + ') ?\n\nกดตกลงเฉพาะเมื่อแอดมินของร้านส่งลิงก์นี้ให้คุณ\n(ข้อมูลเดิมไม่หาย ต้องล็อกอินใหม่ 1 ครั้ง)')) return;
+  try{
+    const r = await (await fetch(u + '?action=names')).json();
+    if(!r || (!r.ok && r.error !== 'use_post')){ window.alert('ลิงก์นี้ใช้ไม่ได้ (ระบบไม่ตอบ) แจ้งแอดมิน'); return; }
+    if(!(r.version >= NEEDED_SERVER)){ window.alert('ลิงก์นี้ยังเป็นระบบหลังบ้านรุ่นเก่า ไม่เปลี่ยนค่าให้ แจ้งแอดมิน'); return; }
+    localStorage.setItem('totu_api_url', u);
+    window.alert('ตั้งค่าเรียบร้อย ✓ เครื่องนี้ใช้ระบบหลังบ้านใหม่แล้ว กดตกลงแล้วล็อกอินใหม่');
+    location.replace(location.pathname);
+  }catch(e){ window.alert('เปิดลิงก์ไม่สำเร็จ ตรวจอินเทอร์เน็ตแล้วลองใหม่'); }
+}
+(function(){
+  const m = /^#api=(.+)$/.exec(location.hash);
+  if(!m) return;
+  let u = '';
+  try{ u = decodeURIComponent(m[1]); }catch(e){}
+  try{ history.replaceState(null, '', location.pathname); }catch(e){}
+  if(!API_URL_OK.test(u)){ setTimeout(()=>window.alert('ลิงก์ตั้งค่าไม่ถูกต้อง แจ้งแอดมินให้ส่งใหม่'), 200); return; }
+  setTimeout(()=>applySetupLink(u), 400);
+})();
+
 // ---------- Copy: LINE-style case text + tables for Excel ----------
 function fmtCE(v){
   const d = parseYmd(v);
@@ -2888,9 +2921,10 @@ function renderConn(){
   el.innerHTML = `<div class="ab-card" style="margin-bottom:12px"><b>🔌 การเชื่อมต่อระบบ (ของเครื่องนี้)</b>
     <div class="ab-grid"><div><b>หน้าเว็บ</b> ${esc(APP_VERSION)}</div><div><b>Apps Script (หลังบ้าน)</b> ${SERVER_VER ? 'เวอร์ชัน ' + SERVER_VER : 'เก่ามาก'} ${okv ? '<span style="color:#2F7D4F">✓ ใช้ได้</span>' : '<span style="color:var(--rose)">⚠ ต้องเวอร์ชัน ' + NEEDED_SERVER + ' ขึ้นไป</span>'}</div></div>
     <div style="font-size:12.5px;word-break:break-all"><b>ลิงก์ที่ใช้:</b> <code>${esc(API_URL)}</code><br>${overridden ? '⚠ <b>ตั้งเฉพาะเครื่องนี้</b> เครื่องอื่นของพนักงานยังใช้ลิงก์ที่ฝังในไฟล์เว็บ (ถ้าต่างกัน พนักงานจะเห็นข้อมูลไม่ตรงกัน เช่น มองไม่เห็นไฟล์แนบ)' : 'ฝังอยู่ในไฟล์เว็บ ทุกเครื่องใช้ลิงก์เดียวกันนี้'}</div>
-    <div class="actions" style="margin-top:8px"><button class="btn ghost sm" id="conn-copy">📋 คัดลอกลิงก์ที่ใช้อยู่</button><a class="btn ghost sm" href="${esc(API_URL)}?action=names" target="_blank" rel="noopener" style="text-decoration:none">เปิดตรวจเวอร์ชัน</a>${overridden ? '<button class="btn ghost sm" id="conn-reset">กลับไปใช้ลิงก์ในไฟล์เว็บ</button>' : ''}</div>
+    <div class="actions" style="margin-top:8px"><button class="btn ghost sm" id="conn-copy">📋 คัดลอกลิงก์ที่ใช้อยู่</button><button class="btn primary sm" id="conn-setup">📲 ลิงก์ตั้งค่าเครื่องพนักงาน</button><a class="btn ghost sm" href="${esc(API_URL)}?action=names" target="_blank" rel="noopener" style="text-decoration:none">เปิดตรวจเวอร์ชัน</a>${overridden ? '<button class="btn ghost sm" id="conn-reset">กลับไปใช้ลิงก์ในไฟล์เว็บ</button>' : ''}</div>
     <div class="note" style="margin:8px 0 0">ถ้าพนักงานบางคน<b>มองไม่เห็นไฟล์ที่คนอื่นแนบ</b>: เครื่องของเขาน่าจะยังเชื่อมต่อลิงก์ระบบหลังบ้านรุ่นเก่า ให้ส่งลิงก์ที่คัดลอกจากปุ่มด้านบนให้ผู้พัฒนาฝังลงไฟล์เว็บ (ครั้งเดียว ทุกเครื่องเปลี่ยนพร้อมกัน) หรืออัปเดตลิงก์เดิมให้เป็นโค้ดรุ่นใหม่ แล้วให้ทุกเครื่องกด Ctrl+F5</div></div>`;
   document.getElementById('conn-copy').addEventListener('click', ()=>copyText(API_URL, 'คัดลอกลิงก์แล้ว ✓ วางส่งให้ผู้พัฒนาในแชทได้เลย'));
+  document.getElementById('conn-setup').addEventListener('click', ()=>document.getElementById('setup-btn').click());
   const rs = document.getElementById('conn-reset');
   if(rs) rs.addEventListener('click', ()=>{ try{ localStorage.removeItem('totu_api_url'); }catch(e){} location.reload(); });
 }
@@ -4449,7 +4483,7 @@ function renderServerBanner(){
   const old = SERVER_VER < NEEDED_SERVER, admin = isAdminUser(CURRENT_EMPLOYEE), bad = admin && old;
   if(old && !admin && CURRENT_EMPLOYEE){
     el.style.display = 'block'; el.dataset.key = 'staff';
-    el.innerHTML = '⚠ เครื่องนี้เชื่อมต่อระบบหลังบ้าน<b>รุ่นเก่า</b>' + (SERVER_VER ? ' (เวอร์ชัน ' + SERVER_VER + ')' : '') + ' จึงอาจมองไม่เห็นไฟล์แนบ / รายชื่อผู้ติดต่อ / งานสั่ง Abutment ที่คนอื่นลงไว้ — แจ้งแอดมินให้อัปเดตลิงก์ระบบของเครื่องนี้ แล้วกด Ctrl+F5';
+    el.innerHTML = '⚠ เครื่องนี้เชื่อมต่อระบบหลังบ้าน<b>รุ่นเก่า</b>' + (SERVER_VER ? ' (เวอร์ชัน ' + SERVER_VER + ')' : '') + ' จึงอาจมองไม่เห็นไฟล์แนบ / รายชื่อผู้ติดต่อ / งานสั่ง Abutment ที่คนอื่นลงไว้ — ขอ "ลิงก์ตั้งค่าเครื่อง" จากแอดมิน (ปุ่ม 📲 มุมขวาบนของแอดมิน) แล้วเปิดลิงก์นั้นในเครื่องนี้ 1 ครั้ง';
     return;
   }
   el.style.display = bad ? 'block' : 'none';
@@ -4489,6 +4523,7 @@ function activeTabName(){ const b = document.querySelector('nav.tabs button.acti
 // only the tab you are looking at is drawn (the others are drawn when you open them): keeps refreshes fast with thousands of orders
 function renderAll(){
   renderServerBanner();
+  renderSetupBtn();
   renderAlerts();
   renderAbutTab();
   if(CASE_OPEN_ID && !UPLOADING && !document.getElementById('case-modal').contains(document.activeElement)) renderCase();
