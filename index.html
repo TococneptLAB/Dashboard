@@ -170,9 +170,44 @@
   .po-check th,.po-check td{border:1px solid #888;padding:4px 6px;text-align:left;}
   tr.grp td{background:#E3EAE9;font-weight:700;}
   .miss{color:var(--rose);font-weight:700;}
+  .bz-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:900px){.bz-grid{grid-template-columns:1fr;}}
+  .bz-chart svg{width:100%;height:auto;display:block;}
+  .bz-legend div{display:flex;align-items:center;gap:8px;font-size:13px;padding:3px 0;border-bottom:1px solid var(--line);}
+  .bz-legend i{width:11px;height:11px;border-radius:50%;display:inline-block;flex-shrink:0;}
+  .bz-legend .nm{flex:1;}
+  .bz-legend .val{font-family:'IBM Plex Mono',monospace;font-size:12.5px;}
+  .bz-progress{height:20px;background:#EEF3F2;border-radius:10px;overflow:hidden;position:relative;margin:6px 0;}
+  .bz-progress .f{height:100%;background:var(--teal);}
+  .bz-progress .m{position:absolute;top:0;bottom:0;width:2px;background:var(--ink);}
+  .bz-pill{display:inline-block;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:700;}
+  .tt-types{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+  .tt-type{border:2px solid var(--line);border-radius:10px;padding:5px 10px 5px 6px;display:flex;align-items:center;gap:6px;cursor:pointer;background:#fff;font-family:inherit;font-size:12.5px;font-weight:700;color:var(--ink);}
+  .tt-type svg{width:24px;height:24px;}
+  .tt-type.active{background:#F1F8F7;}
+  .tt-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;padding:10px 8px;background:#F7FAF9;}
+  .tt-stage{position:relative;margin:0 auto;}
+  .tt-stage svg.bg{position:absolute;left:0;top:0;pointer-events:none;}
+  .tt-tooth{position:absolute;border:none;background:none;padding:0;cursor:pointer;display:block;}
+  .tt-tooth svg.tb{display:block;}
+  .tt-tooth:hover rect.tp{stroke:var(--teal);stroke-width:2;}
+  .tt-tooth.anchor rect.tp{stroke:#0B2B36;stroke-width:2.4;stroke-dasharray:3 2;}
+  .tt-num{position:absolute;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--muted);transform:translate(-50%,-50%);pointer-events:none;}
+  .tt-num.sel{color:var(--ink);font-weight:700;}
+  .tt-mode.active{background:#0B2B36;color:#fff;border-color:#0B2B36;}
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="ic-crown" viewBox="0 0 24 24"><path d="M5 9c0-3 2.2-5 4.4-5 1 0 1.8.4 2.6.4s1.6-.4 2.6-.4C16.8 4 19 6 19 9c0 3-1 5-1.2 8-.2 2-.8 3-1.8 3s-1.3-1.5-2-3c-.3-.7-.6-1-1-1s-.7.3-1 1c-.7 1.5-1 3-2 3s-1.6-1-1.8-3C6 14 5 12 5 9z" fill="currentColor"/><path d="M6.4 12.6h11.2" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round"/></symbol>
+  <symbol id="ic-pontic" viewBox="0 0 24 24"><rect x="0.5" y="7" width="5" height="2.6" rx="1.3" fill="currentColor"/><rect x="18.5" y="7" width="5" height="2.6" rx="1.3" fill="currentColor"/><g transform="translate(5.4 4.2) scale(.62)"><path d="M5 9c0-3 2.2-5 4.4-5 1 0 1.8.4 2.6.4s1.6-.4 2.6-.4C16.8 4 19 6 19 9c0 3-1 5-1.2 8-.2 2-.8 3-1.8 3s-1.3-1.5-2-3c-.3-.7-.6-1-1-1s-.7.3-1 1c-.7 1.5-1 3-2 3s-1.6-1-1.8-3C6 14 5 12 5 9z" fill="currentColor"/></g><path d="M6.5 18.5h11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".5"/></symbol>
+  <symbol id="ic-implant" viewBox="0 0 24 24"><g transform="translate(5.2 .6) scale(.62)"><path d="M5 9c0-3 2.2-5 4.4-5 1 0 1.8.4 2.6.4s1.6-.4 2.6-.4C16.8 4 19 6 19 9c0 3-.6 4.5-1.2 6H6.2C5.6 13.5 5 12 5 9z" fill="currentColor"/></g><rect x="9" y="9.8" width="6" height="2.2" rx=".6" fill="currentColor" opacity=".7"/><path d="M9.6 12.6h4.8l-.9 9.4h-3z" fill="currentColor"/><path d="M9.9 15h4.2M10.2 17.4h3.6M10.4 19.7h3.2" stroke="#fff" stroke-width="1" fill="none"/></symbol>
+  <symbol id="ic-abutment" viewBox="0 0 24 24"><path d="M7.5 3.5h9l1 5.5-2.4 2.6V21H8.9v-9.4L6.5 9z" fill="currentColor"/><path d="M9 7.2h6" stroke="#fff" stroke-width="1.4" fill="none" stroke-linecap="round"/><path d="M9.2 15.5h5.6" stroke="#fff" stroke-width="1" fill="none"/></symbol>
+  <symbol id="ic-inlay" viewBox="0 0 24 24"><path d="M5 9c0-3 2.2-5 4.4-5 1 0 1.8.4 2.6.4s1.6-.4 2.6-.4C16.8 4 19 6 19 9c0 3-1 5-1.2 8-.2 2-.8 3-1.8 3s-1.3-1.5-2-3c-.3-.7-.6-1-1-1s-.7.3-1 1c-.7 1.5-1 3-2 3s-1.6-1-1.8-3C6 14 5 12 5 9z" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="8.6" y="6.4" width="6.8" height="4.4" rx="1.6" fill="currentColor"/></symbol>
+  <symbol id="ic-veneer" viewBox="0 0 24 24"><path d="M6.5 4.5c3.8-1.8 8.2-1.2 11 1.6-.3 6.2-2 12-5.5 14C8.6 18.4 6.5 12.4 6.5 4.5z" fill="currentColor"/><path d="M9 8.5c1.6-.8 3.6-.8 5 .2" stroke="#fff" stroke-width="1.2" fill="none" stroke-linecap="round" opacity=".8"/></symbol>
+  <symbol id="ic-coping" viewBox="0 0 24 24"><path d="M4.5 18c0-6.4 3.2-12 7.5-12s7.5 5.6 7.5 12z" fill="currentColor"/><path d="M4 18.8h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8.6 15.2c.8-3 1.8-4.6 3.4-4.6" stroke="#fff" stroke-width="1.3" fill="none" stroke-linecap="round" opacity=".8"/></symbol>
+  <symbol id="ic-other" viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z" fill="currentColor"/><path d="M12 12l8-4.5M12 12L4 7.5M12 12v9" stroke="#fff" stroke-width="1.2" fill="none"/></symbol>
+</defs></svg>
 
 <div id="setup-screen" style="position:fixed;inset:0;background:var(--paper);z-index:200;display:none;align-items:center;justify-content:center;">
   <div class="setup-box">
@@ -225,6 +260,7 @@
       <button data-tab="delivery">ใบนำส่ง</button>
       <button data-tab="dept">สถานะแผนก</button>
       <button data-tab="dash">แดชบอร์ด</button>
+      <button data-tab="overview">ภาพรวมรายได้</button>
       <button data-tab="report">สรุปหมอ / คลินิก</button>
       <button data-tab="billing">ราคา / บิล</button>
       <button data-tab="contacts">ผู้ติดต่อ</button>
@@ -240,6 +276,13 @@
       <h2>สร้างใบออเดอร์งานใหม่ <span class="tag">NEW ORDER</span></h2>
       <div id="edit-banner" style="display:none;background:#FCEFDD;border:1px solid #E9C48A;color:#7a4a00;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:13.5px;font-weight:600"></div>
       <div class="grid form" id="order-form"></div>
+      <div id="tooth-block" style="margin:16px 0 4px">
+        <h2 style="font-size:15px;margin:0 0 4px">ผังฟัน / ชนิดงาน <span class="tag">TOOTH CHART</span></h2>
+        <div class="note" style="margin:0 0 8px">เลือกชนิดงานก่อน แล้วคลิกซี่ฟันได้หลายซี่ (คลิกซ้ำเพื่อยกเลิก) • เลือกต่อเนื่อง: กด Shift ค้างแล้วคลิกซี่ปลาย หรือกดปุ่ม "เลือกเป็นช่วง" (เหมาะกับมือถือ) แล้วแตะซี่แรกและซี่สุดท้าย • เปลี่ยนชนิดงานระหว่างทางได้ ซี่ละชนิด • ระบบใส่ "ตำแหน่งฟัน" และ "จำนวน (ซี่)" ให้เอง หรือจะพิมพ์ตำแหน่งเองก็ได้ ผังจะตามให้ (เลขฟันระบบ FDI)</div>
+        <div id="tooth-types" class="tt-types"></div>
+        <div class="tt-wrap"><div id="tooth-chart"></div></div>
+        <div id="tooth-summary" class="note" style="margin-top:6px"></div>
+      </div>
       <h2 id="order-dept-title" style="margin-top:18px">สถานะเริ่มต้นแต่ละแผนก</h2>
       <div class="grid form" id="order-dept-form"></div>
       <div class="actions">
@@ -390,6 +433,66 @@
     </div>
   </section>
 
+  <!-- OVERVIEW TAB -->
+  <section id="view-overview" class="view">
+    <div class="card">
+      <h2>ภาพรวมรายได้ <span class="tag">ESTIMATE</span></h2>
+      <div class="filters">
+        <select id="bz-year"></select>
+        <select id="bz-scope"><option value="year">สรุปทั้งปี</option><option value="month">เฉพาะเดือนที่เลือกด้านบน</option></select>
+      </div>
+      <div class="note">ตัวเลขรายได้เป็น <b>ประมาณการ</b> = เคสที่ส่งแล้ว × ตารางราคา (เคสคูปอง/งานแก้นับ 0 บาท นับตามวันรับงาน เหมือนใบแจ้งหนี้) ไม่รวมค่าใช้จ่าย เงินสด/ธนาคาร และไม่เท่ากับตัวเลขในโปรแกรมบัญชีเสมอไป (ส่วนลด ใบลดหนี้ งานที่ออกบิลนอกระบบ) <span id="bz-missing"></span></div>
+      <div class="kpis" id="bz-kpis" style="margin-top:12px"></div>
+    </div>
+    <div class="card">
+      <h2>รายได้รายเดือน <span class="tag" id="bz-year-tag"></span></h2>
+      <div class="bz-chart" id="bz-bars"></div>
+    </div>
+    <div class="bz-grid">
+      <div class="card">
+        <h2>สัดส่วนรายได้ตามวัสดุ <span class="tag" id="bz-scope-tag"></span></h2>
+        <div class="bz-grid" style="grid-template-columns:200px 1fr;align-items:center"><div class="bz-chart" id="bz-donut"></div><div class="bz-legend" id="bz-donut-legend"></div></div>
+      </div>
+      <div class="card">
+        <h2>ยอดขายสูงสุด</h2>
+        <div class="filters"><select id="bz-top-by"><option value="clinic">ตามคลินิก</option><option value="doctor">ตามหมอ</option></select></div>
+        <div id="bz-top"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>รอรับชำระ / เกินกำหนด (ลูกหนี้)</h2>
+      <div class="bz-grid" style="align-items:start">
+        <div><div class="kpis" id="bz-ar-kpis" style="grid-template-columns:1fr 1fr"></div><div class="bz-chart" id="bz-aging"></div></div>
+        <div class="note" style="margin:0">บิลจะเข้ามาที่นี่เมื่อกด <b>"📌 บันทึกเป็นบิลที่ออกแล้ว"</b> ในแท็บ "ราคา / บิล" (วันครบกำหนดคิดจากจำนวนวันเครดิตด้านล่าง) จากนั้นกด "รับชำระ" ที่รายการเมื่อได้รับเงิน ระบบจะแยกให้เองว่ารอรับชำระหรือเกินกำหนด
+          <div class="filters" style="margin-top:10px"><label style="margin:0;font-size:13px">เครดิตเริ่มต้น (วัน)</label><input type="number" id="bz-credit" min="0" style="width:90px"><button class="btn ghost sm" id="bz-credit-save">บันทึก</button></div></div>
+      </div>
+      <div id="inv-form-wrap" class="cm-note" style="display:none;margin-top:12px">
+        <b id="inv-form-title"></b>
+        <div class="grid form" style="margin-top:8px">
+          <div class="field"><label>เลขที่ใบแจ้งหนี้</label><input id="invf_no"></div>
+          <div class="field"><label>ยอดบิล (บาท)</label><input id="invf_amount" type="number" min="0" step="any"></div>
+          <div class="field"><label>วันที่ออกบิล</label><input id="invf_issue" type="date"></div>
+          <div class="field"><label>วันครบกำหนด</label><input id="invf_due" type="date"></div>
+          <div class="field"><label>รับชำระแล้ว (บาท)</label><input id="invf_paid" type="number" min="0" step="any"></div>
+          <div class="field"><label>วันที่รับชำระ</label><input id="invf_paid_date" type="date"></div>
+          <div class="field" style="grid-column:1/-1"><label>หมายเหตุ</label><input id="invf_note"></div>
+        </div>
+        <div class="actions" style="margin-top:8px"><button class="btn primary" id="invf-save">💾 บันทึก</button><button class="btn ghost" id="invf-full">💵 รับชำระเต็มจำนวนวันนี้</button><button class="btn ghost" id="invf-cancel">ยกเลิก</button></div>
+      </div>
+      <div class="filters" style="margin-top:12px"><select id="inv-filter"><option value="open">ค้างชำระ</option><option value="overdue">เกินกำหนด</option><option value="paid">ชำระแล้ว</option><option value="all">ทั้งหมด</option></select></div>
+      <div class="tablewrap" style="max-height:380px"><table id="inv-table"></table></div>
+    </div>
+    <div class="card">
+      <h2>ภาพการผลิต: ส่งงานแล้วกี่ซี่ เทียบเป้า <span class="tag" id="bz-prod-tag"></span></h2>
+      <div class="bz-grid" style="align-items:start">
+        <div id="bz-prod"></div>
+        <div class="bz-chart" id="bz-daily"></div>
+      </div>
+      <div class="filters" style="margin-top:8px"><label style="margin:0;font-size:13px">เป้าหมายต่อเดือน (ซี่)</label><input type="number" id="bz-target" min="0" style="width:110px"><button class="btn ghost sm" id="bz-target-save">บันทึกเป้า</button></div>
+      <div class="note">นับตามวัน "ส่งงานจริง" (ถ้าไม่มีวันส่ง ใช้วันรับงาน) • ความเร็วเทียบเป้าคิดตามสัดส่วนวันที่ผ่านไปของเดือน • ส่งตรงนัด = ส่งงานไม่เกินวันนัดคนไข้ (นับเฉพาะเคสที่มีวันนัดเป็นวันที่จริง)</div>
+    </div>
+  </section>
+
   <!-- BILLING TAB -->
   <section id="view-billing" class="view">
     <div class="card">
@@ -416,9 +519,10 @@
         <label style="display:flex;gap:6px;align-items:center;margin:0;font-size:13px;color:var(--ink);font-weight:600"><input type="checkbox" id="bl-free-rework" checked style="width:auto;margin:0"> งานแก้คิด 0 บาท</label>
         <select id="bl-vat" title="ภาษีมูลค่าเพิ่ม"><option value="none">ไม่มี VAT</option><option value="v0">VAT 0%</option><option value="v7">VAT 7% (บวกเพิ่ม)</option></select>
       </div>
-      <div class="filters"><button class="btn primary" id="bl-xlsx">⬇ Excel</button> <button class="btn primary" id="bl-pdf">🖨 PDF</button></div>
+      <div class="filters"><button class="btn primary" id="bl-xlsx">⬇ Excel</button> <button class="btn primary" id="bl-pdf">🖨 PDF</button> <button class="btn ghost" id="bl-record">📌 บันทึกเป็นบิลที่ออกแล้ว</button></div>
       <div class="note" id="bl-note"></div>
       <div class="note" id="bl-contact" style="color:var(--ink)"></div>
+      <div class="note" id="bl-invstatus" style="color:var(--ink)"></div>
       <div class="tablewrap"><table id="bl-table"></table></div>
     </div>
   </section>
@@ -518,7 +622,7 @@
 <div class="toast" id="toast"></div>
 
 <script id="data-blob" type="application/json">{"fields":["source_sheet","is_rework","case_type","coupon_status","case_id","date_received","clinic","doctor","patient","implant_system","detail","position","color","material","qty","unit_label","scan_system","delivery_method","notes","status","dep_design","dep_milling_zirconia","dep_milling_premill","dep_press","dep_porcelain","dep_qc","dep_packing","dep_delivery","sent_flag","date_sent","appointment_date","tech1","tech2"],"rows":[]}</script>
-<script id="refs-blob" type="application/json">{"clinics": ["(ออกบิลหมอ)", "14/8", "1st dental clinic", "2024-10-09T00:00:00", "3S Lab", "ABC แฟมิลี่", "AG Dental Plus Clinic", "ARC Dental clinic สนามเป้า", "All About Teeth Dental Clinic สาขาลาดพร้าว", "All About Teeth Dental Clinic สาขาอโศก", "Alpaca Dental Clinic แคราย", "Anuparb", "Apple Dental Clinic", "Arc dental clinic", "At Homeจอหอ", "Athome สระครก จอหอ", "B.A ปทุม", "BCDC", "BCDC สาขาบิ๊กซี", "BCDC สาขาเพิ่มสิน", "BCDC สาขาเพิ่มสิน 64", "BCDC เพิ่มสิน", "BIDC Emquartier", "BIDH", "BKK48", "BPDC", "BSDC", "BWDC", "Bangkok Smile Dental", "Be Well Dental Clinic", "Be well หัวหิน", "Belix Dental Clinic", "Bettrr Smile Clinic", "Bettrr Smile Clinic ภูเก็ต", "Bewell หัวหิน", "Big Smile อ่างทอง", "Big care", "Big care เพิ่มสิน", "Buddy smile", "Buddy smile สาขาลาดพร้าววังหิน", "Charm บางแสน", "Charm ศรีราชา", "Chin dental Clinic", "Clinic All Smile", "Clinic All Smile สาขาตะพง", "Clinic Dentreat", "Clinic wisdom tooth", "Colon P", "Csmileyala Clinic", "D Duo สัตหีบ", "D-Dou สัตหีบ", "D-Plus นวมินทร์", "DNS", "DNY รามอินทรา กม.8", "DNY ลาดพร้าว101", "DNY ลาดพร้าว102", "Daily Daily Dental Clinic", "Daily Dental Clinic", "Deezy สำโรง", "Delta 304", "Deluxe นวนคร", "Dent 4U", "Dent4U", "Dent4u พิษณุโลก", "Dental Art ทาวน์อินทาวน์", "Dental Art สะพานควาย", "Dental Art อุทัยธานี", "Dental Empire Clinic", "Dental Empire รัชดา19", "Dental Home Clinic ปราจีน", "Dental Hub Clinic (หนองแขม)", "Dental Hug", "Dental Image ปิ่นเกล้า", "Dental Protect", "Dental Select", "Dental Shine Clinic", "Dental Story", "Dental Story สัตหีบ", "Dental Wise", "Dental Zone", "Dental art ทาวน์อินทาวน์", "Dental art สะพายควาย", "Dental art อุทัยธานี", "Dental at Home", "Dental at home นวมินทร์ 70", "Dental at home นวมินทร์70", "Dental home clinic (พระโขนง)", "Dental hub Phuket", "Dental hug", "Dental max 50", "Dental wise", "Dental zone", "DentalWise", "Dente Align", "Dentista", "Dentista77", "Dentreat", "Dio", "Doctor Fair Dental Clinic", "DortorTanawat dental clinic", "Dr. Pranmas Teeranuwat", "ESTE บางแสน", "Edelweiss สาขาวิภาวดี", "Edelweiss สาขาสุขุมวิท15", "Eden Dental", "Eden Dental ศาลาแดง", "Eden dental", "Eden detalclinic", "Feel Good", "Feel good", "Feel good clinic", "Feel good ยังไม่ได้ออกบิล", "Floss Dental (เกาะสมุย)", "Forest Dental Clinic", "Freind Dental Clinic สาขาเซฟวัน", "Friend เซฟวัน", "Funwiset Dental อ่างทอง", "GOdaddy", "Gardentist Clinic จันทบุรี", "Gardentist จันทบุรี", "Gentle Peach Dental Clinic", "Give Time จันทบุรี", "Godaddy", "Gold 9", "HYPS Dental CNX", "HYPS Dental Clinic", "HYPS Dental cnx", "Habito Dental", "Hachi dental", "Happy Smile ชิดลม", "Hein Clinic ตาคลี", "Homey Mega Bangna", "JDC", "JK dental clinic ฉะเชิงเทรา", "Jeeraporn", "Joy Dental กระบี่", "KC Smile ลาดพร้าว 71", "KC Smile ลาดพร้าว 72", "KC smile ลาดพร้าว 71", "Kitcha Dental Clinic Chiang Mai", "Kongkrapanclinic(ส่งงานDentalHug)", "Konvy Dental", "LDC พระราม2", "LDC พระราม5", "LDC เพชรเกษม", "LITA Dental Clinic", "Love at first dental clinic", "M'JOY Dental Clinic", "M'Joy Dental Clinic", "MAX 50", "MDC", "Manhattan", "Manhattan Dental Clinic", "Manhatton", "Manhatton Dental", "Medtopia", "Mj Dental Clinic", "Mj Dental clinic", "Monday ลาดพร้าว101", "Moonsmile ลพบุรี", "NS clinic", "NTeeth ราม65", "Nattist บางพลี", "NewHome Dental", "NewHome Dental สาขาปากท่อ", "Nice Dental หลักสี่", "Nis Dental Image ภูเก็ต", "Ortho Smile", "P'Jane", "P'Jom", "PDC", "PSK Dental Center", "PSK dental center", "Perfect Dental", "Perfect dental", "Pop Smile Dental Clinic", "Pop Smile Dental Clinic ตลาดนำชัย", "Pop Smile Dental Clinic นำชัย", "Pop Smile Dental Clinic หัวตะเข้", "Prime Dental Clinic", "Prime dental", "Prime dental Clinic", "Prime dental Clinic เชียงใหม่", "Prodent", "Prodent lab", "ProudDent Dental Clinic", "Pt.", "RDC", "RDL", "Rabbit Dental Clinic", "Rimkhong Dental", "SOL Dental Clinic", "SOL dental clinic | คลินิกทันตกรรมโซล", "Sea Sky", "Seasky", "Sky dental clinic", "Smile & Co", "Smile & shine", "Smile Art Pattya", "Smile Craft", "Smile Crafter ราชเทวี", "Smile Crafters ราชเทวี", "Smile Dent", "Smile Dental Clinic พิษณุโลก", "Smile Phitsanulok", "Smile Room", "Smile Sai5", "Smile Studio Dental", "Smile again ศาลายา", "Smile room ลำพูน", "Smile room แม่ริม", "Smile&Style Dental studio", "SmileCenter", "Smiley ฉะเชิงเทรา", "Sriracha Smile", "Star smile ศรีราชา", "Summer Smile", "TDH Canvas", "TMD", "Tann Dental Clinic", "Tann dental Clinic", "Teema smile", "Teeth Talk  ฟิวเจอร์", "Teeth Time", "Teeth Time (งานส่วนตัวหมอ)", "Teeth Time งานส่วนตัว", "The Glass Smile Dental Clinic", "The Grand Dentist (คลองหลวง)", "The Grand Dentist (ฟิวเจอร์ปาร์ค รังสิต)", "The Grand คลองหลวง", "The dental center Sisaket", "The smile gallery phuket ส่งจากสนามบินภูเก็ต", "The smilist", "Tooth Melody", "Tooth Republic Dental Clinic", "Tooth Republic Dental Clinic คอนโดไลท์เฮ้าส์ เจริญนคร", "Tooth&Mood Dental Clinic", "ToothMelody", "Toothday จอหอ", "Toothday หัวทะเล", "Toothist", "Toothtist", "Toothtist Sea Sky", "Trust dental clinic สาขาซีคอนบางแค", "Vsmile มุกดาหาร", "Vsmileมุกดาหาร", "WE DENT Clinic", "Warmsmile Dental Care", "We are dentist clinic", "Well tooth", "Wellsmiles dental clinic", "White smile clinic lamphun", "Wisdom Dental clinic", "Wisdom Tooth", "Wisdom อนุสาวรีย์", "XDC", "YDC", "YDC กทม", "YDC กรุงเทพกรีฑา", "YDC ทาวน์อินทาวน์", "YDC สาขากรุงเทพกรีฑา", "Yes Tooth Clinic", "Yim Yim Dental Clinic", "Your Dental Clinic", "charm bangsaen clinic", "csmileyala clinic", "dental @ home", "dental at home นวมินทร์70", "dental world", "dentist i need you", "doctortanawat", "esse dental clinic", "feel good", "i-smile dental clinic", "iLike Dental Clinic", "iLike Dental Clinic พัทยา", "my condo ปิ่นเกล้า", "new smile phuket", "pa", "prodent", "scene smile", "sea sky", "sky dental clinic", "skytain อโศก", "smile desire dental clinic", "smile desire dental clinic ปัตตานี", "smile icon", "smile icon สมุทรปราการ", "smile room แม่ริม", "tooth & mood แบริ่ง35", "tooth republic ศาลายา", "vsmile dentel", "กาญจนาภิเษก KDC", "กาญจษาภิเษก KDC", "การ์เด้นทิสท์", "คงกระพันคลินิก", "คงกระพันสาย 5", "คณะ", "คณะทันต ม.พะเยา", "คณะทันต มอ.", "คณะทันตะ ม.นเรศวร", "คณะทันตะมอ.", "คณะทันตแพทยศาสตร์ มหาวิทยาลัยพะเยา", "คณะทันตแพทย์ มหาวิทยาลัยพะเยา", "ครอบครัวฟันดี ระยอง", "ครอบครัวฟันดีระยอง", "ครอบครัวฟันดีราชชุมพล", "ครอบไม่แนบ-จุดสบสูงมาก", "คลินิก Alpaca", "คลินิก Alpaca จรัญ13", "คลินิก Alpaca บางซื่อ", "คลินิก BPDC", "คลินิก sig32", "คลินิก ไอสมาย ลำลูกกา", "คลินิก105เด็นทัลโฮม ลาซาล14", "คลินิกpkdc(ปุณกันทันตแพทย์)", "คลินิกคชเนตตีทันตกรรม", "คลินิกชเนตต์ทันตแพทย์", "คลินิกดับเบิ้ลยู ตลิ่งชัน", "คลินิกทันตกรรม 108", "คลินิกทันตกรรม LDC Dental อุบล", "คลินิกทันตกรรม คลับเดนทอล", "คลินิกทันตกรรม108", "คลินิกทันตกรรมBA", "คลินิกทันตกรรมBA ปทุม", "คลินิกทันตกรรมกิฟไทม์ จันทบุรี", "คลินิกทันตกรรมจั่นเจา", "คลินิกทันตกรรมดีดูโอ้ สัตหีบ", "คลินิกทันตกรรมทันตแพทย์ประสิทธิ์", "คลินิกทันตกรรมนางรอง", "คลินิกทันตกรรมนานา หัวหิน", "คลินิกทันตกรรมนานา หัวหิน(Bewell)", "คลินิกทันตกรรมนิคม 304", "คลินิกทันตกรรมนิคมสไมล์ 304", "คลินิกทันตกรรมบลูทูธ", "คลินิกทันตกรรมบางปะอิน", "คลินิกทันตกรรมบางมด สาขาปิ่นเกล้า (งานส่วนตัว)", "คลินิกทันตกรรมบางมด สาขาเกษตร (งานส่วนตัว)", "คลินิกทันตกรรมบีเอ", "คลินิกทันตกรรมบ้านฟันยิ้ม", "คลินิกทันตกรรมบ้านหมอตั้ม", "คลินิกทันตกรรมพีพี", "คลินิกทันตกรรมฟ.ฟัน", "คลินิกทันตกรรมฟ.ฟัน กบินทร์บุรี", "คลินิกทันตกรรมฟ.ฟัน บุรีรัมย์", "คลินิกทันตกรรมมอร์นิ่ง", "คลินิกทันตกรรมมิตรสัมพันธ์", "คลินิกทันตกรรมยูสมายล์ (สาขาบางแสน)", "คลินิกทันตกรรมรักษ์ฟัน", "คลินิกทันตกรรมวนารมย์", "คลินิกทันตกรรมวอร์มเนส", "คลินิกทันตกรรมวีสไมล์ ราชบุรี", "คลินิกทันตกรรมสมายล์เจอร์นีย์ เอกชัย 69", "คลินิกทันตกรรมสไมล์รูม ลำพูน", "คลินิกทันตกรรมสไมล์ลาย พระราม5", "คลินิกทันตกรรมสไมล์ลี", "คลินิกทันตกรรมสไมล์ลี่", "คลินิกทันตกรรมสไมล์สายสาม", "คลินิกทันตกรรมหนองซาก", "คลินิกทันตกรรมหมอจั่นเจา", "คลินิกทันตกรรมหมอตั้มทันตะ ฉะเฉิงเทรา", "คลินิกทันตกรรมหมอตั้มทันตะ ฉะเชิงเทรา", "คลินิกทันตกรรมหมอตั้มทันตะฉะเชิงเทรา", "คลินิกทันตกรรมหมอธนดล", "คลินิกทันตกรรมหมอน้ำตาล", "คลินิกทันตกรรมหมอฝ้ายพิจิตร", "คลินิกทันตกรรมหมอฝ้ายพิจิตร(ทับคล้อ)", "คลินิกทันตกรรมหมอมด", "คลินิกทันตกรรมหมอสมาย", "คลินิกทันตกรรมหมอเจิ้น", "คลินิกทันตกรรมหมอแป้ง", "คลินิกทันตกรรมอมตะ", "คลินิกทันตกรรมอัลไพน์ พุทธมณฑลสาย2", "คลินิกทันตกรรมเคลียร์เด้นท์", "คลินิกทันตกรรมเดนทัลสไมล์ สระแก้ว", "คลินิกทันตกรรมเดนท์ ฟอร์ ยู", "คลินิกทันตกรรมเดนท์แอนด์สไมล์", "คลินิกทันตกรรมเดอะเทมส์", "คลินิกทันตกรรมเดอะแพททิส", "คลินิกทันตกรรมเพื่อนฟัน", "คลินิกทันตกรรมแต้มยิ้ม อารมณ์ดี พะเยา", "คลินิกทันตกรรมแพลนเนท", "คลินิกทันตกรรมแหลมฉบัง", "คลินิกทันตกรรมโกลด์ไนน์", "คลินิกทันตกรรมโปรเดนห์", "คลินิกทันตกรรมไฉไลทำฟัน", "คลินิกทันตกรรมไลท์สมายมีนบุรี", "คลินิกทันตกรรมไวท์สไมล์", "คลินิกทันตกรรมไฮซีซั่น", "คลินิกทันตแพทย์ณรงค์", "คลินิกทันตแพทย์บุญชู", "คลินิกทันตแพทย์ปกรณ์", "คลินิกทันตแพทย์วราภรณ์", "คลินิกทันตแพทย์สงวน", "คลินิกทันตแพทย์หมอชวนพิศ", "คลินิกทันตแพทย์อินอร", "คลินิกบัณฑิต10 คณะทันตแพทย์ มช.", "คลินิกบีเอ", "คลินิกบ้านหมอฟัน พญาไท", "คลินิกปารีนารถ ปิ่นเกล้า", "คลินิกพร้อมยิ้ม", "คลินิกฟ.ฟันดี", "คลินิกฟันดี", "คลินิกฟันดี กทม เสนา", "คลินิกมิตรสัมพันธ์", "คลินิกมิตรสัมพันธ์ ลาดพร้าว1", "คลินิกยิ้ม ยิ้ม ตลาดราชวัตร", "คลินิกวีสมายล์ ท่าโรงช้าง", "คลินิกศรีตรัง หาดใหญ่", "คลินิกสถานีฟันดี", "คลินิกสถานีฟันดีบ้านฉาง", "คลินิกสุขภาพฟัน DENTAL HEALTH CLINIC", "คลินิกสุขภาพฟัน(ออกบิลคนไข้)", "คลินิกสไมล์", "คลินิกหน้าตลาดวงศกร", "คลินิกหมอฝ้ายบีเอ", "คลินิกหมอฝ้ายบีเอ (พิจิต)", "คลินิกหมอฝ้ายพิจิตร", "คลินิกหมอฝ้ายพิจิตร (ตะพานหิน)", "คลินิกหมอฝ้ายพิจิตร (ทับคล้อ)", "คลินิกหมอฝ้ายพิจิตร(ตะพานหิน)", "คลินิกหมอสมาย จ.บึงกาฬ", "คลินิกหมอสุชาติกระทุ่มแบน", "คลินิกหมอสุมาย จ.บึงกาฬ", "คลินิกหมอเจริญ กำแพงเพชร", "คลินิกหมอเล้ง", "คลินิกอังสะนา", "คลินิกอุ่นใจทันตกรรม กวงฮั้ว", "คลินิกอุ่นใจทันตกรรม มาบตาพุด", "คลินิกเจริญ-วันเพ็ญ ทันตแพทย์", "คลินิกเจริญ-วันเพ็ญทันตแพทย์", "คลินิกเดนทัลเอ็มไพร์", "คลินิกเดนท์ ฟอร์ ยู", "คลินิกเอสซี เดนทัล", "คลินิกโก้สหคลินิก", "คลินิกไบร์ทสมาย", "คลินิคบ้านหมอหนึ่ง", "คลีนิค", "คลีนิคทันตแพทย์ปกรณ์", "คลีนิคบางกอกสไมล์ สาขาอโศก", "คาราเมล", "งานคุณหมอสลิล", "งานส่วนตัว", "งานส่วนตัวคุณหมอ", "งานส่วนตัวคุณหมอ(edelweiss)", "งานส่วนตัวหมอ", "งานหมอเปิ้ล", "จริยา เดนทัล", "จิรกานต์ทันตแพทย์", "จิรกานต์ทันตแพทย์คลินิก", "ชนนี Clinic", "ชนนีทันตกรรม", "ชวิส เด็นทอล คลินิก", "ชวิส เด็นทอลคลินิก", "ชเนตตีทันตแพทย์", "ชเนตตีทันตแพทย์ ราชบุรี", "ดับเบิ้ลยูเดนทัล", "ดี.ดี.เดนทัล", "ดี.ดี.เดนทัล (อ้อมน้อย)", "ดี.ดี.เดนทัล สาขาอ้อมน้อย", "ดี.ดี.เดนทัล สาขาอ้อมใหญ่", "ทรี เด็นทัลแล็บ", "ทองสไมล์ หาดใหญ่", "ทันตกรรมบางปะอิน", "ทันตกรรมบางปะอิิน", "ทันตกรรมบ้านย่า", "ทันตกรรมบ้านหมอยีน", "ทันตกรรมบ้านหมอโบว์", "ทันตกรรมพร้อมยิ้ม", "ทันตกรรมสนามบิน", "ทันตกรรมสูงเนิน", "ทันตกรรมสไมล์ลี่", "ทันตกรรมหมอจั่นเจา", "ทันตกรรมหมอธนดล สระบุรี", "ทันตกรรมเดอะเฟิสต์ บางบัวทอง", "ทันตกิจ", "ทันตแพทย์ประสิทธิ์ จันทบุรี", "ทันตแพทย์ภาวนา", "ทีธอะแนปคลินิก", "นานาหัวหิน", "นานาเดนทอลหัวหิน", "บริษัท เด็นทัล สตาร์ จำกัด สระบุรี", "บางกอกแกรนด์เดนทัล", "บูทีค เดนทัล", "บ่อวินสไมล์", "บ้านรักยิ้ม ปราจีน", "บ้านหมอฟัน ปราจีน", "บ้านหมอฟันดำเนิน", "บ้านหมอฟันดำเนินสะดวก", "บ้านหมอฟันนิคมสไมล์", "บ้านหมอฟันปราจีน", "บ้านหมอลม", "บ้านหมอลม อุบล", "บ้านหมอโบว์", "ปันยิ้ม ราชบุรี", "ปารีนารถ", "พราวเดนท์ คลินิกทันตกรรม ราชบุรี", "ฟ.ฟันดี สาขาเซฟวัน", "ฟอฟัน กาญจนบุรี", "ฟันดี", "ฟันดีคลินิก ปทุมธานี", "ฟันสไมล์ สาขาราชสีมาเซนเตอร์", "ฟันสไมล์ สาขาเเซฟวัน", "ภทรคลินิกทันตกรรม", "ม.นเรศวร", "มิตรสัมพันธ์ ลาดพร้าว", "มิราเคิล", "ยิ้มกว้างทันตกรรม", "ยิ้มพิมพ์ใจ", "ยิ้มหวาน อยุธยา", "ยิ้มหวานอยุธยา", "ยิ้มหวานอยุุธยา", "ยิ้้มยิ้มโชคชัย4", "รพ ราชบุรี", "รพ.กรุงเทพคริสเตียน", "รพ.นาดี", "รพ.พญาไทพหลโยธิน (เปาโลสะพานควาย)", "รพ.ราชบุรี", "รพ.ราชบุรี ส่งงานไบร์ทสมาย", "รพ.สมเด็จพระสังฆราชองค์ที่17", "รพ.สมเด็จยุพราชจอมบึง", "รพ.สระแก้ว", "รพ.สินแพทย์ เสรีรักษ์", "รพ.สุราษฎร์ธานี", "ริมโขงเชียงราย", "ศูนย์จัดฟัน รากฟันเทียม บูทีค เดนทัล", "ศูนย์ทันตกรรม love at", "ศูนย์ทันตกรรมคู้บอน ซอย4", "ศูนย์ทันตกรรมรัชดา", "ศููนย์ทันตกรรม รัชดา ทรัพย์สินดี", "สมาคมรากเทียมแห่งประเทศไทยนะครับ [TADI]", "สมายล์แกลอรี่ สุราษฎร์", "สสจ.นครราชสีมา", "สานัส พรานนก", "สานัส สำเหร่", "สไมล์ลาย พระราม5", "สไมล์สายสาม", "สไมล์อาร์ตคลินิก", "สไมล์อาร์ตคลินิก ชลบุรี", "สไมล์อาร์ตคลินิก พัทยา", "หมอตั้มทันตะ", "หมอตั้มทันตะ คลินิกทันตกรรม", "หมอตั้มทันตะ คลินิกทันตกรรม ฉะเชิงเทรา", "หมอตั้มทันตะ ฉะเฉิงเทรา", "หมอฝ้ายพิจิตร", "หมอเก้ หมอป่าน คลินิกทันตกรรม", "หมอเก้-หมอป่าน คลินิกทันตกรรม", "หมอเก้-หมอป่านคลินิกทันตกรรม", "หมอแป้งสไมล์คลับ", "อนุพันธ์", "อัญชนาเดนทัล", "อัลปาก้า", "อาร์เทคนา เดนทัล แลบ", "ฺBrightsmile", "เคดีแอล", "เคอิชิ", "เจนน้อย", "เดนทอลเวิลด์", "เดนทอลไวส์", "เดนทัล ดี", "เดนทัลโฮม", "เด็นทอลเวิล", "เด็นทัล ดี", "เด็นทัลครีเอชั่น", "เด็นทัลอิมเมจลาดพร้าว", "เด็นทัลโฮม", "เพื่อนฟัน สุพรรณบุรี", "เมก้าเจน", "เมดโทเปีย", "เมตาเดนเต้ บางกะปิ", "เมตาเดนเต้ บิ๊กซีอ่อนนุช", "เมตาเดนเต้ สำโรง", "แรบบิทเดนทัลคลินิก", "แหลมฉบังคลินิกทันตกรรม", "โก้สหคลินิก", "โรงพยาบาลค่ายธนะรัชต์", "โรงพยาบาลท่าศาลา", "โรงพยาบาลอุบลรักษ์ ธนบุรี", "โอมากาเสะ คลินิก", "ไพร์มเด็นทอลโซลูชั่น", "ไอสมาย ลำลูกกา"], "materials": ["3Shape", "Aidite", "Aidite+lisi", "Amber", "Amber Press", "BB", "Biomate  swiss", "Composite", "Custom ASC", "Design", "Digital Guide", "EMAX", "Emax", "Emax+PMMA", "Emax+Zirconia", "Emax,Zirconia", "Enamic", "File", "Full Metal", "Gmail", "Itero", "LISI", "Line", "Lisi", "Lisi press", "Lisipress", "Lithium", "Metal", "Meterial", "Mill Abutment", "Model", "Normal", "PAMA", "PMMA", "PMMA bridge", "Partial Denture", "Premill+model", "Print", "Print Model", "RTN", "Special Tray", "Temp PMMA", "Tibar", "Wax", "Waxing", "Zir+Emax", "Zir+Full", "Zir+Lisi", "Zir+Temp", "Zirconia", "Zirconia + Emax", "acrylic", "allon", "ceramic", "temporary", "zircon", "กลึงอบัตเมนต์", "ทำ PMMA temp crown", "รอยพิมพ์", "รายะเอียดทางไลน์", "วัสดุเลือกอีกที", "หมอไม่ปริ้น"], "systems": ["All-On", "Alpha Bio", "Alpha Dent", "Analog", "Ankylos", "Astra tech", "Bioconcept", "Biohorizon", "Biomet 3i", "Biotem", "Branemark", "Bridge", "Camlog", "Conelog", "Cowell", "Crown", "Dentis", "Dentium", "Dentsply", "Digital WAXUP", "Dio", "Endo CR", "Guide Stent เหงือก", "Hand Waxup", "Hiossen", "Implant", "Inlay/onlay", "Legacy", "MIS", "Marry land Bridge", "Megagen", "Model", "NORMAL", "Neobiotech", "Neodent", "Neoess", "Neoss", "Nobel", "Nuvo", "Onlay/Inlay", "Osstem", "Otakon", "PW Plus", "Point Implant", "Print", "Scan", "Screw Retained Crown", "Sic", "Smile Design & Mockup", "Straumann", "Study Model", "TYPE", "Tekka", "Temp", "Veneer", "Warantec", "Warratac", "Wego", "Xive", "Zeramex", "Zimmer", "all-on", "bridge", "conelog", "crown", "guide stent", "milling custom", "nobel", "overdenture", "point implant", "scan", "temp", "temporary", "veneer", "กลึงงานzr", "กลึงอาบัติเม้น"], "scan_systems": ["3Shape", "BIS Cloud", "CD", "EMS", "Flash drive", "Gmail", "Google Drive", "Itero", "Line", "Medi", "Medit", "Medit Link", "OneDrive", "Shining3D", "eighteeth", "shinning 3D", "พี่ตู่รับ", "รอยพิมพ์", "ส่งแมส"], "statuses": ["ชะลอเคส", "ยกเลิกเคส", "รับเข้าระบบ", "สถานะ", "ส่งแล้ว"], "delivery": ["EMS", "Grab", "Kerry", "พี่เต๋าส่ง", "รถตู้", "รถตู้เอกมัย", "รถทัวร์", "ส่งที่อิมเมจสาขาลาดพร้าว", "ส่งที่เดอะเด้นรัชโยธิน", "ส่งแมส"], "techs": ["(ใช้คูปอง zirงาน TGBIC-9", "1st", "3D", "3Shape", "Ao", "Ball", "CAD/CAM", "Gmail", "Itero", "Job", "Line", "Lita", "May", "Medit", "Medit Link", "Mint", "Mod-x", "Oil", "Shining3D", "Tao", "Tattoo", "Tawan", "Too", "Tum", "Wa", "X", "Yim", "aem", "ball", "chomp", "eighteeth", "oil", "shining 3D", "shinning 3D", "tatt", "tawan", "yim", "ช่างนอก", "ช่างโอ๋", "นโม", "นุ๊ก", "มาย", "รอยพิมพ์", "รอออกบิล", "ลิตา", "หน่อย", "หมอจ่ายค่าแลปแล้ว", "ออกบิลคนไข้", "อ๊อฟ", "เอม", "แม็ค", "โหน่ง"], "dep_statuses": ["รอดำเนินการ", "กำลังดำเนินการ", "เสร็จแล้ว", "ระงับชั่วคราว", "ยกเลิก", "ไม่เกี่ยวข้อง"], "departments": [{"key": "order_intake", "label": "รับออเดอร์ (Admin)"}, {"key": "scan", "label": "SCAN"}, {"key": "design", "label": "DESIGN"}, {"key": "abutment", "label": "Order Abutment (ถ้ามี)"}, {"key": "receive", "label": "รับของ (ถ้ามี)"}, {"key": "milling", "label": "MILLING"}, {"key": "all_ceramic", "label": "ALL CERAMIC (ทำสี)"}, {"key": "qc", "label": "QC"}, {"key": "billing", "label": "ออกบิล (Admin)"}, {"key": "delivery", "label": "DELIVERY"}], "case_types": ["ปกติ", "คูปอง"], "coupon_statuses": ["รออนุมัติ", "อนุมัติแล้ว", "ใช้คูปองแล้ว", "คูปองหมดอายุ/ยกเลิก"], "doctors": ["Dr.Thanet Sawangsiripol", "Dr.อัญชลี", "Dr.Suttaya", "Dr.Pitter", "Dr.Suchada", "Dr.นันท์นภัส ดุรงค์พงศ์เกษม", "Dr.สุชาติ ทันตสุวรรณ", "Dr.Piyawat", "Dr.สุพจน์", "Dr.ภูมิชาย", "Dr.win", "Dr.ธนัท สิทธิรัตน์", "Dr.สโรจินต์", "Dr.Cherdsak Tantasuwan", "Dr.กัลป์", "Dr.Thanadol", "Dr.", "Dr.Smon Manosoontorn", "Dr.Chariya", "Dr.Sukrit", "Dr.pat", "Dr.Alonsi", "Dr.Kittikun", "Dr.Thanatip Setthayon", "Dr.ธนพงษ์ ทันตสุวรรณ", "Dr.Sukrit Sermsri", "Dr.เคอิชิ", "Dr.Manita", "Dr.นุโลม", "Dr.Panchanit", "Dr.อนุพันธ์", "Dr.นิชาภา", "Dr.thanet", "Dr.Siwakorn Booncharoensinchai", "Dr.สุพิทย์ แข็งแรง", "Dr.Panpicha Maketone", "Dr.สปัน", "Dr.Anivat phunjinda", "Dr.ปารย์รวี ถนอมศักดิ์ชัย", "Dr.Peeraya", "Dr.ชิตพล", "Dr.หทัยภัทร ตระกูลสุข", "Dr.ดวิษา กำศิริพิมาน", "Dr.ปารย์รวี", "Dr.Panchanit Olarnrak", "Dr.วันจักร", "Dr.Pratya Tharatorn", "Dr.ขิง", "Dr.\tPanchanit Olarnrak", "Dr.Atipong", "Dr.สลิล ชำนาญเวช", "Dr.Viphak Chartiyanont", "Dr.Suneebhorn", "Dr.พีชญา", "Dr.Paramunee", "Dr.วรางค์รัตน์ เศวตศิลป์", "Dr.หทัยภัทร", "Dr.ปัจญลักษณ์", "Dr.Anivat", "Dr.Pongsakorn Phanthikaew", "Dr.Thewarit", "Dr.ปิยานันต์", "Dr.พงศกร อภิญสถานนท์", "Dr.Sicharinee Prakchinnawarn", "Dr.ฐานันด์ วิภาดาเกษม", "Dr.ประสิทธิ์ ชัยเจริญพงศ์", "Dr.Win", "Dr.Pongbhum Chinhathaiwat", "Dr.Fai", "Dr.ปัญจลักษณ์", "Dr.จิณห์นิภา โรจน์สวัสกดิ์สุข", "Dr.จิณห์นิภา โรจน์สวัสดิ์สุข", "Dr.Chinnapong Lertwannapong", "Dr.สรัล เทาศรีดี", "Dr.อาจรีย์", "Dr.ศริน จันทิพย์วงษ์", "Dr.ภูมิชาย จิตรรักษ์", "เคดีแอล", "Dr.ภูริตา จโนภาส", "Dr.ชัยพร", "Dr.นวรัตน์", "Dr.พิทักษ์", "Dr.จิราภา สุวรรณ", "Dr.กรรณิการ์", "Dr.ณัฐพล ป้อมศิลา", "Dr.สุภาภรณ์ พวงสุวรรณ", "Dr.ศุภกร อัศวราชันย์", "Dr.นิธิวุฒ กรรณาลงกรณ์", "Dr.will", "Dr.ภููมิชาย", "Dr.ธมนวรรณ", "Dr.ณัฐิกา กล้าหาญ", "Dr.ศศิณิษา", "Dr.Anivat Phanjinda", "Dr.Nisarat Sritha", "Dr.Tanasak", "Dr.Rasana Boonpeng", "Dr.วาทิศ เดชพงษ์", "Dr.\tWorapol Pruangprayoon", "Dr.ภาณุพงษ์ ภิญโญ", "Dr.พจนารถ", "Dr.ธนพล แสงอาสภวิริยะ", "Dr.เธียร ศรีกสิกุล", "Dr.Todsaphon Inprakhon", "Dr.ภานุพงษ์", "Dr.\tTodsaphon Inprakhon", "Dr.ธนิน", "Dr.Lalita", "Dr.เทพเทพินทร์ ตั้งศักดิ์สมหวัง", "Dr.Phattranit", "Dr.พีรภัทร ธรรมประสม", "Dr.Chisanu", "Dr.อัญจิดา ชวนะโรจนฤทธิ์", "Dr.กตัญญู", "Dr.Nalat", "Dr.ณัฐิกา", "Dr.Zamp", "Dr.akarapat rattananon", "Dr.RDL", "Dr.สลิล ชำนาญ", "Dr.zamp", "Dr.ศรัญชัย", "Dr.พัด", "Dr.ทพญ.ภาวนา สุวรรณกาฬ", "Dr.สิณิชา", "Dr.Sirinan Aranyawongsakorn", "Dr.ปัณชนิต", "Dr.สุพิทย์", "Dr.ธนพล", "Dr.Parin Jeeranun", "Dr.Suttaya Poosong", "Dr.junjao", "Dr.คล้ายจันทร์", "Dr.ณัฐกฤตา", "Dr.Sorrasit Laohapatcharin", "Dr.แซ้ม", "Dr.ปรางทิพย์", "Dr.Will", "Dr.วัชรพงศ์", "Dr.Cholada", "Dr.นนท์นที", "Dr.ชมภูนุช", "Dr.ภัทรพร ยั่นยง", "Dr.ทศพล อินประโคน", "Dr.วรวรรณ", "Dr.ปราณมาศ ธีรานุวัฒน์", "Dr..สรัล เทาศรีดี", "Dr.คนธ์พงษ์", "Dr.ฉัตรณรงค์ แพทย์พุฒิธรรม", "Dr.ปิยะนุช เชื้อบัณฑิต", "Dr.อนุุพันธ์", "Dr.อรณิชา", "Dr.Jeeraporn", "Dr.อธิพร ภูวราวุฒิพานิช", "Dr.อรณิชา กาญจนาพาที", "Dr.ยาวี", "Dr.สุภาภรณ์", "Dr.piyawat", "Dr.ชนรรค์ เล็กอุทัย", "Dr.เจริญ ทิพยโสตถิ", "Dr.Dr.Suttaya", "Dr.สุุพิทย์ แข็งแรง", "Dr.ชมพูนุช สุขชีพ", "Dr.ชลัมพล", "Dr.Supreeya", "Dr.Aurt", "Dr.ฉัตรณรงค์", "Dr.Nuch", "Dr.ฉัตรฤทัย", "Dr.ประพันธ์", "Dr.\tSuchada Olarnrak", "Dr.ปิยานันต์ สุขวรกิจวนิช", "Dr.ภัทรพร ยืนยง", "Dr.ศรัณย์ กิตติศุภกร", "Dr.Apaporn", "Dr. Yospat Rathirom", "Dr.เสกสรร พูดเถิด", "Dr.ศรัญญา หอมกลิ่นยา", "Dr.ฉัตรฤทัย กาญจนโสภณ", "Dr.ปิยะนุช", "Dr.worraned", "Dr.ธนกร", "Dr.ณัฐวุฒิ", "Dr.Sorrasit", "Dr.Pongsakorn Komutpol", "Dr.\tSukrit", "Dr.เสกสรร พูลเกิด", "Dr.Sabsidee", "Dr.ศริณ จันทิพย์วงษ์", "Dr.นันทรัตน์", "Dr.Thanatchaya", "Dr.Hataipar", "Dr.ฝน", "Dr.ทัตพร", "Dr.สุสมา บรรจงจิตร", "Dr.เอกชัย", "Dr.กรปวีณ์", "Dr.สิเรียม เทาศรีดี", "Dr.Anivat Phunjinda", "Dr.บุษกร อัครวัชรางกูร", "Dr.จิตติญา วัฒนกิตานนท์", "Dr.ดวงประทีป", "Dr.สุชานันท์", "Dr.เจนน้อย", "Dr.อนุพันธ์ สิทธิโชคชัยวุฒิ", "Dr.วัสยศ", "Dr.ณัฐพล", "Dr.Pranmas", "Dr.Thitiwadee Rukkhaphan", "Dr.พงศกร", "Dr.หทัยภัทร ตระกูล", "Dr.ณัฐกฤต", "Dr.ภููริตา", "Dr.นักสิทธิ์ จิตรตรง", "Dr.ธีรวัฒน์", "Dr.Parinya", "Dr.ยศวดี สิทธิศร", "Dr.จิรภัทร", "Dr.กตัญญู หลิมไชยกุล", "Dr.พีชญา จิตจาตุรันต์", "Dr.รวิภา", "Dr.ทพ.สราวุธ รจิตรบูรณะกุล", "Dr.Dittaya Charoenkijkajorn", "Dr.นิศารัตน์ ศรีทา", "Dr.Siriwadee Prathompat", "Dr.ปุณณดา เที่ยงตรง", "Dr.ปรินทร์", "Dr.จรัสวรรณ", "Dr.อาภาพร", "ชื่อแพทย์", "Dr.ปัณฑ์ชนิต", "Dr.ภูริตา จโนภาส (จ๋า)", "Dr.พงศ์กร พันธ์แก้ว", "Dr.สาละวิน", "Dr.Nattawat", "Dr.Dio", "Dr.วิบุลย์", "Dr.Non", "Dr.Worapol Pruangprayoon", "Dr.Sirirat", "Dr.ยาวี เมฆขำ", "Dr.ภาณุพงษ์", "Dr.setthapong", "Dr.กชกร บ่อคำ", "Dr.เจนวิทย์ บรรจงรุจกุล", "Dr.ชลชัย", "Dr.THANABAT YIAMPANOMKUN", "Dr.ภูมิพัฒน์", "Dr.Salil", "Dr.สลิล", "Dr.พริมา", "Dr.Poosit Thongsamak", "Dr.นัสวีน ตอแก", "Dr.อภิชญา บุญโสภา", "Dr.ธฤษวรรน", "Dr.tanawat", "Dr.ซิตพล", "Dr.ชมพูนุช", "Dr. แป้ง", "Dr.Parin", "Dr.Paporn on", "Dr.สัชชัย อานินตคุณ", "Dr.Mum", "Dr.Tui", "Dr.Nonthawat", "Dr.Pat", "Dr.สานเติม", "Dr.เอมวดี", "Dr.ต๊อบ", "Dr.วุฒิกา", "Dr.Wirawat", "Dr.พิมพมนต์ ภิรมย์รื่น", "Dr.ปาณาลี", "Dr.ดวิษา", "Dr.สุชาติ ทันตสุวรรณ(Dr.ประพันธ์)", "Dr.Yuttapol Pimpison", "Dr.อัญชิสา", "Dr.อรรถ", "Dr.จีรภัทร์", "Dr.ภาณุมาศ อินทะมน", "Dr.ต๊อป ปราณวดี", "Dr.คนธ์พงษ์ บุญขำ", "Dr.Salisa", "Dr.สมชาย", "Dr.อมรพงษ์", "Dr.ชมภูนุช ติยะวงศ์มานะ", "Dr.อมรพงษ์ วชิรมน", "Dr.ปิยานันต์ (หมอแอล)", "Dr.Nas", "Dr.คณิต", "Dr.\tPanpicha Maketone", "Dr.dear", "Dr.กัลยกร เจริญผล", "Dr.พัชร กุลโกวิท", "Dr.wut", "Dr.สุพจน์ (กวง)", "Dr.Nis", "Dr.Prakchinawan , Sicharinee", "Dr.ปาร์ยรวี", "Dr.นิด", "Dr.Thanathip", "Dr.mum", "Dr.alonsi", "Dr.วันเนส โฮม", "Dr.ยศวดี", "Dr.โชษิตา", "Dr.ญาณภัทร", "Dr.ปฏิภาณ", "Dr.Akarapat rattananon", "Dr.สสุมา", "Dr.เกื้อพงษ์", "Dr.กวี เด่นไพโรจน์ศักดิ์", "Dr.Kunlanun", "Dr.ภูริกา", "Dr.Alice", "Dr.เลิศศิริ", "Dr.อัญชนา", "Dr.พีชญชา", "Dr.จิตตยากร", "Dr.ณัฐดนัย", "Dr.ปัญญาวุธ", "Dr.ไอซ์", "Dr.ธร", "Dr.Prodent", "Dr.Dr.Pitter", "Dr.กีรติ", "Dr.JJ", "Dr.ณัฐวีร์ หวังพิริยะพาณิช", "Dr.เดียร์นา", "Dr.สาธิต ปราบริปูตลุย", "Dr.Yok", "Dr.ธิปก", "Dr.ติวเตอร์", "Dr.กัสมา", "Dr.ภัทรพร", "Dr.ฐานัส ลิ่ววัฒนากรณ์", "Dr.เดียร์นา เบญจมาพร", "Dr.ณัฏฐรัชพล อภิชนถิรพันธิ์", "Dr.Jeerapatr O.Baiyokvichit", "Dr.สมาคมรากเทียม tadi", "Dr.พรจิรา", "Dr.สุภาพร", "Dr.จิรายุ วิเวกเมธากร", "Dr.Supatsorn", "Dr.kanchirat", "Dr.พิชิต", "Dr. นิติโชติ นิลกำแหง", "Dr.ยุวนุช", "Dr.ณภัทร", "RDL", "Dr.อมรรัตน์", "ทพ.ธนัฎฐนนท์", "Dr.ภูวิพัฒน์", "Dr.กางเขน", "Dr..Manapon Wimonratmanorom", "Dr.Surapong Kanchanabat", "Dr.กิตตินันท์", "Dr.Pisit Suksuphan", "Dr.จิณตภา", "Dr.ศศิพินธ์ุ", "Dr.Sunee", "Dr. มยุรัชฎ์ พิพัฒภาสกร", "Dr.ชนม์นัฐฌา เจริญผล", "Dr.Suwit Limpattamapanee", "Dr.อดิศร", "Dr.Chompunuch", "Dr.ธนพล หนูมาน้อย", "Dr.เจริญ ทิพยโสถิ", "Dr.suchada", "Dr. Rukkhaphan, Thitiwadee", "Dr.ธนพจน์", "Dr.ธนพล แสง", "Dr.Top", "Dr.พงศกร พันธิ์แก้ว", "Sorrasit Laohapatcharin", "Dr.Yospat", "Dr.Todsaphon", "Dr.สิชารินีย์  หมอยีน", "Dr.พรรณพิชา (โอ๋)", "Dr.รุ่งโรจน์", "Dr.Ikanchirat", "Dr.yoky", "Dr.กตัญญ", "Dr.ภูริดา หมอจ๋าราชบุรี", "Dr.ปริศนา", "Dr.นที", "Dr.Pichaporn", "Dr.สุภสิทธิ์ นาคไร่ขิง", "Dr.กาย", "Dr.ศิริไพบูลย์", "Dr.พสธร", "Dr.วิสุณี", "Dr.กฤตภพ", "Dr.WORANIS PETCHSUPHAMIT", "Dr.เปิ้ล", "Dr.พรทิทา", "Dr.Pook", "Dr.Pek", "Dr.Kaew", "Dr.ทศพล", "Dr.พงษกร", "Dr.ธวัชชัย", "Dr.ตะวันฉาน", "Dr.อาทิตยา เชาวน์ทวี", "Dr. พงษภร", "Dr.ปณาลี", "Dr.ฐานันด์", "Dr.Jin", "Dr.ปรมุนี", "Dr.พงศกร อภิญสภานนท์", "Dr.เชาว์วรรธน์", "Dr.พรศักดิ์", "Dr.สุโชติ", "Dr.เมก้าเจน", "Dr.Komgrit", "Dr.พัสวี", "Dr.อัณณพิมพ์", "Dr.Sermsakul Wongtiraporn", "Dr.Kanokporn", "Dr.ท็อป", "Dr.สิริภัทร", "DR.kanokporn", "Dr.จิติพันธ์ อ.ใบหยกวิจิตร", "Dr.ชัยธนาธัชช์ ไตรญาณสิริ", "Dr.บุษรา TG-Bic10", "Dr.อรณิชา กาญจนพาที", "Dr..Parin Jeeranun", "Dr.\tPongsathorn Satjatham", "Dr.ญาสุมินทร์ วงศ์พันธุเศรษฐ์", "Dr.วิชาญ แตรกัล", "Dr.ปรางทิพย์ สุขศรีจักรวาล", "Dr.อัมพา", "Dr.Atipong Thammabuchit", "Dr.ศิริศักดิ์", "Dr.Jittayakorn Kasemsan", "Dr. สัมพันธ์", "Dr.วรัญญู", "Dr.ยงยุทธ", "Dr.สุทธิจิต", "Dr.ฐนกร", "Dr.เจฎฐพงศ์", "Dr.พงศ์ภูมิ", "Dr.Supaporn", "Dr.วิว", "Dr.ทรี เด็นทัลแล็บ", "Dr.อมรรัตน์ มรรคอนันตโชติ", "Dr. Salisa", "Dr.ช่างสมนึก", "Dr.ลลิล", "Dr.ภัควุฒินันท์", "Dr.พี่ตู่", "Dr.กตัญญูู", "Dr.คาราเมล", "Dr.เจน", "Dr.Siwakorn", "Dr.อาทิตย์ ศรีคชา", "Dr.นิติโชติ นิลกำแหง", "Dr.Anchana", "Dr.วินัย", "Dr.เทพเทพินทร์", "ทพ. สมชาย", "Dr.อุทุมพร", "Dr.Yonokpant", "Dr.ณิชาภา ธนาดลพิจิต", "Dr.สิริชัย วิริยจารี", "Dr.พลอยลดา", "ทพ.สมชาย/ทพ.ศักดิ์ชัย", "Dr.ศรันย์ โกศลจิตต์บุญ", "Dr.เบญญา", "Dr.เดนทอลเวิลด์", "Dr.James", "Dr.Dr.ฐานันด์ วิภาดาเกษม", "Dr.Rapeepat Sripila", "Dr.ธนัฏฐนนท์", "Dr.Thayika", "Dr.อิสริยา เล็กคุณา", "Dr.Poorita", "Dr.องอาจ", "หมอชิน", "Dr.มนภรณ์ วิมลรัชต์มโนรม", "Dr.Panpicha", "Dr.Oat", "Dr.วรนันต์ วนาสนันต์", "Dr.Watit", "Dr.พรรณพิชา", "Dr.Suwit Limpattamapane", "Dr.ปาจรีย์ แก้วภูมิแห่", "Dr.Sakanus Vijintanawan", "Dr.Amornpong", "Dr.ศริณ", "Dr.Thanatnon", "Dr.กรวิทย์", "Dr.Supit Khangrang", "Dr.\takarapat rattananon", "Dr.Chayakrit Taratikundech", "Dr.ปานวาด เฮงจีระจรัส", "Dr.Gamp", "Dr.นพรันต์ เอมจุ้ย", "Dr.หทัยภัทร หมออุ๋มอิ๋ม", "Dr.ชลัมพล เกตุพิชัย (หมอเบิร์ด)", "Dr.พจนารค", "Dr.Rukkhaphan", "Dr.ตอง", "Dr.ธนดล", "Dr.ธราปัฐพ์", "Dr.ศุภาพัชร ตรีเทพจุลยากูล", "Dr.watit", "Dr.song \tSukrit", "Dr.ชิน", "ระบบ Meisinger / Oktagon", "Dr.ทราย", "Dr.จริยา เจิดแจ่มจรัส", "Dr.Anuparb Aungsuvorapruek", "Dr.Arm", "prodent", "Dr.ทรัพย์สิดี", "Dr.chatnarong", "Dr.หมอชัยพร", "Dr.ปิยาวัฒน์ สุวรีดิลกกูล", "Dr.รศนา (นุ่น)", "คณะทันตแพทยศาสตร์ มหาวิทยาลัยพะเยา", "ทพญ.ปัณฑ์ชนิต โอฬารรักษ์", "ส่งกลึงอาบัติเม้น", "Dr.นิชาภา วรวีธราโรตี", "Dr.อะตอม", "Dr.charoen Tiyasothin", "ทันตกรรมหมอจั่นเจา", "Dr.pong", "Dr.Pitchaya Vadhanakrai", "Dr.Pongsathorn Satjatham", "Dr.Tanawan", "Dr.กษิดิศ", "Dr.Top สุธาสินี", "Dr.วิษณุ กีนติพงศ์ภักดี", "Dr.นุ่น", "ทพญ.กรรณิการ์", "ทพ.พงศกร พันธิแก้ว", "Dr.วัสยส", "กลึงอาบัติเม้น", "Dr.ธนัศ สิทธิรัตน์", "Dr.ชิษณุ", "Dr.fai (พิจิตร)", "Dr.Darunee", "Dr.สัณห์ชัย", "Dr.Hataipat", "Dr.กลัฟ", "Dr.เจริญ ทิพยโสถติ", "Dr.พิทัก", "Dr.วิษณุ กีรติพงศ์ภักดี", "Dr.Butsakorn", "Dr.แก๊ม", "Dr.จริยา", "เคดีเเอล", "Dr.pongsathorn"]}</script>
+<script id="refs-blob" type="application/json">{"clinics": ["(ออกบิลหมอ)", "14/8", "1st dental clinic", "2024-10-09T00:00:00", "3S Lab", "ABC แฟมิลี่", "AG Dental Plus Clinic", "ARC Dental clinic สนามเป้า", "All About Teeth Dental Clinic สาขาลาดพร้าว", "All About Teeth Dental Clinic สาขาอโศก", "Alpaca Dental Clinic แคราย", "Anuparb", "Apple Dental Clinic", "Arc dental clinic", "At Homeจอหอ", "Athome สระครก จอหอ", "B.A ปทุม", "BCDC", "BCDC สาขาบิ๊กซี", "BCDC สาขาเพิ่มสิน", "BCDC สาขาเพิ่มสิน 64", "BCDC เพิ่มสิน", "BIDC Emquartier", "BIDH", "BKK48", "BPDC", "BSDC", "BWDC", "Bangkok Smile Dental", "Be Well Dental Clinic", "Be well หัวหิน", "Belix Dental Clinic", "Bettrr Smile Clinic", "Bettrr Smile Clinic ภูเก็ต", "Bewell หัวหิน", "Big Smile อ่างทอง", "Big care", "Big care เพิ่มสิน", "Buddy smile", "Buddy smile สาขาลาดพร้าววังหิน", "Charm บางแสน", "Charm ศรีราชา", "Chin dental Clinic", "Clinic All Smile", "Clinic All Smile สาขาตะพง", "Clinic Dentreat", "Clinic wisdom tooth", "Colon P", "Csmileyala Clinic", "D Duo สัตหีบ", "D-Dou สัตหีบ", "D-Plus นวมินทร์", "DNS", "DNY รามอินทรา กม.8", "DNY ลาดพร้าว101", "DNY ลาดพร้าว102", "Daily Daily Dental Clinic", "Daily Dental Clinic", "Deezy สำโรง", "Delta 304", "Deluxe นวนคร", "Dent 4U", "Dent4U", "Dent4u พิษณุโลก", "Dental Art ทาวน์อินทาวน์", "Dental Art สะพานควาย", "Dental Art อุทัยธานี", "Dental Empire Clinic", "Dental Empire รัชดา19", "Dental Home Clinic ปราจีน", "Dental Hub Clinic (หนองแขม)", "Dental Hug", "Dental Image ปิ่นเกล้า", "Dental Protect", "Dental Select", "Dental Shine Clinic", "Dental Story", "Dental Story สัตหีบ", "Dental Wise", "Dental Zone", "Dental art ทาวน์อินทาวน์", "Dental art สะพายควาย", "Dental art อุทัยธานี", "Dental at Home", "Dental at home นวมินทร์ 70", "Dental at home นวมินทร์70", "Dental home clinic (พระโขนง)", "Dental hub Phuket", "Dental hug", "Dental max 50", "Dental wise", "Dental zone", "DentalWise", "Dente Align", "Dentista", "Dentista77", "Dentreat", "Dio", "Doctor Fair Dental Clinic", "DortorTanawat dental clinic", "Dr. Pranmas Teeranuwat", "ESTE บางแสน", "Edelweiss สาขาวิภาวดี", "Edelweiss สาขาสุขุมวิท15", "Eden Dental", "Eden Dental ศาลาแดง", "Eden dental", "Eden detalclinic", "Feel Good", "Feel good", "Feel good clinic", "Feel good ยังไม่ได้ออกบิล", "Floss Dental (เกาะสมุย)", "Forest Dental Clinic", "Freind Dental Clinic สาขาเซฟวัน", "Friend เซฟวัน", "Funwiset Dental อ่างทอง", "GOdaddy", "Gardentist Clinic จันทบุรี", "Gardentist จันทบุรี", "Gentle Peach Dental Clinic", "Give Time จันทบุรี", "Godaddy", "Gold 9", "HYPS Dental CNX", "HYPS Dental Clinic", "HYPS Dental cnx", "Habito Dental", "Hachi dental", "Happy Smile ชิดลม", "Hein Clinic ตาคลี", "Homey Mega Bangna", "JDC", "JK dental clinic ฉะเชิงเทรา", "Jeeraporn", "Joy Dental กระบี่", "KC Smile ลาดพร้าว 71", "KC Smile ลาดพร้าว 72", "KC smile ลาดพร้าว 71", "Kitcha Dental Clinic Chiang Mai", "Kongkrapanclinic(ส่งงานDentalHug)", "Konvy Dental", "LDC พระราม2", "LDC พระราม5", "LDC เพชรเกษม", "LITA Dental Clinic", "Love at first dental clinic", "M'JOY Dental Clinic", "M'Joy Dental Clinic", "MAX 50", "MDC", "Manhattan", "Manhattan Dental Clinic", "Manhatton", "Manhatton Dental", "Medtopia", "Mj Dental Clinic", "Mj Dental clinic", "Monday ลาดพร้าว101", "Moonsmile ลพบุรี", "NS clinic", "NTeeth ราม65", "Nattist บางพลี", "NewHome Dental", "NewHome Dental สาขาปากท่อ", "Nice Dental หลักสี่", "Nis Dental Image ภูเก็ต", "Ortho Smile", "P'Jane", "P'Jom", "PDC", "PSK Dental Center", "PSK dental center", "Perfect Dental", "Perfect dental", "Pop Smile Dental Clinic", "Pop Smile Dental Clinic ตลาดนำชัย", "Pop Smile Dental Clinic นำชัย", "Pop Smile Dental Clinic หัวตะเข้", "Prime Dental Clinic", "Prime dental", "Prime dental Clinic", "Prime dental Clinic เชียงใหม่", "Prodent", "Prodent lab", "ProudDent Dental Clinic", "Pt.", "RDC", "RDL", "Rabbit Dental Clinic", "Rimkhong Dental", "SOL Dental Clinic", "SOL dental clinic | คลินิกทันตกรรมโซล", "Sea Sky", "Seasky", "Sky dental clinic", "Smile & Co", "Smile & shine", "Smile Art Pattya", "Smile Craft", "Smile Crafter ราชเทวี", "Smile Crafters ราชเทวี", "Smile Dent", "Smile Dental Clinic พิษณุโลก", "Smile Phitsanulok", "Smile Room", "Smile Sai5", "Smile Studio Dental", "Smile again ศาลายา", "Smile room ลำพูน", "Smile room แม่ริม", "Smile&Style Dental studio", "SmileCenter", "Smiley ฉะเชิงเทรา", "Sriracha Smile", "Star smile ศรีราชา", "Summer Smile", "TDH Canvas", "TMD", "Tann Dental Clinic", "Tann dental Clinic", "Teema smile", "Teeth Talk  ฟิวเจอร์", "Teeth Time", "Teeth Time (งานส่วนตัวหมอ)", "Teeth Time งานส่วนตัว", "The Glass Smile Dental Clinic", "The Grand Dentist (คลองหลวง)", "The Grand Dentist (ฟิวเจอร์ปาร์ค รังสิต)", "The Grand คลองหลวง", "The dental center Sisaket", "The smile gallery phuket ส่งจากสนามบินภูเก็ต", "The smilist", "Tooth Melody", "Tooth Republic Dental Clinic", "Tooth Republic Dental Clinic คอนโดไลท์เฮ้าส์ เจริญนคร", "Tooth&Mood Dental Clinic", "ToothMelody", "Toothday จอหอ", "Toothday หัวทะเล", "Toothist", "Toothtist", "Toothtist Sea Sky", "Trust dental clinic สาขาซีคอนบางแค", "Vsmile มุกดาหาร", "Vsmileมุกดาหาร", "WE DENT Clinic", "Warmsmile Dental Care", "We are dentist clinic", "Well tooth", "Wellsmiles dental clinic", "White smile clinic lamphun", "Wisdom Dental clinic", "Wisdom Tooth", "Wisdom อนุสาวรีย์", "XDC", "YDC", "YDC กทม", "YDC กรุงเทพกรีฑา", "YDC ทาวน์อินทาวน์", "YDC สาขากรุงเทพกรีฑา", "Yes Tooth Clinic", "Yim Yim Dental Clinic", "Your Dental Clinic", "charm bangsaen clinic", "csmileyala clinic", "dental @ home", "dental at home นวมินทร์70", "dental world", "dentist i need you", "doctortanawat", "esse dental clinic", "feel good", "i-smile dental clinic", "iLike Dental Clinic", "iLike Dental Clinic พัทยา", "my condo ปิ่นเกล้า", "new smile phuket", "pa", "prodent", "scene smile", "sea sky", "sky dental clinic", "skytain อโศก", "smile desire dental clinic", "smile desire dental clinic ปัตตานี", "smile icon", "smile icon สมุทรปราการ", "smile room แม่ริม", "tooth & mood แบริ่ง35", "tooth republic ศาลายา", "vsmile dentel", "กาญจนาภิเษก KDC", "กาญจษาภิเษก KDC", "การ์เด้นทิสท์", "คงกระพันคลินิก", "คงกระพันสาย 5", "คณะ", "คณะทันต ม.พะเยา", "คณะทันต มอ.", "คณะทันตะ ม.นเรศวร", "คณะทันตะมอ.", "คณะทันตแพทยศาสตร์ มหาวิทยาลัยพะเยา", "คณะทันตแพทย์ มหาวิทยาลัยพะเยา", "ครอบครัวฟันดี ระยอง", "ครอบครัวฟันดีระยอง", "ครอบครัวฟันดีราชชุมพล", "ครอบไม่แนบ-จุดสบสูงมาก", "คลินิก Alpaca", "คลินิก Alpaca จรัญ13", "คลินิก Alpaca บางซื่อ", "คลินิก BPDC", "คลินิก sig32", "คลินิก ไอสมาย ลำลูกกา", "คลินิก105เด็นทัลโฮม ลาซาล14", "คลินิกpkdc(ปุณกันทันตแพทย์)", "คลินิกคชเนตตีทันตกรรม", "คลินิกชเนตต์ทันตแพทย์", "คลินิกดับเบิ้ลยู ตลิ่งชัน", "คลินิกทันตกรรม 108", "คลินิกทันตกรรม LDC Dental อุบล", "คลินิกทันตกรรม คลับเดนทอล", "คลินิกทันตกรรม108", "คลินิกทันตกรรมBA", "คลินิกทันตกรรมBA ปทุม", "คลินิกทันตกรรมกิฟไทม์ จันทบุรี", "คลินิกทันตกรรมจั่นเจา", "คลินิกทันตกรรมดีดูโอ้ สัตหีบ", "คลินิกทันตกรรมทันตแพทย์ประสิทธิ์", "คลินิกทันตกรรมนางรอง", "คลินิกทันตกรรมนานา หัวหิน", "คลินิกทันตกรรมนานา หัวหิน(Bewell)", "คลินิกทันตกรรมนิคม 304", "คลินิกทันตกรรมนิคมสไมล์ 304", "คลินิกทันตกรรมบลูทูธ", "คลินิกทันตกรรมบางปะอิน", "คลินิกทันตกรรมบางมด สาขาปิ่นเกล้า (งานส่วนตัว)", "คลินิกทันตกรรมบางมด สาขาเกษตร (งานส่วนตัว)", "คลินิกทันตกรรมบีเอ", "คลินิกทันตกรรมบ้านฟันยิ้ม", "คลินิกทันตกรรมบ้านหมอตั้ม", "คลินิกทันตกรรมพีพี", "คลินิกทันตกรรมฟ.ฟัน", "คลินิกทันตกรรมฟ.ฟัน กบินทร์บุรี", "คลินิกทันตกรรมฟ.ฟัน บุรีรัมย์", "คลินิกทันตกรรมมอร์นิ่ง", "คลินิกทันตกรรมมิตรสัมพันธ์", "คลินิกทันตกรรมยูสมายล์ (สาขาบางแสน)", "คลินิกทันตกรรมรักษ์ฟัน", "คลินิกทันตกรรมวนารมย์", "คลินิกทันตกรรมวอร์มเนส", "คลินิกทันตกรรมวีสไมล์ ราชบุรี", "คลินิกทันตกรรมสมายล์เจอร์นีย์ เอกชัย 69", "คลินิกทันตกรรมสไมล์รูม ลำพูน", "คลินิกทันตกรรมสไมล์ลาย พระราม5", "คลินิกทันตกรรมสไมล์ลี", "คลินิกทันตกรรมสไมล์ลี่", "คลินิกทันตกรรมสไมล์สายสาม", "คลินิกทันตกรรมหนองซาก", "คลินิกทันตกรรมหมอจั่นเจา", "คลินิกทันตกรรมหมอตั้มทันตะ ฉะเฉิงเทรา", "คลินิกทันตกรรมหมอตั้มทันตะ ฉะเชิงเทรา", "คลินิกทันตกรรมหมอตั้มทันตะฉะเชิงเทรา", "คลินิกทันตกรรมหมอธนดล", "คลินิกทันตกรรมหมอน้ำตาล", "คลินิกทันตกรรมหมอฝ้ายพิจิตร", "คลินิกทันตกรรมหมอฝ้ายพิจิตร(ทับคล้อ)", "คลินิกทันตกรรมหมอมด", "คลินิกทันตกรรมหมอสมาย", "คลินิกทันตกรรมหมอเจิ้น", "คลินิกทันตกรรมหมอแป้ง", "คลินิกทันตกรรมอมตะ", "คลินิกทันตกรรมอัลไพน์ พุทธมณฑลสาย2", "คลินิกทันตกรรมเคลียร์เด้นท์", "คลินิกทันตกรรมเดนทัลสไมล์ สระแก้ว", "คลินิกทันตกรรมเดนท์ ฟอร์ ยู", "คลินิกทันตกรรมเดนท์แอนด์สไมล์", "คลินิกทันตกรรมเดอะเทมส์", "คลินิกทันตกรรมเดอะแพททิส", "คลินิกทันตกรรมเพื่อนฟัน", "คลินิกทันตกรรมแต้มยิ้ม อารมณ์ดี พะเยา", "คลินิกทันตกรรมแพลนเนท", "คลินิกทันตกรรมแหลมฉบัง", "คลินิกทันตกรรมโกลด์ไนน์", "คลินิกทันตกรรมโปรเดนห์", "คลินิกทันตกรรมไฉไลทำฟัน", "คลินิกทันตกรรมไลท์สมายมีนบุรี", "คลินิกทันตกรรมไวท์สไมล์", "คลินิกทันตกรรมไฮซีซั่น", "คลินิกทันตแพทย์ณรงค์", "คลินิกทันตแพทย์บุญชู", "คลินิกทันตแพทย์ปกรณ์", "คลินิกทันตแพทย์วราภรณ์", "คลินิกทันตแพทย์สงวน", "คลินิกทันตแพทย์หมอชวนพิศ", "คลินิกทันตแพทย์อินอร", "คลินิกบัณฑิต10 คณะทันตแพทย์ มช.", "คลินิกบีเอ", "คลินิกบ้านหมอฟัน พญาไท", "คลินิกปารีนารถ ปิ่นเกล้า", "คลินิกพร้อมยิ้ม", "คลินิกฟ.ฟันดี", "คลินิกฟันดี", "คลินิกฟันดี กทม เสนา", "คลินิกมิตรสัมพันธ์", "คลินิกมิตรสัมพันธ์ ลาดพร้าว1", "คลินิกยิ้ม ยิ้ม ตลาดราชวัตร", "คลินิกวีสมายล์ ท่าโรงช้าง", "คลินิกศรีตรัง หาดใหญ่", "คลินิกสถานีฟันดี", "คลินิกสถานีฟันดีบ้านฉาง", "คลินิกสุขภาพฟัน DENTAL HEALTH CLINIC", "คลินิกสุขภาพฟัน(ออกบิลคนไข้)", "คลินิกสไมล์", "คลินิกหน้าตลาดวงศกร", "คลินิกหมอฝ้ายบีเอ", "คลินิกหมอฝ้ายบีเอ (พิจิต)", "คลินิกหมอฝ้ายพิจิตร", "คลินิกหมอฝ้ายพิจิตร (ตะพานหิน)", "คลินิกหมอฝ้ายพิจิตร (ทับคล้อ)", "คลินิกหมอฝ้ายพิจิตร(ตะพานหิน)", "คลินิกหมอสมาย จ.บึงกาฬ", "คลินิกหมอสุชาติกระทุ่มแบน", "คลินิกหมอสุมาย จ.บึงกาฬ", "คลินิกหมอเจริญ กำแพงเพชร", "คลินิกหมอเล้ง", "คลินิกอังสะนา", "คลินิกอุ่นใจทันตกรรม กวงฮั้ว", "คลินิกอุ่นใจทันตกรรม มาบตาพุด", "คลินิกเจริญ-วันเพ็ญ ทันตแพทย์", "คลินิกเจริญ-วันเพ็ญทันตแพทย์", "คลินิกเดนทัลเอ็มไพร์", "คลินิกเดนท์ ฟอร์ ยู", "คลินิกเอสซี เดนทัล", "คลินิกโก้สหคลินิก", "คลินิกไบร์ทสมาย", "คลินิคบ้านหมอหนึ่ง", "คลีนิค", "คลีนิคทันตแพทย์ปกรณ์", "คลีนิคบางกอกสไมล์ สาขาอโศก", "คาราเมล", "งานคุณหมอสลิล", "งานส่วนตัว", "งานส่วนตัวคุณหมอ", "งานส่วนตัวคุณหมอ(edelweiss)", "งานส่วนตัวหมอ", "งานหมอเปิ้ล", "จริยา เดนทัล", "จิรกานต์ทันตแพทย์", "จิรกานต์ทันตแพทย์คลินิก", "ชนนี Clinic", "ชนนีทันตกรรม", "ชวิส เด็นทอล คลินิก", "ชวิส เด็นทอลคลินิก", "ชเนตตีทันตแพทย์", "ชเนตตีทันตแพทย์ ราชบุรี", "ดับเบิ้ลยูเดนทัล", "ดี.ดี.เดนทัล", "ดี.ดี.เดนทัล (อ้อมน้อย)", "ดี.ดี.เดนทัล สาขาอ้อมน้อย", "ดี.ดี.เดนทัล สาขาอ้อมใหญ่", "ทรี เด็นทัลแล็บ", "ทองสไมล์ หาดใหญ่", "ทันตกรรมบางปะอิน", "ทันตกรรมบางปะอิิน", "ทันตกรรมบ้านย่า", "ทันตกรรมบ้านหมอยีน", "ทันตกรรมบ้านหมอโบว์", "ทันตกรรมพร้อมยิ้ม", "ทันตกรรมสนามบิน", "ทันตกรรมสูงเนิน", "ทันตกรรมสไมล์ลี่", "ทันตกรรมหมอจั่นเจา", "ทันตกรรมหมอธนดล สระบุรี", "ทันตกรรมเดอะเฟิสต์ บางบัวทอง", "ทันตกิจ", "ทันตแพทย์ประสิทธิ์ จันทบุรี", "ทันตแพทย์ภาวนา", "ทีธอะแนปคลินิก", "นานาหัวหิน", "นานาเดนทอลหัวหิน", "บริษัท เด็นทัล สตาร์ จำกัด สระบุรี", "บางกอกแกรนด์เดนทัล", "บูทีค เดนทัล", "บ่อวินสไมล์", "บ้านรักยิ้ม ปราจีน", "บ้านหมอฟัน ปราจีน", "บ้านหมอฟันดำเนิน", "บ้านหมอฟันดำเนินสะดวก", "บ้านหมอฟันนิคมสไมล์", "บ้านหมอฟันปราจีน", "บ้านหมอลม", "บ้านหมอลม อุบล", "บ้านหมอโบว์", "ปันยิ้ม ราชบุรี", "ปารีนารถ", "พราวเดนท์ คลินิกทันตกรรม ราชบุรี", "ฟ.ฟันดี สาขาเซฟวัน", "ฟอฟัน กาญจนบุรี", "ฟันดี", "ฟันดีคลินิก ปทุมธานี", "ฟันสไมล์ สาขาราชสีมาเซนเตอร์", "ฟันสไมล์ สาขาเเซฟวัน", "ภทรคลินิกทันตกรรม", "ม.นเรศวร", "มิตรสัมพันธ์ ลาดพร้าว", "มิราเคิล", "ยิ้มกว้างทันตกรรม", "ยิ้มพิมพ์ใจ", "ยิ้มหวาน อยุธยา", "ยิ้มหวานอยุธยา", "ยิ้มหวานอยุุธยา", "ยิ้้มยิ้มโชคชัย4", "รพ ราชบุรี", "รพ.กรุงเทพคริสเตียน", "รพ.นาดี", "รพ.พญาไทพหลโยธิน (เปาโลสะพานควาย)", "รพ.ราชบุรี", "รพ.ราชบุรี ส่งงานไบร์ทสมาย", "รพ.สมเด็จพระสังฆราชองค์ที่17", "รพ.สมเด็จยุพราชจอมบึง", "รพ.สระแก้ว", "รพ.สินแพทย์ เสรีรักษ์", "รพ.สุราษฎร์ธานี", "ริมโขงเชียงราย", "ศูนย์จัดฟัน รากฟันเทียม บูทีค เดนทัล", "ศูนย์ทันตกรรม love at", "ศูนย์ทันตกรรมคู้บอน ซอย4", "ศูนย์ทันตกรรมรัชดา", "ศููนย์ทันตกรรม รัชดา ทรัพย์สินดี", "สมาคมรากเทียมแห่งประเทศไทยนะครับ [TADI]", "สมายล์แกลอรี่ สุราษฎร์", "สสจ.นครราชสีมา", "สานัส พรานนก", "สานัส สำเหร่", "สไมล์ลาย พระราม5", "สไมล์สายสาม", "สไมล์อาร์ตคลินิก", "สไมล์อาร์ตคลินิก ชลบุรี", "สไมล์อาร์ตคลินิก พัทยา", "หมอตั้มทันตะ", "หมอตั้มทันตะ คลินิกทันตกรรม", "หมอตั้มทันตะ คลินิกทันตกรรม ฉะเชิงเทรา", "หมอตั้มทันตะ ฉะเฉิงเทรา", "หมอฝ้ายพิจิตร", "หมอเก้ หมอป่าน คลินิกทันตกรรม", "หมอเก้-หมอป่าน คลินิกทันตกรรม", "หมอเก้-หมอป่านคลินิกทันตกรรม", "หมอแป้งสไมล์คลับ", "อนุพันธ์", "อัญชนาเดนทัล", "อัลปาก้า", "อาร์เทคนา เดนทัล แลบ", "ฺBrightsmile", "เคดีแอล", "เคอิชิ", "เจนน้อย", "เดนทอลเวิลด์", "เดนทอลไวส์", "เดนทัล ดี", "เดนทัลโฮม", "เด็นทอลเวิล", "เด็นทัล ดี", "เด็นทัลครีเอชั่น", "เด็นทัลอิมเมจลาดพร้าว", "เด็นทัลโฮม", "เพื่อนฟัน สุพรรณบุรี", "เมก้าเจน", "เมดโทเปีย", "เมตาเดนเต้ บางกะปิ", "เมตาเดนเต้ บิ๊กซีอ่อนนุช", "เมตาเดนเต้ สำโรง", "แรบบิทเดนทัลคลินิก", "แหลมฉบังคลินิกทันตกรรม", "โก้สหคลินิก", "โรงพยาบาลค่ายธนะรัชต์", "โรงพยาบาลท่าศาลา", "โรงพยาบาลอุบลรักษ์ ธนบุรี", "โอมากาเสะ คลินิก", "ไพร์มเด็นทอลโซลูชั่น", "ไอสมาย ลำลูกกา"], "materials": ["3Shape", "Aidite", "Aidite+lisi", "Amber", "Amber Press", "BB", "Biomate  swiss", "Composite", "Custom ASC", "Design", "Digital Guide", "EMAX", "Emax", "Emax+PMMA", "Emax+Zirconia", "Emax,Zirconia", "Enamic", "File", "Full Metal", "Gmail", "Itero", "LISI", "Line", "Lisi", "Lisi press", "Lisipress", "Lithium", "Metal", "Meterial", "Mill Abutment", "Model", "Normal", "PAMA", "PMMA", "PMMA bridge", "Partial Denture", "Premill+model", "Print", "Print Model", "RTN", "Special Tray", "Temp PMMA", "Tibar", "Wax", "Waxing", "Zir+Emax", "Zir+Full", "Zir+Lisi", "Zir+Temp", "Zirconia", "Zirconia + Emax", "acrylic", "allon", "ceramic", "temporary", "zircon", "กลึงอบัตเมนต์", "ทำ PMMA temp crown", "รอยพิมพ์", "รายะเอียดทางไลน์", "วัสดุเลือกอีกที", "หมอไม่ปริ้น"], "systems": ["All-On", "Alpha Bio", "Alpha Dent", "Analog", "Ankylos", "Astra tech", "Bioconcept", "Biohorizon", "Biomet 3i", "Biotem", "Branemark", "Bridge", "Camlog", "Conelog", "Cowell", "Crown", "Dentis", "Dentium", "Dentsply", "Digital WAXUP", "Dio", "Endo CR", "Guide Stent เหงือก", "Hand Waxup", "Hiossen", "Implant", "Inlay/onlay", "Legacy", "MIS", "Marry land Bridge", "Megagen", "Model", "NORMAL", "Neobiotech", "Neodent", "Neoess", "Neoss", "Nobel", "Nuvo", "Onlay/Inlay", "Osstem", "Otakon", "PW Plus", "Point Implant", "Print", "Scan", "Screw Retained Crown", "Sic", "Smile Design & Mockup", "Straumann", "Study Model", "TYPE", "Tekka", "Temp", "Veneer", "Warantec", "Warratac", "Wego", "Xive", "Zeramex", "Zimmer", "all-on", "bridge", "conelog", "crown", "guide stent", "milling custom", "nobel", "overdenture", "point implant", "scan", "temp", "temporary", "veneer", "กลึงงานzr", "กลึงอาบัติเม้น"], "scan_systems": ["3Shape", "BIS Cloud", "CD", "EMS", "Flash drive", "Gmail", "Google Drive", "Itero", "Line", "Medi", "Medit", "Medit Link", "OneDrive", "Shining3D", "eighteeth", "shinning 3D", "พี่ตู่รับ", "รอยพิมพ์", "ส่งแมส"], "statuses": ["ชะลอเคส", "ยกเลิกเคส", "รับเข้าระบบ", "สถานะ", "ส่งแล้ว"], "delivery": ["EMS", "Grab", "Kerry", "พี่เต๋าส่ง", "รถตู้", "รถตู้เอกมัย", "รถทัวร์", "ส่งที่อิมเมจสาขาลาดพร้าว", "ส่งที่เดอะเด้นรัชโยธิน", "ส่งแมส"], "techs": ["(ใช้คูปอง zirงาน TGBIC-9", "1st", "3D", "3Shape", "Ao", "Ball", "CAD/CAM", "Gmail", "Itero", "Job", "Line", "Lita", "May", "Medit", "Medit Link", "Mint", "Mod-x", "Oil", "Shining3D", "Tao", "Tattoo", "Tawan", "Too", "Tum", "Wa", "X", "Yim", "aem", "ball", "chomp", "eighteeth", "oil", "shining 3D", "shinning 3D", "tatt", "tawan", "yim", "ช่างนอก", "ช่างโอ๋", "นโม", "นุ๊ก", "มาย", "รอยพิมพ์", "รอออกบิล", "ลิตา", "หน่อย", "หมอจ่ายค่าแลปแล้ว", "ออกบิลคนไข้", "อ๊อฟ", "เอม", "แม็ค", "โหน่ง"], "dep_statuses": ["รอดำเนินการ", "กำลังดำเนินการ", "เสร็จแล้ว", "ระงับชั่วคราว", "ยกเลิก", "ไม่เกี่ยวข้อง"], "departments": [{"key": "order_intake", "label": "รับออเดอร์ (Admin)"}, {"key": "scan", "label": "SCAN"}, {"key": "design", "label": "DESIGN"}, {"key": "model_printing", "label": "MODEL PRINTING", "parallel": true}, {"key": "abutment", "label": "Order Abutment (ถ้ามี)"}, {"key": "receive", "label": "รับของ (ถ้ามี)"}, {"key": "milling", "label": "MILLING"}, {"key": "all_ceramic", "label": "ALL CERAMIC (ทำสี)", "join": true}, {"key": "qc", "label": "QC"}, {"key": "billing", "label": "ออกบิล (Admin)"}, {"key": "delivery", "label": "DELIVERY"}], "case_types": ["ปกติ", "คูปอง"], "coupon_statuses": ["รออนุมัติ", "อนุมัติแล้ว", "ใช้คูปองแล้ว", "คูปองหมดอายุ/ยกเลิก"], "doctors": ["Dr.Thanet Sawangsiripol", "Dr.อัญชลี", "Dr.Suttaya", "Dr.Pitter", "Dr.Suchada", "Dr.นันท์นภัส ดุรงค์พงศ์เกษม", "Dr.สุชาติ ทันตสุวรรณ", "Dr.Piyawat", "Dr.สุพจน์", "Dr.ภูมิชาย", "Dr.win", "Dr.ธนัท สิทธิรัตน์", "Dr.สโรจินต์", "Dr.Cherdsak Tantasuwan", "Dr.กัลป์", "Dr.Thanadol", "Dr.", "Dr.Smon Manosoontorn", "Dr.Chariya", "Dr.Sukrit", "Dr.pat", "Dr.Alonsi", "Dr.Kittikun", "Dr.Thanatip Setthayon", "Dr.ธนพงษ์ ทันตสุวรรณ", "Dr.Sukrit Sermsri", "Dr.เคอิชิ", "Dr.Manita", "Dr.นุโลม", "Dr.Panchanit", "Dr.อนุพันธ์", "Dr.นิชาภา", "Dr.thanet", "Dr.Siwakorn Booncharoensinchai", "Dr.สุพิทย์ แข็งแรง", "Dr.Panpicha Maketone", "Dr.สปัน", "Dr.Anivat phunjinda", "Dr.ปารย์รวี ถนอมศักดิ์ชัย", "Dr.Peeraya", "Dr.ชิตพล", "Dr.หทัยภัทร ตระกูลสุข", "Dr.ดวิษา กำศิริพิมาน", "Dr.ปารย์รวี", "Dr.Panchanit Olarnrak", "Dr.วันจักร", "Dr.Pratya Tharatorn", "Dr.ขิง", "Dr.\tPanchanit Olarnrak", "Dr.Atipong", "Dr.สลิล ชำนาญเวช", "Dr.Viphak Chartiyanont", "Dr.Suneebhorn", "Dr.พีชญา", "Dr.Paramunee", "Dr.วรางค์รัตน์ เศวตศิลป์", "Dr.หทัยภัทร", "Dr.ปัจญลักษณ์", "Dr.Anivat", "Dr.Pongsakorn Phanthikaew", "Dr.Thewarit", "Dr.ปิยานันต์", "Dr.พงศกร อภิญสถานนท์", "Dr.Sicharinee Prakchinnawarn", "Dr.ฐานันด์ วิภาดาเกษม", "Dr.ประสิทธิ์ ชัยเจริญพงศ์", "Dr.Win", "Dr.Pongbhum Chinhathaiwat", "Dr.Fai", "Dr.ปัญจลักษณ์", "Dr.จิณห์นิภา โรจน์สวัสกดิ์สุข", "Dr.จิณห์นิภา โรจน์สวัสดิ์สุข", "Dr.Chinnapong Lertwannapong", "Dr.สรัล เทาศรีดี", "Dr.อาจรีย์", "Dr.ศริน จันทิพย์วงษ์", "Dr.ภูมิชาย จิตรรักษ์", "เคดีแอล", "Dr.ภูริตา จโนภาส", "Dr.ชัยพร", "Dr.นวรัตน์", "Dr.พิทักษ์", "Dr.จิราภา สุวรรณ", "Dr.กรรณิการ์", "Dr.ณัฐพล ป้อมศิลา", "Dr.สุภาภรณ์ พวงสุวรรณ", "Dr.ศุภกร อัศวราชันย์", "Dr.นิธิวุฒ กรรณาลงกรณ์", "Dr.will", "Dr.ภููมิชาย", "Dr.ธมนวรรณ", "Dr.ณัฐิกา กล้าหาญ", "Dr.ศศิณิษา", "Dr.Anivat Phanjinda", "Dr.Nisarat Sritha", "Dr.Tanasak", "Dr.Rasana Boonpeng", "Dr.วาทิศ เดชพงษ์", "Dr.\tWorapol Pruangprayoon", "Dr.ภาณุพงษ์ ภิญโญ", "Dr.พจนารถ", "Dr.ธนพล แสงอาสภวิริยะ", "Dr.เธียร ศรีกสิกุล", "Dr.Todsaphon Inprakhon", "Dr.ภานุพงษ์", "Dr.\tTodsaphon Inprakhon", "Dr.ธนิน", "Dr.Lalita", "Dr.เทพเทพินทร์ ตั้งศักดิ์สมหวัง", "Dr.Phattranit", "Dr.พีรภัทร ธรรมประสม", "Dr.Chisanu", "Dr.อัญจิดา ชวนะโรจนฤทธิ์", "Dr.กตัญญู", "Dr.Nalat", "Dr.ณัฐิกา", "Dr.Zamp", "Dr.akarapat rattananon", "Dr.RDL", "Dr.สลิล ชำนาญ", "Dr.zamp", "Dr.ศรัญชัย", "Dr.พัด", "Dr.ทพญ.ภาวนา สุวรรณกาฬ", "Dr.สิณิชา", "Dr.Sirinan Aranyawongsakorn", "Dr.ปัณชนิต", "Dr.สุพิทย์", "Dr.ธนพล", "Dr.Parin Jeeranun", "Dr.Suttaya Poosong", "Dr.junjao", "Dr.คล้ายจันทร์", "Dr.ณัฐกฤตา", "Dr.Sorrasit Laohapatcharin", "Dr.แซ้ม", "Dr.ปรางทิพย์", "Dr.Will", "Dr.วัชรพงศ์", "Dr.Cholada", "Dr.นนท์นที", "Dr.ชมภูนุช", "Dr.ภัทรพร ยั่นยง", "Dr.ทศพล อินประโคน", "Dr.วรวรรณ", "Dr.ปราณมาศ ธีรานุวัฒน์", "Dr..สรัล เทาศรีดี", "Dr.คนธ์พงษ์", "Dr.ฉัตรณรงค์ แพทย์พุฒิธรรม", "Dr.ปิยะนุช เชื้อบัณฑิต", "Dr.อนุุพันธ์", "Dr.อรณิชา", "Dr.Jeeraporn", "Dr.อธิพร ภูวราวุฒิพานิช", "Dr.อรณิชา กาญจนาพาที", "Dr.ยาวี", "Dr.สุภาภรณ์", "Dr.piyawat", "Dr.ชนรรค์ เล็กอุทัย", "Dr.เจริญ ทิพยโสตถิ", "Dr.Dr.Suttaya", "Dr.สุุพิทย์ แข็งแรง", "Dr.ชมพูนุช สุขชีพ", "Dr.ชลัมพล", "Dr.Supreeya", "Dr.Aurt", "Dr.ฉัตรณรงค์", "Dr.Nuch", "Dr.ฉัตรฤทัย", "Dr.ประพันธ์", "Dr.\tSuchada Olarnrak", "Dr.ปิยานันต์ สุขวรกิจวนิช", "Dr.ภัทรพร ยืนยง", "Dr.ศรัณย์ กิตติศุภกร", "Dr.Apaporn", "Dr. Yospat Rathirom", "Dr.เสกสรร พูดเถิด", "Dr.ศรัญญา หอมกลิ่นยา", "Dr.ฉัตรฤทัย กาญจนโสภณ", "Dr.ปิยะนุช", "Dr.worraned", "Dr.ธนกร", "Dr.ณัฐวุฒิ", "Dr.Sorrasit", "Dr.Pongsakorn Komutpol", "Dr.\tSukrit", "Dr.เสกสรร พูลเกิด", "Dr.Sabsidee", "Dr.ศริณ จันทิพย์วงษ์", "Dr.นันทรัตน์", "Dr.Thanatchaya", "Dr.Hataipar", "Dr.ฝน", "Dr.ทัตพร", "Dr.สุสมา บรรจงจิตร", "Dr.เอกชัย", "Dr.กรปวีณ์", "Dr.สิเรียม เทาศรีดี", "Dr.Anivat Phunjinda", "Dr.บุษกร อัครวัชรางกูร", "Dr.จิตติญา วัฒนกิตานนท์", "Dr.ดวงประทีป", "Dr.สุชานันท์", "Dr.เจนน้อย", "Dr.อนุพันธ์ สิทธิโชคชัยวุฒิ", "Dr.วัสยศ", "Dr.ณัฐพล", "Dr.Pranmas", "Dr.Thitiwadee Rukkhaphan", "Dr.พงศกร", "Dr.หทัยภัทร ตระกูล", "Dr.ณัฐกฤต", "Dr.ภููริตา", "Dr.นักสิทธิ์ จิตรตรง", "Dr.ธีรวัฒน์", "Dr.Parinya", "Dr.ยศวดี สิทธิศร", "Dr.จิรภัทร", "Dr.กตัญญู หลิมไชยกุล", "Dr.พีชญา จิตจาตุรันต์", "Dr.รวิภา", "Dr.ทพ.สราวุธ รจิตรบูรณะกุล", "Dr.Dittaya Charoenkijkajorn", "Dr.นิศารัตน์ ศรีทา", "Dr.Siriwadee Prathompat", "Dr.ปุณณดา เที่ยงตรง", "Dr.ปรินทร์", "Dr.จรัสวรรณ", "Dr.อาภาพร", "ชื่อแพทย์", "Dr.ปัณฑ์ชนิต", "Dr.ภูริตา จโนภาส (จ๋า)", "Dr.พงศ์กร พันธ์แก้ว", "Dr.สาละวิน", "Dr.Nattawat", "Dr.Dio", "Dr.วิบุลย์", "Dr.Non", "Dr.Worapol Pruangprayoon", "Dr.Sirirat", "Dr.ยาวี เมฆขำ", "Dr.ภาณุพงษ์", "Dr.setthapong", "Dr.กชกร บ่อคำ", "Dr.เจนวิทย์ บรรจงรุจกุล", "Dr.ชลชัย", "Dr.THANABAT YIAMPANOMKUN", "Dr.ภูมิพัฒน์", "Dr.Salil", "Dr.สลิล", "Dr.พริมา", "Dr.Poosit Thongsamak", "Dr.นัสวีน ตอแก", "Dr.อภิชญา บุญโสภา", "Dr.ธฤษวรรน", "Dr.tanawat", "Dr.ซิตพล", "Dr.ชมพูนุช", "Dr. แป้ง", "Dr.Parin", "Dr.Paporn on", "Dr.สัชชัย อานินตคุณ", "Dr.Mum", "Dr.Tui", "Dr.Nonthawat", "Dr.Pat", "Dr.สานเติม", "Dr.เอมวดี", "Dr.ต๊อบ", "Dr.วุฒิกา", "Dr.Wirawat", "Dr.พิมพมนต์ ภิรมย์รื่น", "Dr.ปาณาลี", "Dr.ดวิษา", "Dr.สุชาติ ทันตสุวรรณ(Dr.ประพันธ์)", "Dr.Yuttapol Pimpison", "Dr.อัญชิสา", "Dr.อรรถ", "Dr.จีรภัทร์", "Dr.ภาณุมาศ อินทะมน", "Dr.ต๊อป ปราณวดี", "Dr.คนธ์พงษ์ บุญขำ", "Dr.Salisa", "Dr.สมชาย", "Dr.อมรพงษ์", "Dr.ชมภูนุช ติยะวงศ์มานะ", "Dr.อมรพงษ์ วชิรมน", "Dr.ปิยานันต์ (หมอแอล)", "Dr.Nas", "Dr.คณิต", "Dr.\tPanpicha Maketone", "Dr.dear", "Dr.กัลยกร เจริญผล", "Dr.พัชร กุลโกวิท", "Dr.wut", "Dr.สุพจน์ (กวง)", "Dr.Nis", "Dr.Prakchinawan , Sicharinee", "Dr.ปาร์ยรวี", "Dr.นิด", "Dr.Thanathip", "Dr.mum", "Dr.alonsi", "Dr.วันเนส โฮม", "Dr.ยศวดี", "Dr.โชษิตา", "Dr.ญาณภัทร", "Dr.ปฏิภาณ", "Dr.Akarapat rattananon", "Dr.สสุมา", "Dr.เกื้อพงษ์", "Dr.กวี เด่นไพโรจน์ศักดิ์", "Dr.Kunlanun", "Dr.ภูริกา", "Dr.Alice", "Dr.เลิศศิริ", "Dr.อัญชนา", "Dr.พีชญชา", "Dr.จิตตยากร", "Dr.ณัฐดนัย", "Dr.ปัญญาวุธ", "Dr.ไอซ์", "Dr.ธร", "Dr.Prodent", "Dr.Dr.Pitter", "Dr.กีรติ", "Dr.JJ", "Dr.ณัฐวีร์ หวังพิริยะพาณิช", "Dr.เดียร์นา", "Dr.สาธิต ปราบริปูตลุย", "Dr.Yok", "Dr.ธิปก", "Dr.ติวเตอร์", "Dr.กัสมา", "Dr.ภัทรพร", "Dr.ฐานัส ลิ่ววัฒนากรณ์", "Dr.เดียร์นา เบญจมาพร", "Dr.ณัฏฐรัชพล อภิชนถิรพันธิ์", "Dr.Jeerapatr O.Baiyokvichit", "Dr.สมาคมรากเทียม tadi", "Dr.พรจิรา", "Dr.สุภาพร", "Dr.จิรายุ วิเวกเมธากร", "Dr.Supatsorn", "Dr.kanchirat", "Dr.พิชิต", "Dr. นิติโชติ นิลกำแหง", "Dr.ยุวนุช", "Dr.ณภัทร", "RDL", "Dr.อมรรัตน์", "ทพ.ธนัฎฐนนท์", "Dr.ภูวิพัฒน์", "Dr.กางเขน", "Dr..Manapon Wimonratmanorom", "Dr.Surapong Kanchanabat", "Dr.กิตตินันท์", "Dr.Pisit Suksuphan", "Dr.จิณตภา", "Dr.ศศิพินธ์ุ", "Dr.Sunee", "Dr. มยุรัชฎ์ พิพัฒภาสกร", "Dr.ชนม์นัฐฌา เจริญผล", "Dr.Suwit Limpattamapanee", "Dr.อดิศร", "Dr.Chompunuch", "Dr.ธนพล หนูมาน้อย", "Dr.เจริญ ทิพยโสถิ", "Dr.suchada", "Dr. Rukkhaphan, Thitiwadee", "Dr.ธนพจน์", "Dr.ธนพล แสง", "Dr.Top", "Dr.พงศกร พันธิ์แก้ว", "Sorrasit Laohapatcharin", "Dr.Yospat", "Dr.Todsaphon", "Dr.สิชารินีย์  หมอยีน", "Dr.พรรณพิชา (โอ๋)", "Dr.รุ่งโรจน์", "Dr.Ikanchirat", "Dr.yoky", "Dr.กตัญญ", "Dr.ภูริดา หมอจ๋าราชบุรี", "Dr.ปริศนา", "Dr.นที", "Dr.Pichaporn", "Dr.สุภสิทธิ์ นาคไร่ขิง", "Dr.กาย", "Dr.ศิริไพบูลย์", "Dr.พสธร", "Dr.วิสุณี", "Dr.กฤตภพ", "Dr.WORANIS PETCHSUPHAMIT", "Dr.เปิ้ล", "Dr.พรทิทา", "Dr.Pook", "Dr.Pek", "Dr.Kaew", "Dr.ทศพล", "Dr.พงษกร", "Dr.ธวัชชัย", "Dr.ตะวันฉาน", "Dr.อาทิตยา เชาวน์ทวี", "Dr. พงษภร", "Dr.ปณาลี", "Dr.ฐานันด์", "Dr.Jin", "Dr.ปรมุนี", "Dr.พงศกร อภิญสภานนท์", "Dr.เชาว์วรรธน์", "Dr.พรศักดิ์", "Dr.สุโชติ", "Dr.เมก้าเจน", "Dr.Komgrit", "Dr.พัสวี", "Dr.อัณณพิมพ์", "Dr.Sermsakul Wongtiraporn", "Dr.Kanokporn", "Dr.ท็อป", "Dr.สิริภัทร", "DR.kanokporn", "Dr.จิติพันธ์ อ.ใบหยกวิจิตร", "Dr.ชัยธนาธัชช์ ไตรญาณสิริ", "Dr.บุษรา TG-Bic10", "Dr.อรณิชา กาญจนพาที", "Dr..Parin Jeeranun", "Dr.\tPongsathorn Satjatham", "Dr.ญาสุมินทร์ วงศ์พันธุเศรษฐ์", "Dr.วิชาญ แตรกัล", "Dr.ปรางทิพย์ สุขศรีจักรวาล", "Dr.อัมพา", "Dr.Atipong Thammabuchit", "Dr.ศิริศักดิ์", "Dr.Jittayakorn Kasemsan", "Dr. สัมพันธ์", "Dr.วรัญญู", "Dr.ยงยุทธ", "Dr.สุทธิจิต", "Dr.ฐนกร", "Dr.เจฎฐพงศ์", "Dr.พงศ์ภูมิ", "Dr.Supaporn", "Dr.วิว", "Dr.ทรี เด็นทัลแล็บ", "Dr.อมรรัตน์ มรรคอนันตโชติ", "Dr. Salisa", "Dr.ช่างสมนึก", "Dr.ลลิล", "Dr.ภัควุฒินันท์", "Dr.พี่ตู่", "Dr.กตัญญูู", "Dr.คาราเมล", "Dr.เจน", "Dr.Siwakorn", "Dr.อาทิตย์ ศรีคชา", "Dr.นิติโชติ นิลกำแหง", "Dr.Anchana", "Dr.วินัย", "Dr.เทพเทพินทร์", "ทพ. สมชาย", "Dr.อุทุมพร", "Dr.Yonokpant", "Dr.ณิชาภา ธนาดลพิจิต", "Dr.สิริชัย วิริยจารี", "Dr.พลอยลดา", "ทพ.สมชาย/ทพ.ศักดิ์ชัย", "Dr.ศรันย์ โกศลจิตต์บุญ", "Dr.เบญญา", "Dr.เดนทอลเวิลด์", "Dr.James", "Dr.Dr.ฐานันด์ วิภาดาเกษม", "Dr.Rapeepat Sripila", "Dr.ธนัฏฐนนท์", "Dr.Thayika", "Dr.อิสริยา เล็กคุณา", "Dr.Poorita", "Dr.องอาจ", "หมอชิน", "Dr.มนภรณ์ วิมลรัชต์มโนรม", "Dr.Panpicha", "Dr.Oat", "Dr.วรนันต์ วนาสนันต์", "Dr.Watit", "Dr.พรรณพิชา", "Dr.Suwit Limpattamapane", "Dr.ปาจรีย์ แก้วภูมิแห่", "Dr.Sakanus Vijintanawan", "Dr.Amornpong", "Dr.ศริณ", "Dr.Thanatnon", "Dr.กรวิทย์", "Dr.Supit Khangrang", "Dr.\takarapat rattananon", "Dr.Chayakrit Taratikundech", "Dr.ปานวาด เฮงจีระจรัส", "Dr.Gamp", "Dr.นพรันต์ เอมจุ้ย", "Dr.หทัยภัทร หมออุ๋มอิ๋ม", "Dr.ชลัมพล เกตุพิชัย (หมอเบิร์ด)", "Dr.พจนารค", "Dr.Rukkhaphan", "Dr.ตอง", "Dr.ธนดล", "Dr.ธราปัฐพ์", "Dr.ศุภาพัชร ตรีเทพจุลยากูล", "Dr.watit", "Dr.song \tSukrit", "Dr.ชิน", "ระบบ Meisinger / Oktagon", "Dr.ทราย", "Dr.จริยา เจิดแจ่มจรัส", "Dr.Anuparb Aungsuvorapruek", "Dr.Arm", "prodent", "Dr.ทรัพย์สิดี", "Dr.chatnarong", "Dr.หมอชัยพร", "Dr.ปิยาวัฒน์ สุวรีดิลกกูล", "Dr.รศนา (นุ่น)", "คณะทันตแพทยศาสตร์ มหาวิทยาลัยพะเยา", "ทพญ.ปัณฑ์ชนิต โอฬารรักษ์", "ส่งกลึงอาบัติเม้น", "Dr.นิชาภา วรวีธราโรตี", "Dr.อะตอม", "Dr.charoen Tiyasothin", "ทันตกรรมหมอจั่นเจา", "Dr.pong", "Dr.Pitchaya Vadhanakrai", "Dr.Pongsathorn Satjatham", "Dr.Tanawan", "Dr.กษิดิศ", "Dr.Top สุธาสินี", "Dr.วิษณุ กีนติพงศ์ภักดี", "Dr.นุ่น", "ทพญ.กรรณิการ์", "ทพ.พงศกร พันธิแก้ว", "Dr.วัสยส", "กลึงอาบัติเม้น", "Dr.ธนัศ สิทธิรัตน์", "Dr.ชิษณุ", "Dr.fai (พิจิตร)", "Dr.Darunee", "Dr.สัณห์ชัย", "Dr.Hataipat", "Dr.กลัฟ", "Dr.เจริญ ทิพยโสถติ", "Dr.พิทัก", "Dr.วิษณุ กีรติพงศ์ภักดี", "Dr.Butsakorn", "Dr.แก๊ม", "Dr.จริยา", "เคดีเเอล", "Dr.pongsathorn"]}</script>
 <script>
 /* qrcode-generator (c) 2009 Kazuhiko Arase - MIT License - http://www.opensource.org/licenses/mit-license.php
    The word 'QR Code' is a registered trademark of DENSO WAVE INCORPORATED. */
@@ -528,7 +632,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 // CONFIG: paste your Google Apps Script Web App URL here (ends with /exec)
 // See GoogleAppsScript_Code.gs for setup instructions.
 const API_URL = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW72PIa_dXj--LRPBXGJupKbuI-ctWxmYADGJ7-Pwl6SVo5tKpFX/exec";
-const APP_VERSION = "2026-10-06 รุ่น 16 (รายชื่อผู้ติดต่อ + นำเข้า PEAK)";
+const APP_VERSION = "2026-10-06 รุ่น 19 (ผังฟันรูปโค้ง)";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -572,7 +676,7 @@ async function apiPost(body){
   if(r && r.ok === false && r.error === 'auth' && body.action !== 'login') doLogout('เซสชันหมดอายุ หรือ PIN ถูกเปลี่ยน กรุณาล็อกอินใหม่');
   return r;
 }
-const API_ERRORS = {forbidden:'ไม่มีสิทธิ์ทำรายการนี้', duplicate_case_id:'เลขเคสนี้มีอยู่แล้ว', duplicate_id:'ออเดอร์นี้ถูกบันทึกไปแล้ว', bad_link:'ลิงก์ต้องขึ้นต้นด้วย http:// หรือ https://', busy:'ระบบกำลังยุ่ง ลองใหม่อีกครั้ง', duplicate_code:'รหัสผู้ติดต่อนี้มีอยู่แล้ว', bad_contact:'กรอกรหัสและชื่อให้ครบ', too_many:'มีผู้ติดต่อเต็มจำนวนแล้ว', bad_status:'สถานะไม่ถูกต้อง', too_large:'ข้อมูลยาวเกินไป'};
+const API_ERRORS = {forbidden:'ไม่มีสิทธิ์ทำรายการนี้', duplicate_case_id:'เลขเคสนี้มีอยู่แล้ว', duplicate_id:'ออเดอร์นี้ถูกบันทึกไปแล้ว', bad_link:'ลิงก์ต้องขึ้นต้นด้วย http:// หรือ https://', busy:'ระบบกำลังยุ่ง ลองใหม่อีกครั้ง', duplicate_code:'รหัสผู้ติดต่อนี้มีอยู่แล้ว', bad_contact:'กรอกรหัสและชื่อให้ครบ', bad_invoice:'ข้อมูลบิลไม่ถูกต้อง (ตรวจวันที่/ยอดเงิน)', too_many:'มีผู้ติดต่อเต็มจำนวนแล้ว', bad_status:'สถานะไม่ถูกต้อง', too_large:'ข้อมูลยาวเกินไป'};
 function apiErrorText(r){ return API_ERRORS[r && r.error] || ('ผิดพลาด: ' + ((r && r.error) || 'ไม่ทราบสาเหตุ')); }
 
 function setSyncStatus(ok){
@@ -601,6 +705,7 @@ function clearEmployeeSession(){
 
 // ---------- New orders (shared, via backend) ----------
 let CONTACTS = [], CONTACT_IDX = {};
+let INVOICES = [];
 let NEW_ORDERS = [];       // live orders (edits applied, deleted ones removed)
 let DELETED_ORDERS = [];   // soft-deleted orders (kept in the sheet, can be restored)
 let RAW_ORDERS = [];       // orders exactly as saved in the sheet
@@ -632,6 +737,7 @@ async function loadNewOrders(){
     if(r && r.ok){
       RAW_ORDERS = r.orders || [];
       CONTACTS = r.contacts || [];
+      INVOICES = r.invoices || [];
       rebuildContactIndex();
       EMPLOYEE_LIST = r.employees || [];
       applyOverridesFromServer(r.overrides || []);
@@ -735,8 +841,10 @@ function daysSince(d){
 // the job reaches a department when the previous finished step ended (fallback: date received)
 function arrivalDate(r, deptKey){
   let best = null;
+  const target = DEPARTMENTS.find(x=>x.key === deptKey) || {};
   for(const d of DEPARTMENTS){
     if(d.key === deptKey) break;
+    if(d.parallel && !target.join) continue;      // a parallel step does not delay the steps that run beside it
     const rec = depRecord(r, d.key);
     if(rec.status === 'เสร็จแล้ว' && rec.end){
       const t = parseYmd(rec.end);
@@ -745,11 +853,11 @@ function arrivalDate(r, deptKey){
   }
   return best || parseYmd(r.date_received);
 }
+function daysAtDept(r, key){ const n = daysSince(arrivalDate(r, key)); return n === null ? '' : n; }
 function currentDays(r){
-  const d = currentDeptOf(r);
-  if(d.key.startsWith('_')) return '';
-  const n = daysSince(arrivalDate(r, d.key));
-  return n === null ? '' : n;
+  let best = '';
+  activeDeptsOf(r).forEach(d=>{ const n = daysAtDept(r, d.key); if(n !== '' && (best === '' || n > best)) best = n; });
+  return best;
 }
 function daysCell(n){
   if(n === '' || n === null || n === undefined) return '-';
@@ -760,14 +868,14 @@ function deliveredDate(r){
   return rec.status === 'เสร็จแล้ว' ? (rec.end || '') : '';
 }
 function progressStrip(r){
-  const cur = currentDeptOf(r).key;
+  const curKeys = new Set(activeDeptsOf(r).map(d=>d.key));
   return '<span class="pg">' + DEPARTMENTS.map(d=>{
     const rec = depRecord(r, d.key);
     const sym = SYMBOLS[rec.status] || ['?','s-na'];
     let tip = d.label + ': ' + rec.status;
     if(rec.start) tip += ' • เริ่ม ' + fmtDate(rec.start);
     if(rec.end) tip += ' • เสร็จ ' + fmtDate(rec.end);
-    return `<i class="${sym[1]}${d.key===cur?' cur':''}" title="${esc(tip)}">${sym[0]}</i>`;
+    return `<i class="${sym[1]}${curKeys.has(d.key)?' cur':''}" title="${esc(tip)}">${sym[0]}</i>`;
   }).join('') + '</span>';
 }
 function renderLegends(){
@@ -844,6 +952,7 @@ document.querySelectorAll('nav.tabs button').forEach(btn=>{
     if(btn.dataset.tab==='perm') renderPerm();
     if(btn.dataset.tab==='billing') renderBilling(true);
     if(btn.dataset.tab==='contacts') renderContacts();
+    if(btn.dataset.tab==='overview') renderOverview();
     if(btn.dataset.tab==='delivery') renderDelivery();
   });
 });
@@ -864,6 +973,7 @@ const FORM_FIELDS = [
   {key:'qty', label:'จำนวน (ซี่)', type:'number'},
   {key:'need_abutment', label:'ต้องสั่ง Abutment ไหม', type:'select2', opts:['ไม่ต้อง','ต้องสั่ง']},
   {key:'scan_system', label:'ระบบสแกน', type:'list', opts:REFS.scan_systems},
+  {key:'has_scan', label:'มีไฟล์สแกน (ถ้ามี → พิมพ์โมเดล)', type:'select2', opts:['ไม่มี','มี']},
   {key:'delivery_method', label:'วิธีจัดส่ง', type:'list', opts:REFS.delivery},
   {key:'tech1', label:'ช่าง CAD/CAM', type:'list', opts:REFS.techs},
   {key:'tech2', label:'ช่าง Porcelain', type:'list', opts:REFS.techs},
@@ -931,6 +1041,17 @@ function buildOrderForm(){
   document.getElementById('f_date_received').valueAsDate = new Date();
   FORM_FIELDS.forEach(f=>{ if(f.default){ const el = document.getElementById('f_' + f.key); if(el) el.value = f.default; } });   // e.g. สถานะรวม = รับเข้าระบบ, ประเภทเคส = ปกติ
   document.getElementById('f_doctor').setAttribute('list', 'dl-doctors');
+  const hs = document.getElementById('f_has_scan');
+  const autoScan = ()=>{
+    if(hs.dataset.manual) return;
+    hs.value = (document.getElementById('f_scan_system').value || document.getElementById('f_file_link').value.trim()) ? 'มี' : 'ไม่มี';
+    applyDeptRelevance();
+  };
+  hs.addEventListener('change', ()=>{ hs.dataset.manual = '1'; applyDeptRelevance(); });
+  document.getElementById('f_scan_system').addEventListener('change', autoScan);
+  document.getElementById('f_file_link').addEventListener('input', autoScan);
+  document.getElementById('f_position').addEventListener('input', ()=>parseToothFromText());
+  TOOTH = {}; buildToothUi();
   document.getElementById('f_color').placeholder = 'เช่น คอฟัน 3M3 กลางถึงปลายฟัน 3M2';
   document.getElementById('f_position').placeholder = 'เช่น 26';
   const cidEl = document.getElementById('f_case_id');
@@ -988,6 +1109,7 @@ function readForm(){
     o['dep_'+d.key+'_start'] = sEl ? sEl.value : '';
     o['dep_'+d.key+'_end'] = eEl ? eEl.value : '';
   });
+  o.tooth_types = toothString();
   o._id = 'new__' + (o.case_id||'noid') + '__' + Date.now();
   o.created_by = CURRENT_EMPLOYEE ? CURRENT_EMPLOYEE.name : '';
   return o;
@@ -1127,6 +1249,8 @@ function ticketHtml(o){
       <div><b>คนไข้</b>${esc(o.patient||'-')}</div>
       <div><b>ระบบรากฟันเทียม</b>${esc(o.implant_system||'-')}</div>
       <div><b>ตำแหน่งฟัน</b>${esc(o.position||'-')}</div>
+      <div style="grid-column:1/-1"><b>ชนิดงานรายซี่</b>${esc(toothTypesText(o.tooth_types) || '-')}</div>
+      <div><b>มีไฟล์สแกน</b>${esc(o.has_scan||'ไม่มี')}</div>
       <div><b>สี</b>${esc(o.color||'-')}</div>
       <div><b>วัสดุ</b>${esc(o.material||'-')}</div>
       <div><b>จำนวน</b>${esc(o.qty||'-')} ซี่</div>
@@ -1209,14 +1333,14 @@ function renderCase(){
   if(!raw){ closeCase(); return; }
   const o = withEffectiveStatus(raw);
   const admin = isAdminUser(CURRENT_EMPLOYEE), mine = allowedDeptKeys();
-  const cur = currentDeptOf(o);
+  const curKeys = new Set(activeDeptsOf(o).map(d=>d.key));
   document.getElementById('cm-title').textContent = 'เคส ' + (o.case_id || '-');
   const f = (label, v) => `<div><b>${esc(label)}</b>${esc(v === undefined || v === null || v === '' ? '-' : v)}</div>`;
   const steps = DEPARTMENTS.filter(d=>mine.includes(d.key) && depRecord(o, d.key).status !== 'ไม่เกี่ยวข้อง');
   const stepHtml = steps.length ? steps.map(d=>{
     const r = depRecord(o, d.key), done = r.status === 'เสร็จแล้ว';
     const meta = done ? ('เสร็จ ' + (r.end ? fmtDate(r.end) : '') + (r.by ? ' • โดย ' + r.by : '')) : r.status + (r.start ? ' • เริ่ม ' + fmtDate(r.start) : '');
-    return `<div class="cm-step ${cur.key === d.key ? 'cur' : ''}"><span class="nm">${esc(d.label)}</span><span class="meta">${esc(meta)}${cur.key === d.key ? ' ◀ ขั้นตอนปัจจุบัน' : ''}</span>` +
+    return `<div class="cm-step ${curKeys.has(d.key) ? 'cur' : ''}"><span class="nm">${esc(d.label)}</span><span class="meta">${esc(meta)}${curKeys.has(d.key) ? ' ◀ ขั้นตอนปัจจุบัน' : ''}</span>` +
       (done ? `<button class="btn ghost sm" data-step="undo" data-dept="${esc(d.key)}">↩ ยกเลิกเสร็จ</button>`
             : (r.status === 'กำลังดำเนินการ' ? '' : `<button class="btn ghost" data-step="start" data-dept="${esc(d.key)}">▶ เริ่มทำ</button>`) +
               `<button class="btn primary big" data-step="done" data-dept="${esc(d.key)}">✓ เสร็จแล้ว</button>`) + '</div>';
@@ -1233,6 +1357,7 @@ function renderCase(){
       ${f('คลินิก', o.clinic)}${f('แพทย์', o.doctor)}${f('คนไข้', o.patient)}
       ${f('ระบบรากฟัน', o.implant_system)}${f('ตำแหน่งฟัน', o.position)}${f('สี', o.color)}
       ${f('วัสดุ', o.material)}${f('จำนวน (ซี่)', o.qty)}${f('ระบบสแกน', o.scan_system)}
+      ${toothTypesText(o.tooth_types) ? `<div style="grid-column:1/-1"><b>ชนิดงานรายซี่</b>${esc(toothTypesText(o.tooth_types))}</div>` : ''}${f('มีไฟล์สแกน', o.has_scan === 'มี' ? 'มี (พิมพ์โมเดล)' : 'ไม่มี')}
       ${f('วันรับงาน', fmtDate(o.date_received))}${f('วันนัดคนไข้', o.appointment_date ? fmtDate(o.appointment_date) : '')}${f('วันส่งงานจริง', deliveredDate(o) ? fmtDate(deliveredDate(o)) : '')}
       ${f('ประเภทเคส', (o.case_type === 'คูปอง' ? 'คูปอง' + (o.coupon_status ? ' (' + o.coupon_status + ')' : '') : 'ปกติ') + (o.is_rework === true ? ' • งานแก้' : ''))}${f('วิธีจัดส่ง', o.delivery_method)}${f('คีย์โดย', o.created_by)}
     </div>
@@ -1368,6 +1493,155 @@ function copyAsTsv(list, what){
 }
 let LAST_PENDING_LIST = [], LAST_SEARCH_LIST = [];
 
+// ---------- Tooth chart (FDI) with restoration-type icons ----------
+const TOOTH_TYPES = [
+  {key:'crown',   label:'ครอบฟัน',          color:'#0E6E6E', icon:'ic-crown'},
+  {key:'pontic',  label:'ฟันลอย (Pontic)',  color:'#D98A2B', icon:'ic-pontic'},
+  {key:'implant', label:'ครอบบนอิมแพลนท์',  color:'#2E6FB0', icon:'ic-implant'},
+  {key:'abutment',label:'Abutment',          color:'#8E7CC3', icon:'ic-abutment'},
+  {key:'inlay',   label:'Inlay / Onlay',     color:'#2F7D4F', icon:'ic-inlay'},
+  {key:'veneer',  label:'วีเนียร์',          color:'#D46A9B', icon:'ic-veneer'},
+  {key:'coping',  label:'โคปปิ้ง',           color:'#5B6E6C', icon:'ic-coping'},
+  {key:'other',   label:'อื่นๆ',             color:'#7A8B89', icon:'ic-other'},
+];
+const FDI_UPPER = [18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28];
+const FDI_LOWER = [48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
+const FDI_ALL = FDI_UPPER.concat(FDI_LOWER).map(String);
+let TOOTH = {}, TOOTH_ACTIVE = 'crown';
+function toothTypeOf(key){ return TOOTH_TYPES.find(t=>t.key === key) || TOOTH_TYPES[0]; }
+function toothString(){ return FDI_ALL.filter(t=>TOOTH[t]).map(t=>t + ':' + TOOTH[t]).join(','); }
+function toothFromString(str){
+  const m = {};
+  String(str || '').split(',').forEach(p=>{ const [t, k] = p.split(':'); if(FDI_ALL.includes(t) && TOOTH_TYPES.some(x=>x.key === k)) m[t] = k; });
+  return m;
+}
+function toothTypesText(str){
+  return FDI_ALL.map(t=>{ const m = toothFromString(str); return m[t] ? t + ' ' + toothTypeOf(m[t]).label : ''; }).filter(Boolean).join(' • ');
+}
+// ---- arch layout: teeth placed along a horseshoe, like a real dental arch ----
+const STAGE_W = 340, STAGE_H = 440, ARCH = {A:118, B:136, cx:170, top:26};
+function toothDim(n){ const d = n % 10; return d === 1 ? [24, 17] : d === 2 ? [20, 16] : d === 3 ? [21, 20] : d <= 5 ? [21, 22] : [32, 30]; }
+function archLayout(list, upper){
+  const {A, B, cx, top} = ARCH, cy = upper ? top + B : STAGE_H - top - B;
+  const pt = th => ({x: cx + A * Math.sin(th), y: upper ? cy - B * Math.cos(th) : cy + B * Math.cos(th)});
+  const dims = list.map(toothDim), sumW = dims.reduce((a, d)=>a + d[0], 0);
+  const lenFor = tm => { let L = 0, p = pt(-tm); for(let i = 1; i <= 240; i++){ const q = pt(-tm + 2 * tm * i / 240); L += Math.hypot(q.x - p.x, q.y - p.y); p = q; } return L; };
+  let lo = 0.6, hi = 2.4;
+  for(let i = 0; i < 32; i++){ const mid = (lo + hi) / 2; if(lenFor(mid) < sumW * 1.04) lo = mid; else hi = mid; }
+  const tm = (lo + hi) / 2, N = 800, cum = [0], ths = [];
+  let prev = pt(-tm);
+  for(let i = 0; i <= N; i++){ const th = -tm + 2 * tm * i / N, q = pt(th); ths.push(th); if(i) cum.push(cum[i - 1] + Math.hypot(q.x - prev.x, q.y - prev.y)); prev = q; }
+  const L = cum[N], k = L / sumW;
+  let acc = 0;
+  return list.map((n, idx)=>{
+    const [w, d] = dims[idx], s0 = (acc + w / 2) * k; acc += w;
+    let j = 1; while(j < N && cum[j] < s0) j++;
+    const f = (s0 - cum[j - 1]) / ((cum[j] - cum[j - 1]) || 1), th = ths[j - 1] + (ths[j] - ths[j - 1]) * f, p = pt(th);
+    const dx = A * Math.cos(th), dy = upper ? B * Math.sin(th) : -B * Math.sin(th), len = Math.hypot(dx, dy) || 1;
+    let nx = dy / len, ny = -dx / len;
+    if(nx * (p.x - cx) + ny * (p.y - cy) < 0){ nx = -nx; ny = -ny; }
+    return {t: String(n), x: p.x, y: p.y, ang: Math.atan2(dy, dx) * 180 / Math.PI, nx, ny, w: w * k * 0.93, d};
+  });
+}
+let TOOTH_ANCHOR = null, TOOTH_RANGE_MODE = false, TOOTH_LAST = null;
+const BRIDGE_TYPES = ['crown', 'pontic', 'implant'];
+function toothArchOf(t){ return FDI_UPPER.includes(+t) ? FDI_UPPER.map(String) : FDI_LOWER.map(String); }
+function toothApplyRange(a, b, type){
+  const arch = toothArchOf(a);
+  if(!arch.includes(b)) return false;
+  const i = arch.indexOf(a), j = arch.indexOf(b);
+  arch.slice(Math.min(i, j), Math.max(i, j) + 1).forEach(t=>{ TOOTH[t] = type; });
+  return true;
+}
+function toothClick(t, shift){
+  if(TOOTH_RANGE_MODE || shift){
+    const from = TOOTH_RANGE_MODE ? TOOTH_ANCHOR : TOOTH_LAST;
+    if(from && from !== t && toothApplyRange(from, t, TOOTH_ACTIVE)){ TOOTH_ANCHOR = null; TOOTH_LAST = t; syncToothFields(); buildToothUi(); return; }
+    if(TOOTH_RANGE_MODE){ TOOTH_ANCHOR = t; TOOTH[t] = TOOTH_ACTIVE; TOOTH_LAST = t; syncToothFields(); buildToothUi(); return; }
+  }
+  if(TOOTH[t] === TOOTH_ACTIVE) delete TOOTH[t]; else TOOTH[t] = TOOTH_ACTIVE;
+  TOOTH_LAST = t;
+  syncToothFields(); buildToothUi();
+}
+function toothSelectArch(upper){
+  (upper ? FDI_UPPER : FDI_LOWER).forEach(n=>{ TOOTH[String(n)] = TOOTH_ACTIVE; });
+  syncToothFields(); buildToothUi();
+}
+function buildToothUi(){
+  const types = document.getElementById('tooth-types'), chart = document.getElementById('tooth-chart');
+  if(!types || !chart) return;
+  types.innerHTML = TOOTH_TYPES.map(t=>`<button type="button" class="tt-type ${t.key === TOOTH_ACTIVE ? 'active' : ''}" data-tt="${t.key}" style="${t.key === TOOTH_ACTIVE ? 'border-color:' + t.color : ''}"><svg style="color:${t.color}"><use xlink:href="#${t.icon}" href="#${t.icon}"/></svg>${esc(t.label)}</button>`).join('') +
+    `<button type="button" class="btn ghost sm tt-mode ${TOOTH_RANGE_MODE ? 'active' : ''}" id="tooth-range" style="align-self:center" title="แตะซี่แรกแล้วแตะซี่สุดท้าย ระบบเลือกทุกซี่ตรงกลางให้">${TOOTH_RANGE_MODE ? '✓ ' : ''}เลือกเป็นช่วง</button>` +
+    '<button type="button" class="btn ghost sm" id="tooth-all-up" style="align-self:center">ทั้งฟันบน</button><button type="button" class="btn ghost sm" id="tooth-all-low" style="align-self:center">ทั้งฟันล่าง</button>' +
+    '<button type="button" class="btn ghost sm" id="tooth-clear" style="align-self:center">ล้างผังฟัน</button>';
+  const up = archLayout(FDI_UPPER, true), low = archLayout(FDI_LOWER, false), all = up.concat(low), by = {};
+  all.forEach(g=>{ by[g.t] = g; });
+  // bridge connectors between neighbouring selected teeth
+  let bg = '';
+  [FDI_UPPER, FDI_LOWER].forEach(list=>{
+    for(let i = 0; i < list.length - 1; i++){
+      const a = String(list[i]), b = String(list[i + 1]);
+      if(TOOTH[a] && TOOTH[b] && BRIDGE_TYPES.includes(TOOTH[a]) && BRIDGE_TYPES.includes(TOOTH[b]))
+        bg += `<line class="bridge" x1="${by[a].x.toFixed(1)}" y1="${by[a].y.toFixed(1)}" x2="${by[b].x.toFixed(1)}" y2="${by[b].y.toFixed(1)}" stroke="#0B2B36" stroke-opacity=".55" stroke-width="5" stroke-linecap="round"/>`;
+    }
+  });
+  const txt = (x, y, t, sz, col)=>`<text x="${x}" y="${y}" text-anchor="middle" font-size="${sz}" fill="${col || '#9AA9A7'}" font-family="Noto Sans Thai,sans-serif">${t}</text>`;
+  const svgBg = `<svg class="bg" width="${STAGE_W}" height="${STAGE_H}" viewBox="0 0 ${STAGE_W} ${STAGE_H}">${bg}` +
+    txt(ARCH.cx, 112, 'ฟันบน', 13) + txt(ARCH.cx, STAGE_H - 104, 'ฟันล่าง', 13) +
+    txt(26, 16, 'ขวา', 12, '#5B6E6C') + txt(STAGE_W - 26, 16, 'ซ้าย', 12, '#5B6E6C') + txt(26, STAGE_H - 6, 'ขวา', 12, '#5B6E6C') + txt(STAGE_W - 26, STAGE_H - 6, 'ซ้าย', 12, '#5B6E6C') +
+    `<line x1="${ARCH.cx}" y1="${STAGE_H / 2 - 4}" x2="${ARCH.cx}" y2="${STAGE_H / 2 + 4}" stroke="#D7DFDD"/><line x1="14" y1="${STAGE_H / 2}" x2="${STAGE_W - 14}" y2="${STAGE_H / 2}" stroke="#E3EAE9" stroke-dasharray="3 4"/></svg>`;
+  const btns = all.map(g=>{
+    const ty = TOOTH[g.t] ? toothTypeOf(TOOTH[g.t]) : null, w = +g.w.toFixed(1), d = g.d, col = ty ? ty.color : '#E9EEED', st = ty ? ty.color : '#C5D0CE', n = +g.t, last = n % 10;
+    const fiss = last >= 6 ? `<path d="M${w / 2} ${d * 0.2}V${d * 0.8}M${w * 0.2} ${d / 2}H${w * 0.8}" stroke="${ty ? '#fff' : '#9AA9A7'}" stroke-opacity=".5" fill="none"/>` : (last >= 4 ? `<path d="M${w / 2} ${d * 0.22}V${d * 0.78}" stroke="${ty ? '#fff' : '#9AA9A7'}" stroke-opacity=".5" fill="none"/>` : '');
+    const icon = ty ? `<svg width="14" height="14" style="position:absolute;left:50%;top:50%;margin:-7px 0 0 -7px;transform:rotate(${(-g.ang).toFixed(1)}deg);color:#fff;pointer-events:none"><use xlink:href="#${ty.icon}" href="#${ty.icon}"/></svg>` : '';
+    return `<button type="button" class="tt-tooth ${ty ? 'sel' : ''} ${TOOTH_ANCHOR === g.t ? 'anchor' : ''}" data-tooth="${g.t}" title="${g.t}${ty ? ' ' + esc(ty.label) : ''}" style="left:${g.x.toFixed(1)}px;top:${g.y.toFixed(1)}px;width:${w}px;height:${d}px;transform:translate(-50%,-50%) rotate(${g.ang.toFixed(1)}deg)"><svg class="tb" width="${w}" height="${d}" viewBox="0 0 ${w} ${d}"><rect class="tp" x="1" y="1" width="${(w - 2).toFixed(1)}" height="${d - 2}" rx="${last <= 3 ? 6 : 8}" fill="${col}" stroke="${st}" stroke-width="1.2"/>${fiss}</svg>${icon}</button>` +
+      `<span class="tt-num ${ty ? 'sel' : ''}" style="left:${(g.x + g.nx * (d / 2 + 11)).toFixed(1)}px;top:${(g.y + g.ny * (d / 2 + 11)).toFixed(1)}px">${g.t}</span>`;
+  }).join('');
+  chart.innerHTML = `<div class="tt-stage" style="width:${STAGE_W}px;height:${STAGE_H}px">${svgBg}${btns}</div>`;
+  types.querySelectorAll('[data-tt]').forEach(b=>b.addEventListener('click', ()=>{ TOOTH_ACTIVE = b.dataset.tt; buildToothUi(); }));
+  document.getElementById('tooth-clear').addEventListener('click', ()=>{ TOOTH = {}; TOOTH_ANCHOR = null; TOOTH_LAST = null; syncToothFields(); buildToothUi(); });
+  document.getElementById('tooth-range').addEventListener('click', ()=>{ TOOTH_RANGE_MODE = !TOOTH_RANGE_MODE; TOOTH_ANCHOR = null; buildToothUi(); });
+  document.getElementById('tooth-all-up').addEventListener('click', ()=>toothSelectArch(true));
+  document.getElementById('tooth-all-low').addEventListener('click', ()=>toothSelectArch(false));
+  chart.querySelectorAll('.tt-tooth').forEach(b=>{
+    b.addEventListener('click', e=>toothClick(b.dataset.tooth, e.shiftKey));
+  });
+  // mouse / pen: press on a tooth and drag across others to select a run
+  const stage = chart.querySelector('.tt-stage');
+  let drag = null;
+  stage.addEventListener('pointerdown', e=>{
+    if(e.pointerType === 'touch') return;
+    const el = e.target.closest && e.target.closest('.tt-tooth');
+    if(el) drag = {start: el.dataset.tooth, last: el.dataset.tooth, moved: false, remove: TOOTH[el.dataset.tooth] === TOOTH_ACTIVE};
+  });
+  stage.addEventListener('pointermove', e=>{
+    if(!drag) return;
+    const el = document.elementFromPoint ? document.elementFromPoint(e.clientX, e.clientY) : null, tt = el && el.closest ? el.closest('.tt-tooth') : null;
+    if(!tt || tt.dataset.tooth === drag.last) return;
+    if(!drag.moved){ drag.moved = true; if(drag.remove) delete TOOTH[drag.start]; else TOOTH[drag.start] = TOOTH_ACTIVE; }
+    drag.last = tt.dataset.tooth;
+    if(drag.remove) delete TOOTH[drag.last]; else TOOTH[drag.last] = TOOTH_ACTIVE;
+    syncToothFields();
+  });
+  const endDrag = ()=>{ if(drag && drag.moved){ const stop = e=>{ e.stopPropagation(); e.preventDefault(); }; document.addEventListener('click', stop, {capture:true, once:true}); setTimeout(()=>document.removeEventListener('click', stop, true), 0); buildToothUi(); } drag = null; };
+  stage.addEventListener('pointerup', endDrag);
+  document.addEventListener('pointerup', ()=>{ if(drag && !drag.moved) drag = null; }, {once:true});
+  const sum = document.getElementById('tooth-summary'), str = toothString();
+  sum.innerHTML = str ? '<b>เลือกแล้ว ' + Object.keys(TOOTH).length + ' ซี่:</b> ' + esc(toothTypesText(str)) : 'ยังไม่ได้เลือกซี่ฟัน';
+}
+function syncToothFields(){
+  const sel = FDI_ALL.filter(t=>TOOTH[t]);
+  const pos = document.getElementById('f_position'), qty = document.getElementById('f_qty');
+  if(pos) pos.value = sel.join(',');
+  if(qty) qty.value = sel.length || '';
+}
+function parseToothFromText(){
+  const found = new Set((document.getElementById('f_position').value.match(/[1-4][1-8]/g) || []).filter(t=>FDI_ALL.includes(t)));
+  const next = {};
+  found.forEach(t=>{ next[t] = TOOTH[t] || TOOTH_ACTIVE; });
+  TOOTH = next; buildToothUi();
+}
+
 // ---------- Edit / delete orders ----------
 let EDIT_ID = null;
 function setEditUi(on, caseId){
@@ -1389,12 +1663,15 @@ function startEdit(id){
     let v = o[f.key];
     if(f.key === 'is_rework') v = (o.is_rework === true) ? 'งานแก้ (Rework)' : 'งานปกติ';
     if(f.key === 'need_abutment' && !v) v = 'ไม่ต้อง';
+    if(f.key === 'has_scan' && !v) v = 'ไม่มี';
     if(f.type === 'date') v = /^\d{4}-\d{2}-\d{2}/.test(String(v || '')) ? String(v).slice(0,10) : '';
     if(v === undefined || v === null) v = '';
     if(el.tagName === 'SELECT' && v !== '' && ![...el.options].some(op=>op.value === String(v))) el.add(new Option(String(v), String(v)));
     el.value = v;
   });
   document.getElementById('f_case_id').dataset.manual = '1';
+  document.getElementById('f_has_scan').dataset.manual = '1';
+  TOOTH = toothFromString(o.tooth_types); buildToothUi();
   setEditUi(true, o.case_id);
   window.scrollTo({top:0, behavior:'smooth'});
 }
@@ -1409,6 +1686,7 @@ async function saveEdit(){
   const norm = (k, v)=>{
     if(k === 'is_rework') return String(v === true);
     if(k === 'need_abutment' && !v) return 'ไม่ต้อง';
+    if(k === 'has_scan' && !v) return 'ไม่มี';
     if(k === 'case_type' && !v) return 'ปกติ';
     return String(v ?? '');
   };
@@ -1416,6 +1694,7 @@ async function saveEdit(){
     const k = f.key;
     if(norm(k, nv[k]) !== norm(k, cur[k])) patch[k] = nv[k];
   });
+  if(String(nv.tooth_types || '') !== String(cur.tooth_types || '')) patch.tooth_types = nv.tooth_types;
   if(Object.keys(patch).length === 0){ showToast('ไม่มีการเปลี่ยนแปลง'); return; }
   if(patch.case_id !== undefined){
     if(!String(patch.case_id).trim()){ showToast('เลขเคสห้ามว่าง'); return; }
@@ -1495,7 +1774,7 @@ function renderPending(){
   const scope = scopeEl.value;
   const carryOn = document.getElementById('pd-carry').checked;
   const myKeys = allowedDeptKeys();
-  const isMine = r => myKeys.includes(currentDeptOf(r).key);
+  const isMine = r => activeDeptsOf(r).some(d=>myKeys.includes(d.key));
   const sel = SELECTED_MONTH;
   const pend = pendingBase();
   const inMonth = sel === 'all' ? pend : pend.filter(r=>monthKeyOf(r) === sel);
@@ -1518,11 +1797,13 @@ function renderPending(){
   // grouped by the department that currently holds the job
   const groups = {};
   list.forEach(r=>{
-    const d = currentDeptOf(r);
-    const g = groups[d.key] = groups[d.key] || {label:d.label, key:d.key, n:0, maxDays:-1};
-    g.n++;
-    const dd = currentDays(r);
-    if(dd !== '' && dd > g.maxDays) g.maxDays = dd;
+    const act = activeDeptsOf(r);
+    (act.length ? act : [currentDeptOf(r)]).forEach(d=>{
+      const g = groups[d.key] = groups[d.key] || {label:d.label, key:d.key, n:0, maxDays:-1};
+      g.n++;
+      const dd = d.key.startsWith('_') ? '' : daysAtDept(r, d.key);
+      if(dd !== '' && dd > g.maxDays) g.maxDays = dd;
+    });
   });
   const order = DEPARTMENTS.map(d=>d.key);
   const gl = Object.values(groups).sort((a,b)=>order.indexOf(a.key) - order.indexOf(b.key));
@@ -1883,9 +2164,13 @@ document.getElementById('sr-pdf').addEventListener('click', ()=>{
 let PRICES_WORK = null, BL_DIRTY = false, BL_EXTRA = [];
 function readPrices(){
   const rec = DEP_OVERRIDES['_settings'] && DEP_OVERRIDES['_settings']['prices'];
-  const p = {default:{}, clinics:{}, hidden:[]};
-  if(rec && rec.status){ try{ const v = JSON.parse(rec.status); p.default = v.default || {}; p.clinics = v.clinics || {}; p.hidden = Array.isArray(v.hidden) ? v.hidden : []; }catch(e){} }
+  const p = {default:{}, clinics:{}, hidden:[], targets:{}, credit_days:0};
+  if(rec && rec.status){ try{ const v = JSON.parse(rec.status); p.default = v.default || {}; p.clinics = v.clinics || {}; p.hidden = Array.isArray(v.hidden) ? v.hidden : []; p.targets = (v.targets && typeof v.targets === 'object') ? v.targets : {}; p.credit_days = Number(v.credit_days) > 0 ? Number(v.credit_days) : 0; }catch(e){} }
   return p;
+}
+async function saveSettingsPatch(fn){
+  const cur = readPrices(); fn(cur);
+  await setDeptRecord('_settings', 'prices', {status: JSON.stringify(cur)});
 }
 function priceFor(prices, clinic, mat){
   const c = prices.clinics[clinic] && prices.clinics[clinic][mat];
@@ -2037,10 +2322,12 @@ function renderBilling(force){
     const a = summaryAllRows();
     tbl.innerHTML = rowsToTableHtml(a.rows);
     document.getElementById('bl-contact').textContent = '';
+    renderInvoiceStatusLine('*');
     document.getElementById('bl-note').textContent = `สรุปทุกคลินิก เดือน ${monthLabel(month)} (นับตามวันรับงาน${onlyDel ? ' เฉพาะงานที่ส่งแล้ว' : ''}) • เลือกคลินิกด้านบนเพื่อดูใบแจ้งหนี้รายเคส • เปลี่ยนเดือนที่ตัวเลือกมุมขวาบน`;
   } else {
     const inv = invoiceRows(clinic);
     tbl.innerHTML = rowsToTableHtml(inv.rows);
+    renderInvoiceStatusLine(clinic);
     const ct = contactFor(clinic);
     document.getElementById('bl-contact').textContent = ct ? '👤 ' + contactLines(ct).join(' • ') : '⚠ ไม่พบ "' + clinic + '" ในรายชื่อผู้ติดต่อ — ใบแจ้งหนี้จะไม่มีที่อยู่/เลขภาษี (ไปแท็บ "ผู้ติดต่อ" เพื่อเพิ่ม หรือตั้ง "ชื่อที่ใช้ในออเดอร์")';
     document.getElementById('bl-note').textContent = `${clinic} • ${monthLabel(month)} • ${inv.d.cases} เคส ${inv.d.qty} ซี่` + (inv.d.missing ? ` • ⚠ ${inv.d.missing} รายการยังไม่มีราคา (ไปตั้งราคาด้านบนแล้วกดบันทึก)` : '');
@@ -2080,7 +2367,9 @@ document.getElementById('bl-add-mat').addEventListener('click', ()=>{
 });
 document.getElementById('bl-save-prices').addEventListener('click', async ()=>{
   if(!PRICES_WORK) return;
-  await setDeptRecord('_settings', 'prices', {status: JSON.stringify(PRICES_WORK)});
+  const latest = readPrices();               // keep targets / credit days saved elsewhere
+  latest.default = PRICES_WORK.default; latest.clinics = PRICES_WORK.clinics; latest.hidden = PRICES_WORK.hidden || [];
+  await setDeptRecord('_settings', 'prices', {status: JSON.stringify(latest)});
   BL_DIRTY = false;
   showToast('บันทึกตารางราคาแล้ว ✓');
   renderBilling(true);
@@ -2169,8 +2458,8 @@ document.getElementById('dv-xlsx').addEventListener('click', ()=>{
 function exportAllXlsx(){
   const all = NEW_ORDERS.concat(DELETED_ORDERS).map(withEffectiveStatus);
   const delSet = new Set(DELETED_ORDERS.map(o=>o._id));
-  const oRows = [['เลขเคส','วันรับงาน','คลินิก','หมอ','คนไข้','ระบบรากฟัน','ตำแหน่งฟัน','สี','วัสดุ','ซี่','ระบบสแกน','วิธีส่ง','เลขพัสดุ','วันนัด','ประเภทเคส','สถานะคูปอง','งานแก้','สถานะรวม','ลบแล้ว','คีย์โดย','ลิงก์ไฟล์','รายละเอียด']]
-    .concat(all.map(o=>[o.case_id, fmtCE(o.date_received), o.clinic, o.doctor, o.patient, o.implant_system, o.position, o.color, o.material, parseFloat(o.qty) || 0,
+  const oRows = [['เลขเคส','วันรับงาน','คลินิก','หมอ','คนไข้','ระบบรากฟัน','ตำแหน่งฟัน','ชนิดงานรายซี่','มีไฟล์สแกน','สี','วัสดุ','ซี่','ระบบสแกน','วิธีส่ง','เลขพัสดุ','วันนัด','ประเภทเคส','สถานะคูปอง','งานแก้','สถานะรวม','ลบแล้ว','คีย์โดย','ลิงก์ไฟล์','รายละเอียด']]
+    .concat(all.map(o=>[o.case_id, fmtCE(o.date_received), o.clinic, o.doctor, o.patient, o.implant_system, o.position, toothTypesText(o.tooth_types), o.has_scan === 'มี' ? 'มี' : '', o.color, o.material, parseFloat(o.qty) || 0,
       o.scan_system, o.delivery_method, o.tracking_no, o.appointment_date ? fmtCE(o.appointment_date) : '', o.case_type === 'คูปอง' ? 'คูปอง' : 'ปกติ', o.coupon_status,
       o.is_rework === true ? 'ใช่' : '', o.status, delSet.has(o._id) ? 'ใช่' : '', o.created_by, o.file_link, o.detail].map(v=>typeof v === 'number' ? v : String(v ?? '').replace(/[\r\n]+/g, ' '))));
   const dRows = [['เลขเคส','แผนก','สถานะ','วันเริ่ม','วันเสร็จ','ผู้ทำ']];
@@ -2437,6 +2726,265 @@ document.getElementById('ct-suggest-all').addEventListener('click', ()=>{
   updateContactFields(Object.keys(sug).map(code=>({code, fields:{alias:sug[code]}})), 'ตั้งชื่อที่ใช้ในออเดอร์ ' + n + ' รายการแล้ว ✓');
 });
 
+// ---------- Business overview: revenue estimate, receivables, production vs target (admin) ----------
+const MONTHS_SHORT = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const BZ_COLORS = ['#0E6E6E','#4FC3D0','#2E6FB0','#D98A2B','#8E7CC3','#C0453A','#7A8B89','#9AD3C8'];
+function ymdLocal(d){ return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+function addDaysYmd(ymd, n){ const d = parseYmd(ymd) || new Date(); d.setDate(d.getDate() + n); return ymdLocal(d); }
+function niceCeil(v){
+  if(v <= 0) return 1;
+  const mag = Math.pow(10, Math.floor(Math.log10(v))), f = v / mag;
+  return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * mag;
+}
+function niceStep(v){
+  if(v <= 0) return 1;
+  const mag = Math.pow(10, Math.floor(Math.log10(v))), f = v / mag;
+  return ([1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10].find(x=>x >= f - 1e-9) || 10) * mag;
+}
+function compactNum(n){
+  const a = Math.abs(n);
+  if(a >= 1e6) return (n / 1e6).toFixed(a >= 1e7 ? 0 : 1).replace(/\.0$/, '') + 'M';
+  if(a >= 1e3) return (n / 1e3).toFixed(a >= 1e4 ? 0 : 1).replace(/\.0$/, '') + 'k';
+  return String(Math.round(n * 10) / 10);
+}
+function svgBars(items, opt){
+  opt = opt || {};
+  const W = 700, H = opt.height || 230, pl = 46, pr = 8, pt = 16, pb = 26, n = items.length;
+  const max = niceStep(Math.max(0, ...items.map(i=>i.value)) / 4) * 4, plotH = H - pt - pb, slot = (W - pl - pr) / n, bw = Math.max(3, slot * 0.58);
+  let g = '';
+  for(let i = 0; i <= 4; i++){
+    const y = pt + plotH - plotH * i / 4;
+    g += `<line x1="${pl}" x2="${W - pr}" y1="${y}" y2="${y}" stroke="#E3EAE9"/><text x="${pl - 6}" y="${y + 4}" font-size="11" text-anchor="end" fill="#5B6E6C">${compactNum(max * i / 4)}</text>`;
+  }
+  items.forEach((it, i)=>{
+    const h = max ? plotH * it.value / max : 0, x = pl + slot * i + (slot - bw) / 2, y = pt + plotH - h;
+    g += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(h, it.value > 0 ? 1 : 0).toFixed(1)}" rx="3" fill="${it.hl ? '#D98A2B' : (opt.color || '#0E6E6E')}"><title>${esc(it.label)}: ${esc(it.tip || it.value.toLocaleString())}</title></rect>`;
+    if(it.value > 0 && n <= 16) g += `<text x="${(x + bw / 2).toFixed(1)}" y="${(y - 4).toFixed(1)}" font-size="10.5" text-anchor="middle" fill="#0B2B36">${compactNum(it.value)}</text>`;
+    if(n <= 16 || i % 2 === 0) g += `<text x="${(x + bw / 2).toFixed(1)}" y="${H - 8}" font-size="11" text-anchor="middle" fill="#5B6E6C">${esc(it.label)}</text>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" role="img">${g}</svg>`;
+}
+function svgDonut(items){
+  const total = items.reduce((a, i)=>a + i.value, 0), cx = 90, cy = 90, R = 80, r = 50;
+  if(!total) return '<svg viewBox="0 0 180 180"><circle cx="90" cy="90" r="65" fill="none" stroke="#E3EAE9" stroke-width="30"/><text x="90" y="95" text-anchor="middle" font-size="12" fill="#5B6E6C">ไม่มีข้อมูล</text></svg>';
+  const pt = (rad, a)=>[cx + rad * Math.sin(a), cy - rad * Math.cos(a)];
+  let a0 = 0, out = '';
+  items.forEach((it, i)=>{
+    if(it.value <= 0) return;
+    const frac = it.value / total, col = BZ_COLORS[i % BZ_COLORS.length];
+    if(frac > 0.9999){ out += `<circle cx="${cx}" cy="${cy}" r="${(R + r) / 2}" fill="none" stroke="${col}" stroke-width="${R - r}"/>`; return; }
+    const a1 = a0 + frac * 2 * Math.PI, large = frac > 0.5 ? 1 : 0;
+    const [x0, y0] = pt(R, a0), [x1, y1] = pt(R, a1), [x2, y2] = pt(r, a1), [x3, y3] = pt(r, a0);
+    out += `<path d="M${x0.toFixed(2)} ${y0.toFixed(2)} A${R} ${R} 0 ${large} 1 ${x1.toFixed(2)} ${y1.toFixed(2)} L${x2.toFixed(2)} ${y2.toFixed(2)} A${r} ${r} 0 ${large} 0 ${x3.toFixed(2)} ${y3.toFixed(2)} Z" fill="${col}"><title>${esc(it.label)}: ${(frac * 100).toFixed(1)}%</title></path>`;
+    a0 = a1;
+  });
+  return `<svg viewBox="0 0 180 180" role="img">${out}<text x="90" y="86" text-anchor="middle" font-size="11" fill="#5B6E6C">รวม</text><text x="90" y="104" text-anchor="middle" font-size="14" font-weight="700" fill="#0B2B36">${compactNum(total)}</text></svg>`;
+}
+function hbarsHtml(items, fmt){
+  const max = Math.max(1, ...items.map(i=>i.value));
+  return items.length ? items.map(it=>`<div class="barrow"><div class="lab" title="${esc(it.label)}" style="width:170px">${esc(it.label)}</div><div class="track"><div class="fill" style="width:${(it.value / max * 100).toFixed(1)}%"></div></div><div class="val" style="width:96px">${esc(fmt ? fmt(it.value) : it.value.toLocaleString())}</div></div>`).join('') : '<div class="empty">ไม่มีข้อมูล</div>';
+}
+function bzRevenueOf(prices, o){
+  const q = parseFloat(o.qty) || 0, mat = rpMaterial(o), clinic = rpName(o, 'clinic');
+  const free = o.case_type === 'คูปอง' || o.is_rework === true;
+  const price = free ? 0 : priceFor(prices, clinic, mat);
+  return {q, mat, clinic, doctor: rpName(o, 'doctor'), amount: round2(q * (price || 0)), missing: !free && price === null};
+}
+function bzShipDate(o){ return deliveredDate(o) || String(o.date_received || ''); }
+function bzMonthOf(dateStr){ const d = parseYmd(dateStr); return d ? d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') : 'unknown'; }
+function bzCompute(){
+  const prices = readPrices(), all = NEW_ORDERS.map(withEffectiveStatus);
+  const yearEl = document.getElementById('bz-year'), scopeEl = document.getElementById('bz-scope');
+  const year = (yearEl && yearEl.value) || String(new Date().getFullYear()), scope = scopeEl ? scopeEl.value : 'year';
+  const ref = SELECTED_MONTH === 'all' ? currentMonthKey() : SELECTED_MONTH;
+  const delivered = all.filter(o=>o.status === 'ส่งแล้ว');
+  const rev = delivered.map(o=>Object.assign(bzRevenueOf(prices, o), {month: monthKeyOf(o), o}));
+  const monthly = Array.from({length: 12}, (_, i)=>{
+    const key = year + '-' + String(i + 1).padStart(2, '0'), rows = rev.filter(x=>x.month === key);
+    return {key, label: MONTHS_SHORT[i], value: round2(rows.reduce((a, x)=>a + x.amount, 0)), cases: rows.length, qty: rows.reduce((a, x)=>a + x.q, 0), hl: key === ref};
+  });
+  const inScope = rev.filter(x=>scope === 'year' ? x.month.slice(0, 4) === year : x.month === ref);
+  const agg = key => { const m = {}; inScope.forEach(x=>{ m[x[key]] = (m[x[key]] || 0) + x.amount; }); return Object.keys(m).map(k=>({label:k, value: round2(m[k])})).filter(x=>x.value > 0).sort((a, b)=>b.value - a.value); };
+  const prevKey = shiftMonth(ref, -1);
+  const refTotal = round2(rev.filter(x=>x.month === ref).reduce((a, x)=>a + x.amount, 0));
+  const prevTotal = round2(rev.filter(x=>x.month === prevKey).reduce((a, x)=>a + x.amount, 0));
+  // receivables
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const invs = INVOICES.map(inv=>{
+    const amount = parseFloat(inv.amount) || 0, paid = parseFloat(inv.paid) || 0, balance = round2(amount - paid), due = parseYmd(inv.due_date);
+    const overdueDays = (due && due < today && balance > 0) ? Math.round((today - due) / 86400000) : 0;
+    return Object.assign({}, inv, {amountN: amount, paidN: paid, balance, overdueDays, state: balance <= 0 ? 'ชำระแล้ว' : (overdueDays > 0 ? 'เกินกำหนด' : 'รอรับชำระ')});
+  });
+  const open = invs.filter(i=>i.balance > 0), overdue = open.filter(i=>i.overdueDays > 0);
+  const cm = currentMonthKey(), cmDate = new Date(), buckets = [{label:'เกินกำหนด', value:0, n:0, hl:true}];
+  for(let i = 0; i < 3; i++){ const d = new Date(cmDate.getFullYear(), cmDate.getMonth() + i, 1); buckets.push({label: THAI_MONTHS[d.getMonth()], key: d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'), value:0, n:0}); }
+  buckets.push({label:'หลังจากนั้น', value:0, n:0}, {label:'ไม่ระบุวันครบกำหนด', value:0, n:0});
+  open.forEach(i=>{
+    let b;
+    if(i.overdueDays > 0) b = buckets[0];
+    else if(!i.due_date) b = buckets[buckets.length - 1];
+    else b = buckets.find(x=>x.key && x.key === bzMonthOf(i.due_date)) || buckets[buckets.length - 2];
+    b.value = round2(b.value + i.balance); b.n++;
+  });
+  // production vs target
+  const target = Number(prices.targets.units_per_month) || 0;
+  const shipped = delivered.filter(o=>bzMonthOf(bzShipDate(o)) === ref);
+  const shippedQty = shipped.reduce((a, o)=>a + (parseFloat(o.qty) || 0), 0);
+  const dim = new Date(+ref.slice(0, 4), +ref.slice(5, 7), 0).getDate();
+  const dayNow = ref === cm ? Math.min(new Date().getDate(), dim) : dim;
+  const expected = target * dayNow / dim;
+  const daily = Array.from({length: dim}, (_, i)=>({label: String(i + 1), value: 0}));
+  shipped.forEach(o=>{ const d = parseYmd(bzShipDate(o)); if(d) daily[d.getDate() - 1].value += (parseFloat(o.qty) || 0); });
+  const wip = all.filter(o=>o.status !== 'ส่งแล้ว' && o.status !== 'ยกเลิกเคส').reduce((a, o)=>a + (parseFloat(o.qty) || 0), 0);
+  let onTimeN = 0, onTimeTot = 0;
+  shipped.forEach(o=>{ const ap = parseYmd(o.appointment_date), sd = parseYmd(bzShipDate(o)); if(ap && sd){ onTimeTot++; if(sd <= ap) onTimeN++; } });
+  return {year, scope, ref, monthly, yearTotal: round2(monthly.reduce((a, m)=>a + m.value, 0)), refTotal, prevTotal, prevKey,
+    byMaterial: agg('mat'), byClinic: agg('clinic'), byDoctor: agg('doctor'), inScopeTotal: round2(inScope.reduce((a, x)=>a + x.amount, 0)),
+    missingCases: inScope.filter(x=>x.missing).length, invs, open, overdue, buckets, openTotal: round2(open.reduce((a, i)=>a + i.balance, 0)), overdueTotal: round2(overdue.reduce((a, i)=>a + i.balance, 0)),
+    target, shippedQty, expected, daily, dim, dayNow, wip, onTimeN, onTimeTot, prices};
+}
+let BZ_INV_EDIT = null;
+function renderOverview(){
+  const kp = document.getElementById('bz-kpis');
+  if(!kp) return;
+  const ys = document.getElementById('bz-year'), thisY = new Date().getFullYear();
+  const years = new Set([String(thisY)]);
+  NEW_ORDERS.forEach(o=>{ const k = monthKeyOf(o); if(k !== 'unknown') years.add(k.slice(0, 4)); });
+  const keepY = ys.value || String(thisY);
+  ys.innerHTML = Array.from(years).sort().reverse().map(y=>`<option value="${y}">ปี ${+y + 543}</option>`).join('');
+  ys.value = years.has(keepY) ? keepY : String(thisY);
+  const d = bzCompute(), B = n=>money(n);
+  const mom = d.prevTotal > 0 ? ((d.refTotal - d.prevTotal) / d.prevTotal * 100) : null;
+  const pct = d.target ? d.shippedQty / d.target * 100 : null;
+  const k = (num, lbl, cls)=>`<div class="kpi ${cls || ''}"><div class="num" style="font-size:20px">${num}</div><div class="lbl">${lbl}</div></div>`;
+  kp.innerHTML = k(B(d.yearTotal) + ' บาท', 'รายได้ปี ' + (+d.year + 543) + ' (ประมาณการ)') +
+    k(B(d.refTotal) + ' บาท', 'รายได้ ' + monthLabel(d.ref) + (mom === null ? '' : ' • ' + (mom >= 0 ? '+' : '') + mom.toFixed(1) + '% เทียบเดือนก่อน')) +
+    k(d.shippedQty.toLocaleString() + ' ซี่' + (pct === null ? '' : ' (' + pct.toFixed(0) + '%)'), 'ส่งงานแล้ว ' + monthLabel(d.ref) + (d.target ? ' • เป้า ' + d.target.toLocaleString() : ' • ยังไม่ตั้งเป้า')) +
+    k(B(d.openTotal) + ' บาท', 'รอรับชำระ ' + d.open.length + ' รายการ', 'warn') +
+    k(B(d.overdueTotal) + ' บาท', 'เกินกำหนด ' + d.overdue.length + ' รายการ', 'danger');
+  document.getElementById('bz-missing').innerHTML = d.missingCases ? `<b style="color:var(--rose)">⚠ มี ${d.missingCases} เคสในช่วงนี้ที่ยังไม่มีราคา (นับเป็น 0) ไปตั้งราคาในแท็บ "ราคา / บิล"</b>` : '';
+  document.getElementById('bz-year-tag').textContent = 'ปี ' + (+d.year + 543);
+  document.getElementById('bz-bars').innerHTML = svgBars(d.monthly.map(m=>({label:m.label, value:m.value, hl:m.hl, tip: money(m.value) + ' บาท • ' + m.cases + ' เคส • ' + m.qty + ' ซี่'})));
+  document.getElementById('bz-scope-tag').textContent = d.scope === 'year' ? 'ปี ' + (+d.year + 543) : monthLabel(d.ref);
+  const top = d.byMaterial.slice(0, 7), rest = d.byMaterial.slice(7).reduce((a, x)=>a + x.value, 0);
+  const donutItems = top.concat(rest > 0 ? [{label:'อื่นๆ', value: round2(rest)}] : []);
+  document.getElementById('bz-donut').innerHTML = svgDonut(donutItems);
+  document.getElementById('bz-donut-legend').innerHTML = donutItems.length ? donutItems.map((it, i)=>`<div><i style="background:${BZ_COLORS[i % BZ_COLORS.length]}"></i><span class="nm">${esc(it.label)}</span><span class="val">${esc(B(it.value))}</span></div>`).join('') : '<div class="note">ยังไม่มีรายได้ในช่วงนี้ (ต้องมีเคสที่ส่งแล้ว และตั้งราคาแล้ว)</div>';
+  const by = document.getElementById('bz-top-by').value, list = (by === 'doctor' ? d.byDoctor : d.byClinic).slice(0, 10);
+  document.getElementById('bz-top').innerHTML = hbarsHtml(list, v=>B(v));
+  document.getElementById('bz-ar-kpis').innerHTML = k(d.open.length + ' รายการ', 'รอรับชำระ ' + B(d.openTotal) + ' บาท', 'warn') + k(d.overdue.length + ' รายการ', 'เกินกำหนด ' + B(d.overdueTotal) + ' บาท', 'danger');
+  document.getElementById('bz-aging').innerHTML = svgBars(d.buckets.map(b=>({label:b.label.length > 8 ? b.label.slice(0, 7) + '…' : b.label, value:b.value, hl:b.hl, tip: money(b.value) + ' บาท • ' + b.n + ' รายการ'})), {height: 190, color:'#2E6FB0'});
+  const cr = document.getElementById('bz-credit'); if(document.activeElement !== cr) cr.value = d.prices.credit_days || 30;
+  const tg = document.getElementById('bz-target'); if(document.activeElement !== tg) tg.value = d.target || '';
+  renderInvoiceTable(d);
+  // production
+  document.getElementById('bz-prod-tag').textContent = monthLabel(d.ref);
+  const state = !d.target ? null : (d.shippedQty >= d.expected ? ['เป็นไปตามเป้า ✓', '#E4F3E9', '#2F7D4F'] : (d.shippedQty >= d.expected * 0.8 ? ['ใกล้เคียงเป้า', '#FCEFDD', '#D98A2B'] : ['ช้ากว่าเป้า', '#F0E6E6', '#C0453A']));
+  document.getElementById('bz-prod').innerHTML = `
+    <div style="font-size:13px">ส่งงานแล้ว <b style="font-size:22px">${d.shippedQty.toLocaleString()}</b> ซี่ ${d.target ? 'จากเป้า <b>' + d.target.toLocaleString() + '</b> (' + (d.shippedQty / d.target * 100).toFixed(0) + '%)' : ''}
+      ${state ? `<span class="bz-pill" style="background:${state[1]};color:${state[2]};margin-left:6px">${state[0]}</span>` : ''}</div>
+    ${d.target ? `<div class="bz-progress"><div class="f" style="width:${Math.min(100, d.shippedQty / d.target * 100).toFixed(1)}%"></div><div class="m" style="left:${Math.min(100, d.expected / d.target * 100).toFixed(1)}%" title="ควรถึง ${d.expected.toFixed(0)} ซี่ ณ วันนี้"></div></div>
+      <div class="note" style="margin:0">เส้นดำ = ควรถึง ${d.expected.toFixed(0)} ซี่ ณ วันที่ ${d.dayNow} ของเดือน (จากเป้าตามสัดส่วนวัน)</div>` : '<div class="note">ตั้งเป้าหมายต่อเดือนด้านล่างเพื่อดูว่าเป็นไปตามเป้าหรือไม่</div>'}
+    <div style="margin-top:10px;font-size:13px">งานที่ยังอยู่ในสายการผลิต <b>${d.wip.toLocaleString()}</b> ซี่${d.onTimeTot ? ' • ส่งตรงนัด <b>' + (d.onTimeN / d.onTimeTot * 100).toFixed(0) + '%</b> (' + d.onTimeN + '/' + d.onTimeTot + ' เคสที่มีวันนัด)' : ''}</div>`;
+  document.getElementById('bz-daily').innerHTML = svgBars(d.daily.map(x=>({label:x.label, value:x.value, tip: x.value + ' ซี่'})), {height: 190, color:'#4FC3D0'});
+}
+function renderInvoiceTable(d){
+  const t = document.getElementById('inv-table'), f = document.getElementById('inv-filter').value;
+  let list = d.invs.slice();
+  if(f === 'open') list = list.filter(i=>i.balance > 0); else if(f === 'overdue') list = list.filter(i=>i.overdueDays > 0); else if(f === 'paid') list = list.filter(i=>i.balance <= 0);
+  list.sort((a, b)=>String(a.due_date || '9999').localeCompare(String(b.due_date || '9999')));
+  if(!list.length){ t.innerHTML = '<tr><td class="empty">ไม่มีรายการ — บันทึกบิลที่ออกแล้วได้ในแท็บ "ราคา / บิล"</td></tr>'; return; }
+  t.innerHTML = '<tr><th>คลินิก</th><th>เดือนบิล</th><th>เลขที่</th><th>ครบกำหนด</th><th class="num">ยอดบิล</th><th class="num">รับแล้ว</th><th class="num">คงค้าง</th><th>สถานะ</th><th></th></tr>' +
+    list.map(i=>{
+      const badge = i.state === 'ชำระแล้ว' ? 'b-done' : (i.state === 'เกินกำหนด' ? 'b-hold' : 'b-wait');
+      return `<tr><td>${esc(i.clinic)}</td><td>${esc(monthLabel(i.month))}</td><td>${esc(i.invoice_no || '-')}</td><td>${esc(i.due_date ? fmtDate(i.due_date) : '-')}</td>
+        <td class="num">${esc(money(i.amountN))}</td><td class="num">${esc(money(i.paidN))}</td><td class="num"><b>${esc(money(Math.max(i.balance, 0)))}</b></td>
+        <td><span class="badge ${badge}">${esc(i.state)}${i.overdueDays ? ' ' + i.overdueDays + ' วัน' : ''}</span></td>
+        <td style="white-space:nowrap"><button class="btn ghost sm" data-inv-edit="${esc(i.id)}">${i.balance > 0 ? '💵 รับชำระ / แก้ไข' : '✏️ แก้ไข'}</button> <button class="btn danger sm" data-inv-del="${esc(i.id)}">🗑</button></td></tr>`;
+    }).join('');
+  t.querySelectorAll('[data-inv-edit]').forEach(b=>b.addEventListener('click', ()=>openInvoiceForm(b.dataset.invEdit)));
+  t.querySelectorAll('[data-inv-del]').forEach(b=>b.addEventListener('click', async ()=>{
+    const inv = INVOICES.find(x=>x.id === b.dataset.invDel);
+    if(!window.confirm('ลบบิลของ "' + (inv ? inv.clinic + ' ' + monthLabel(inv.month) : '') + '" ออกจากรายการลูกหนี้?')) return;
+    const r = await apiPost({action:'deleteInvoice', id: b.dataset.invDel});
+    if(!(r && r.ok)){ showToast(apiErrorText(r)); return; }
+    await reloadAfterContactChange('ลบบิลแล้ว');
+  }));
+}
+function openInvoiceForm(id){
+  const i = INVOICES.find(x=>x.id === id); if(!i) return;
+  BZ_INV_EDIT = id;
+  const v = (el, val)=>{ document.getElementById(el).value = val ?? ''; };
+  document.getElementById('inv-form-title').textContent = 'บิล ' + i.clinic + ' • ' + monthLabel(i.month);
+  v('invf_no', i.invoice_no); v('invf_amount', parseFloat(i.amount) || 0); v('invf_issue', i.issue_date); v('invf_due', i.due_date); v('invf_paid', parseFloat(i.paid) || 0); v('invf_paid_date', i.paid_date); v('invf_note', i.note);
+  const w = document.getElementById('inv-form-wrap'); w.style.display = '';
+  if(w.scrollIntoView) w.scrollIntoView({behavior:'smooth', block:'center'});
+}
+async function saveInvoiceForm(fullPay){
+  const g = id=>document.getElementById(id).value.trim();
+  const amount = parseFloat(g('invf_amount')) || 0;
+  const rec = {id: BZ_INV_EDIT, clinic: (INVOICES.find(x=>x.id === BZ_INV_EDIT) || {}).clinic, month: (INVOICES.find(x=>x.id === BZ_INV_EDIT) || {}).month,
+    invoice_no: g('invf_no'), amount, issue_date: g('invf_issue'), due_date: g('invf_due'), paid: fullPay ? amount : (parseFloat(g('invf_paid')) || 0), paid_date: fullPay ? ymdLocal(new Date()) : g('invf_paid_date'), note: g('invf_note')};
+  const r = await apiPost({action:'saveInvoices', mode:'upsert', invoices:[rec]});
+  if(!(r && r.ok)){ showToast(apiErrorText(r)); return; }
+  document.getElementById('inv-form-wrap').style.display = 'none'; BZ_INV_EDIT = null;
+  await reloadAfterContactChange('บันทึกบิลแล้ว ✓');
+}
+// ---- from the billing tab: record issued invoices ----
+function renderInvoiceStatusLine(clinic){
+  const el = document.getElementById('bl-invstatus'); if(!el) return;
+  if(clinic === '*'){ el.textContent = ''; return; }
+  const inv = INVOICES.find(x=>x.id === billingMonth() + '|' + clinic);
+  el.textContent = inv ? '📌 บันทึกบิลแล้ว' + (inv.invoice_no ? ' เลขที่ ' + inv.invoice_no : '') + ' • ยอด ' + money(parseFloat(inv.amount) || 0) + ' • รับแล้ว ' + money(parseFloat(inv.paid) || 0) + ' • ครบกำหนด ' + (inv.due_date ? fmtDate(inv.due_date) : '-') : '';
+}
+async function recordInvoices(){
+  const clinic = document.getElementById('bl-clinic').value, month = billingMonth(), prices = readPrices();
+  const today = ymdLocal(new Date()), due = addDaysYmd(today, prices.credit_days || 30);
+  const vatMode = document.getElementById('bl-vat').value;
+  if(clinic === '*'){
+    const clinics = [...document.getElementById('bl-clinic').options].map(o=>o.value).filter(v=>v !== '*');
+    const invs = []; let miss = 0;
+    clinics.forEach(c=>{ const d = invoiceData(c); if(!d.cases) return; miss += d.missing; invs.push({id: month + '|' + c, clinic: c, month, amount: round2(d.subtotal + (vatMode === 'v7' ? round2(d.subtotal * 0.07) : 0)), issue_date: today, due_date: due}); });
+    if(!invs.length){ showToast('ไม่มีรายการให้ออกบิลในเดือนนี้'); return; }
+    if(!window.confirm('บันทึกบิลที่ออกแล้วของ ' + invs.length + ' คลินิก เดือน ' + monthLabel(month) + (miss ? '\n⚠ มี ' + miss + ' รายการที่ยังไม่มีราคา (นับเป็น 0)' : '') + '\n(คลินิกที่เคยบันทึกแล้วจะถูกข้าม)')) return;
+    const r = await apiPost({action:'saveInvoices', mode:'insert', invoices: invs});
+    if(!(r && r.ok)){ showToast(apiErrorText(r)); return; }
+    await reloadAfterContactChange('บันทึกบิลแล้ว: ใหม่ ' + r.added + (r.skipped ? ' • ข้าม ' + r.skipped : ''));
+    return;
+  }
+  const inv = invoiceRows(clinic);
+  if(!inv.d.cases){ showToast('ไม่มีรายการให้ออกบิล'); return; }
+  const exist = INVOICES.find(x=>x.id === month + '|' + clinic);
+  if(inv.d.missing && !window.confirm('มี ' + inv.d.missing + ' รายการที่ยังไม่มีราคา ยอดอาจต่ำกว่าจริง บันทึกต่อไหม?')) return;
+  if(exist && !window.confirm('มีบิลของคลินิกนี้เดือนนี้อยู่แล้ว (ยอด ' + money(parseFloat(exist.amount) || 0) + ')\nอัปเดตยอดเป็น ' + money(inv.t.total) + ' ? (ข้อมูลรับชำระที่บันทึกไว้จะไม่หาย)')) return;
+  const rec = {id: month + '|' + clinic, clinic, month, amount: inv.t.total};
+  const no = document.getElementById('bl-inv-no').value.trim(); if(no) rec.invoice_no = no;
+  if(!exist){ rec.issue_date = today; rec.due_date = due; }
+  const r = await apiPost({action:'saveInvoices', mode:'upsert', invoices:[rec]});
+  if(!(r && r.ok)){ showToast(apiErrorText(r)); return; }
+  await reloadAfterContactChange('บันทึกบิลแล้ว ✓ ดูได้ที่แท็บ "ภาพรวมรายได้"');
+}
+document.getElementById('bz-year').addEventListener('change', renderOverview);
+document.getElementById('bz-scope').addEventListener('change', renderOverview);
+document.getElementById('bz-top-by').addEventListener('change', renderOverview);
+document.getElementById('inv-filter').addEventListener('change', renderOverview);
+document.getElementById('invf-save').addEventListener('click', ()=>saveInvoiceForm(false));
+document.getElementById('invf-full').addEventListener('click', ()=>saveInvoiceForm(true));
+document.getElementById('invf-cancel').addEventListener('click', ()=>{ document.getElementById('inv-form-wrap').style.display = 'none'; BZ_INV_EDIT = null; });
+document.getElementById('bz-credit-save').addEventListener('click', async ()=>{
+  const n = parseInt(document.getElementById('bz-credit').value, 10);
+  if(!(n >= 0)){ showToast('กรอกจำนวนวัน'); return; }
+  await saveSettingsPatch(c=>{ c.credit_days = n; });
+  showToast('บันทึกเครดิตเริ่มต้น ' + n + ' วันแล้ว ✓'); renderOverview();
+});
+document.getElementById('bz-target-save').addEventListener('click', async ()=>{
+  const n = parseFloat(document.getElementById('bz-target').value);
+  if(!(n >= 0)){ showToast('กรอกจำนวนซี่ต่อเดือน'); return; }
+  await saveSettingsPatch(c=>{ c.targets = Object.assign({}, c.targets, {units_per_month: n}); });
+  showToast('บันทึกเป้าหมาย ' + n + ' ซี่/เดือนแล้ว ✓'); renderOverview();
+});
+document.getElementById('bl-record').addEventListener('click', recordInvoices);
+
 // ---------- Department Status tab ----------
 let CURRENT_DEPT = DEPARTMENTS[0].key;
 function buildDeptChips(){
@@ -2481,11 +3029,11 @@ function renderDept(){
   rows = rows.filter(x=>x.rec.status !== 'ไม่เกี่ยวข้อง' || stFilter==='ไม่เกี่ยวข้อง');
   if(q) rows = rows.filter(x=>[x.r.case_id,x.r.patient,x.r.clinic].some(v=>v && String(v).toLowerCase().includes(q)));
   if(stFilter) rows = rows.filter(x=>x.rec.status===stFilter);
-  const queueN = rows.filter(x=>currentDeptOf(x.r).key === CURRENT_DEPT).length;
+  const queueN = rows.filter(x=>isActiveAt(x.r, CURRENT_DEPT)).length;
   const doneN = rows.filter(x=>x.rec.status === 'เสร็จแล้ว').length;
   const myName = CURRENT_EMPLOYEE ? CURRENT_EMPLOYEE.name : '';
   const view = document.getElementById('dep-f-view').value;
-  if(view === 'queue') rows = rows.filter(x=>currentDeptOf(x.r).key === CURRENT_DEPT);
+  if(view === 'queue') rows = rows.filter(x=>isActiveAt(x.r, CURRENT_DEPT));
   else if(view === 'done') rows = rows.filter(x=>x.rec.status === 'เสร็จแล้ว');
   else if(view === 'mine') rows = rows.filter(x=>x.rec.status === 'เสร็จแล้ว' && x.rec.by === myName);
   const overdueN = rows.filter(x=>isOverdue(x.r) && !['เสร็จแล้ว','ยกเลิก'].includes(x.rec.status)).length;
@@ -2507,7 +3055,7 @@ function renderDept(){
       <td>${esc(r.qty??'-')}</td>
       <td>${esc(fmtDate(r.date_received))}</td>
       <td>${esc(fmtDate(r.appointment_date))}</td>
-      <td>${currentDeptOf(r).key===CURRENT_DEPT ? daysCell(currentDays(r)) : '-'}</td>
+      <td>${isActiveAt(r, CURRENT_DEPT) ? daysCell(daysAtDept(r, CURRENT_DEPT)) : '-'}</td>
       <td>${progressStrip(r)}</td>
       <td><select class="dep-row-select" data-id="${esc(r._id)}">${DEP_STATUSES.map(s=>`<option value="${esc(s)}" ${s===rec.status?'selected':''}>${esc(s)}</option>`).join('')}</select></td>
       <td><input type="date" class="dep-row-start" data-id="${esc(r._id)}" value="${toDateInputVal(rec.start)}" style="font-size:12px;padding:4px"></td>
@@ -2612,9 +3160,7 @@ function renderDash(){
   // where are the jobs right now?
   const wip = {};
   data.forEach(r=>{
-    const d = currentDeptOf(r);
-    if(d.key.startsWith('_')) return;
-    wip[d.label] = (wip[d.label] || 0) + 1;
+    activeDeptsOf(r).forEach(d=>{ wip[d.label] = (wip[d.label] || 0) + 1; });
   });
   drawBars('chart-wip', wip, 12);
 
@@ -2739,6 +3285,7 @@ function renderRework(){
 }
 
 function renderAll(){
+  renderOverview();
   refreshClinicSelect();
   renderContacts();
   renderBilling(false);
@@ -2823,7 +3370,8 @@ function keysForToken(tok){
     if(tok === d.key.toLowerCase() || tok === d.label.toLowerCase() || tok === d.key.replace('_',' ')) keys.push(d.key);
   });
   // group names (as written in the duty list)
-  if(tok === 'cadcam' || tok === 'cad' || tok === 'cam') keys.push('scan', 'design', 'milling');
+  if(tok === 'cadcam' || tok === 'cad' || tok === 'cam') keys.push('scan', 'design', 'model_printing', 'milling');
+  if(tok === 'model' || tok === 'print' || tok === 'printing' || tok === 'พิมพ์โมเดล') keys.push('model_printing');
   if(tok === 'all ceramic' || tok === 'allceramic' || tok === 'porcelain' || tok === 'พอชเลน') keys.push('all_ceramic');
   if(tok === 'admin') keys.push('order_intake', 'abutment', 'receive', 'billing', 'delivery');
   if(tok === 'สแกน') keys.push('scan');
@@ -2852,29 +3400,44 @@ function responsibleFor(deptKey){
   const names = EMPLOYEE_LIST.filter(e=>{ const ex = explicitDeptKeys(e); return ex && ex.includes(deptKey); }).map(e=>e.name);
   return names.length ? names.join(', ') : '-';
 }
+// A step flagged "parallel" (MODEL PRINTING) starts as soon as the steps before it are done, without blocking the next step.
+// A step flagged "join" (ALL CERAMIC) waits for every parallel step before it.
+function activeDeptsOf(r){
+  if(r.status === 'ยกเลิกเคส' || r.status === 'ส่งแล้ว') return [];
+  const act = [], pend = [];
+  let barrier = false;
+  for(const d of DEPARTMENTS){
+    if(DONE_STATES.includes(depValue(r, d.key))) continue;
+    if(d.parallel){ if(!barrier) act.push(d); pend.push(d); continue; }
+    if(barrier) continue;
+    if(d.join && pend.length){ barrier = true; continue; }
+    act.push(d); barrier = true;
+  }
+  return act;
+}
+function isActiveAt(r, key){ return activeDeptsOf(r).some(d=>d.key === key); }
 function currentDeptOf(r){
   if(r.status === 'ยกเลิกเคส') return {key:'_cancel', label:'ยกเลิกเคส'};
   if(r.status === 'ส่งแล้ว') return {key:'_done', label:'ส่งมอบแล้ว'};
-  for(const d of DEPARTMENTS){
-    const st = depValue(r, d.key);
-    if(DONE_STATES.includes(st)) continue;
-    return d;
-  }
-  return {key:'_done', label:'เสร็จครบทุกแผนก'};
+  const a = activeDeptsOf(r);
+  return a.length ? a[0] : {key:'_done', label:'เสร็จครบทุกแผนก'};
 }
 function currentDeptLabel(r){
-  const d = currentDeptOf(r);
-  if(d.key.startsWith('_')) return d.label;
-  return d.label + ' (' + depValue(r, d.key) + ')';
+  const a = activeDeptsOf(r);
+  if(!a.length) return currentDeptOf(r).label;
+  return a.map(d=>d.label + ' (' + depValue(r, d.key) + ')').join(' + ');
 }
 function currentPeople(r){
-  const d = currentDeptOf(r);
-  return d.key.startsWith('_') ? '-' : responsibleFor(d.key);
+  const a = activeDeptsOf(r);
+  if(!a.length) return '-';
+  const names = new Set();
+  a.forEach(d=>{ const x = responsibleFor(d.key); if(x !== '-') x.split(', ').forEach(n=>names.add(n)); });
+  return names.size ? Array.from(names).join(', ') : '-';
 }
 // which steps a case needs (material + whether an abutment must be ordered)
-function depRelevance(material, needAbutment){
+function depRelevance(material, needAbutment, hasScan){
   const m = String(material || '').toLowerCase();
-  const rel = {order_intake:true, scan:true, design:true, abutment:false, receive:false,
+  const rel = {order_intake:true, scan:true, design:true, model_printing: !!hasScan, abutment:false, receive:false,
                milling:true, all_ceramic:false, qc:true, billing:true, delivery:true};
   if(needAbutment){ rel.abutment = true; rel.receive = true; }
   // press-only materials are pressed at ALL CERAMIC, not milled
@@ -2886,7 +3449,8 @@ function depRelevance(material, needAbutment){
 function applyDeptRelevance(){
   const matEl = document.getElementById('f_material');
   const abEl = document.getElementById('f_need_abutment');
-  const rel = depRelevance(matEl ? matEl.value : '', abEl && abEl.value === 'ต้องสั่ง');
+  const hsEl = document.getElementById('f_has_scan');
+  const rel = depRelevance(matEl ? matEl.value : '', abEl && abEl.value === 'ต้องสั่ง', hsEl && hsEl.value === 'มี');
   DEPARTMENTS.forEach(d=>{
     const sel = document.getElementById('fd_'+d.key);
     if(!sel) return;
