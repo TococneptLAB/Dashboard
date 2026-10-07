@@ -241,6 +241,8 @@
   .urg{display:inline-block;margin-left:5px;padding:1px 7px;border-radius:999px;font-size:11px;font-weight:800;white-space:nowrap;vertical-align:middle;} .urg1{background:#FFE3D6;color:#B3420F;border:1px solid #F0B49B;} .urg2{background:#D64535;color:#fff;}
   tr:has(.urg2){background:#FDE8E6;} tr:has(.urg1){background:#FFF1EA;}
   .urg-box{border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin:8px 0;display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:14px;} .urg-box.on{background:#FDECEA;border-color:#E5A39B;color:#8A2B1F;} .urg-box .urg-ctl{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;}
+  .step-in-box{margin:-2px 0 10px;padding:7px 10px;border:1px dashed #9BB5B2;border-radius:8px;background:#F4F9F8;font-size:13px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+  .step-in-box small{color:var(--muted);margin-left:3px;}
 </style>
 </head>
 <body>
@@ -755,7 +757,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-06 รุ่น 40 (บอกสาเหตุเมื่อมองไม่เห็นไฟล์ + หน้าการเชื่อมต่อ)";
+const APP_VERSION = "2026-10-06 รุ่น 42 (ส่งต่อไฟล์ให้ขั้นถัดไป)";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -1450,7 +1452,7 @@ function urgencyOf(o){ const p = String((o && o.priority) || ''); return p === '
 function urgBadge(o){ const u = urgencyOf(o); return u === 2 ? `<span class="urg urg2" title="${esc(o.urgent_note || '')}">🚨 ด่วนมาก</span>` : u === 1 ? `<span class="urg urg1" title="${esc(o.urgent_note || '')}">🔥 ด่วน</span>` : ''; }
 function caseLink(r){
   const n = FILE_COUNTS[r._id];
-  return `<a href="#" class="caselink" data-open-case="${esc(r._id)}" title="เปิดรายละเอียดเคส">${esc(r.case_id ?? '-')}</a>` + urgBadge(r) + (n ? ` <span title="มีไฟล์แนบ ${n} ไฟล์" style="font-size:11px;color:var(--muted);white-space:nowrap">📎${n}</span>` : '');
+  return `<a href="#" class="caselink" data-open-case="${esc(r._id)}" title="เปิดรายละเอียดเคส">${esc(r.case_id ?? '-')}</a>` + urgBadge(r) + (n ? ` <a href="#" class="filebadge" data-open-case="${esc(r._id)}" data-goto-files="1" title="มีไฟล์แนบ ${n} ไฟล์ — กดเพื่อดู/ดาวน์โหลด" style="font-size:11px;color:var(--teal);white-space:nowrap;font-weight:700;text-decoration:none">📎${n}</a>` : '');
 }
 function notesOf(id){
   const out = [];
@@ -1516,7 +1518,7 @@ function renderCase(){
     return `<div class="cm-step ${curKeys.has(d.key) ? 'cur' : ''}"><span class="nm">${esc(d.label)}</span><span class="meta">${esc(meta)}${curKeys.has(d.key) ? ' ◀ ขั้นตอนปัจจุบัน' : ''}</span>` +
       (done ? `${stepUp(d)}<button class="btn ghost sm" data-step="undo" data-dept="${esc(d.key)}">↩ ยกเลิกเสร็จ</button>`
             : (r.status === 'กำลังดำเนินการ' ? '' : `<button class="btn ghost" data-step="start" data-dept="${esc(d.key)}">▶ เริ่มทำ</button>`) +
-              `${stepUp(d)}<button class="btn primary big" data-step="done" data-dept="${esc(d.key)}">${DONE_LABEL[d.key] || '✓ เสร็จแล้ว'}</button><button class="btn ghost sm" data-step="skip" data-dept="${esc(d.key)}" title="ขั้นตอนนี้ไม่เกี่ยวกับเคสนี้">ข้ามขั้นตอน</button>`) + '</div>';
+              `${stepUp(d)}<button class="btn primary big" data-step="done" data-dept="${esc(d.key)}">${DONE_LABEL[d.key] || '✓ เสร็จแล้ว'}</button><button class="btn ghost sm" data-step="skip" data-dept="${esc(d.key)}" title="ขั้นตอนนี้ไม่เกี่ยวกับเคสนี้">ข้ามขั้นตอน</button>`) + '</div><div class="step-in" data-step-in="' + esc(d.key) + '"></div>';
   }).join('') : '<div class="note">คุณไม่มีขั้นตอนที่อัปเดตได้ในเคสนี้ (หรือขั้นตอนของคุณไม่เกี่ยวกับเคสนี้)</div>';
   const skippedHtml = skipped.length ? '<div class="note" style="margin:10px 0 6px">ขั้นตอนของคุณที่ถูกข้ามไว้ (ไม่เกี่ยวข้อง) — ถ้าเคสนี้ต้องใช้ กดเปิดใช้ได้</div>' + skipped.map(d=>`<div class="cm-step" style="opacity:.85"><span class="nm">${esc(d.label)}</span><span class="meta">ไม่เกี่ยวข้องกับเคสนี้</span><button class="btn ghost sm" data-step="enable" data-dept="${esc(d.key)}">เปิดใช้ขั้นตอนนี้</button></div>`).join('') : '';
   const notes = notesOf(o._id);
@@ -1541,7 +1543,7 @@ function renderCase(){
       <button class="btn ghost sm" id="cm-print">🖨 พิมพ์ใบงาน (มี QR)</button>
       ${admin ? '<button class="btn ghost sm" id="cm-edit">✏️ แก้ไขเคส</button>' : ''}
     </div>
-    <div class="cm-sec">${urgentBoxHtml(o)}<h3>ขั้นตอนของคุณ</h3>${stepHtml}${skippedHtml}</div>
+    <div class="cm-sec"><div id="cm-file-strip"></div>${urgentBoxHtml(o)}<h3>ขั้นตอนของคุณ</h3>${stepHtml}${skippedHtml}</div>
     ${abutSectionHtml(o)}
     <div class="cm-sec"><h3>ไฟล์ / การจัดส่ง</h3>
       <div class="grid form">
@@ -1573,6 +1575,19 @@ function renderCase(){
   body.querySelectorAll('[data-step]').forEach(b=>b.addEventListener('click', async ()=>{
     if(b.dataset.step === 'skip' && !window.confirm('ข้ามขั้นตอนนี้ (ไม่เกี่ยวข้องกับเคสนี้)?')) return;
     if(b.dataset.step === 'undo' && !window.confirm('ยกเลิกสถานะ "เสร็จ" ของขั้นตอนนี้? (เคสจะกลับไปรอทำ)')) return;
+    if(b.dataset.step === 'done' && FILE_PRODUCERS.includes(b.dataset.dept)){
+      const list = CASE_FILES[CASE_OPEN_ID];
+      if(list && !list.some(f=>f.dept === b.dataset.dept)){
+        const idx = DEPARTMENTS.findIndex(d=>d.key === b.dataset.dept);
+        const next = DEPARTMENTS.slice(idx + 1).filter(d=>depValue(o, d.key) !== 'ไม่เกี่ยวข้อง' && !DONE_STATES.includes(depValue(o, d.key))).slice(0, 2).map(d=>d.label.replace(/ \(.*/, '')).join(' / ') || 'ขั้นถัดไป';
+        if(window.confirm('ขั้น ' + ((DEPARTMENTS[idx] || {}).label || '') + ' ยังไม่ได้แนบไฟล์ส่งต่อให้ ' + next + '\n\nกด OK = ไปแนบไฟล์ก่อน (แล้วกดเสร็จอีกครั้ง)\nกด Cancel = กดเสร็จโดยไม่แนบไฟล์')){
+          const sel = document.getElementById('cm-file-dept'); if(sel) sel.value = b.dataset.dept;
+          const f = document.getElementById('cm-file-pick'); if(f && f.scrollIntoView) f.scrollIntoView({block:'center'});
+          showToast('แนบไฟล์ของขั้นนี้ที่ปุ่ม 📎 แล้วกด "เสร็จแล้ว" อีกครั้ง');
+          return;
+        }
+      }
+    }
     b.disabled = true;
     await setStep(CASE_OPEN_ID, b.dataset.dept, b.dataset.step);
     showToast({done:'✓ บันทึกแล้ว ' + nowStamp().replace('T', ' เวลา '), start:'▶ เริ่มทำแล้ว', undo:'ยกเลิกเครื่องหมายแล้ว', enable:'เปิดใช้ขั้นตอนแล้ว', skip:'ข้ามขั้นตอนแล้ว'}[b.dataset.step]);
@@ -1608,7 +1623,10 @@ document.getElementById('cm-close').addEventListener('click', closeCase);
 document.getElementById('case-modal').addEventListener('click', e=>{ if(e.target.id === 'case-modal') closeCase(); });
 document.addEventListener('click', e=>{
   const a = e.target.closest('[data-open-case]');
-  if(a){ e.preventDefault(); openCase(a.dataset.openCase); }
+  if(a){
+    e.preventDefault(); openCase(a.dataset.openCase);
+    if(a.dataset.gotoFiles) setTimeout(()=>{ const f = document.getElementById('cm-files-list'); if(f && f.scrollIntoView) f.scrollIntoView({block:'center'}); }, 150);
+  }
 });
 function caseIdFromHash(){ const m = /^#case=(.+)$/.exec(location.hash); return m ? decodeURIComponent(m[1]) : null; }
 function openCaseFromHash(){
@@ -1778,7 +1796,53 @@ function updateStepFileBadges(){
     l.textContent = (l.dataset.suText || '📎 ไฟล์') + (n ? ' (' + n + ')' : '');
   });
 }
+const FILE_PRODUCERS = ['scan', 'design', 'model_printing'];     // steps that normally hand files to the next team
+function inputFilesFor(list, key){
+  const idx = DEPARTMENTS.findIndex(d=>d.key === key), me = DEPARTMENTS[idx] || {};
+  const prior = new Set(['order_intake', 'general']);
+  const joinIdx = DEPARTMENTS.findIndex(x=>x.join);      // the step that waits for the parallel work (porcelain / ALL CERAMIC)
+  DEPARTMENTS.forEach((d, i)=>{ if(i < idx && !(d.parallel && (me.parallel || idx < joinIdx))) prior.add(d.key); });     // work running BESIDE this step (model printing vs milling) is not an input
+  prior.delete(key);
+  return list.filter(f=>prior.has(f.dept || 'general')).sort((a, b)=>a.uploaded_at < b.uploaded_at ? 1 : -1);
+}
+function renderStepInputs(){
+  const list = CASE_FILES[CASE_OPEN_ID];
+  document.querySelectorAll('[data-step-in]').forEach(box=>{
+    if(!list){ box.innerHTML = ''; return; }
+    const files = inputFilesFor(list, box.dataset.stepIn);
+    if(!files.length){ box.innerHTML = ''; box.className = 'step-in'; return; }
+    const labelOf = k => k === 'general' ? 'ทั่วไป' : ((DEPARTMENTS.find(x=>x.key === k) || {}).label || k);
+    const chip = f=>{
+      const nm = esc(f.name.length > 30 ? f.name.slice(0, 27) + '...' : f.name), sm = `<small>${esc(labelOf(f.dept || 'general').replace(/ \(.*/, ''))} • ${esc(f.uploaded_by)}</small>`;
+      return f.link ? `<a class="btn ghost sm" href="${esc(f.drive_id ? driveDownloadUrl(f) : f.link)}" target="_blank" rel="noopener" style="text-decoration:none" title="${esc(f.name)}">${FILE_ICON[f.kind] || '📦'} ${nm}${sm}</a>`
+                    : `<button type="button" class="btn ghost sm" data-in-open="${esc(f.id)}" title="${esc(f.name)}">${FILE_ICON[f.kind] || '📦'} ${nm}${sm}</button>`;
+    };
+    box.className = 'step-in step-in-box';
+    box.innerHTML = `<b>📥 ไฟล์จากขั้นก่อนหน้า (${files.length})</b> ` + files.slice(0, 6).map(chip).join('') + (files.length > 6 ? `<small>และอีก ${files.length - 6} ไฟล์ (ดูที่ "ไฟล์แนบเคส" ด้านล่าง)</small>` : '') + ` <button type="button" class="btn primary sm" data-in-all="1">⬇ โหลดทั้งหมด</button>`;
+    box.querySelectorAll('[data-in-open]').forEach(b=>b.addEventListener('click', ()=>openCaseFile(files.find(x=>x.id === b.dataset.inOpen), b)));
+    box.querySelector('[data-in-all]').addEventListener('click', e=>downloadAllFiles(files, e.currentTarget));
+  });
+}
+function renderFileStrip(){
+  const el = document.getElementById('cm-file-strip');
+  if(!el) return;
+  const list = CASE_FILES[CASE_OPEN_ID], n = FILE_COUNTS[CASE_OPEN_ID] || 0;
+  if(!list){ el.innerHTML = n ? `<div class="ab-card" style="margin-bottom:8px">📎 มีไฟล์แนบ ${n} ไฟล์ — กำลังโหลดรายการ...</div>` : ''; return; }
+  if(!list.length){ el.innerHTML = ''; return; }
+  const chip = f=>{
+    const nm = esc(f.name.length > 34 ? f.name.slice(0, 31) + '...' : f.name);
+    if(f.link) return `<a class="btn ghost sm" href="${esc(f.drive_id ? driveDownloadUrl(f) : f.link)}" target="_blank" rel="noopener" style="text-decoration:none" title="${esc(f.name)} • โดย ${esc(f.uploaded_by)}">${FILE_ICON[f.kind] || '📦'} ${nm}</a>`;
+    return `<button type="button" class="btn ghost sm" data-strip-open="${esc(f.id)}" title="${esc(f.name)} • โดย ${esc(f.uploaded_by)}">${FILE_ICON[f.kind] || '📦'} ${nm}</button>`;
+  };
+  el.innerHTML = `<div class="ab-card" style="margin-bottom:8px"><b>📎 ไฟล์แนบของเคสนี้ (${list.length})</b> <span style="color:var(--muted);font-size:12px">กดชื่อไฟล์เพื่อโหลด/เปิด • แนบโดย ${esc([...new Set(list.map(f=>f.uploaded_by))].join(', '))}</span>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">${list.slice(-6).reverse().map(chip).join('')}<a href="#" id="strip-all" class="caselink" style="align-self:center;font-size:12.5px">ดูทั้งหมด / แยกตามขั้นตอน ↓</a></div></div>`;
+  el.querySelectorAll('[data-strip-open]').forEach(b=>b.addEventListener('click', ()=>openCaseFile(list.find(x=>x.id === b.dataset.stripOpen), b)));
+  const all = document.getElementById('strip-all');
+  if(all) all.addEventListener('click', e=>{ e.preventDefault(); const f = document.getElementById('cm-files-list'); if(f && f.scrollIntoView) f.scrollIntoView({block:'start', behavior:'smooth'}); });
+}
 function renderFilesList(){
+  renderFileStrip();
+  renderStepInputs();
   const el = document.getElementById('cm-files-list');
   if(!el) return;
   const list = CASE_FILES[CASE_OPEN_ID];
@@ -2003,7 +2067,7 @@ function computeAlerts(){
     }
     const days = currentDays(o);
     if(days !== '' && days >= WARN_DAYS) add('stuck', 2, '🐢', tag + ' ค้างที่ ' + where + ' ' + days + ' วัน');
-    if(!admin){ const t = arrivalStamp(o, my[0].key); if(t && t.getTime() > seenAt) add('new', 1, '🆕', tag + ' ถึงขั้น ' + where + ' แล้ว (ถึงคิวคุณ)'); }
+    if(!admin){ const t = arrivalStamp(o, my[0].key); if(t && t.getTime() > seenAt) add('new', 1, '🆕', tag + ' ถึงขั้น ' + where + ' แล้ว (ถึงคิวคุณ)' + (FILE_COUNTS[o._id] ? ' • มีไฟล์แนบรอ ' + FILE_COUNTS[o._id] + ' ไฟล์' : '')); }
   });
   if(canManageAbutment()){
     ABUTMENTS.filter(a=>a.status === 'requested' || a.status === 'ordered').forEach(a=>{
@@ -2098,6 +2162,8 @@ function caseText(o){
   const l4 = [body, t(o.material), qty && qty !== 'NaN' ? qty + ' ซี่' : ''].filter(Boolean).join(' ');
   const l5 = t(o.scan_system);
   let text = [l1, l2, l3, l4, l5].filter(Boolean).join('\n');
+  const fl = (CASE_FILES[o._id] || []).filter(f=>f.link).slice(0, 8);
+  if(fl.length) text += '\n\n📎 ไฟล์:\n' + fl.map(f=>f.name + ' ' + (f.drive_id ? driveDownloadUrl(f) : f.link)).join('\n');
   if(urgencyOf(o)) text = (urgencyOf(o) === 2 ? '🚨 ด่วนมาก' : '🔥 ด่วน') + (t(o.urgent_note) ? ' — ' + t(o.urgent_note) : '') + '\n' + text;
   const note = t(o.detail);
   if(note) text += '\n\n' + note;
