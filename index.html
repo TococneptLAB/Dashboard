@@ -195,6 +195,12 @@
   .tt-num{position:absolute;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--muted);transform:translate(-50%,-50%);pointer-events:none;}
   .tt-num.sel{color:var(--ink);font-weight:700;}
   .tt-mode.active{background:#0B2B36;color:#fff;border-color:#0B2B36;}
+  @media (pointer:coarse){
+    .cm-step .btn{min-height:44px;padding:8px 16px;font-size:14.5px;}
+    .cm-step{gap:10px;padding:10px 12px;margin-bottom:10px;}
+    #cm-body .btn.sm{min-height:40px;}
+    .tt-type{padding:8px 12px 8px 8px;}
+  }
 </style>
 </head>
 <body>
@@ -428,6 +434,7 @@
     <div class="card">
       <h2>ใครทำอะไรได้บ้าง <span class="tag">สิทธิ์พนักงาน</span></h2>
       <div class="note" style="margin:0 0 12px">ตารางนี้อ่านจากชีท <b>Employees</b> ใน Google Sheet แบบสด หากต้องการเปลี่ยนสิทธิ์ ให้แก้ที่ชีทนั้น: คอลัมน์ <b>role</b> (ใส่ <code>admin</code> = แอดมิน, ว่าง = พนักงานทั่วไป) และคอลัมน์ <b>depts</b> (แผนกที่รับผิดชอบ เช่น <code>CADCAM</code>, <code>All ceramic, QC</code>, <code>Admin</code>) มีผลภายในประมาณ 20 วินาที ไม่ต้องล็อกอินใหม่ ไม่ต้องแก้โค้ด</div>
+      <div id="perm-gaps"></div>
       <div class="tablewrap"><table id="perm-table"></table></div>
       <div class="note">✓ = ทำได้ | – = ทำไม่ได้ | "แก้สถานะแผนก" = ติ๊ก ✓ / เปลี่ยนสถานะ / ใส่วันที่ เฉพาะแผนกที่ระบุไว้ในช่องถัดไป</div>
     </div>
@@ -632,7 +639,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 // CONFIG: paste your Google Apps Script Web App URL here (ends with /exec)
 // See GoogleAppsScript_Code.gs for setup instructions.
 const API_URL = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW72PIa_dXj--LRPBXGJupKbuI-ctWxmYADGJ7-Pwl6SVo5tKpFX/exec";
-const APP_VERSION = "2026-10-06 รุ่น 19 (ผังฟันรูปโค้ง)";
+const APP_VERSION = "2026-10-06 รุ่น 21 (ปุ่มใหญ่บนมือถือ + ยืนยันก่อนยกเลิก)";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -873,8 +880,8 @@ function progressStrip(r){
     const rec = depRecord(r, d.key);
     const sym = SYMBOLS[rec.status] || ['?','s-na'];
     let tip = d.label + ': ' + rec.status;
-    if(rec.start) tip += ' • เริ่ม ' + fmtDate(rec.start);
-    if(rec.end) tip += ' • เสร็จ ' + fmtDate(rec.end);
+    if(rec.start) tip += ' • เริ่ม ' + fmtStamp(rec.start);
+    if(rec.end) tip += ' • เสร็จ ' + fmtStamp(rec.end);
     return `<i class="${sym[1]}${curKeys.has(d.key)?' cur':''}" title="${esc(tip)}">${sym[0]}</i>`;
   }).join('') + '</span>';
 }
@@ -1038,7 +1045,7 @@ function buildOrderForm(){
     div.innerHTML = inner;
     wrap.appendChild(div);
   });
-  document.getElementById('f_date_received').valueAsDate = new Date();
+  document.getElementById('f_date_received').value = todayLocal();
   FORM_FIELDS.forEach(f=>{ if(f.default){ const el = document.getElementById('f_' + f.key); if(el) el.value = f.default; } });   // e.g. สถานะรวม = รับเข้าระบบ, ประเภทเคส = ปกติ
   document.getElementById('f_doctor').setAttribute('list', 'dl-doctors');
   const hs = document.getElementById('f_has_scan');
@@ -1080,7 +1087,7 @@ function buildOrderForm(){
   });
   refreshClinicSelect();
   applyDeptRelevance();
-  const todayStr = new Date().toISOString().slice(0,10);
+  const todayStr = todayLocal();
   const oiSel = document.getElementById('fd_order_intake');
   if(oiSel){
     oiSel.value = 'เสร็จแล้ว';
@@ -1278,10 +1285,12 @@ async function patchOrder(id, patch){
 }
 async function setStep(id, deptKey, action){
   const o = orderById(id); if(!o) return;
-  const today = new Date().toISOString().slice(0,10), cur = depRecord(o, deptKey);
+  const today = nowStamp(), cur = depRecord(o, deptKey);
   if(action === 'start') await setDeptRecord(id, deptKey, {status:'กำลังดำเนินการ', start: cur.start || today});
   else if(action === 'done') await setDeptRecord(id, deptKey, {status:'เสร็จแล้ว', end: today});
   else if(action === 'undo') await setDeptRecord(id, deptKey, {status:'รอดำเนินการ', end:''});
+  else if(action === 'enable') await setDeptRecord(id, deptKey, {status:'รอดำเนินการ'});
+  else if(action === 'skip') await setDeptRecord(id, deptKey, {status:'ไม่เกี่ยวข้อง'});
 }
 function safeUrl(u){ return /^https?:\/\//i.test(String(u || '')) ? String(u) : ''; }
 function caseLink(r){
@@ -1300,7 +1309,7 @@ function fmtStamp(t){
   if(!t) return '';
   if(/^\d{4}-\d{2}-\d{2}$/.test(t)) return fmtDate(t);
   const d = new Date(t);
-  return isNaN(d) ? String(t) : d.toLocaleString('th-TH', {dateStyle:'short', timeStyle:'short'});
+  return isNaN(d) ? String(t) : d.toLocaleDateString('th-TH') + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ' น.';
 }
 function timelineOf(o){
   const ev = [];
@@ -1337,14 +1346,18 @@ function renderCase(){
   document.getElementById('cm-title').textContent = 'เคส ' + (o.case_id || '-');
   const f = (label, v) => `<div><b>${esc(label)}</b>${esc(v === undefined || v === null || v === '' ? '-' : v)}</div>`;
   const steps = DEPARTMENTS.filter(d=>mine.includes(d.key) && depRecord(o, d.key).status !== 'ไม่เกี่ยวข้อง');
+  const skipped = DEPARTMENTS.filter(d=>mine.includes(d.key) && depRecord(o, d.key).status === 'ไม่เกี่ยวข้อง');
+  const DONE_LABEL = {delivery:'✓ ส่งมอบแล้ว', receive:'✓ รับของแล้ว', abutment:'✓ สั่งแล้ว', billing:'✓ ออกบิลแล้ว', model_printing:'✓ พิมพ์เสร็จ'};
   const stepHtml = steps.length ? steps.map(d=>{
     const r = depRecord(o, d.key), done = r.status === 'เสร็จแล้ว';
-    const meta = done ? ('เสร็จ ' + (r.end ? fmtDate(r.end) : '') + (r.by ? ' • โดย ' + r.by : '')) : r.status + (r.start ? ' • เริ่ม ' + fmtDate(r.start) : '');
+    const who = r.by || (d.key === 'order_intake' ? (o.created_by || '') : '');
+    const meta = done ? ('เสร็จ ' + (r.end ? fmtStamp(r.end) : '') + (who ? ' • โดย ' + who : '')) : r.status + (r.start ? ' • เริ่ม ' + fmtStamp(r.start) : '');
     return `<div class="cm-step ${curKeys.has(d.key) ? 'cur' : ''}"><span class="nm">${esc(d.label)}</span><span class="meta">${esc(meta)}${curKeys.has(d.key) ? ' ◀ ขั้นตอนปัจจุบัน' : ''}</span>` +
       (done ? `<button class="btn ghost sm" data-step="undo" data-dept="${esc(d.key)}">↩ ยกเลิกเสร็จ</button>`
             : (r.status === 'กำลังดำเนินการ' ? '' : `<button class="btn ghost" data-step="start" data-dept="${esc(d.key)}">▶ เริ่มทำ</button>`) +
-              `<button class="btn primary big" data-step="done" data-dept="${esc(d.key)}">✓ เสร็จแล้ว</button>`) + '</div>';
+              `<button class="btn primary big" data-step="done" data-dept="${esc(d.key)}">${DONE_LABEL[d.key] || '✓ เสร็จแล้ว'}</button><button class="btn ghost sm" data-step="skip" data-dept="${esc(d.key)}" title="ขั้นตอนนี้ไม่เกี่ยวกับเคสนี้">ข้ามขั้นตอน</button>`) + '</div>';
   }).join('') : '<div class="note">คุณไม่มีขั้นตอนที่อัปเดตได้ในเคสนี้ (หรือขั้นตอนของคุณไม่เกี่ยวกับเคสนี้)</div>';
+  const skippedHtml = skipped.length ? '<div class="note" style="margin:10px 0 6px">ขั้นตอนของคุณที่ถูกข้ามไว้ (ไม่เกี่ยวข้อง) — ถ้าเคสนี้ต้องใช้ กดเปิดใช้ได้</div>' + skipped.map(d=>`<div class="cm-step" style="opacity:.85"><span class="nm">${esc(d.label)}</span><span class="meta">ไม่เกี่ยวข้องกับเคสนี้</span><button class="btn ghost sm" data-step="enable" data-dept="${esc(d.key)}">เปิดใช้ขั้นตอนนี้</button></div>`).join('') : '';
   const notes = notesOf(o._id);
   const tl = timelineOf(o);
   document.getElementById('cm-body').innerHTML = `
@@ -1358,7 +1371,7 @@ function renderCase(){
       ${f('ระบบรากฟัน', o.implant_system)}${f('ตำแหน่งฟัน', o.position)}${f('สี', o.color)}
       ${f('วัสดุ', o.material)}${f('จำนวน (ซี่)', o.qty)}${f('ระบบสแกน', o.scan_system)}
       ${toothTypesText(o.tooth_types) ? `<div style="grid-column:1/-1"><b>ชนิดงานรายซี่</b>${esc(toothTypesText(o.tooth_types))}</div>` : ''}${f('มีไฟล์สแกน', o.has_scan === 'มี' ? 'มี (พิมพ์โมเดล)' : 'ไม่มี')}
-      ${f('วันรับงาน', fmtDate(o.date_received))}${f('วันนัดคนไข้', o.appointment_date ? fmtDate(o.appointment_date) : '')}${f('วันส่งงานจริง', deliveredDate(o) ? fmtDate(deliveredDate(o)) : '')}
+      ${f('วันรับงาน', fmtDate(o.date_received))}${f('วันนัดคนไข้', o.appointment_date ? fmtDate(o.appointment_date) : '')}${f('วันส่งงานจริง', deliveredDate(o) ? fmtStamp(deliveredDate(o)) : '')}
       ${f('ประเภทเคส', (o.case_type === 'คูปอง' ? 'คูปอง' + (o.coupon_status ? ' (' + o.coupon_status + ')' : '') : 'ปกติ') + (o.is_rework === true ? ' • งานแก้' : ''))}${f('วิธีจัดส่ง', o.delivery_method)}${f('คีย์โดย', o.created_by)}
     </div>
     ${o.detail ? `<div class="cm-note"><small>รายละเอียด / หมายเหตุ</small>${esc(o.detail)}</div>` : ''}
@@ -1367,7 +1380,7 @@ function renderCase(){
       <button class="btn ghost sm" id="cm-print">🖨 พิมพ์ใบงาน (มี QR)</button>
       ${admin ? '<button class="btn ghost sm" id="cm-edit">✏️ แก้ไขเคส</button>' : ''}
     </div>
-    <div class="cm-sec"><h3>ขั้นตอนของคุณ</h3>${stepHtml}</div>
+    <div class="cm-sec"><h3>ขั้นตอนของคุณ</h3>${stepHtml}${skippedHtml}</div>
     <div class="cm-sec"><h3>ไฟล์ / การจัดส่ง</h3>
       <div class="grid form">
         <div class="field"><label>ลิงก์ไฟล์ / ภาพ</label><input id="cm-file" value="${esc(o.file_link || '')}" placeholder="https://drive.google.com/..."></div>
@@ -1385,9 +1398,11 @@ function renderCase(){
     <div class="cm-sec" style="text-align:center"><div style="display:inline-block">${qrSvg(caseUrl(o.case_id), 110)}<div class="note" style="margin:2px 0 0">QR ของเคสนี้ (สแกนเพื่อเปิดหน้านี้)</div></div></div>`;
   const body = document.getElementById('cm-body');
   body.querySelectorAll('[data-step]').forEach(b=>b.addEventListener('click', async ()=>{
+    if(b.dataset.step === 'skip' && !window.confirm('ข้ามขั้นตอนนี้ (ไม่เกี่ยวข้องกับเคสนี้)?')) return;
+    if(b.dataset.step === 'undo' && !window.confirm('ยกเลิกสถานะ "เสร็จ" ของขั้นตอนนี้? (เคสจะกลับไปรอทำ)')) return;
     b.disabled = true;
     await setStep(CASE_OPEN_ID, b.dataset.dept, b.dataset.step);
-    showToast(b.dataset.step === 'done' ? '✓ บันทึกว่าทำเสร็จแล้ว' : b.dataset.step === 'start' ? '▶ เริ่มทำแล้ว' : 'ยกเลิกเครื่องหมายแล้ว');
+    showToast({done:'✓ บันทึกแล้ว ' + nowStamp().replace('T', ' เวลา '), start:'▶ เริ่มทำแล้ว', undo:'ยกเลิกเครื่องหมายแล้ว', enable:'เปิดใช้ขั้นตอนแล้ว', skip:'ข้ามขั้นตอนแล้ว'}[b.dataset.step]);
     renderAll(); renderCase();
   }));
   document.getElementById('cm-copy').addEventListener('click', ()=>copyText(caseText(o), 'คัดลอกรายละเอียดแล้ว ✓'));
@@ -2013,6 +2028,11 @@ function renderPerm(){
   if(!EMPLOYEE_LIST.length){ t.innerHTML = '<tr><td class="empty">ยังไม่มีรายชื่อพนักงาน</td></tr>'; return; }
   const labelOf = k => (DEPARTMENTS.find(d=>d.key === k) || {label:k}).label;
   const yes = '<b style="color:#2F7D4F">✓</b>', no = '<span style="color:#aaa">–</span>';
+  const gapEl = document.getElementById('perm-gaps');
+  if(gapEl){
+    const gaps = DEPARTMENTS.filter(d=>d.key !== 'order_intake' && !EMPLOYEE_LIST.some(e=>!isAdminUser(e) && allowedDeptKeys(e).includes(d.key)));
+    gapEl.innerHTML = gaps.length ? '<div class="note" style="color:var(--rose);font-weight:600;margin:0 0 10px">⚠ แผนกที่ยังไม่มีพนักงานทั่วไปรับผิดชอบ (มีแต่แอดมินที่กดได้): ' + gaps.map(d=>esc(d.label)).join(', ') + ' — เพิ่มชื่อพนักงานในชีท Employees แล้วใส่แผนกในช่อง depts (เช่น <code>Delivery</code> สำหรับคนส่งของ)</div>' : '';
+  }
   const head = ['พนักงาน','ทีม (department)','ระดับ','เมนูที่เห็น','สร้างออเดอร์','แก้ไข / ลบออเดอร์','สรุปหมอ / คลินิก / แดชบอร์ด','แก้สถานะแผนก (เฉพาะแผนกนี้)'];
   const rows = EMPLOYEE_LIST.map(e=>{
     const admin = isAdminUser(e);
@@ -2388,7 +2408,7 @@ document.getElementById('bl-pdf').addEventListener('click', ()=>{
 // ---------- Daily delivery sheet ----------
 function dvGroupKey(r, by){ return by === 'clinic' ? rpName(r, 'clinic') : (String(r.delivery_method || '').trim() || 'ยังไม่ระบุวิธีส่ง'); }
 function dvLists(){
-  const date = document.getElementById('dv-date').value || new Date().toISOString().slice(0,10);
+  const date = document.getElementById('dv-date').value || todayLocal();
   const all = NEW_ORDERS.map(withEffectiveStatus);
   const ready = all.filter(r=>currentDeptOf(r).key === 'delivery');
   const done = all.filter(r=>{ const rec = depRecord(r, 'delivery'); return rec.status === 'เสร็จแล้ว' && String(rec.end || '').slice(0,10) === date; });
@@ -2402,25 +2422,25 @@ function dvGroups(list, by){
 function renderDelivery(){
   const dEl = document.getElementById('dv-date');
   if(!dEl) return;
-  if(!dEl.value) dEl.value = new Date().toISOString().slice(0,10);
+  if(!dEl.value) dEl.value = todayLocal();
   const by = document.getElementById('dv-group').value;
   const {date, ready, done} = dvLists();
   document.getElementById('dv-tag').textContent = fmtDate(date);
   document.getElementById('dv-ready-n').textContent = ready.length;
   document.getElementById('dv-done-n').textContent = done.length;
-  const head = '<tr><th>ส่งแล้ว ✓</th><th>เลขเคส</th><th>คลินิก</th><th>คนไข้</th><th>วัสดุ</th><th>ซี่</th><th>วิธีส่ง</th><th>เลขพัสดุ</th></tr>';
-  const build = (list, checked) => list.length ? head + dvGroups(list, by).map(g=>
-    `<tr class="grp"><td colspan="8">${esc(g.key)} — ${g.rows.length} เคส ${g.rows.reduce((a,r)=>a + (parseFloat(r.qty) || 0), 0)} ซี่</td></tr>` +
+  const headOf = t => '<tr><th>ส่งแล้ว ✓</th><th>เลขเคส</th><th>คลินิก</th><th>คนไข้</th><th>วัสดุ</th><th>ซี่</th><th>วิธีส่ง</th><th>เลขพัสดุ</th>' + (t ? '<th>เวลาที่ส่ง</th>' : '') + '</tr>';
+  const build = (list, checked) => list.length ? headOf(checked) + dvGroups(list, by).map(g=>
+    `<tr class="grp"><td colspan="${checked ? 9 : 8}">${esc(g.key)} — ${g.rows.length} เคส ${g.rows.reduce((a,r)=>a + (parseFloat(r.qty) || 0), 0)} ซี่</td></tr>` +
     g.rows.map(r=>`<tr><td style="text-align:center"><input type="checkbox" class="dv-tick" data-id="${esc(r._id)}" ${checked ? 'checked' : ''} style="width:22px;height:22px;accent-color:#0E6E6E"></td>
       <td>${caseLink(r)}</td><td>${esc(rpName(r, 'clinic'))}</td><td>${esc(r.patient ?? '-')}</td><td>${esc(rpMaterial(r))}</td><td>${esc(r.qty ?? '-')}</td><td>${esc(r.delivery_method || '-')}</td>
-      <td><input class="dv-track" data-id="${esc(r._id)}" value="${esc(r.tracking_no || '')}" placeholder="เลขพัสดุ" style="width:150px;padding:4px 6px"></td></tr>`).join('')).join('')
+      <td><input class="dv-track" data-id="${esc(r._id)}" value="${esc(r.tracking_no || '')}" placeholder="เลขพัสดุ" style="width:150px;padding:4px 6px"></td>${checked ? '<td>' + esc(fmtStamp(depRecord(r, 'delivery').end)) + '</td>' : ''}</tr>`).join('')).join('')
     : '<tr><td class="empty">ไม่มีรายการ</td></tr>';
   const keep = document.activeElement && document.activeElement.classList && document.activeElement.classList.contains('dv-track');
   if(!keep){
     document.getElementById('dv-ready').innerHTML = build(ready, false);
     document.getElementById('dv-done').innerHTML = build(done, true);
     document.querySelectorAll('#view-delivery .dv-tick').forEach(cb=>cb.addEventListener('change', async ()=>{
-      if(cb.checked) await setDeptRecord(cb.dataset.id, 'delivery', {status:'เสร็จแล้ว', end: document.getElementById('dv-date').value || date});
+      if(cb.checked) await setDeptRecord(cb.dataset.id, 'delivery', {status:'เสร็จแล้ว', end: stampForDate(document.getElementById('dv-date').value || date)});
       else await setDeptRecord(cb.dataset.id, 'delivery', {status:'รอดำเนินการ', end:''});
       showToast(cb.checked ? '✓ บันทึกว่าส่งแล้ว' : 'ยกเลิกการส่งแล้ว');
       renderAll();
@@ -2462,11 +2482,11 @@ function exportAllXlsx(){
     .concat(all.map(o=>[o.case_id, fmtCE(o.date_received), o.clinic, o.doctor, o.patient, o.implant_system, o.position, toothTypesText(o.tooth_types), o.has_scan === 'มี' ? 'มี' : '', o.color, o.material, parseFloat(o.qty) || 0,
       o.scan_system, o.delivery_method, o.tracking_no, o.appointment_date ? fmtCE(o.appointment_date) : '', o.case_type === 'คูปอง' ? 'คูปอง' : 'ปกติ', o.coupon_status,
       o.is_rework === true ? 'ใช่' : '', o.status, delSet.has(o._id) ? 'ใช่' : '', o.created_by, o.file_link, o.detail].map(v=>typeof v === 'number' ? v : String(v ?? '').replace(/[\r\n]+/g, ' '))));
-  const dRows = [['เลขเคส','แผนก','สถานะ','วันเริ่ม','วันเสร็จ','ผู้ทำ']];
-  all.forEach(o=>DEPARTMENTS.forEach(d=>{ const r = depRecord(o, d.key); if(r.status !== 'ไม่เกี่ยวข้อง') dRows.push([String(o.case_id ?? ''), d.label, r.status, r.start || '', r.end || '', r.by || '']); }));
+  const dRows = [['เลขเคส','แผนก','สถานะ','เริ่ม (วัน-เวลา)','เสร็จ (วัน-เวลา)','ผู้ทำ']];
+  all.forEach(o=>DEPARTMENTS.forEach(d=>{ const r = depRecord(o, d.key); if(r.status !== 'ไม่เกี่ยวข้อง') dRows.push([String(o.case_id ?? ''), d.label, r.status, fmtStamp(r.start), fmtStamp(r.end), r.by || '']); }));
   const nRows = [['เลขเคส','เวลา','ผู้เขียน','โน้ต']];
   all.forEach(o=>notesOf(o._id).forEach(n=>nRows.push([String(o.case_id ?? ''), fmtStamp(n.t), n.by || '', n.text])));
-  const stamp = new Date().toISOString().slice(0,10);
+  const stamp = todayLocal();
   downloadXlsx('สำรองข้อมูลทั้งหมด ' + stamp + '.xlsx', [{name:'ออเดอร์', rows:oRows}, {name:'สถานะแผนก', rows:dRows}, {name:'โน้ต', rows:nRows}]);
 }
 document.getElementById('export-all').addEventListener('click', exportAllXlsx);
@@ -2706,7 +2726,7 @@ async function handleContactFile(file){
 function exportContactsXlsx(){
   if(!CONTACTS.length){ showToast('ยังไม่มีรายชื่อ'); return; }
   const head = ['รหัส','ชื่อ (ออกบิล)','ชื่อที่ใช้ในออเดอร์','ประเภท','เลขประจำตัวผู้เสียภาษี','สาขา','ที่อยู่','โทร','อีเมล','ผู้ติดต่อ','หมายเหตุ','ที่มา'];
-  downloadXlsx('รายชื่อผู้ติดต่อ ' + new Date().toISOString().slice(0,10) + '.xlsx', [{name:'ผู้ติดต่อ', rows:[head].concat(CONTACTS.map(c=>[c.code, c.name, c.alias, c.type, c.tax_id, c.branch, c.address, c.phone, c.email, c.contact_person, c.note, c.source]))}]);
+  downloadXlsx('รายชื่อผู้ติดต่อ ' + todayLocal() + '.xlsx', [{name:'ผู้ติดต่อ', rows:[head].concat(CONTACTS.map(c=>[c.code, c.name, c.alias, c.type, c.tax_id, c.branch, c.address, c.phone, c.email, c.contact_person, c.note, c.source]))}]);
 }
 document.getElementById('ct-q').addEventListener('input', renderContacts);
 document.getElementById('ct-type').addEventListener('change', renderContacts);
@@ -3007,11 +3027,22 @@ function buildDeptChips(){
   const sel = document.getElementById('dep-f-status');
   sel.innerHTML = '<option value="">สถานะแผนกทั้งหมด</option>' + DEP_STATUSES.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join('');
 }
+function pad2(n){ return String(n).padStart(2, '0'); }
+function todayLocal(){ return ymdLocal(new Date()); }
+function nowStamp(){ const d = new Date(); return ymdLocal(d) + 'T' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()); }
+// a chosen day + the current time (when the day is today); a past day stays date-only because the real time is unknown
+function stampForDate(dateStr){ return (!dateStr || dateStr === todayLocal()) ? nowStamp() : dateStr; }
 function toDateInputVal(v){
   if(!v) return '';
+  const m = /^(\d{4}-\d{2}-\d{2})/.exec(String(v));
+  if(m) return m[1];
   const d = new Date(v);
-  if(isNaN(d)) return '';
-  return d.toISOString().slice(0,10);
+  return isNaN(d) ? '' : ymdLocal(d);
+}
+function toDateTimeInputVal(v){
+  if(!v) return '';
+  const m = /^(\d{4}-\d{2}-\d{2})(?:[T ](\d{2}:\d{2}))?/.exec(String(v));
+  return m ? m[1] + 'T' + (m[2] || '00:00') : '';
 }
 function renderDept(){
   renderLegends();
@@ -3041,7 +3072,7 @@ function renderDept(){
 
   const t = document.getElementById('dept-table');
   if(!rows.length){ t.innerHTML = '<tr><td class="empty">ไม่มีเคสที่เกี่ยวข้องกับแผนกนี้ตามเงื่อนไข</td></tr>'; return; }
-  const header = ['ทำแล้ว ✓','เลขเคส','คลินิก','คนไข้','วัสดุ','จำนวน','วันรับงาน','วันนัด (deadline)','ค้างในแผนก','ความคืบหน้า','สถานะแผนกนี้','วันเริ่ม','วันเสร็จ','ทำโดย',''];
+  const header = ['ทำแล้ว ✓','เลขเคส','คลินิก','คนไข้','วัสดุ','จำนวน','วันรับงาน','วันนัด (deadline)','ค้างในแผนก','ความคืบหน้า','สถานะแผนกนี้','เริ่ม (วัน-เวลา)','เสร็จ (วัน-เวลา)','ทำโดย',''];
   let html = '<tr>'+header.map(h=>`<th>${h}</th>`).join('')+'</tr>';
   rows.slice(0,300).forEach(({r,rec})=>{
     const overdue = isOverdue(r) && !['เสร็จแล้ว','ยกเลิก'].includes(rec.status);
@@ -3058,8 +3089,8 @@ function renderDept(){
       <td>${isActiveAt(r, CURRENT_DEPT) ? daysCell(daysAtDept(r, CURRENT_DEPT)) : '-'}</td>
       <td>${progressStrip(r)}</td>
       <td><select class="dep-row-select" data-id="${esc(r._id)}">${DEP_STATUSES.map(s=>`<option value="${esc(s)}" ${s===rec.status?'selected':''}>${esc(s)}</option>`).join('')}</select></td>
-      <td><input type="date" class="dep-row-start" data-id="${esc(r._id)}" value="${toDateInputVal(rec.start)}" style="font-size:12px;padding:4px"></td>
-      <td><input type="date" class="dep-row-end" data-id="${esc(r._id)}" value="${toDateInputVal(rec.end)}" style="font-size:12px;padding:4px"></td>
+      <td><input type="datetime-local" class="dep-row-start" data-id="${esc(r._id)}" value="${toDateTimeInputVal(rec.start)}" style="font-size:12px;padding:4px"></td>
+      <td><input type="datetime-local" class="dep-row-end" data-id="${esc(r._id)}" value="${toDateTimeInputVal(rec.end)}" style="font-size:12px;padding:4px"></td>
       <td>${isDone ? esc(rec.by || '-') : '-'}</td>
       <td>${overdue?'<span class="badge b-hold">เกินกำหนด</span>':''}</td>
     </tr>`;
@@ -3072,10 +3103,10 @@ function renderDept(){
       const startInput = row ? row.querySelector('.dep-row-start') : null;
       const endInput = row ? row.querySelector('.dep-row-end') : null;
       if(sel.value==='กำลังดำเนินการ' && startInput && !startInput.value){
-        startInput.value = new Date().toISOString().slice(0,10); rec.start = startInput.value;
+        startInput.value = nowStamp(); rec.start = startInput.value;
       }
       if(sel.value==='เสร็จแล้ว' && endInput && !endInput.value){
-        endInput.value = new Date().toISOString().slice(0,10); rec.end = endInput.value;
+        endInput.value = nowStamp(); rec.end = endInput.value;
       }
       await setDeptRecord(sel.dataset.id, CURRENT_DEPT, rec);
       showToast('อัปเดตสถานะแผนก '+DEPARTMENTS.find(d=>d.key===CURRENT_DEPT).label+' แล้ว');
@@ -3085,7 +3116,7 @@ function renderDept(){
   });
   t.querySelectorAll('.dep-tick').forEach(cb=>{
     cb.addEventListener('change', async ()=>{
-      const today = new Date().toISOString().slice(0,10);
+      const today = nowStamp();
       if(cb.checked){
         await setDeptRecord(cb.dataset.id, CURRENT_DEPT, {status:'เสร็จแล้ว', end: today});
         showToast('✓ บันทึกว่าทำเสร็จแล้ว (ดูได้ที่มุมมอง "ทำเสร็จแล้ว")');
@@ -3247,7 +3278,8 @@ function renderSearch(){
   t.innerHTML = '<tr>'+labels.map(l=>`<th>${l}</th>`).join('')+'</tr>' +
     data.slice(0,300).map(r0=>{ const r = Object.assign({}, r0, {cur_dept: currentDeptLabel(r0), cur_people: currentPeople(r0), cur_days: currentDays(r0), date_delivered: deliveredDate(r0)}); return '<tr>'+cols.map(c=>{
       if(c==='status') return `<td><span class="badge ${STATUS_BADGE[r.status]||''}">${esc(r.status||'-')}</span></td>`;
-      if(c==='date_received' || c==='date_delivered') return `<td>${esc(fmtDate(r[c]))}</td>`;
+      if(c==='date_received') return `<td>${esc(fmtDate(r[c]))}</td>`;
+      if(c==='date_delivered') return `<td>${esc(r[c] ? fmtStamp(r[c]) : '-')}</td>`;
       if(c==='progress') return `<td>${progressStrip(r)}</td>`;
       if(c==='case_id') return `<td>${caseLink(r)}</td>`;
       if(c==='cur_days') return `<td>${daysCell(r[c])}</td>`;
@@ -3443,7 +3475,7 @@ function depRelevance(material, needAbutment, hasScan){
   // press-only materials are pressed at ALL CERAMIC, not milled
   if(/press/.test(m) && !/zir/.test(m)) rel.milling = false;
   // colour / glaze step applies to crown & bridge work, not to models, guides or temporaries
-  if(!(/print model|guide/.test(m) || (/temp/.test(m) && /pmma/.test(m)) || m === '')) rel.all_ceramic = true;
+  if(!(/print model|guide/.test(m) || (/temp/.test(m) && /pmma/.test(m)))) rel.all_ceramic = true;
   return rel;
 }
 function applyDeptRelevance(){
