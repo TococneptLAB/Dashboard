@@ -210,6 +210,18 @@
   .up-bar i{display:block;height:100%;background:var(--teal);width:0;transition:width .2s;}
   #img-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:120;align-items:center;justify-content:center;flex-direction:column;gap:10px;padding:12px;}
   #img-lightbox img{max-width:100%;max-height:82vh;border-radius:8px;background:#fff;}
+  .ct-sec{border-top:1px solid var(--line);margin-top:10px;padding-top:6px;}
+  .ct-sec summary{font-weight:700;cursor:pointer;margin:4px 0 8px;font-size:15px;}
+  .ct-radios{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin:6px 0 10px;font-size:14px;}
+  .ct-radios label{display:flex;gap:6px;align-items:center;margin:0;font-weight:600;color:var(--ink);cursor:pointer;}
+  .ct-radios input[type=radio]{width:auto;margin:0;}
+  .ct-hit{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:6px 10px;border:1px solid var(--line);border-radius:8px;margin-top:6px;background:#fff;font-size:13px;}
+  #server-banner{display:none;background:#FBE9E7;border:1px solid #E5A39B;color:#8A2B1F;border-radius:10px;padding:10px 14px;margin:10px 0;font-size:13.5px;font-weight:600;line-height:1.5;}
+  .fl-grp{margin-bottom:10px;}
+  .fl-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0;padding:4px 8px;background:#EEF3F2;border-radius:8px;font-size:13.5px;}
+  .ab-card{background:#FBF7EE;border:1px solid #E9D9B0;border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:13.5px;}
+  .ab-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:4px 14px;margin:6px 0;}
+  @media(max-width:600px){.ab-grid{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
@@ -269,10 +281,12 @@
       <span>สวัสดี, <b id="user-name-display"></b></span>
       <button id="logout-btn">ออกจากระบบ</button>
     </div>
-    <nav class="tabs">
+    <div id="server-banner"></div>
+  <nav class="tabs">
       <button data-tab="order" class="active">สร้างออเดอร์</button>
       <button data-tab="pending">งานค้าง</button>
       <button data-tab="delivery">ใบนำส่ง</button>
+      <button data-tab="abutment">รอ Abutment</button>
       <button data-tab="dept">สถานะแผนก</button>
       <button data-tab="dash">แดชบอร์ด</button>
       <button data-tab="overview">ภาพรวมรายได้</button>
@@ -297,6 +311,13 @@
         <div id="tooth-types" class="tt-types"></div>
         <div class="tt-wrap"><div id="tooth-chart"></div></div>
         <div id="tooth-summary" class="note" style="margin-top:6px"></div>
+      </div>
+      <div id="order-files-block" style="margin:18px 0 4px">
+        <h2 style="font-size:15px;margin:0 0 4px">ไฟล์แนบออเดอร์ <span class="tag">UPLOAD</span></h2>
+        <div class="note" style="margin:0 0 8px">แนบไฟล์สแกน (STL / PLY / OBJ) รูป ใบสั่งงาน หรือ PDF ที่ได้จากคลินิก ระบบอัปโหลดขึ้น Google Drive ให้เมื่อกด "บันทึกออเดอร์" ทีมถัดไปเปิดเคส (หรือสแกน QR) แล้วดาวน์โหลดไปใช้ได้เลย • แนบเพิ่มทีหลังได้ในหน้าเคส • ถ้ามีไฟล์สแกน ระบบเปิดขั้น MODEL PRINTING ให้อัตโนมัติ</div>
+        <div class="actions"><label class="btn ghost" for="of-cam" style="cursor:pointer">📷 ถ่ายรูป</label><input id="of-cam" type="file" accept="image/*" capture="environment" style="display:none"><label class="btn primary" for="of-pick" style="cursor:pointer">📎 เลือกไฟล์ (หลายไฟล์ได้)</label><input id="of-pick" type="file" multiple style="display:none"></div>
+        <div id="of-list" style="margin-top:8px"></div>
+        <div id="order-upload-progress" style="margin-top:6px"></div>
       </div>
       <h2 id="order-dept-title" style="margin-top:18px">สถานะเริ่มต้นแต่ละแผนก</h2>
       <div class="grid form" id="order-dept-form"></div>
@@ -558,22 +579,57 @@
       </div>
       <div id="ct-import" class="cm-note" style="display:none"></div>
       <div id="ct-form-wrap" class="cm-note" style="display:none">
-        <b id="ct-form-title"></b>
-        <div class="grid form" style="margin-top:8px">
-          <div class="field"><label>รหัสผู้ติดต่อ</label><input id="ctf_code"></div>
-          <div class="field"><label>ชื่อ (ตามกฎหมาย / ที่ใช้ออกบิล) *</label><input id="ctf_name"></div>
-          <div class="field"><label>ชื่อที่ใช้ในออเดอร์ (ชื่อเรียก/ชื่อย่อ)</label><input id="ctf_alias" list="dl-clinics"></div>
-          <div class="field"><label>ประเภท</label><select id="ctf_type"><option value="ลูกค้า">ลูกค้า</option><option value="ซัพพลายเออร์">ซัพพลายเออร์</option><option value="อื่นๆ">อื่นๆ</option><option value="">ยังไม่จัดประเภท</option></select></div>
-          <div class="field"><label>เลขประจำตัวผู้เสียภาษี</label><input id="ctf_tax"></div>
-          <div class="field"><label>สาขา (00000 = สำนักงานใหญ่)</label><input id="ctf_branch"></div>
-          <div class="field" style="grid-column:1/-1"><label>ที่อยู่</label><input id="ctf_address"></div>
-          <div class="field"><label>เบอร์โทร</label><input id="ctf_phone"></div>
-          <div class="field"><label>อีเมล</label><input id="ctf_email"></div>
-          <div class="field"><label>ผู้ติดต่อ</label><input id="ctf_person"></div>
-          <div class="field" style="grid-column:1/-1"><label>ชื่อเดิม / ชื่อที่เคยใช้ (คั่นด้วย ; ) — เคสเก่าที่ใช้ชื่อเหล่านี้จะถูกนับรวมกับคลินิกนี้ในรายงานและบิล</label><input id="ctf_former" placeholder="เช่น Dental hug; DentalHug"></div>
-          <div class="field"><label>หมายเหตุ</label><input id="ctf_note"></div>
+        <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start">
+          <b id="ct-form-title" style="font-size:18px"></b>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <div class="field" style="min-width:170px"><label>ประเภทผู้ติดต่อ</label><select id="ctf_type"><option value="ลูกค้า">ลูกค้า</option><option value="ซัพพลายเออร์">ซัพพลายเออร์</option><option value="อื่นๆ">อื่นๆ</option><option value="">ไม่ระบุ</option></select></div>
+            <div class="field" style="min-width:150px"><label>รหัสผู้ติดต่อ <span id="ctf_code_n" style="font-weight:400;color:var(--muted)"></span></label><input id="ctf_code" maxlength="14"></div>
+          </div>
         </div>
-        <div class="actions" style="margin-top:8px"><button class="btn primary" id="ctf-save">💾 บันทึก</button><button class="btn ghost" id="ctf-cancel">ยกเลิก</button></div>
+        <details open class="ct-sec"><summary>ข้อมูลกิจการ</summary>
+          <div class="ct-radios"><label><input type="radio" name="ctf_entity" value="juristic" checked> นิติบุคคล</label><label><input type="radio" name="ctf_entity" value="person"> บุคคลธรรมดา</label></div>
+          <div class="grid form">
+            <div class="field"><label>เลขทะเบียนภาษี 13 หลัก <span id="ctf_tax_n" style="font-weight:400;color:var(--muted)">0/13</span></label>
+              <div style="display:flex;gap:8px"><input id="ctf_tax" inputmode="numeric" maxlength="13" placeholder="กรุณาระบุเลข 13 หลัก"><button type="button" class="btn primary sm" id="ctf-search-tax" style="white-space:nowrap">🔍 ค้นหา</button></div>
+              <div id="ctf_tax_msg" class="note" style="margin:4px 0 0"></div></div>
+            <div class="field"><label>สาขา</label>
+              <div class="ct-radios" style="margin:0"><label><input type="radio" name="ctf_br" value="none" checked> ไม่ระบุ</label><label><input type="radio" name="ctf_br" value="hq"> สำนักงานใหญ่</label><label><input type="radio" name="ctf_br" value="branch"> สาขา</label>
+              <input id="ctf_branch" inputmode="numeric" maxlength="5" placeholder="00001" style="width:90px;display:none"></div></div>
+          </div>
+          <div class="grid form">
+            <div class="field"><label id="ctf_nt_label">ประเภทกิจการ</label><select id="ctf_nametype"></select></div>
+            <div class="field"><label id="ctf_core_label">ชื่อกิจการ *</label>
+              <div style="display:flex;gap:8px"><input id="ctf_core"><button type="button" class="btn ghost sm" id="ctf-search-name" style="white-space:nowrap">🔍 ค้นหาด้วยชื่อ</button></div>
+              <div id="ctf_legal" class="note" style="margin:4px 0 0"></div></div>
+          </div>
+          <div id="ctf_results"></div>
+        </details>
+        <details open class="ct-sec"><summary>ชื่อที่ใช้ในแล็บ</summary>
+          <div class="grid form">
+            <div class="field"><label>ชื่อที่ใช้ในออเดอร์ (ชื่อเรียก/ชื่อย่อ)</label><input id="ctf_alias" list="dl-clinics"></div>
+            <div class="field"><label>ชื่อเดิม / ชื่อที่เคยใช้ (คั่นด้วย ; ) — เคสเก่าที่ใช้ชื่อเหล่านี้จะถูกนับรวมกับคลินิกนี้</label><input id="ctf_former" placeholder="เช่น Dental hug; DentalHug"></div>
+          </div>
+        </details>
+        <details open class="ct-sec"><summary>ที่อยู่จดทะเบียน</summary>
+          <div class="grid form">
+            <div class="field"><label>ผู้ติดต่อ</label><input id="ctf_person" maxlength="100"></div>
+            <div class="field"><label>ที่อยู่ (เลขที่ ซอย ถนน อาคาร ห้อง/หมู่บ้าน)</label><input id="ctf_line" maxlength="200" placeholder="กรุณาระบุเลขที่ ซอย ถนน อาคาร ห้องเลขที่ หรือหมู่บ้าน"></div>
+            <div class="field"><label>แขวง / ตำบล</label><input id="ctf_sub" maxlength="100"></div>
+            <div class="field"><label>เขต / อำเภอ</label><input id="ctf_district" maxlength="100"></div>
+            <div class="field"><label>จังหวัด</label><input id="ctf_province" list="dl-provinces" maxlength="100"></div>
+            <div class="field"><label>รหัสไปรษณีย์</label><input id="ctf_postal" inputmode="numeric" maxlength="5"></div>
+          </div>
+        </details>
+        <details open class="ct-sec"><summary>ช่องทางติดต่อ</summary>
+          <div class="grid form">
+            <div class="field"><label>อีเมล</label><input id="ctf_email" maxlength="120" placeholder="email@website.com"></div>
+            <div class="field"><label>เบอร์โทร</label><input id="ctf_phone" maxlength="60" placeholder="099-999-9999"></div>
+            <div class="field"><label>เว็บไซต์</label><input id="ctf_website" maxlength="100" placeholder="www.website.com"></div>
+            <div class="field"><label>เบอร์แฟกซ์</label><input id="ctf_fax" maxlength="30" placeholder="02-090-4301"></div>
+          </div>
+        </details>
+        <div class="field" style="margin-top:6px"><label>หมายเหตุ</label><input id="ctf_note" maxlength="500"></div>
+        <div class="actions" style="margin-top:10px"><button class="btn primary" id="ctf-save">💾 บันทึก</button><button class="btn ghost" id="ctf-cancel">ยกเลิก</button></div>
       </div>
       <div class="filters" id="ct-bulk" style="display:none">
         <span style="font-size:13px">เลือก <b id="ct-sel-n">0</b> รายการ:</span>
@@ -583,6 +639,21 @@
       </div>
       <div class="note">ชื่อที่ใช้ในออเดอร์ คือชื่อที่ช่างและแอดมินเรียก (เช่น "Teeth Time") ใช้เชื่อมกับเคสเก่า และดึงที่อยู่/เลขภาษีมาใส่ใบแจ้งหนี้ ส่วนประเภท "ซัพพลายเออร์/อื่นๆ" จะไม่แสดงในรายการเลือกคลินิกตอนสร้างออเดอร์</div>
       <div class="tablewrap" style="max-height:560px"><table id="ct-table"></table></div>
+    </div>
+  </section>
+
+  <!-- ABUTMENT TAB -->
+  <section id="view-abutment" class="view">
+    <div class="card">
+      <h2>รอ Abutment <span class="tag">ORDER ABUTMENT</span></h2>
+      <div class="kpis" id="ab-kpis"></div>
+      <div class="filters" style="margin-top:12px">
+        <select id="ab-filter"><option value="open">ค้าง (รอสั่ง + สั่งแล้วรอของ)</option><option value="requested">รอสั่ง</option><option value="ordered">สั่งแล้ว รอของ</option><option value="received">ได้รับแล้ว</option><option value="cancelled">ยกเลิก</option><option value="all">ทั้งหมด</option></select>
+        <input id="ab-q" placeholder="ค้นหา: เลขเคส / คลินิก / คนไข้ / ร้าน / ยี่ห้อ" style="min-width:260px">
+        <button class="btn primary sm" id="ab-xlsx">⬇ Excel</button> <button class="btn ghost sm" id="ab-pdf">🖨 PDF</button>
+      </div>
+      <div class="note">ช่างกด "ขอสั่ง Abutment" ในหน้าเคส → เคสมาอยู่ที่นี่ (รอสั่ง) → คนสั่งบันทึกรายละเอียดและกด "สั่งแล้ว" → เมื่อของมากด "ได้รับของแล้ว" ระบบติ๊กขั้นตอน Order Abutment / รับของ ให้เอง ค้างเกินวันที่คาดว่าจะมาจะขึ้นสีแดง</div>
+      <div class="tablewrap" style="max-height:560px"><table id="ab-table"></table></div>
     </div>
   </section>
 
@@ -638,6 +709,8 @@
 <div id="img-lightbox"><img id="lb-img" alt=""><div><a class="btn primary" id="lb-save" style="text-decoration:none;display:inline-block">⬇ บันทึกรูป</a> <button class="btn ghost" id="lb-close" style="background:#fff">✕ ปิด</button></div></div>
 <datalist id="dl-doctors"></datalist>
 <datalist id="dl-clinics"></datalist>
+<datalist id="dl-systems"></datalist>
+<datalist id="dl-provinces"><option value="กระบี่"><option value="กรุงเทพมหานคร"><option value="กาญจนบุรี"><option value="กาฬสินธุ์"><option value="กำแพงเพชร"><option value="ขอนแก่น"><option value="จันทบุรี"><option value="ฉะเชิงเทรา"><option value="ชลบุรี"><option value="ชัยนาท"><option value="ชัยภูมิ"><option value="ชุมพร"><option value="เชียงราย"><option value="เชียงใหม่"><option value="ตรัง"><option value="ตราด"><option value="ตาก"><option value="นครนายก"><option value="นครปฐม"><option value="นครพนม"><option value="นครราชสีมา"><option value="นครศรีธรรมราช"><option value="นครสวรรค์"><option value="นนทบุรี"><option value="นราธิวาส"><option value="น่าน"><option value="บึงกาฬ"><option value="บุรีรัมย์"><option value="ปทุมธานี"><option value="ประจวบคีรีขันธ์"><option value="ปราจีนบุรี"><option value="ปัตตานี"><option value="พระนครศรีอยุธยา"><option value="พะเยา"><option value="พังงา"><option value="พัทลุง"><option value="พิจิตร"><option value="พิษณุโลก"><option value="เพชรบุรี"><option value="เพชรบูรณ์"><option value="แพร่"><option value="ภูเก็ต"><option value="มหาสารคาม"><option value="มุกดาหาร"><option value="แม่ฮ่องสอน"><option value="ยโสธร"><option value="ยะลา"><option value="ร้อยเอ็ด"><option value="ระนอง"><option value="ระยอง"><option value="ราชบุรี"><option value="ลพบุรี"><option value="ลำปาง"><option value="ลำพูน"><option value="เลย"><option value="ศรีสะเกษ"><option value="สกลนคร"><option value="สงขลา"><option value="สตูล"><option value="สมุทรปราการ"><option value="สมุทรสงคราม"><option value="สมุทรสาคร"><option value="สระแก้ว"><option value="สระบุรี"><option value="สิงห์บุรี"><option value="สุโขทัย"><option value="สุพรรณบุรี"><option value="สุราษฎร์ธานี"><option value="สุรินทร์"><option value="หนองคาย"><option value="หนองบัวลำภู"><option value="อ่างทอง"><option value="อำนาจเจริญ"><option value="อุดรธานี"><option value="อุตรดิตถ์"><option value="อุทัยธานี"><option value="อุบลราชธานี"></datalist>
 <div class="toast" id="toast"></div>
 
 <script id="data-blob" type="application/json">{"fields":["source_sheet","is_rework","case_type","coupon_status","case_id","date_received","clinic","doctor","patient","implant_system","detail","position","color","material","qty","unit_label","scan_system","delivery_method","notes","status","dep_design","dep_milling_zirconia","dep_milling_premill","dep_press","dep_porcelain","dep_qc","dep_packing","dep_delivery","sent_flag","date_sent","appointment_date","tech1","tech2"],"rows":[]}</script>
@@ -651,7 +724,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 // CONFIG: paste your Google Apps Script Web App URL here (ends with /exec)
 // See GoogleAppsScript_Code.gs for setup instructions.
 const API_URL = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW72PIa_dXj--LRPBXGJupKbuI-ctWxmYADGJ7-Pwl6SVo5tKpFX/exec";
-const APP_VERSION = "2026-10-06 รุ่น 25 (แก้ไข/เพิ่มชื่อคลินิก)";
+const APP_VERSION = "2026-10-06 รุ่น 28 (สั่ง Abutment)";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -695,8 +768,10 @@ async function apiPost(body){
   if(r && r.ok === false && r.error === 'auth' && body.action !== 'login') doLogout('เซสชันหมดอายุ หรือ PIN ถูกเปลี่ยน กรุณาล็อกอินใหม่');
   return r;
 }
-const API_ERRORS = {forbidden:'ไม่มีสิทธิ์ทำรายการนี้', duplicate_case_id:'เลขเคสนี้มีอยู่แล้ว', duplicate_id:'ออเดอร์นี้ถูกบันทึกไปแล้ว', bad_link:'ลิงก์ต้องขึ้นต้นด้วย http:// หรือ https://', busy:'ระบบกำลังยุ่ง ลองใหม่อีกครั้ง', bad_parts:'ส่งไฟล์ไม่ครบ ลองอัปโหลดใหม่', no_order:'ไม่พบออเดอร์นี้ในระบบ', too_many:'เคสนี้มีไฟล์แนบเต็มจำนวนแล้ว', not_found:'ไม่พบไฟล์นี้แล้ว', duplicate_code:'รหัสผู้ติดต่อนี้มีอยู่แล้ว', bad_contact:'กรอกรหัสและชื่อให้ครบ', bad_invoice:'ข้อมูลบิลไม่ถูกต้อง (ตรวจวันที่/ยอดเงิน)', too_many:'มีผู้ติดต่อเต็มจำนวนแล้ว', bad_status:'สถานะไม่ถูกต้อง', too_large:'ข้อมูลยาวเกินไป'};
-function apiErrorText(r){ return API_ERRORS[r && r.error] || ('ผิดพลาด: ' + ((r && r.error) || 'ไม่ทราบสาเหตุ')); }
+const API_ERRORS = {forbidden:'ไม่มีสิทธิ์ทำรายการนี้', duplicate_case_id:'เลขเคสนี้มีอยู่แล้ว', duplicate_id:'ออเดอร์นี้ถูกบันทึกไปแล้ว', bad_link:'ลิงก์ต้องขึ้นต้นด้วย http:// หรือ https://', busy:'ระบบกำลังยุ่ง ลองใหม่อีกครั้ง', bad_date:'วันที่/เวลาไม่ถูกต้อง',  bad_parts:'ส่งไฟล์ไม่ครบ ลองอัปโหลดใหม่', no_order:'ไม่พบออเดอร์นี้ในระบบ', too_many:'เคสนี้มีไฟล์แนบเต็มจำนวนแล้ว', not_found:'ไม่พบไฟล์นี้แล้ว', duplicate_code:'รหัสผู้ติดต่อนี้มีอยู่แล้ว', bad_contact:'กรอกรหัสและชื่อให้ครบ', bad_invoice:'ข้อมูลบิลไม่ถูกต้อง (ตรวจวันที่/ยอดเงิน)', too_many:'มีผู้ติดต่อเต็มจำนวนแล้ว', bad_status:'สถานะไม่ถูกต้อง', too_large:'ข้อมูลยาวเกินไป'};
+function apiErrorText(r){
+  if(r && r.error === 'unknown_action') return 'Apps Script ที่ Deploy อยู่เก่ากว่าหน้าเว็บ (ไม่รู้จักคำสั่งนี้) — วางโค้ด GoogleAppsScript_Code_v' + NEEDED_SERVER + '.gs แล้ว Deploy เวอร์ชันใหม่';
+  return API_ERRORS[r && r.error] || ('ผิดพลาด: ' + ((r && r.error) || 'ไม่ทราบสาเหตุ')); }
 
 function setSyncStatus(ok){
   const dot = document.getElementById('sync-dot');
@@ -725,6 +800,9 @@ function clearEmployeeSession(){
 // ---------- New orders (shared, via backend) ----------
 let CONTACTS = [], CONTACT_IDX = {};
 let INVOICES = [];
+const NEEDED_SERVER = 9;
+let SERVER_VER = NEEDED_SERVER;
+let ABUTMENTS = [];
 let FILE_COUNTS = {}, CASE_FILES = {}, UPLOADING = false, FILE_CHUNK = 6 * 1024 * 1024;
 let NEW_ORDERS = [];       // live orders (edits applied, deleted ones removed)
 let DELETED_ORDERS = [];   // soft-deleted orders (kept in the sheet, can be restored)
@@ -759,6 +837,8 @@ async function loadNewOrders(){
       CONTACTS = r.contacts || [];
       INVOICES = r.invoices || [];
       FILE_COUNTS = r.file_counts || {};
+      SERVER_VER = r.server_version || 0;
+      ABUTMENTS = r.abutments || [];
       rebuildContactIndex();
       EMPLOYEE_LIST = r.employees || [];
       applyOverridesFromServer(r.overrides || []);
@@ -973,6 +1053,7 @@ document.querySelectorAll('nav.tabs button').forEach(btn=>{
     if(btn.dataset.tab==='perm') renderPerm();
     if(btn.dataset.tab==='billing') renderBilling(true);
     if(btn.dataset.tab==='contacts') renderContacts();
+    if(btn.dataset.tab==='abutment') renderAbutTab();
     if(btn.dataset.tab==='overview') renderOverview();
     if(btn.dataset.tab==='delivery') renderDelivery();
   });
@@ -1078,6 +1159,7 @@ function buildOrderForm(){
   document.getElementById('f_position').addEventListener('input', ()=>parseToothFromText());
   document.getElementById('f_clinic').parentElement.insertAdjacentHTML('beforeend', '<a href="#" id="clinic-quick-add" class="caselink" style="font-size:12px;display:inline-block;margin-top:4px">＋ เพิ่มคลินิกใหม่</a>');
   document.getElementById('clinic-quick-add').addEventListener('click', e=>{ e.preventDefault(); quickAddClinic(); });
+  bindOrderFiles();
   TOOTH = {}; buildToothUi();
   document.getElementById('f_color').placeholder = 'เช่น คอฟัน 3M3 กลางถึงปลายฟัน 3M2';
   document.getElementById('f_position').placeholder = 'เช่น 26';
@@ -1169,6 +1251,11 @@ async function doSaveOrder(){
   showToast('บันทึกออเดอร์ '+order.case_id+' แล้ว (เดือน'+monthLabel(k)+') • กด "ล้างฟอร์ม" เพื่อเริ่มออเดอร์ถัดไป');
   renderRecentOrders();
   renderAll();
+  if(PENDING_FILES.length){
+    const files = PENDING_FILES.slice();
+    await uploadCaseFiles(order._id, files, 'order_intake', 'แนบตอนสร้างออเดอร์', 'order-upload-progress');
+    PENDING_FILES = []; renderPendingFiles();
+  }
 }
 document.getElementById('save-order').addEventListener('click', async ()=>{
   if(SAVING) return;
@@ -1368,15 +1455,17 @@ function renderCase(){
   const f = (label, v) => `<div><b>${esc(label)}</b>${esc(v === undefined || v === null || v === '' ? '-' : v)}</div>`;
   const steps = DEPARTMENTS.filter(d=>mine.includes(d.key) && depRecord(o, d.key).status !== 'ไม่เกี่ยวข้อง');
   const skipped = DEPARTMENTS.filter(d=>mine.includes(d.key) && depRecord(o, d.key).status === 'ไม่เกี่ยวข้อง');
+  const SU_TEXT = {abutment:'📎 ใบสั่งซื้อ', receive:'📎 รูปของที่มาถึง'};
+  const stepUp = d => `<label class="btn ghost sm" for="su-${esc(d.key)}" data-su-label="${esc(d.key)}" data-su-text="${esc(SU_TEXT[d.key] || '📎 ไฟล์')}" style="cursor:pointer" title="อัปโหลดไฟล์ของขั้นตอนนี้ (รูป / สแกน / เอกสาร) ทีมถัดไปดาวน์โหลดได้">${esc(SU_TEXT[d.key] || '📎 ไฟล์')}</label><input type="file" multiple id="su-${esc(d.key)}" data-su="${esc(d.key)}" style="display:none">`;
   const DONE_LABEL = {delivery:'✓ ส่งมอบแล้ว', receive:'✓ รับของแล้ว', abutment:'✓ สั่งแล้ว', billing:'✓ ออกบิลแล้ว', model_printing:'✓ พิมพ์เสร็จ'};
   const stepHtml = steps.length ? steps.map(d=>{
     const r = depRecord(o, d.key), done = r.status === 'เสร็จแล้ว';
     const who = r.by || (d.key === 'order_intake' ? (o.created_by || '') : '');
     const meta = done ? ('เสร็จ ' + (r.end ? fmtStamp(r.end) : '') + (who ? ' • โดย ' + who : '')) : r.status + (r.start ? ' • เริ่ม ' + fmtStamp(r.start) : '');
     return `<div class="cm-step ${curKeys.has(d.key) ? 'cur' : ''}"><span class="nm">${esc(d.label)}</span><span class="meta">${esc(meta)}${curKeys.has(d.key) ? ' ◀ ขั้นตอนปัจจุบัน' : ''}</span>` +
-      (done ? `<button class="btn ghost sm" data-step="undo" data-dept="${esc(d.key)}">↩ ยกเลิกเสร็จ</button>`
+      (done ? `${stepUp(d)}<button class="btn ghost sm" data-step="undo" data-dept="${esc(d.key)}">↩ ยกเลิกเสร็จ</button>`
             : (r.status === 'กำลังดำเนินการ' ? '' : `<button class="btn ghost" data-step="start" data-dept="${esc(d.key)}">▶ เริ่มทำ</button>`) +
-              `<button class="btn primary big" data-step="done" data-dept="${esc(d.key)}">${DONE_LABEL[d.key] || '✓ เสร็จแล้ว'}</button><button class="btn ghost sm" data-step="skip" data-dept="${esc(d.key)}" title="ขั้นตอนนี้ไม่เกี่ยวกับเคสนี้">ข้ามขั้นตอน</button>`) + '</div>';
+              `${stepUp(d)}<button class="btn primary big" data-step="done" data-dept="${esc(d.key)}">${DONE_LABEL[d.key] || '✓ เสร็จแล้ว'}</button><button class="btn ghost sm" data-step="skip" data-dept="${esc(d.key)}" title="ขั้นตอนนี้ไม่เกี่ยวกับเคสนี้">ข้ามขั้นตอน</button>`) + '</div>';
   }).join('') : '<div class="note">คุณไม่มีขั้นตอนที่อัปเดตได้ในเคสนี้ (หรือขั้นตอนของคุณไม่เกี่ยวกับเคสนี้)</div>';
   const skippedHtml = skipped.length ? '<div class="note" style="margin:10px 0 6px">ขั้นตอนของคุณที่ถูกข้ามไว้ (ไม่เกี่ยวข้อง) — ถ้าเคสนี้ต้องใช้ กดเปิดใช้ได้</div>' + skipped.map(d=>`<div class="cm-step" style="opacity:.85"><span class="nm">${esc(d.label)}</span><span class="meta">ไม่เกี่ยวข้องกับเคสนี้</span><button class="btn ghost sm" data-step="enable" data-dept="${esc(d.key)}">เปิดใช้ขั้นตอนนี้</button></div>`).join('') : '';
   const notes = notesOf(o._id);
@@ -1402,6 +1491,7 @@ function renderCase(){
       ${admin ? '<button class="btn ghost sm" id="cm-edit">✏️ แก้ไขเคส</button>' : ''}
     </div>
     <div class="cm-sec"><h3>ขั้นตอนของคุณ</h3>${stepHtml}${skippedHtml}</div>
+    ${abutSectionHtml(o)}
     <div class="cm-sec"><h3>ไฟล์ / การจัดส่ง</h3>
       <div class="grid form">
         <div class="field"><label>ลิงก์ไฟล์ / ภาพ</label><input id="cm-file" value="${esc(o.file_link || '')}" placeholder="https://drive.google.com/..."></div>
@@ -1437,6 +1527,7 @@ function renderCase(){
     renderAll(); renderCase();
   }));
   bindFileSection(o);
+  bindAbutSection(o);
   document.getElementById('cm-copy').addEventListener('click', ()=>copyText(caseText(o), 'คัดลอกรายละเอียดแล้ว ✓'));
   document.getElementById('cm-print').addEventListener('click', ()=>printTicket(o));
   const ed = document.getElementById('cm-edit');
@@ -1534,12 +1625,12 @@ async function uploadOne(order, file, dept, note, onProgress){
     throw err;
   }
 }
-async function uploadCaseFiles(orderId, files, dept, note){
+async function uploadCaseFiles(orderId, files, dept, note, boxId){
   if(UPLOADING){ showToast('กำลังอัปโหลดไฟล์อื่นอยู่ รอให้เสร็จก่อน'); return; }
   const order = orderById(orderId);
   if(!order) return;
   UPLOADING = true;
-  const box = () => document.getElementById('cm-upload-progress');
+  const box = () => document.getElementById(boxId || 'cm-upload-progress');
   let okN = 0;
   try{
     for(const f0 of files){
@@ -1574,20 +1665,54 @@ async function loadCaseFiles(orderId){
   }catch(e){ /* keep cache */ }
   if(CASE_OPEN_ID === orderId) renderFilesList();
 }
+function stepStatusOf(order, key){
+  if(!order || !DEPARTMENTS.some(d=>d.key === key)) return '';
+  const st = depRecord(order, key).status;
+  return st === 'เสร็จแล้ว' ? '✓ เสร็จแล้ว' : st === 'กำลังดำเนินการ' ? '▶ กำลังทำ' : st === 'ไม่เกี่ยวข้อง' ? '' : 'รอทำ';
+}
+async function downloadAllFiles(list, btn){
+  const old = btn ? btn.textContent : '';
+  if(btn) btn.disabled = true;
+  try{
+    for(let i = 0; i < list.length; i++){
+      if(btn) btn.textContent = '⏳ ' + (i + 1) + '/' + list.length;
+      saveBlob(await fetchFileBlob(list[i]), list[i].name);
+      await sleepMs(350);
+    }
+    showToast('ดาวน์โหลด ' + list.length + ' ไฟล์แล้ว (ถ้าเบราว์เซอร์ถามให้อนุญาตหลายไฟล์ กดอนุญาต)');
+  }catch(err){ showToast('ดาวน์โหลดไม่สำเร็จ: ' + (err && err.message ? err.message : err)); }
+  finally{ if(btn){ btn.disabled = false; btn.textContent = old; } }
+}
+function updateStepFileBadges(){
+  const list = CASE_FILES[CASE_OPEN_ID] || [];
+  document.querySelectorAll('label[data-su-label]').forEach(l=>{
+    const n = list.filter(f=>f.dept === l.dataset.suLabel).length;
+    l.textContent = (l.dataset.suText || '📎 ไฟล์') + (n ? ' (' + n + ')' : '');
+  });
+}
 function renderFilesList(){
   const el = document.getElementById('cm-files-list');
   if(!el) return;
   const list = CASE_FILES[CASE_OPEN_ID];
   if(!list){ el.innerHTML = '<div class="note">กำลังโหลดรายการไฟล์...</div>'; return; }
+  updateStepFileBadges();
   const me = CURRENT_EMPLOYEE ? CURRENT_EMPLOYEE.name : '', admin = isAdminUser(CURRENT_EMPLOYEE);
-  if(!list.length){ el.innerHTML = '<div class="note">ยังไม่มีไฟล์แนบ</div>'; return; }
-  el.innerHTML = list.map(f=>{
-    const d = DEPARTMENTS.find(x=>x.key === f.dept), isImg = f.kind === 'photo' || /^image\//.test(f.mime);
+  if(!list.length){ el.innerHTML = '<div class="note">ยังไม่มีไฟล์แนบ — แต่ละแผนกอัปโหลดไฟล์ของตัวเองที่ปุ่ม 📎 ในขั้นตอนด้านบน ทีมถัดไปจะเห็นและดาวน์โหลดได้ที่นี่</div>'; return; }
+  const order = orderById(CASE_OPEN_ID);
+  const keys = ['order_intake', 'general'].concat(DEPARTMENTS.map(d=>d.key).filter(k=>k !== 'order_intake'));
+  const labelOf = k => k === 'general' ? 'ทั่วไป (ทั้งเคส)' : ((DEPARTMENTS.find(x=>x.key === k) || {}).label || k);
+  const groups = keys.map(k=>({k, files: list.filter(f=>(f.dept || 'general') === k)})).filter(g=>g.files.length);
+  list.filter(f=>!keys.includes(f.dept || 'general')).forEach(f=>{ const g = groups.find(x=>x.k === 'general'); if(g) g.files.push(f); else groups.push({k:'general', files:[f]}); });
+  const row = f=>{
+    const isImg = f.kind === 'photo' || /^image\//.test(f.mime);
     return `<div class="fl-row"><span class="ic">${FILE_ICON[f.kind] || '📦'}</span><div class="grow"><div class="nm">${esc(f.name)}</div>
-      <div class="meta">${esc(KIND_LABEL_TH[f.kind] || '')} • ${esc(fmtSize(f.size))} • ${esc(d ? d.label : 'ทั่วไป')} • ${esc(f.uploaded_by)} • ${esc(fmtStamp(f.uploaded_at))}${f.note ? ' • ' + esc(f.note) : ''}</div></div>
+      <div class="meta">${esc(KIND_LABEL_TH[f.kind] || '')} • ${esc(fmtSize(f.size))} • ${esc(f.uploaded_by)} • ${esc(fmtStamp(f.uploaded_at))}${f.note ? ' • ' + esc(f.note) : ''}</div></div>
       <button class="btn ghost sm" data-file-open="${esc(f.id)}">${isImg ? '👁 ดูรูป' : '⬇ ดาวน์โหลด'}</button>
       ${(admin || f.uploaded_by === me) ? `<button class="btn danger sm" data-file-del="${esc(f.id)}">🗑</button>` : ''}</div>`;
-  }).join('');
+  };
+  el.innerHTML = (list.length > 1 ? `<div class="actions" style="margin:0 0 8px"><button class="btn ghost sm" data-dl-all="*">⬇ ดาวน์โหลดทั้งหมด (${list.length} ไฟล์)</button></div>` : '') +
+    groups.map(g=>`<div class="fl-grp"><div class="fl-head"><b>${esc(labelOf(g.k))}</b> <span class="meta">${esc(stepStatusOf(order, g.k))} • ${g.files.length} ไฟล์</span>${g.files.length > 1 ? `<button class="btn ghost sm" data-dl-all="${esc(g.k)}" style="margin-left:auto">⬇ ทั้งหมดของขั้นนี้</button>` : ''}</div>${g.files.map(row).join('')}</div>`).join('');
+  el.querySelectorAll('[data-dl-all]').forEach(b=>b.addEventListener('click', ()=>downloadAllFiles(b.dataset.dlAll === '*' ? list : (groups.find(g=>g.k === b.dataset.dlAll) || {files:[]}).files, b)));
   el.querySelectorAll('[data-file-open]').forEach(b=>b.addEventListener('click', ()=>openCaseFile(list.find(x=>x.id === b.dataset.fileOpen), b)));
   el.querySelectorAll('[data-file-del]').forEach(b=>b.addEventListener('click', async ()=>{
     const f = list.find(x=>x.id === b.dataset.fileDel);
@@ -1635,6 +1760,10 @@ document.getElementById('lb-close').addEventListener('click', ()=>{ document.get
 document.getElementById('img-lightbox').addEventListener('click', e=>{ if(e.target.id === 'img-lightbox') document.getElementById('lb-close').click(); });
 function bindFileSection(o){
   const orderId = o._id;
+  document.querySelectorAll('input[data-su]').forEach(inp=>inp.addEventListener('change', async e=>{
+    const files = Array.from(e.target.files || []); e.target.value = '';
+    if(files.length) await uploadCaseFiles(orderId, files, inp.dataset.su, '', 'cm-upload-progress');
+  }));
   renderFilesList();
   loadCaseFiles(orderId);
   const go = async e=>{
@@ -1646,6 +1775,30 @@ function bindFileSection(o){
   document.getElementById('cm-file-cam').addEventListener('change', go);
 }
 
+// ---------- Files attached while creating an order ----------
+let PENDING_FILES = [];
+function renderPendingFiles(){
+  const el = document.getElementById('of-list');
+  if(!el) return;
+  el.innerHTML = PENDING_FILES.length ? PENDING_FILES.map((f, i)=>`<div class="fl-row"><span class="ic">${FILE_ICON[fileKindOf(f.name, f.type)] || '📦'}</span><div class="grow"><div class="nm">${esc(f.name)}</div><div class="meta">${esc(KIND_LABEL_TH[fileKindOf(f.name, f.type)] || '')} • ${esc(fmtSize(f.size))} • จะอัปโหลดตอนกดบันทึกออเดอร์</div></div><button type="button" class="btn danger sm" data-of-rm="${i}">✕ เอาออก</button></div>`).join('') : '';
+  el.querySelectorAll('[data-of-rm]').forEach(b=>b.addEventListener('click', ()=>{ PENDING_FILES.splice(+b.dataset.ofRm, 1); renderPendingFiles(); }));
+}
+function addPendingFiles(files){
+  files.forEach(f=>{
+    if(f.size > MAX_FILE_BYTES){ showToast(f.name + ' ใหญ่เกิน 100 MB (บีบเป็น ZIP หรือใส่ลิงก์ไฟล์แทน)'); return; }
+    if(!f.size){ showToast(f.name + ' เป็นไฟล์ว่าง'); return; }
+    PENDING_FILES.push(f);
+  });
+  renderPendingFiles();
+  // a 3D scan file means the case is digital -> model printing step
+  const hs = document.getElementById('f_has_scan');
+  if(hs && !hs.dataset.manual && PENDING_FILES.some(f=>fileKindOf(f.name, f.type) === 'scan3d')){ hs.value = 'มี'; applyDeptRelevance(); }
+}
+function bindOrderFiles(){
+  PENDING_FILES = []; renderPendingFiles();
+  ['of-pick', 'of-cam'].forEach(id=>{ const inp = document.getElementById(id); if(inp && !inp.dataset.bound){ inp.dataset.bound = '1'; inp.addEventListener('change', e=>{ addPendingFiles(Array.from(e.target.files || [])); e.target.value = ''; }); } });
+  const box = document.getElementById('order-upload-progress'); if(box) box.innerHTML = '';
+}
 // ---------- Copy: LINE-style case text + tables for Excel ----------
 function fmtCE(v){
   const d = parseYmd(v);
@@ -1859,6 +2012,144 @@ function parseToothFromText(){
   found.forEach(t=>{ next[t] = TOOTH[t] || TOOTH_ACTIVE; });
   TOOTH = next; buildToothUi();
 }
+
+// ---------- Order Abutment: request, order details, waiting list ----------
+const AB_STATUS = {requested:'รอสั่ง', ordered:'สั่งแล้ว รอของ', received:'ได้รับของแล้ว', cancelled:'ยกเลิก'};
+const AB_BADGE = {requested:'b-wait', ordered:'b-prog', received:'b-done', cancelled:'b-hold'};
+function abutOf(orderId){ return ABUTMENTS.find(a=>a.order_id === orderId) || null; }
+function canManageAbutment(){ return isAdminUser(CURRENT_EMPLOYEE) || allowedDeptKeys().some(k=>k === 'abutment' || k === 'receive'); }
+function abutDays(a){
+  const from = a.status === 'ordered' ? (a.ordered_at || a.requested_at) : a.requested_at;
+  const d = parseYmd(from);
+  return d ? daysSince(d) : null;
+}
+function abutOverdue(a){
+  if(!(a.status === 'requested' || a.status === 'ordered') || !a.eta) return 0;
+  const e = parseYmd(a.eta), t = new Date(); t.setHours(0, 0, 0, 0);
+  return e && e < t ? Math.round((t - e) / 86400000) : 0;
+}
+function abutSectionHtml(o){
+  const a = abutOf(o._id), manage = canManageAbutment();
+  const stepsOn = depRecord(o, 'abutment').status !== 'ไม่เกี่ยวข้อง' || depRecord(o, 'receive').status !== 'ไม่เกี่ยวข้อง';
+  let inner = '';
+  if(!a || a.status === 'cancelled'){
+    if(a && a.status === 'cancelled') inner += '<div class="ab-card">การสั่ง Abutment ของเคสนี้ถูกยกเลิก</div>';
+    if(manage && stepsOn && !a) inner += '<div class="note">เคสนี้ต้องสั่ง Abutment (ติ๊กไว้ตอนสร้างออเดอร์) แต่ยังไม่มีรายละเอียดการสั่ง</div>';
+    inner += manage && stepsOn && !a
+      ? '<div class="actions"><button class="btn primary" id="ab-open-form">✏️ บันทึกรายละเอียดการสั่ง</button></div>'
+      : '<div class="actions"><button class="btn primary" id="ab-request">🔩 ขอสั่ง Abutment</button></div><div class="note">ต้องใช้ Abutment กับเคสนี้? กดเพื่อแจ้งคนสั่ง ระบบเปิดขั้น Order Abutment + รับของ ให้เคสนี้ทันที</div>';
+  } else {
+    const od = abutOverdue(a), days = abutDays(a);
+    inner += `<div class="ab-card"><div><span class="badge ${AB_BADGE[a.status] || ''}">${esc(AB_STATUS[a.status] || a.status)}</span>
+      ${od ? `<span class="badge b-hold" style="margin-left:6px">เกินกำหนด ${od} วัน</span>` : ''}
+      <span style="color:var(--muted);font-size:12px;margin-left:8px">ขอโดย ${esc(a.requested_by || '-')} • ${esc(fmtStamp(a.requested_at))}${days !== null && a.status !== 'received' ? ' • ค้าง ' + days + ' วัน' : ''}</span></div>
+      <div class="ab-grid"><div><b>ยี่ห้อ</b> ${esc(a.brand || '-')}</div><div><b>รุ่น / ขนาด</b> ${esc(a.spec || '-')}</div><div><b>จำนวน</b> ${esc(a.qty || '-')}</div><div><b>ร้านที่สั่ง</b> ${esc(a.supplier || '-')}</div>
+      <div><b>สั่งเมื่อ</b> ${esc(a.ordered_at ? fmtStamp(a.ordered_at) : '-')}</div><div><b>คาดว่าจะมา</b> ${esc(a.eta ? fmtDate(a.eta) : '-')}</div><div><b>เลขพัสดุ</b> ${esc(a.tracking_no || '-')}</div><div><b>ได้รับเมื่อ</b> ${esc(a.received_at ? fmtStamp(a.received_at) : '-')}</div></div>
+      ${a.note ? `<div style="font-size:12.5px"><b>โน้ต:</b> ${esc(a.note)}</div>` : ''}</div>`;
+    if(manage){
+      inner += `<div class="actions" style="margin-bottom:6px"><button class="btn ghost" id="ab-open-form">✏️ บันทึก / แก้ไขรายละเอียดการสั่ง</button>
+        ${a.status === 'requested' ? '<button class="btn primary" id="ab-q-ordered">✓ สั่งแล้ว (ตอนนี้)</button>' : ''}${a.status === 'ordered' ? '<button class="btn primary" id="ab-q-received">📦 ได้รับของแล้ว (ตอนนี้)</button>' : ''}</div>`;
+    }
+  }
+  if(manage && (a || stepsOn)){
+    inner += `<div id="ab-form" class="cm-note" style="display:none"><div class="grid form">
+      <div class="field"><label>สถานะ</label><select id="ab_status"><option value="requested">รอสั่ง</option><option value="ordered">สั่งแล้ว รอของ</option><option value="received">ได้รับของแล้ว</option><option value="cancelled">ยกเลิก</option></select></div>
+      <div class="field"><label>ยี่ห้อ / ระบบ</label><input id="ab_brand" list="dl-systems"></div>
+      <div class="field"><label>รุ่น / ขนาด</label><input id="ab_spec" placeholder="เช่น Ti-base Ø4.5 GH2"></div>
+      <div class="field"><label>จำนวน</label><input id="ab_qty" inputmode="numeric"></div>
+      <div class="field"><label>ร้านที่สั่ง</label><input id="ab_supplier"></div>
+      <div class="field"><label>วันที่/เวลาที่สั่ง</label><input id="ab_ordered" type="datetime-local"></div>
+      <div class="field"><label>วันที่คาดว่าจะมาถึง</label><input id="ab_eta" type="date"></div>
+      <div class="field"><label>เลขพัสดุ</label><input id="ab_track"></div>
+      <div class="field"><label>วันที่/เวลาที่ได้รับของ</label><input id="ab_received" type="datetime-local"></div>
+      <div class="field"><label>โน้ต</label><input id="ab_note" maxlength="300"></div></div>
+      <div class="actions" style="margin-top:8px"><button class="btn primary" id="ab-save">💾 บันทึก</button><button class="btn danger" id="ab-cancel-order">✕ ยกเลิกการสั่ง</button><button class="btn ghost" id="ab-close">ปิด</button></div>
+      <div class="note">ใบสั่งซื้อ และรูปของที่มาถึง อัปโหลดที่ปุ่ม 📎 ในขั้นตอน "Order Abutment" และ "รับของ" ด้านบน</div></div>`;
+  }
+  return `<div class="cm-sec"><h3>🔩 สั่ง Abutment</h3>${inner}</div>`;
+}
+async function abutCall(body, okMsg){
+  const r = await apiPost(body);
+  if(!(r && r.ok)){ showToast(apiErrorText(r)); return false; }
+  if(await loadNewOrders()){ rebuildOrders(); renderAll(); }
+  if(CASE_OPEN_ID) renderCase();
+  if(okMsg) showToast(okMsg);
+  return true;
+}
+function bindAbutSection(o){
+  const id = o._id, a = abutOf(id), g = x=>document.getElementById(x);
+  const caseId = String(o.case_id || '');
+  if(g('ab-request')) g('ab-request').addEventListener('click', async ()=>{
+    const note = window.prompt('หมายเหตุถึงคนสั่ง เช่น ซี่ฟัน / ยี่ห้อที่ต้องใช้ (เว้นว่างได้)');
+    if(note === null) return;
+    await abutCall({action:'requestAbutment', order_id:id, case_id:caseId, note:String(note).trim()}, '🔩 ส่งคำขอสั่ง Abutment แล้ว ขั้นตอนเปิดให้เคสนี้แล้ว');
+  });
+  const form = g('ab-form');
+  const open = ()=>{
+    if(!form) return;
+    const v = (k, val)=>{ g(k).value = val || ''; };
+    v('ab_status', a ? a.status : 'requested'); v('ab_brand', a && a.brand); v('ab_spec', a && a.spec); v('ab_qty', a && a.qty); v('ab_supplier', a && a.supplier);
+    v('ab_ordered', a && toDateTimeInputVal(a.ordered_at)); v('ab_eta', a && toDateInputVal(a.eta)); v('ab_track', a && a.tracking_no); v('ab_received', a && toDateTimeInputVal(a.received_at)); v('ab_note', a && a.note);
+    form.style.display = '';
+  };
+  if(g('ab-open-form')) g('ab-open-form').addEventListener('click', open);
+  if(g('ab-close')) g('ab-close').addEventListener('click', ()=>{ form.style.display = 'none'; });
+  const fields = ()=>({status:g('ab_status').value, brand:g('ab_brand').value.trim(), spec:g('ab_spec').value.trim(), qty:g('ab_qty').value.trim(), supplier:g('ab_supplier').value.trim(),
+    ordered_at:g('ab_ordered').value, eta:g('ab_eta').value, tracking_no:g('ab_track').value.trim(), received_at:g('ab_received').value, note:g('ab_note').value.trim()});
+  if(g('ab-save')) g('ab-save').addEventListener('click', ()=>abutCall({action:'saveAbutment', order_id:id, case_id:caseId, fields:fields()}, 'บันทึกรายละเอียดการสั่งแล้ว ✓'));
+  if(g('ab-cancel-order')) g('ab-cancel-order').addEventListener('click', async ()=>{
+    if(!window.confirm('ยกเลิกการสั่ง Abutment ของเคสนี้? (ขั้นตอนสั่งและรับของจะถูกข้าม)')) return;
+    await abutCall({action:'saveAbutment', order_id:id, case_id:caseId, fields:{status:'cancelled'}}, 'ยกเลิกการสั่งแล้ว');
+  });
+  if(g('ab-q-ordered')) g('ab-q-ordered').addEventListener('click', ()=>abutCall({action:'saveAbutment', order_id:id, case_id:caseId, fields:{status:'ordered', ordered_at:nowStamp()}}, '✓ บันทึกว่าสั่งแล้ว ' + nowStamp().replace('T', ' เวลา ')));
+  if(g('ab-q-received')) g('ab-q-received').addEventListener('click', ()=>abutCall({action:'saveAbutment', order_id:id, case_id:caseId, fields:{status:'received', received_at:nowStamp()}}, '📦 บันทึกว่าได้รับของแล้ว ' + nowStamp().replace('T', ' เวลา ')));
+}
+function abutRowsForTab(){
+  const f = document.getElementById('ab-filter').value, q = normKey(document.getElementById('ab-q').value);
+  return ABUTMENTS.map(a=>({a, o: orderById(a.order_id)})).filter(x=>x.o).filter(x=>{
+    const st = x.a.status;
+    if(f === 'open' ? !(st === 'requested' || st === 'ordered') : (f !== 'all' && st !== f)) return false;
+    if(!q) return true;
+    return [x.o.case_id, rpName(x.o, 'clinic'), x.o.patient, x.a.supplier, x.a.brand, x.a.spec, x.a.tracking_no].some(v=>normKey(v).includes(q));
+  }).sort((p, r)=>(abutOverdue(r.a) - abutOverdue(p.a)) || ((abutDays(r.a) || 0) - (abutDays(p.a) || 0)));
+}
+function renderAbutTab(){
+  const t = document.getElementById('ab-table');
+  if(!t) return;
+  const btn = document.querySelector('nav.tabs button[data-tab="abutment"]');
+  const open = ABUTMENTS.filter(a=>a.status === 'requested' || a.status === 'ordered');
+  if(btn) btn.textContent = 'รอ Abutment' + (open.length ? ' (' + open.length + ')' : '');
+  if(!canManageAbutment()) return;
+  const k = (n, l, c)=>`<div class="kpi ${c || ''}"><div class="num">${n}</div><div class="lbl">${l}</div></div>`;
+  const thisM = currentMonthKey();
+  document.getElementById('ab-kpis').innerHTML = k(ABUTMENTS.filter(a=>a.status === 'requested').length, 'รอสั่ง', 'warn') + k(ABUTMENTS.filter(a=>a.status === 'ordered').length, 'สั่งแล้ว รอของ') +
+    k(open.filter(a=>abutOverdue(a) > 0).length, 'เกินกำหนด (เลยวันที่คาดว่าจะมา)', 'danger') + k(ABUTMENTS.filter(a=>a.status === 'received' && String(a.received_at).slice(0, 7) === thisM).length, 'ได้รับแล้วเดือนนี้');
+  const rows = abutRowsForTab();
+  if(!rows.length){ t.innerHTML = '<tr><td class="empty">ไม่มีรายการ 🎉</td></tr>'; return; }
+  t.innerHTML = '<tr><th>เลขเคส</th><th>คลินิก</th><th>คนไข้</th><th>ตำแหน่งฟัน</th><th>ยี่ห้อ / รุ่น</th><th>จำนวน</th><th>ร้านที่สั่ง</th><th>สถานะ</th><th>ขอโดย</th><th>ค้าง</th><th>คาดว่าจะมา</th><th>เลขพัสดุ</th><th></th></tr>' +
+    rows.map(({a, o})=>{
+      const od = abutOverdue(a), dd = abutDays(a);
+      return `<tr><td>${caseLink(o)}</td><td>${esc(rpName(o, 'clinic'))}</td><td>${esc(o.patient || '-')}</td><td>${esc(o.position || '-')}</td><td>${esc([a.brand, a.spec].filter(Boolean).join(' ') || '-')}</td><td>${esc(a.qty || '-')}</td><td>${esc(a.supplier || '-')}</td>
+        <td><span class="badge ${AB_BADGE[a.status] || ''}">${esc(AB_STATUS[a.status] || a.status)}</span></td><td>${esc(a.requested_by || '-')}<div style="font-size:11px;color:var(--muted)">${esc(fmtStamp(a.requested_at))}</div></td>
+        <td>${a.status === 'received' || a.status === 'cancelled' ? '-' : daysCell(dd)}</td><td>${a.eta ? esc(fmtDate(a.eta)) : '-'}${od ? `<div><span class="badge b-hold">เกิน ${od} วัน</span></div>` : ''}</td><td>${esc(a.tracking_no || '-')}</td>
+        <td style="white-space:nowrap">${a.status === 'requested' ? `<button class="btn primary sm" data-ab-q="ordered" data-id="${esc(a.order_id)}">✓ สั่งแล้ว</button>` : ''}${a.status === 'ordered' ? `<button class="btn primary sm" data-ab-q="received" data-id="${esc(a.order_id)}">📦 รับของแล้ว</button>` : ''} <button class="btn ghost sm" data-open-case="${esc(a.order_id)}">✏️ รายละเอียด</button></td></tr>`;
+    }).join('');
+  t.querySelectorAll('[data-ab-q]').forEach(b=>b.addEventListener('click', async ()=>{
+    const o = orderById(b.dataset.id), isOrd = b.dataset.abQ === 'ordered';
+    if(!window.confirm((isOrd ? 'บันทึกว่าสั่ง Abutment ของเคส ' : 'บันทึกว่าได้รับของของเคส ') + (o ? o.case_id : '') + ' แล้ว?')) return;
+    const f = isOrd ? {status:'ordered', ordered_at:nowStamp()} : {status:'received', received_at:nowStamp()};
+    await abutCall({action:'saveAbutment', order_id:b.dataset.id, case_id:o ? String(o.case_id || '') : '', fields:f}, isOrd ? '✓ บันทึกว่าสั่งแล้ว' : '📦 บันทึกว่าได้รับของแล้ว');
+  }));
+}
+function abutExportRows(){
+  const head = ['เลขเคส','คลินิก','คนไข้','ตำแหน่งฟัน','ยี่ห้อ','รุ่น/ขนาด','จำนวน','ร้านที่สั่ง','สถานะ','ขอโดย','ขอเมื่อ','สั่งเมื่อ','คาดว่าจะมา','ได้รับเมื่อ','ค้าง (วัน)','เกินกำหนด (วัน)','เลขพัสดุ','โน้ต'];
+  return [head].concat(abutRowsForTab().map(({a, o})=>[String(o.case_id ?? ''), rpName(o, 'clinic'), String(o.patient ?? ''), String(o.position ?? ''), a.brand, a.spec, a.qty ? Number(a.qty) : '', a.supplier, AB_STATUS[a.status] || a.status,
+    a.requested_by, fmtStamp(a.requested_at), fmtStamp(a.ordered_at), a.eta ? fmtDate(a.eta) : '', fmtStamp(a.received_at), a.status === 'received' || a.status === 'cancelled' ? '' : (abutDays(a) ?? ''), abutOverdue(a) || '', a.tracking_no, a.note]));
+}
+document.getElementById('ab-filter').addEventListener('change', renderAbutTab);
+document.getElementById('ab-q').addEventListener('input', renderAbutTab);
+document.getElementById('ab-xlsx').addEventListener('click', ()=>{ const r = abutExportRows(); if(r.length < 2){ showToast('ไม่มีรายการ'); return; } downloadXlsx('รอ Abutment ' + todayLocal() + '.xlsx', [{name:'Abutment', rows:r}]); });
+document.getElementById('ab-pdf').addEventListener('click', ()=>{ const r = abutExportRows(); if(r.length < 2){ showToast('ไม่มีรายการ'); return; } printPdf(safeFileName('รอ Abutment ' + todayLocal()), 'รายการสั่ง Abutment ' + fmtDate(todayLocal()), [{rows:r}]); });
 
 // ---------- Edit / delete orders ----------
 let EDIT_ID = null;
@@ -2748,7 +3039,12 @@ function contactLines(c){
   const br = c.branch === '00000' ? ' (สำนักงานใหญ่)' : (c.branch ? ' สาขา ' + c.branch : '');
   return [c.name + (c.tax_id ? ' • เลขประจำตัวผู้เสียภาษี ' + c.tax_id + br : ''), c.address, c.phone ? 'โทร ' + c.phone : ''].filter(Boolean);
 }
+function refreshSystemList(){
+  const dl = document.getElementById('dl-systems');
+  if(dl && !dl.childElementCount) dl.innerHTML = (REFS.systems || []).map(x=>`<option value="${esc(x)}"></option>`).join('');
+}
 function refreshClinicSelect(){
+  refreshSystemList();
   const sel = document.getElementById('f_clinic');
   if(!sel) return;
   const keep = sel.value, used = new Set(), seen = new Set();
@@ -2763,6 +3059,45 @@ function refreshClinicSelect(){
     if(![...sel.options].some(o=>o.value === keep)) sel.add(new Option(keep, keep));
     sel.value = keep;
   }
+}
+
+// ---------- Contact form helpers (PEAK-style) ----------
+const ENTITY_TYPES = ['บริษัทจำกัด', 'บริษัทมหาชนจำกัด', 'ห้างหุ้นส่วนจำกัด', 'ห้างหุ้นส่วนสามัญ', 'ร้านค้า', 'สมาคม', 'อื่นๆ'];
+const PERSON_PREFIX = ['ไม่มี', 'นาย', 'นางสาว', 'นาง', 'ทพ.', 'ทพญ.', 'ทญ.'];
+function composeLegalName(entity, nameType, core){
+  core = String(core || '').replace(/\s+/g, ' ').trim();
+  if(!core) return '';
+  if(entity === 'person') return (nameType && nameType !== 'ไม่มี' ? nameType + ' ' : '') + core;
+  const has = /^(บริษัท|ห้างหุ้นส่วน)/.test(core);
+  if(nameType === 'บริษัทจำกัด') return has ? core : 'บริษัท ' + core + ' จำกัด';
+  if(nameType === 'บริษัทมหาชนจำกัด') return has ? core : 'บริษัท ' + core + ' จำกัด (มหาชน)';
+  if(nameType === 'ห้างหุ้นส่วนจำกัด') return has ? core : 'ห้างหุ้นส่วนจำกัด ' + core;
+  if(nameType === 'ห้างหุ้นส่วนสามัญ') return has ? core : 'ห้างหุ้นส่วนสามัญ ' + core;
+  return core;
+}
+function splitLegalName(name){
+  const n = String(name || '').replace(/\s+/g, ' ').trim();
+  let m;
+  if((m = /^บริษัท\s*(.+?)\s*จำกัด\s*\(มหาชน\)$/.exec(n))) return {entity:'juristic', nameType:'บริษัทมหาชนจำกัด', core:m[1]};
+  if((m = /^บริษัท\s*(.+?)\s*จำกัด$/.exec(n))) return {entity:'juristic', nameType:'บริษัทจำกัด', core:m[1]};
+  if((m = /^ห้างหุ้นส่วนจำกัด\s*(.+)$/.exec(n))) return {entity:'juristic', nameType:'ห้างหุ้นส่วนจำกัด', core:m[1]};
+  if((m = /^ห้างหุ้นส่วนสามัญ\s*(.+)$/.exec(n))) return {entity:'juristic', nameType:'ห้างหุ้นส่วนสามัญ', core:m[1]};
+  if((m = /^(นาย|นางสาว|นาง|ทพ\.|ทพญ\.|ทญ\.)\s*(.+)$/.exec(n))) return {entity:'person', nameType:m[1], core:m[2]};
+  return {entity:'juristic', nameType:'อื่นๆ', core:n};
+}
+function composeAddress(p){
+  const bkk = /กรุงเทพ/.test(p.province || '');
+  const pre = (v, a, b) => { v = String(v || '').trim(); return !v ? '' : (new RegExp('^(' + a + ')').test(v) ? v : b + v); };
+  const area = [pre(p.sub_district, 'แขวง|ต\\.|ตำบล', bkk ? 'แขวง' : 'ต.'), pre(p.district, 'เขต|อ\\.|อำเภอ', bkk ? 'เขต' : 'อ.'), bkk ? String(p.province || '').trim() : pre(p.province, 'จ\\.|จังหวัด', 'จ.'), String(p.postal_code || '').trim()].filter(Boolean).join(' ');
+  return [String(p.addr_line || '').replace(/\s+/g, ' ').trim(), area].filter(Boolean).join(' ');
+}
+function taxCheck(t){
+  t = String(t || '');
+  if(!t) return 'empty';
+  if(!/^\d{13}$/.test(t)) return 'short';
+  let sum = 0;
+  for(let i = 0; i < 12; i++) sum += (+t[i]) * (13 - i);
+  return ((11 - sum % 11) % 10) === +t[12] ? 'ok' : 'bad';
 }
 
 // ---- reading the PEAK .xlsx in the browser (no library): zip + inflate + XML ----
@@ -2823,15 +3158,17 @@ function parsePeakRows(rows){
   const out = [];
   rows.slice(hi + 1).forEach(r=>{
     const code = c(r, 1); if(!code) return;
+    const entity = c(r, 6) === 'นิติบุคคล' ? 'juristic' : 'person';
     const prefix = c(r, 8) === 'ไม่มี' ? '' : c(r, 8);
-    const name = [prefix, c(r, 9), c(r, 10)].filter(Boolean).join(' ');
+    const typeRaw = c(r, 7);
+    const nameType = entity === 'person' ? (prefix || 'ไม่มี') : (ENTITY_TYPES.includes(typeRaw) ? typeRaw : 'อื่นๆ');
+    const core = [c(r, 9), c(r, 10)].filter(Boolean).join(' ');
+    const name = composeLegalName(entity, nameType, core);
     if(!name) return;
-    const sub = c(r, 13), dist = c(r, 14), prov = c(r, 15), zip = c(r, 17), line = c(r, 12).replace(/\s+/g, ' ');
-    const bkk = /กรุงเทพ/.test(prov);
-    const area = [sub && (bkk ? 'แขวง' : 'ต.') + sub, dist && (bkk ? 'เขต' : 'อ.') + dist, prov && (bkk ? '' : 'จ.') + prov, zip].filter(Boolean).join(' ');
+    const parts = {addr_line: c(r, 12).replace(/\s+/g, ' '), sub_district: c(r, 13), district: c(r, 14), province: c(r, 15), postal_code: c(r, 17)};
     const person = c(r, 11) || [c(r, 40) === 'ไม่มี' ? '' : c(r, 40), c(r, 41), c(r, 42)].filter(Boolean).join(' ');
-    out.push({code, name, alias:'', type:'', tax_id:c(r, 4), branch: c(r, 5) === 'ไม่ระบุ' ? '' : c(r, 5), address: [line, area].filter(Boolean).join(' '),
-      phone: c(r, 25) || c(r, 44), email: c(r, 26) || c(r, 45), contact_person: person, note:'', source:'PEAK'});
+    out.push(Object.assign({code, name, alias:'', type:'', tax_id:c(r, 4), branch: c(r, 5) === 'ไม่ระบุ' ? '' : c(r, 5), address: composeAddress(parts),
+      phone: c(r, 25) || c(r, 44), email: c(r, 26) || c(r, 45), website: c(r, 27), fax: c(r, 28), contact_person: person, note:'', source:'PEAK', entity, name_type: nameType}, parts));
   });
   return {contacts: out};
 }
@@ -2919,22 +3256,91 @@ function nextContactCode(prefix){
   CONTACTS.forEach(c=>{ const m = new RegExp('^' + prefix + '(\\d+)$').exec(c.code); if(m) max = Math.max(max, parseInt(m[1], 10)); });
   return prefix + String(max + 1).padStart(5, '0');
 }
+function ctEntity(){ const r = document.querySelector('input[name="ctf_entity"]:checked'); return r ? r.value : 'juristic'; }
+function ctBranchValue(){
+  const m = (document.querySelector('input[name="ctf_br"]:checked') || {}).value;
+  if(m === 'hq') return '00000';
+  if(m === 'branch') return (document.getElementById('ctf_branch').value.replace(/\D/g, '') || '1').padStart(5, '0').slice(-5);
+  return '';
+}
+function ctFillNameTypes(entity, selected){
+  const sel = document.getElementById('ctf_nametype'), list = entity === 'person' ? PERSON_PREFIX : ENTITY_TYPES;
+  sel.innerHTML = list.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');
+  sel.value = list.includes(selected) ? selected : list[0];
+  document.getElementById('ctf_nt_label').textContent = entity === 'person' ? 'คำนำหน้า' : 'ประเภทกิจการ';
+  document.getElementById('ctf_core_label').textContent = entity === 'person' ? 'ชื่อ - นามสกุล *' : 'ชื่อกิจการ *';
+}
+function ctRefreshHints(){
+  const tax = document.getElementById('ctf_tax').value.replace(/\D/g, '');
+  document.getElementById('ctf_tax_n').textContent = tax.length + '/13';
+  const code = document.getElementById('ctf_code').value; document.getElementById('ctf_code_n').textContent = code.length + '/14';
+  const legal = composeLegalName(ctEntity(), document.getElementById('ctf_nametype').value, document.getElementById('ctf_core').value);
+  document.getElementById('ctf_legal').innerHTML = legal ? 'ชื่อตามกฎหมาย (ใช้ออกบิล): <b>' + esc(legal) + '</b>' : '';
+  document.getElementById('ctf_branch').style.display = (document.querySelector('input[name="ctf_br"]:checked') || {}).value === 'branch' ? '' : 'none';
+}
+function ctMatches(q, exceptCode){
+  const k = normKey(q);
+  if(k.length < 2) return [];
+  return CONTACTS.filter(c=>c.code !== exceptCode && [c.name, c.alias].concat(String(c.former_names || '').split(';')).some(v=>{ const x = normKey(v); return x && (x.includes(k) || (x.length >= 4 && k.includes(x))); })).slice(0, 8);
+}
+function ctShowHits(list, title){
+  const box = document.getElementById('ctf_results');
+  if(!list.length){ box.innerHTML = ''; return; }
+  const br = c => c.branch === '00000' ? ' • สำนักงานใหญ่' : (c.branch ? ' • สาขา ' + c.branch : '');
+  box.innerHTML = '<div class="note" style="margin:8px 0 0"><b>' + esc(title) + '</b></div>' + list.map(c=>`<div class="ct-hit"><span style="flex:1;min-width:200px"><b>${esc(c.name)}</b>${c.alias ? ' • ใช้ในออเดอร์: ' + esc(c.alias) : ''}${c.tax_id ? ' • ภาษี ' + esc(c.tax_id) : ''}${esc(br(c))} • รหัส ${esc(c.code)}</span><button type="button" class="btn ghost sm" data-ct-hit="${esc(c.code)}">✏️ เปิดรายการนี้</button></div>`).join('');
+  box.querySelectorAll('[data-ct-hit]').forEach(b=>b.addEventListener('click', ()=>openContactForm(b.dataset.ctHit)));
+}
+function ctSearchTax(){
+  const tax = document.getElementById('ctf_tax').value.replace(/\D/g, ''), msg = document.getElementById('ctf_tax_msg');
+  const st = taxCheck(tax);
+  if(st === 'empty' || st === 'short'){ msg.innerHTML = '<span style="color:var(--rose)">กรุณาระบุเลข 13 หลักให้ครบ (' + tax.length + '/13)</span>'; ctShowHits([], ''); return; }
+  const hits = CONTACTS.filter(c=>c.tax_id === tax && c.code !== (CT_EDIT === '__new__' ? '' : CT_EDIT));
+  msg.innerHTML = (st === 'ok' ? '<span style="color:#2F7D4F">✓ เลขถูกต้องตามหลักตรวจสอบ</span>' : '<span style="color:var(--rose)">⚠ เลขนี้ไม่ผ่านการตรวจหลักตรวจสอบ อาจพิมพ์ผิด</span>') + ' • ' + (hits.length ? 'พบในรายชื่อแล้ว ' + hits.length + ' รายการ' : 'ไม่พบเลขนี้ในรายชื่อของคุณ') + ' <span style="color:var(--muted)">(ยังไม่ได้เชื่อมกับฐานข้อมูลกรมสรรพากร/DBD)</span>';
+  ctShowHits(hits, 'รายการที่มีเลขภาษีนี้อยู่แล้ว');
+}
+function ctSearchName(){
+  const q = document.getElementById('ctf_core').value || document.getElementById('ctf_alias').value;
+  const hits = ctMatches(q, CT_EDIT === '__new__' ? '' : CT_EDIT);
+  if(!hits.length){ document.getElementById('ctf_results').innerHTML = '<div class="note" style="margin:8px 0 0">ไม่พบชื่อที่คล้ายกันในรายชื่อ</div>'; return; }
+  ctShowHits(hits, 'พบรายชื่อที่คล้ายกัน ' + hits.length + ' รายการ (ตรวจก่อนเพิ่ม จะได้ไม่ซ้ำ)');
+}
 function openContactForm(code){
   const c = code ? CONTACTS.find(x=>x.code === code) : null;
   CT_EDIT = c ? c.code : '__new__';
   const v = (id, val) => { document.getElementById(id).value = val ?? ''; };
-  document.getElementById('ct-form-title').textContent = c ? 'แก้ไขผู้ติดต่อ: ' + c.name : 'เพิ่มผู้ติดต่อใหม่';
+  document.getElementById('ct-form-title').textContent = c ? 'แก้ไขผู้ติดต่อ: ' + c.name : 'เพิ่มผู้ติดต่อ';
+  const sp = c ? splitLegalName(c.name) : {entity:'juristic', nameType:'บริษัทจำกัด', core:''};
+  const entity = (c && c.entity) || sp.entity, nameType = (c && c.name_type) || sp.nameType;
+  document.querySelector('input[name="ctf_entity"][value="' + entity + '"]').checked = true;
+  ctFillNameTypes(entity, nameType);
+  v('ctf_core', c ? (c.name_type && c.entity ? splitLegalName(c.name).core : sp.core) : '');
   v('ctf_code', c ? c.code : nextContactCode()); document.getElementById('ctf_code').readOnly = !!c;
-  v('ctf_name', c && c.name); v('ctf_alias', c && c.alias); v('ctf_type', c ? c.type : 'ลูกค้า'); v('ctf_tax', c && c.tax_id); v('ctf_branch', c && c.branch);
-  v('ctf_former', c && c.former_names); v('ctf_address', c && c.address); v('ctf_phone', c && c.phone); v('ctf_email', c && c.email); v('ctf_person', c && c.contact_person); v('ctf_note', c && c.note);
+  v('ctf_type', c ? c.type : 'ลูกค้า'); v('ctf_tax', c && c.tax_id);
+  const br = c ? (c.branch === '00000' ? 'hq' : (c.branch ? 'branch' : 'none')) : 'none';
+  document.querySelector('input[name="ctf_br"][value="' + br + '"]').checked = true; v('ctf_branch', c && c.branch && c.branch !== '00000' ? c.branch : '');
+  v('ctf_alias', c && c.alias); v('ctf_former', c && c.former_names); v('ctf_person', c && c.contact_person);
+  const structured = c && (c.addr_line || c.sub_district || c.district || c.province || c.postal_code);
+  v('ctf_line', c ? (structured ? c.addr_line : c.address) : ''); v('ctf_sub', c && c.sub_district); v('ctf_district', c && c.district); v('ctf_province', c && c.province); v('ctf_postal', c && c.postal_code);
+  v('ctf_email', c && c.email); v('ctf_phone', c && c.phone); v('ctf_website', c && c.website); v('ctf_fax', c && c.fax); v('ctf_note', c && c.note);
+  document.getElementById('ctf_tax_msg').innerHTML = ''; document.getElementById('ctf_results').innerHTML = '';
+  ctRefreshHints();
   document.getElementById('ct-form-wrap').style.display = '';
-  document.getElementById('ct-form-wrap').scrollIntoView && document.getElementById('ct-form-wrap').scrollIntoView({behavior:'smooth', block:'center'});
+  document.getElementById('ct-form-wrap').scrollIntoView && document.getElementById('ct-form-wrap').scrollIntoView({behavior:'smooth', block:'start'});
 }
 async function saveContactForm(){
   const g = id => document.getElementById(id).value.trim();
-  const contact = {code:g('ctf_code'), name:g('ctf_name'), alias:g('ctf_alias'), type:document.getElementById('ctf_type').value, tax_id:g('ctf_tax'), branch:g('ctf_branch'),
-    address:g('ctf_address'), phone:g('ctf_phone'), email:g('ctf_email'), contact_person:g('ctf_person'), note:g('ctf_note'), source:'manual'};
-  if(!contact.code || !contact.name){ showToast('กรอกรหัสและชื่อให้ครบ'); return; }
+  const entity = ctEntity(), nameType = document.getElementById('ctf_nametype').value, core = g('ctf_core');
+  const parts = {addr_line: g('ctf_line'), sub_district: g('ctf_sub'), district: g('ctf_district'), province: g('ctf_province'), postal_code: g('ctf_postal').replace(/\D/g, '')};
+  const tax = g('ctf_tax').replace(/\D/g, '');
+  const contact = Object.assign({code:g('ctf_code'), name: composeLegalName(entity, nameType, core), alias:g('ctf_alias'), type:document.getElementById('ctf_type').value, tax_id:tax, branch: ctBranchValue(),
+    address: composeAddress(parts), phone:g('ctf_phone'), email:g('ctf_email'), website:g('ctf_website'), fax:g('ctf_fax'), contact_person:g('ctf_person'), note:g('ctf_note'), source:'manual', entity, name_type: nameType}, parts);
+  if(!contact.code || !core){ showToast('กรอกรหัสและชื่อให้ครบ'); return; }
+  if(tax && !/^\d{13}$/.test(tax) && !window.confirm('เลขทะเบียนภาษีมี ' + tax.length + ' หลัก (ปกติ 13 หลัก) บันทึกต่อไหม?')) return;
+  if(tax.length === 13 && taxCheck(tax) === 'bad' && !window.confirm('เลขทะเบียนภาษีนี้ไม่ผ่านการตรวจหลักตรวจสอบ อาจพิมพ์ผิด บันทึกต่อไหม?')) return;
+  if(CT_EDIT === '__new__' && tax){
+    const dup = CONTACTS.find(c=>c.tax_id === tax && (c.branch || '') === contact.branch);
+    if(dup && !window.confirm('มีผู้ติดต่อเลขภาษีและสาขาเดียวกันอยู่แล้ว: "' + dup.name + '" (รหัส ' + dup.code + ')\nยังจะเพิ่มซ้ำไหม?')) return;
+  }
   let former = g('ctf_former').split(';').map(x=>x.trim()).filter(Boolean), renamed = '';
   const prev = CT_EDIT !== '__new__' ? CONTACTS.find(x=>x.code === CT_EDIT) : null;
   if(prev){
@@ -3022,6 +3428,13 @@ document.getElementById('ct-q').addEventListener('input', renderContacts);
 document.getElementById('ct-type').addEventListener('change', renderContacts);
 document.getElementById('ct-add').addEventListener('click', ()=>openContactForm(null));
 document.getElementById('ctf-save').addEventListener('click', saveContactForm);
+document.querySelectorAll('input[name="ctf_entity"]').forEach(r=>r.addEventListener('change', ()=>{ ctFillNameTypes(ctEntity(), ''); ctRefreshHints(); }));
+document.querySelectorAll('input[name="ctf_br"]').forEach(r=>r.addEventListener('change', ctRefreshHints));
+['ctf_core', 'ctf_nametype', 'ctf_code', 'ctf_tax'].forEach(id=>document.getElementById(id).addEventListener('input', ctRefreshHints));
+document.getElementById('ctf_nametype').addEventListener('change', ctRefreshHints);
+document.getElementById('ctf_tax').addEventListener('input', e=>{ e.target.value = e.target.value.replace(/\D/g, '').slice(0, 13); ctRefreshHints(); document.getElementById('ctf_tax_msg').innerHTML = ''; });
+document.getElementById('ctf-search-tax').addEventListener('click', ctSearchTax);
+document.getElementById('ctf-search-name').addEventListener('click', ctSearchName);
 document.getElementById('ctf-cancel').addEventListener('click', ()=>{ document.getElementById('ct-form-wrap').style.display = 'none'; CT_EDIT = null; });
 document.getElementById('ct-file').addEventListener('change', async e=>{ const f = e.target.files[0]; if(f) await handleContactFile(f); e.target.value = ''; });
 document.getElementById('ct-export').addEventListener('click', exportContactsXlsx);
@@ -3606,7 +4019,16 @@ function renderRework(){
     }).join('')+'</tr>').join('');
 }
 
+function renderServerBanner(){
+  const el = document.getElementById('server-banner');
+  if(!el) return;
+  const bad = isAdminUser(CURRENT_EMPLOYEE) && SERVER_VER < NEEDED_SERVER;
+  el.style.display = bad ? 'block' : 'none';
+  if(bad) el.innerHTML = '⚠ Apps Script (หลังบ้าน) ยังเป็น' + (SERVER_VER ? 'เวอร์ชัน ' + SERVER_VER : 'เวอร์ชันเก่ามาก') + ' แต่หน้าเว็บนี้ต้องใช้เวอร์ชัน ' + NEEDED_SERVER + ' — ปุ่ม ผู้ติดต่อ / ไฟล์แนบ / ราคา-บิล บางอย่างจะขึ้น "unknown_action" จนกว่าจะวางโค้ด <u>GoogleAppsScript_Code_v' + NEEDED_SERVER + '.gs</u> ทับใน Apps Script แล้ว Deploy → เวอร์ชันใหม่ (ลิงก์เดิมใช้ต่อได้)';
+}
 function renderAll(){
+  renderServerBanner();
+  renderAbutTab();
   renderOverview();
   refreshClinicSelect();
   renderContacts();
@@ -3786,6 +4208,7 @@ function applyDeptRelevance(){
 let LAST_DEPT_SIG = null;
 function tabAllowed(tab){
   if(isAdminUser(CURRENT_EMPLOYEE) || NORMAL_TABS.includes(tab)) return true;
+  if(tab === 'abutment') return canManageAbutment();
   return tab === 'delivery' && allowedDeptKeys().includes('delivery');
 }
 function applyRole(){
