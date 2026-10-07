@@ -490,6 +490,7 @@
     <div class="card">
       <h2>ใครทำอะไรได้บ้าง <span class="tag">สิทธิ์พนักงาน</span></h2>
       <div class="note" style="margin:0 0 12px">ตารางนี้อ่านจากชีท <b>Employees</b> ใน Google Sheet แบบสด หากต้องการเปลี่ยนสิทธิ์ ให้แก้ที่ชีทนั้น: คอลัมน์ <b>role</b> (ใส่ <code>admin</code> = แอดมิน, ว่าง = พนักงานทั่วไป) และคอลัมน์ <b>depts</b> (แผนกที่รับผิดชอบ เช่น <code>CADCAM</code>, <code>All ceramic, QC</code>, <code>Admin</code>) มีผลภายในประมาณ 20 วินาที ไม่ต้องล็อกอินใหม่ ไม่ต้องแก้โค้ด</div>
+      <div id="perm-conn"></div>
       <div id="perm-gaps"></div>
       <div class="tablewrap"><table id="perm-table"></table></div>
       <div class="note">✓ = ทำได้ | – = ทำไม่ได้ | "แก้สถานะแผนก" = ติ๊ก ✓ / เปลี่ยนสถานะ / ใส่วันที่ เฉพาะแผนกที่ระบุไว้ในช่องถัดไป</div>
@@ -754,7 +755,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-06 รุ่น 39 (เคสด่วน + ศูนย์แจ้งเตือน 🔔)";
+const APP_VERSION = "2026-10-06 รุ่น 40 (บอกสาเหตุเมื่อมองไม่เห็นไฟล์ + หน้าการเชื่อมต่อ)";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -1741,11 +1742,13 @@ async function uploadCaseFiles(orderId, files, dept, note, boxId){
   if(okN){ showToast('อัปโหลดแล้ว ' + okN + ' ไฟล์ ✓' + (SERVER_VER >= DIRECT_MIN && DIRECT_BROKEN ? ' (ใช้วิธีแบ่งส่วนไปก่อน: ยังไม่ได้เรียกใช้ authorizeNow ใน Apps Script จึงยังไม่ได้ลิงก์ไฟล์เดียว)' : '')); await loadNewOrders(); }
   await loadCaseFiles(orderId);
 }
+const FILE_LIST_ERR = {};
 async function loadCaseFiles(orderId){
   try{
     const r = await apiPost({action:'listFiles', order_id: orderId});
-    if(r && r.ok){ CASE_FILES[orderId] = r.files; FILE_COUNTS[orderId] = r.files.length; }
-  }catch(e){ /* keep cache */ }
+    if(r && r.ok){ CASE_FILES[orderId] = r.files; FILE_COUNTS[orderId] = r.files.length; delete FILE_LIST_ERR[orderId]; }
+    else FILE_LIST_ERR[orderId] = (r && r.error === 'unknown_action') ? 'old' : apiErrorText(r);
+  }catch(e){ if(!CASE_FILES[orderId]) FILE_LIST_ERR[orderId] = 'net'; }
   if(CASE_OPEN_ID === orderId) renderFilesList();
 }
 function driveDownloadUrl(f){ return f.drive_id ? 'https://drive.google.com/uc?export=download&id=' + encodeURIComponent(f.drive_id) : (f.link || '#'); }
@@ -1779,7 +1782,12 @@ function renderFilesList(){
   const el = document.getElementById('cm-files-list');
   if(!el) return;
   const list = CASE_FILES[CASE_OPEN_ID];
-  if(!list){ el.innerHTML = '<div class="note">กำลังโหลดรายการไฟล์...</div>'; return; }
+  if(!list){
+    const er = FILE_LIST_ERR[CASE_OPEN_ID];
+    el.innerHTML = er ? `<div class="note" style="color:var(--rose);font-weight:600">⚠ โหลดรายการไฟล์ไม่ได้ — ${er === 'old' ? 'เครื่องนี้ยังเชื่อมต่อระบบหลังบ้านรุ่นเก่า (ไม่มีระบบไฟล์แนบ) แจ้งแอดมินให้อัปเดตลิงก์ระบบของเครื่องนี้ แล้วกด Ctrl+F5' : er === 'net' ? 'อินเทอร์เน็ตหลุดหรือเซิร์ฟเวอร์ไม่ตอบ ลองใหม่อีกครั้ง' : esc(er)}</div><button type="button" class="btn ghost sm" id="fl-retry" style="margin-top:6px">↻ ลองใหม่</button>` : '<div class="note">กำลังโหลดรายการไฟล์...</div>';
+    const rt = document.getElementById('fl-retry'); if(rt) rt.addEventListener('click', ()=>{ delete FILE_LIST_ERR[CASE_OPEN_ID]; renderFilesList(); loadCaseFiles(CASE_OPEN_ID); });
+    return;
+  }
   updateStepFileBadges();
   const me = CURRENT_EMPLOYEE ? CURRENT_EMPLOYEE.name : '', admin = isAdminUser(CURRENT_EMPLOYEE);
   if(!list.length){ el.innerHTML = '<div class="note">ยังไม่มีไฟล์แนบ — แต่ละแผนกอัปโหลดไฟล์ของตัวเองที่ปุ่ม 📎 ในขั้นตอนด้านบน ทีมถัดไปจะเห็นและดาวน์โหลดได้ที่นี่</div>'; return; }
@@ -2807,7 +2815,21 @@ document.getElementById('rp-csv-overview').addEventListener('click', ()=>downloa
 document.getElementById('rp-csv-detail').addEventListener('click', ()=>downloadCsv('สรุปรายเดือน.csv', RP_CSV_DETAIL));
 
 // ---------- Permissions overview (admin) ----------
+function renderConn(){
+  const el = document.getElementById('perm-conn');
+  if(!el) return;
+  const overridden = API_URL !== API_URL_BUILT, okv = SERVER_VER >= NEEDED_SERVER;
+  el.innerHTML = `<div class="ab-card" style="margin-bottom:12px"><b>🔌 การเชื่อมต่อระบบ (ของเครื่องนี้)</b>
+    <div class="ab-grid"><div><b>หน้าเว็บ</b> ${esc(APP_VERSION)}</div><div><b>Apps Script (หลังบ้าน)</b> ${SERVER_VER ? 'เวอร์ชัน ' + SERVER_VER : 'เก่ามาก'} ${okv ? '<span style="color:#2F7D4F">✓ ใช้ได้</span>' : '<span style="color:var(--rose)">⚠ ต้องเวอร์ชัน ' + NEEDED_SERVER + ' ขึ้นไป</span>'}</div></div>
+    <div style="font-size:12.5px;word-break:break-all"><b>ลิงก์ที่ใช้:</b> <code>${esc(API_URL)}</code><br>${overridden ? '⚠ <b>ตั้งเฉพาะเครื่องนี้</b> เครื่องอื่นของพนักงานยังใช้ลิงก์ที่ฝังในไฟล์เว็บ (ถ้าต่างกัน พนักงานจะเห็นข้อมูลไม่ตรงกัน เช่น มองไม่เห็นไฟล์แนบ)' : 'ฝังอยู่ในไฟล์เว็บ ทุกเครื่องใช้ลิงก์เดียวกันนี้'}</div>
+    <div class="actions" style="margin-top:8px"><button class="btn ghost sm" id="conn-copy">📋 คัดลอกลิงก์ที่ใช้อยู่</button><a class="btn ghost sm" href="${esc(API_URL)}?action=names" target="_blank" rel="noopener" style="text-decoration:none">เปิดตรวจเวอร์ชัน</a>${overridden ? '<button class="btn ghost sm" id="conn-reset">กลับไปใช้ลิงก์ในไฟล์เว็บ</button>' : ''}</div>
+    <div class="note" style="margin:8px 0 0">ถ้าพนักงานบางคน<b>มองไม่เห็นไฟล์ที่คนอื่นแนบ</b>: เครื่องของเขาน่าจะยังเชื่อมต่อลิงก์ระบบหลังบ้านรุ่นเก่า ให้ส่งลิงก์ที่คัดลอกจากปุ่มด้านบนให้ผู้พัฒนาฝังลงไฟล์เว็บ (ครั้งเดียว ทุกเครื่องเปลี่ยนพร้อมกัน) หรืออัปเดตลิงก์เดิมให้เป็นโค้ดรุ่นใหม่ แล้วให้ทุกเครื่องกด Ctrl+F5</div></div>`;
+  document.getElementById('conn-copy').addEventListener('click', ()=>copyText(API_URL, 'คัดลอกลิงก์แล้ว ✓ วางส่งให้ผู้พัฒนาในแชทได้เลย'));
+  const rs = document.getElementById('conn-reset');
+  if(rs) rs.addEventListener('click', ()=>{ try{ localStorage.removeItem('totu_api_url'); }catch(e){} location.reload(); });
+}
 function renderPerm(){
+  renderConn();
   const t = document.getElementById('perm-table');
   if(!t) return;
   if(!EMPLOYEE_LIST.length){ t.innerHTML = '<tr><td class="empty">ยังไม่มีรายชื่อพนักงาน</td></tr>'; return; }
@@ -4358,7 +4380,12 @@ function renderRework(){
 function renderServerBanner(){
   const el = document.getElementById('server-banner');
   if(!el) return;
-  const bad = isAdminUser(CURRENT_EMPLOYEE) && SERVER_VER < NEEDED_SERVER;
+  const old = SERVER_VER < NEEDED_SERVER, admin = isAdminUser(CURRENT_EMPLOYEE), bad = admin && old;
+  if(old && !admin && CURRENT_EMPLOYEE){
+    el.style.display = 'block'; el.dataset.key = 'staff';
+    el.innerHTML = '⚠ เครื่องนี้เชื่อมต่อระบบหลังบ้าน<b>รุ่นเก่า</b>' + (SERVER_VER ? ' (เวอร์ชัน ' + SERVER_VER + ')' : '') + ' จึงอาจมองไม่เห็นไฟล์แนบ / รายชื่อผู้ติดต่อ / งานสั่ง Abutment ที่คนอื่นลงไว้ — แจ้งแอดมินให้อัปเดตลิงก์ระบบของเครื่องนี้ แล้วกด Ctrl+F5';
+    return;
+  }
   el.style.display = bad ? 'block' : 'none';
   if(!bad){ el.dataset.key = ''; return; }
   const key = SERVER_VER + '|' + API_URL;
