@@ -245,6 +245,7 @@
   #chat-panel .ch-m{display:flex;margin:6px 0;} #chat-panel .ch-m.mine{justify-content:flex-end;} #chat-panel .ch-b{max-width:78%;padding:7px 11px;border-radius:12px;background:#EDF1F0;font-size:14px;line-height:1.45;word-break:break-word;position:relative;} #chat-panel .ch-m.mine .ch-b{background:#D3EBE4;}
   #chat-panel .ch-who{font-size:11.5px;font-weight:700;color:var(--teal);} #chat-panel .ch-t{font-size:11px;color:var(--muted);margin-left:8px;} #chat-panel .ch-del{border:0;background:none;cursor:pointer;font-size:12px;opacity:.55;margin-left:6px;} #chat-panel .ch-deleted{color:var(--muted);font-style:italic;font-size:13px;}
   #chat-panel .mention{background:#FFF1B8;border-radius:4px;padding:0 3px;font-weight:700;} #chat-panel .ch-in{border-top:1px solid var(--line);padding:8px;display:flex;gap:8px;} #chat-panel .ch-in textarea{flex:1;resize:none;height:44px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font:inherit;}
+  #chat-panel .ch-img{display:block;max-width:100%;max-height:260px;border-radius:8px;margin:2px 0 4px;background:#e6ecea;} #chat-panel .ch-pic{display:flex;gap:8px;align-items:center;padding:6px 10px;border-top:1px solid var(--line);background:#F6F9F8;} #chat-panel .ch-pic img{max-height:70px;border-radius:6px;} #chat-panel .ch-in .btn{flex:none;}
   @media (max-width:700px){ #chat-panel{top:56px;right:0;width:100vw;height:calc(100vh - 60px);border-radius:0;} #chat-panel .ch-wrap{flex-direction:column;} #chat-panel .ch-side{width:auto;max-height:122px;border-right:0;border-bottom:1px solid var(--line);} }
   .bell #bell-n{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;border-radius:9px;background:#8A8F8E;color:#fff;font-size:11px;font-weight:700;line-height:18px;text-align:center;padding:0 4px;display:none;}
   .bell.has #bell-n{display:block;background:#E0A21B;} .bell.hot #bell-n{display:block;background:#D64535;} .bell.hot{animation:bellring 1.6s ease-in-out infinite;}
@@ -260,7 +261,7 @@
   .step-in-box{margin:-2px 0 10px;padding:7px 10px;border:1px dashed #9BB5B2;border-radius:8px;background:#F4F9F8;font-size:13px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
   .step-in-box small{color:var(--muted);margin-left:3px;}
   .tg{display:inline-block;margin-right:5px;padding:1px 8px;border-radius:999px;font-size:11.5px;font-weight:800;white-space:nowrap;vertical-align:middle;border:1px solid transparent;}
-  .tg-abut{background:#E9E4F7;color:#4B3A8C;border-color:#CFC4EE;} .tg-zir{background:#E1F0F0;color:#0E6E6E;border-color:#B6DADA;} .tg-pre{background:#E3EDF9;color:#1F5E9E;border-color:#BAD0EC;} .tg-emax{background:#FBEBD9;color:#A35A0A;border-color:#EFCDA3;}
+  .tg-abut{background:#E9E4F7;color:#4B3A8C;border-color:#CFC4EE;} .tg-zir{background:#E1F0F0;color:#0E6E6E;border-color:#B6DADA;} .tg-model{background:#FCE8EF;color:#A12A55;border-color:#F1C2D3;} .tg-pre{background:#E3EDF9;color:#1F5E9E;border-color:#BAD0EC;} .tg-emax{background:#FBEBD9;color:#A35A0A;border-color:#EFCDA3;}
 </style>
 </head>
 <body>
@@ -795,7 +796,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-06 รุ่น 50 (ห้องแชท 💬)";
+const APP_VERSION = "2026-10-08 รุ่น 52 (ป้ายงาน ทำ Model 🦷)";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -1144,7 +1145,7 @@ const FORM_FIELDS = [
   {key:'case_type', label:'ประเภทเคส', type:'list', opts:REFS.case_types, default:'ปกติ'},
   {key:'priority', label:'ความเร่งด่วน (เว้นว่าง = ปกติ)', type:'list', opts:['ด่วน', 'ด่วนมาก']},
   {key:'urgent_note', label:'ข้อความถึงทีม (เช่น คนไข้รอ / หมอนัดพรุ่งนี้)', type:'text'},
-  {key:'tasks', label:'ป้ายงานกลึง (ติ๊กได้หลายอัน)', type:'tasks'},
+  {key:'tasks', label:'ป้ายงาน (ติ๊กได้หลายอัน)', type:'tasks'},
   {key:'coupon_status', label:'สถานะคูปอง (ถ้าเป็นคูปอง)', type:'list', opts:REFS.coupon_statuses},
   {key:'clinic', label:'คลินิก (พิมพ์ค้นหา หรือพิมพ์ชื่อเองได้)', type:'combo'},
   {key:'doctor', label:'แพทย์', type:'text'},
@@ -2301,6 +2302,7 @@ const TASK_DEFS = [
   {key:'zir', icon:'⚙️', label:'กลึง Zirconia', cls:'tg-zir'},
   {key:'premill', icon:'⚙️', label:'กลึง Premill', cls:'tg-pre'},
   {key:'emax', icon:'⚙️', label:'กลึง Emax', cls:'tg-emax'},
+  {key:'model', icon:'🦷', label:'ทำ Model', cls:'tg-model'},
 ];
 function taskKeysOf(o){ const raw = o && o.tasks; return (Array.isArray(raw) ? raw : String(raw || '').split(',')).map(x=>String(x).trim()).filter(Boolean); }
 function abutOpen(o){ const a = ABUTMENTS.find(x=>x.order_id === o._id); return !!a && (a.status === 'requested' || a.status === 'ordered'); }
@@ -2314,7 +2316,7 @@ function taskBoxHtml(o){
     return `<button type="button" class="btn ${on ? 'primary' : 'ghost'} sm" data-task="${t.key}" ${can ? '' : 'disabled'} title="${on ? 'กดอีกครั้งเพื่อยกเลิก' : 'กดเพื่อติดป้าย'}">${t.icon} ${t.label}${on ? ' ✓' : ''}</button>`;
   }).join('');
   const anyMill = taskKeysOf(o).length > 0;
-  return `<div class="urg-box" id="task-box"><b>ป้ายงาน</b><span class="urg-ctl" style="margin-left:0">${btns}${admin && anyMill ? '<button type="button" class="btn ghost sm" data-task="_clear">ยกเลิกป้ายกลึงทั้งหมด</button>' : ''}</span></div>`;
+  return `<div class="urg-box" id="task-box"><b>ป้ายงาน</b><span class="urg-ctl" style="margin-left:0">${btns}${admin && anyMill ? '<button type="button" class="btn ghost sm" data-task="_clear">ยกเลิกป้ายทั้งหมด</button>' : ''}</span></div>`;
 }
 function bindTaskBox(o){
   document.querySelectorAll('#task-box [data-task]').forEach(b=>b.addEventListener('click', async ()=>{
@@ -2343,7 +2345,7 @@ function bindTaskBox(o){
       }
     }
     await patchOrder(id, patch);
-    showToast(k === '_clear' ? 'ยกเลิกป้ายกลึงทั้งหมดแล้ว' : (list.includes(k) ? '✓ ติดป้าย "' + TASK_DEFS.find(t=>t.key === k).label + '" แล้ว' : 'ยกเลิกป้าย "' + TASK_DEFS.find(t=>t.key === k).label + '" แล้ว'));
+    showToast(k === '_clear' ? 'ยกเลิกป้ายทั้งหมดแล้ว' : (list.includes(k) ? '✓ ติดป้าย "' + TASK_DEFS.find(t=>t.key === k).label + '" แล้ว' : 'ยกเลิกป้าย "' + TASK_DEFS.find(t=>t.key === k).label + '" แล้ว'));
     renderAll(); renderCase();
   }));
 }
@@ -2464,6 +2466,9 @@ document.getElementById('pf-pdf').addEventListener('click', ()=>{ const x = perf
 
 // ---------- 💬 Chat: shop-wide room, team rooms, direct messages (needs the v14 server) ----------
 const CHAT_MIN = 14;
+const CHAT_IMG_MIN = 15;
+function chatImgOn(){ return chatOn() && SERVER_VER >= CHAT_IMG_MIN; }
+const CHAT_PIC = {file:null, url:''};
 const CHAT = {msgs:{}, rooms:[], after:'', open:false, room:'all', ready:false, busy:false, fast:null, slow:null, draft:{}};
 let ALERT_N = 0;
 function updateTitleBadge(){ const n = ALERT_N + (chatOn() ? chatUnreadTotal() : 0); document.title = (n ? '(' + n + ') ' : '') + ALERT_BASE_TITLE; }
@@ -2496,6 +2501,39 @@ function chatDayLabel(d){
   const t0 = new Date(); t0.setHours(0, 0, 0, 0); const diff = Math.round((t0 - new Date(d.getFullYear(), d.getMonth(), d.getDate())) / 86400000);
   return diff === 0 ? 'วันนี้' : diff === 1 ? 'เมื่อวาน' : d.getDate() + '/' + (d.getMonth() + 1) + '/' + (d.getFullYear() + 543);
 }
+function chatImgHtml(id){
+  const sid = String(id).replace(/[^A-Za-z0-9_-]/g, '');
+  return `<a href="https://drive.google.com/file/d/${sid}/view" target="_blank" rel="noopener"><img class="ch-img" loading="lazy" alt="รูปในแชท" src="https://drive.google.com/thumbnail?id=${sid}&sz=w800"></a>`;
+}
+// shrink a picture to <= 1280 px JPEG (PNG/GIF-with-alpha screenshots become JPEG on white) so it stays small for Apps Script
+function chatShrink(file){
+  return new Promise((resolve, reject)=>{
+    const u = URL.createObjectURL(file), im = new Image();
+    im.onload = ()=>{
+      try{
+        const k = Math.min(1, 1280 / Math.max(im.naturalWidth || 1, im.naturalHeight || 1)), w = Math.max(1, Math.round((im.naturalWidth || 1) * k)), h = Math.max(1, Math.round((im.naturalHeight || 1) * k));
+        const c = document.createElement('canvas'); c.width = w; c.height = h;
+        const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, w, h); g.drawImage(im, 0, 0, w, h);
+        const out = c.toDataURL('image/jpeg', 0.82); URL.revokeObjectURL(u);
+        resolve({mime:'image/jpeg', data: out.split(',')[1] || '', preview: out});
+      }catch(e){ reject(e); }
+    };
+    im.onerror = ()=>{ URL.revokeObjectURL(u); reject(new Error('bad_image')); };
+    im.src = u;
+  });
+}
+async function chatPickImage(file){
+  if(!file || !/^image\//.test(file.type || '')) return;
+  if(!chatImgOn()){ showToast('ส่งรูปในแชทได้เมื่อหลังบ้านเป็นเวอร์ชัน ' + CHAT_IMG_MIN + ' ขึ้นไป'); return; }
+  try{ CHAT_PIC.file = await chatShrink(file); }catch(e){ showToast('อ่านรูปนี้ไม่ได้ ลองรูปอื่น'); return; }
+  chatRenderPic();
+}
+function chatRenderPic(){
+  const box = document.getElementById('ch-pic'); if(!box) return;
+  box.innerHTML = CHAT_PIC.file ? `<img src="${CHAT_PIC.file.preview}" alt=""><button type="button" class="btn ghost sm" id="ch-pic-x" title="เอารูปออก">✕</button>` : '';
+  box.style.display = CHAT_PIC.file ? 'flex' : 'none';
+  const x = document.getElementById('ch-pic-x'); if(x) x.addEventListener('click', ()=>{ CHAT_PIC.file = null; chatRenderPic(); });
+}
 function chatMsgHtml(m, prev){
   const t = new Date(m.created_at), pt = prev ? new Date(prev.created_at) : null, mine = m.sender === chatMe();
   const day = (!pt || pt.toDateString() !== t.toDateString()) ? `<div class="ch-day">${esc(chatDayLabel(t))}</div>` : '';
@@ -2503,7 +2541,7 @@ function chatMsgHtml(m, prev){
   if(m.deleted) return day + `<div class="ch-m ${mine ? 'mine' : ''}"><div class="ch-b"><span class="ch-deleted">🚫 ข้อความถูกลบ</span></div></div>`;
   const canDel = isAdminUser(CURRENT_EMPLOYEE) || (mine && Date.now() - t.getTime() < 10 * 60000);
   const showName = !mine && CHAT.room.indexOf('dm:') !== 0;
-  return day + `<div class="ch-m ${mine ? 'mine' : ''}"><div class="ch-b">${showName ? `<div class="ch-who">${esc(m.sender)}</div>` : ''}${chatLinkify(m.text)}<span class="ch-t">${hm}</span>${canDel ? `<button class="ch-del" data-del="${esc(m.id)}" title="ลบข้อความ">🗑</button>` : ''}</div></div>`;
+  return day + `<div class="ch-m ${mine ? 'mine' : ''}"><div class="ch-b">${showName ? `<div class="ch-who">${esc(m.sender)}</div>` : ''}${m.image ? chatImgHtml(m.image) : ''}${m.text ? chatLinkify(m.text) : ''}<span class="ch-t">${hm}</span>${canDel ? `<button class="ch-del" data-del="${esc(m.id)}" title="ลบข้อความ">🗑</button>` : ''}</div></div>`;
 }
 function chatRoomList(){
   const keys = CHAT.rooms.map(r=>r.key).concat(Object.keys(CHAT.msgs).filter(k=>k.indexOf('dm:') === 0)).concat(CHAT.room.indexOf('dm:') === 0 ? [CHAT.room] : []);
@@ -2525,9 +2563,18 @@ function buildChatPanel(){
   p.dataset.built = '1';
   p.innerHTML = `<div class="ch-wrap"><div class="ch-side"><div style="padding:10px 12px;font-weight:800;display:flex;align-items:center">💬 แชท<button type="button" class="btn ghost sm" id="ch-close" style="margin-left:auto">✕</button></div><div class="ch-rooms" id="ch-rooms"></div><div style="padding:8px"><select id="ch-dm" style="width:100%"><option value="">＋ ข้อความส่วนตัวถึง...</option></select><div id="ch-notify" style="margin-top:6px"></div></div></div>
     <div class="ch-main"><div class="ch-head"><span id="ch-title" style="flex:1"></span><button type="button" class="btn ghost sm" id="ch-mute"></button></div><div class="ch-msgs" id="ch-msgs"></div>
-    <div class="ch-in"><textarea id="ch-text" maxlength="1000" placeholder="พิมพ์ข้อความ... (Enter = ส่ง, Shift+Enter = ขึ้นบรรทัดใหม่) ใช้ #เลขเคส ลิงก์เคส, @ชื่อ เรียกคน"></textarea><button type="button" class="btn primary" id="ch-send">ส่ง</button></div></div></div>`;
+    <div id="ch-pic" class="ch-pic" style="display:none"></div><div class="ch-in"><button type="button" class="btn ghost" id="ch-attach" title="แนบรูป (หรือกด Ctrl+V วางรูป)">📎</button><input type="file" id="ch-file" accept="image/*" style="display:none"><textarea id="ch-text" maxlength="1000" placeholder="พิมพ์ข้อความ... (Enter = ส่ง) วางรูปได้ด้วย Ctrl+V หรือกด 📎 · #เลขเคส ลิงก์เคส, @ชื่อ เรียกคน"></textarea><button type="button" class="btn primary" id="ch-send">ส่ง</button></div></div></div>`;
   document.getElementById('ch-close').addEventListener('click', ()=>closeChat());
   document.getElementById('ch-send').addEventListener('click', chatSend);
+  document.getElementById('ch-attach').addEventListener('click', ()=>{ if(!chatImgOn()){ showToast('ต้องอัปเดตหลังบ้านเป็นเวอร์ชัน ' + CHAT_IMG_MIN + ' ก่อน จึงจะส่งรูปในแชทได้'); return; } document.getElementById('ch-file').click(); });
+  document.getElementById('ch-file').addEventListener('change', e=>{ const f = e.target.files && e.target.files[0]; e.target.value = ''; chatPickImage(f); });
+  document.getElementById('ch-text').addEventListener('paste', e=>{
+    const items = (e.clipboardData && e.clipboardData.items) || [];
+    for(const it of items){ if(it.kind === 'file' && /^image\//.test(it.type)){ const f = it.getAsFile(); if(f){ e.preventDefault(); chatPickImage(f); return; } } }
+  });
+  const mainEl = document.querySelector('#chat-panel .ch-main');
+  mainEl.addEventListener('dragover', e=>{ if(e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files')) e.preventDefault(); });
+  mainEl.addEventListener('drop', e=>{ const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]; if(f && /^image\//.test(f.type)){ e.preventDefault(); chatPickImage(f); } });
   document.getElementById('ch-text').addEventListener('keydown', e=>{ if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); chatSend(); } });
   document.getElementById('ch-text').addEventListener('input', e=>{ CHAT.draft[CHAT.room] = e.target.value; });
   document.getElementById('ch-dm').addEventListener('change', e=>{ const v = e.target.value; e.target.value = ''; if(v) openChat(dmKey(chatMe(), v)); });
@@ -2542,7 +2589,7 @@ function renderChat(keepScroll){
   const roomsEl = document.getElementById('ch-rooms'), msgsEl = document.getElementById('ch-msgs');
   roomsEl.innerHTML = chatRoomList().map(k=>{
     const list = CHAT.msgs[k] || [], last = list.filter(m=>!m.deleted).slice(-1)[0], u = chatUnread(k);
-    return `<div class="ch-room ${k === CHAT.room ? 'on' : ''}" data-room="${esc(k)}"><span style="flex:1;min-width:0">${esc(chatRoomLabel(k))}${chatMuted(k) ? ' 🔕' : ''}<small>${last ? esc((last.sender === chatMe() ? 'คุณ' : last.sender) + ': ' + last.text) : 'ยังไม่มีข้อความ'}</small></span>${u && !chatMuted(k) ? `<span class="ch-badge">${u > 99 ? '99+' : u}</span>` : ''}</div>`;
+    return `<div class="ch-room ${k === CHAT.room ? 'on' : ''}" data-room="${esc(k)}"><span style="flex:1;min-width:0">${esc(chatRoomLabel(k))}${chatMuted(k) ? ' 🔕' : ''}<small>${last ? esc((last.sender === chatMe() ? 'คุณ' : last.sender) + ': ' + (last.text || '🖼 รูปภาพ')) : 'ยังไม่มีข้อความ'}</small></span>${u && !chatMuted(k) ? `<span class="ch-badge">${u > 99 ? '99+' : u}</span>` : ''}</div>`;
   }).join('');
   roomsEl.querySelectorAll('[data-room]').forEach(r=>r.addEventListener('click', ()=>openChat(r.dataset.room)));
   const dm = document.getElementById('ch-dm');
@@ -2606,20 +2653,23 @@ function chatNotify(list){
     return !viewing && (re.test(m.text) || !chatMuted(m.room));
   });
   if(!shown.length) return;
-  const f = shown[0], tagged = re.test(f.text), snip = f.text.length > 70 ? f.text.slice(0, 67) + '...' : f.text;
+  const f = shown[0], ftx = f.text || '🖼 รูปภาพ', tagged = re.test(f.text), snip = ftx.length > 70 ? ftx.slice(0, 67) + '...' : ftx;
   showToast((tagged ? '📣 ' + f.sender + ' แท็กคุณ: ' : '💬 ' + f.sender + (f.room.indexOf('dm:') === 0 ? '' : ' (' + chatRoomLabel(f.room) + ')') + ': ') + snip + (shown.length > 1 ? '  (+' + (shown.length - 1) + ' ข้อความ)' : ''));
   try{
-    if(typeof Notification !== 'undefined' && Notification.permission === 'granted' && document.hidden) new Notification('💬 ' + (tagged ? 'มีคนแท็กคุณ' : 'ข้อความใหม่') + ' — ' + f.sender, {body: shown.slice(0, 3).map(m=>m.sender + ': ' + m.text).join('\n'), tag: 'totu-chat'});
+    if(typeof Notification !== 'undefined' && Notification.permission === 'granted' && document.hidden) new Notification('💬 ' + (tagged ? 'มีคนแท็กคุณ' : 'ข้อความใหม่') + ' — ' + f.sender, {body: shown.slice(0, 3).map(m=>m.sender + ': ' + (m.text || '🖼 รูปภาพ')).join('\n'), tag: 'totu-chat'});
     if(navigator.vibrate) navigator.vibrate(120);
   }catch(e){ /* not supported here */ }
 }
 async function chatSend(){
-  const ta = document.getElementById('ch-text'), text = ta.value.trim();
-  if(!text) return;
+  const ta = document.getElementById('ch-text'), text = ta.value.trim(), pic = CHAT_PIC.file;
+  if(!text && !pic) return;
   const btn = document.getElementById('ch-send'); btn.disabled = true;
-  const r = await apiPost({action:'chatSend', room: CHAT.room, text});
+  const req = {action:'chatSend', room: CHAT.room, text};
+  if(pic) req.image = {mime: pic.mime, data: pic.data};
+  const r = await apiPost(req);
   btn.disabled = false;
-  if(!(r && r.ok)){ showToast(r && r.error === 'too_fast' ? 'ส่งเร็วเกินไป รอสักครู่' : apiErrorText(r)); return; }
+  if(!(r && r.ok)){ showToast(r && r.error === 'too_fast' ? 'ส่งเร็วเกินไป รอสักครู่' : r && r.error === 'too_large' ? 'รูปใหญ่เกินไป' : r && r.error === 'upload_failed' ? 'เก็บรูปไม่สำเร็จ (ตรวจสิทธิ์ Drive ของหลังบ้าน)' : apiErrorText(r)); return; }
+  CHAT_PIC.file = null; chatRenderPic();
   const m = r.message, list = CHAT.msgs[m.room] || (CHAT.msgs[m.room] = []);
   if(!list.some(x=>x.id === m.id)){ list.push(m); list.sort((a, b)=>a.created_at < b.created_at ? -1 : 1); }
   if(m.updated_at > CHAT.after) CHAT.after = m.updated_at;
@@ -2630,7 +2680,7 @@ async function chatDelete(id){
   if(!window.confirm('ลบข้อความนี้?')) return;
   const r = await apiPost({action:'chatDelete', id});
   if(!(r && r.ok)){ showToast(r && r.error === 'forbidden' ? 'ลบได้เฉพาะข้อความของตัวเองภายใน 10 นาที (แอดมินลบได้ทุกข้อความ)' : apiErrorText(r)); return; }
-  Object.values(CHAT.msgs).forEach(l=>l.forEach(m=>{ if(m.id === id){ m.deleted = true; m.text = ''; } }));
+  Object.values(CHAT.msgs).forEach(l=>l.forEach(m=>{ if(m.id === id){ m.deleted = true; m.text = ''; m.image = ''; } }));
   renderChat(true);
 }
 async function chatMore(){
