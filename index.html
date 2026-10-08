@@ -5259,6 +5259,9 @@ function couponReportPdf(){
 }
 document.getElementById('cpr-btn').addEventListener('click', couponReportPdf);
 function renderCouponByDoctor(){
+  const card = document.getElementById('coupon-by-doc-card');
+  if(card) card.style.display = canSeeCoupons(CURRENT_EMPLOYEE) ? '' : 'none';
+  if(!canSeeCoupons(CURRENT_EMPLOYEE)) return;
   renderCouponAdmin(); renderCouponWallets();
   const box = document.getElementById('cpd-list'); if(!box) return;
   const open = new Set([...box.querySelectorAll('details[open]')].map(d=>d.dataset.k));
@@ -5547,6 +5550,11 @@ document.getElementById('logout-btn').addEventListener('click', ()=>doLogout('')
 // Roles: admin = all tabs | everyone else = only "search" (ตรวจสอบงาน) + "dept" (สถานะแผนก)
 // A person counts as admin if role = admin, or (role blank and department = Admin)
 const NORMAL_TABS = ['pending', 'search', 'dept'];
+function isCeoUser(emp){
+  if(!emp) return false;
+  return String(emp.role || '').trim().toLowerCase() === 'ceo' || String(emp.department || '').trim().toLowerCase() === 'ceo';
+}
+function canSeeCoupons(emp){ return isAdminUser(emp) || isCeoUser(emp); }
 function isAdminUser(emp){
   if(!emp) return false;
   const role = String(emp.role || '').trim().toLowerCase();
