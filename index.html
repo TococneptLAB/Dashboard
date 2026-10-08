@@ -262,7 +262,7 @@
   .step-in-box small{color:var(--muted);margin-left:3px;}
   .tg{display:inline-block;margin-right:5px;padding:1px 8px;border-radius:999px;font-size:11.5px;font-weight:800;white-space:nowrap;vertical-align:middle;border:1px solid transparent;}
   .tg-abut{background:#E9E4F7;color:#4B3A8C;border-color:#CFC4EE;} .tg-zir{background:#E1F0F0;color:#0E6E6E;border-color:#B6DADA;} .cpd-row{border:1px solid var(--line);border-radius:10px;margin:6px 0;background:#fff;} .cpd-row>summary{cursor:pointer;padding:8px 12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;} .cpd-row .cpd-n{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;} .cpd-chip{font-size:12px;padding:1px 8px;border-radius:10px;background:#EEF3F2;} .cpd-chip.live{background:#FFF1B8;font-weight:700;} .cpd-cases{padding:2px 12px 10px;font-size:13.5px;} .cpd-cases table{width:100%;}
-  .pf-mill-tot td{font-weight:800;background:#F1F6F5;} .tg-model{background:#FCE8EF;color:#A12A55;border-color:#F1C2D3;} .tg-pre{background:#E3EDF9;color:#1F5E9E;border-color:#BAD0EC;} .tg-emax{background:#FBEBD9;color:#A35A0A;border-color:#EFCDA3;}
+  .pf-mill-tot td{font-weight:800;background:#F1F6F5;} .ship-chip{display:inline-block;margin-left:4px;padding:0 7px;border-radius:9px;font-size:11.5px;font-weight:700;} .ship-today{background:#D64535;color:#fff;} .ship-late{background:#8E1F14;color:#fff;} .ship-soon{background:#FFE2A8;color:#7A4B00;} .tg-model{background:#FCE8EF;color:#A12A55;border-color:#F1C2D3;} .tg-pre{background:#E3EDF9;color:#1F5E9E;border-color:#BAD0EC;} .tg-emax{background:#FBEBD9;color:#A35A0A;border-color:#EFCDA3;}
 </style>
 </head>
 <body>
@@ -805,7 +805,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-08 รุ่น 55 (ยอดกลึงรายวันตามวัสดุ ⚙️)";
+const APP_VERSION = "2026-10-08 รุ่น 58 (ผลงานกลึงแยกวัสดุ Zir/Emax/Premill/PMMA/Wax)";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -1040,6 +1040,19 @@ function isPastDue(dateStr){
   const today = new Date(); today.setHours(0,0,0,0);
   return d < today;
 }
+// planned ship-out date ("วันส่งออก"): 0 = today, 1 = tomorrow, <0 = late; null = none / already delivered
+function shipDiff(o){
+  if(!o || o.status === 'ส่งแล้ว' || o.status === 'ยกเลิกเคส') return null;
+  const d = parseYmd(o.ship_date); if(!d) return null;
+  const t = new Date(); t.setHours(0, 0, 0, 0);
+  return Math.round((d - t) / 86400000);
+}
+function shipCell(o){
+  const txt = o.ship_date ? fmtDate(o.ship_date) : '-', df = shipDiff(o);
+  if(df === null) return esc(txt);
+  const chip = df < 0 ? `<span class="ship-chip ship-late">เลย ${-df} วัน</span>` : df === 0 ? '<span class="ship-chip ship-today">ออกวันนี้</span>' : df === 1 ? '<span class="ship-chip ship-soon">พรุ่งนี้</span>' : '';
+  return esc(txt) + chip;
+}
 function isOverdue(row){
   if(row.status === 'ส่งแล้ว' || row.status === 'ยกเลิกเคส') return false;
   return isPastDue(row.appointment_date);
@@ -1197,6 +1210,7 @@ const FORM_FIELDS = [
   {key:'tech2', label:'ช่าง Porcelain', type:'list', opts:REFS.techs},
   {key:'status', label:'สถานะรวม', type:'list', opts:REFS.statuses.filter(x=>x !== 'สถานะ'), default:'รับเข้าระบบ'},
   {key:'appointment_date', label:'วันนัดคนไข้', type:'date'},
+  {key:'ship_date', label:'วันส่งออก (วันที่ต้องส่งงานออก / ให้แมสมารับ)', type:'date'},
   {key:'is_rework', label:'ประเภทงาน', type:'select2', opts:['งานปกติ','งานแก้ (Rework)']},
   {key:'file_link', label:'ลิงก์ไฟล์ / ภาพ (Google Drive ฯลฯ)', type:'text'},
   {key:'detail', label:'รายละเอียด / ข้อความจากแพทย์ / หมายเหตุ', type:'textarea'},
@@ -1498,6 +1512,7 @@ function ticketHtml(o){
       <div><b>ระบบสแกน</b>${esc(o.scan_system||'-')}</div>
       <div><b>วิธีจัดส่ง</b>${esc(o.delivery_method||'-')}</div>
       <div><b>วันนัดคนไข้</b>${esc(o.appointment_date||'-')}</div>
+      <div><b>วันส่งออก</b>${shipCell(o)}</div>
       <div><b>ประเภทเคส</b>${esc(o.case_type||'ปกติ')}${o.case_type==='คูปอง' ? ' (' + esc(o.coupon_status||'-') + ')' : ''}</div>
       <div><b>ต้องสั่ง Abutment</b>${esc(o.need_abutment||'ไม่ต้อง')}</div>
       <div style="grid-column:1/-1"><b>รายละเอียด/หมายเหตุ</b>${esc(o.detail||'-')}</div>
@@ -1613,7 +1628,7 @@ function renderCase(){
       ${f('ระบบรากฟัน', o.implant_system)}${f('ตำแหน่งฟัน', o.position)}${f('สี', o.color)}
       ${f('วัสดุ', o.material)}${f('จำนวน (ซี่)', o.qty)}${f('ระบบสแกน', o.scan_system)}
       ${toothTypesText(o.tooth_types) ? `<div style="grid-column:1/-1"><b>ชนิดงานรายซี่</b>${esc(toothTypesText(o.tooth_types))}</div>` : ''}${f('มีไฟล์สแกน', o.has_scan === 'มี' ? 'มี (พิมพ์โมเดล)' : 'ไม่มี')}
-      ${f('วันรับงาน', fmtDate(o.date_received))}${f('วันนัดคนไข้', o.appointment_date ? fmtDate(o.appointment_date) : '')}${f('วันส่งงานจริง', deliveredDate(o) ? fmtStamp(deliveredDate(o)) : '')}
+      ${f('วันรับงาน', fmtDate(o.date_received))}${f('วันนัดคนไข้', o.appointment_date ? fmtDate(o.appointment_date) : '')}${f('วันส่งออก (กำหนด)', o.ship_date ? fmtDate(o.ship_date) : '')}${f('วันส่งงานจริง', deliveredDate(o) ? fmtStamp(deliveredDate(o)) : '')}
       ${f('ประเภทเคส', (o.case_type === 'คูปอง' ? 'คูปอง' + (o.coupon_status ? ' (' + o.coupon_status + ')' : '') : 'ปกติ') + (o.is_rework === true ? ' • งานแก้' : ''))}${f('วิธีจัดส่ง', o.delivery_method)}${f('คีย์โดย', o.created_by)}
     </div>
     ${o.detail ? `<div class="cm-note"><small>รายละเอียด / หมายเหตุ</small>${esc(o.detail)}</div>` : ''}
@@ -2143,6 +2158,11 @@ function computeAlerts(){
     const add = (kind, level, icon, text)=>{ if(foreign && level < 3) return; out.push({id: kind + ':' + o._id, kind, level, icon, text, orderId: o._id}); };
     const u = urgencyOf(o);
     if(u) add('urgent', 3, u === 2 ? '🚨' : '🔥', (u === 2 ? 'ด่วนมาก ' : 'ด่วน ') + tag + ' — รอ ' + where + (o.urgent_note ? ' • ' + o.urgent_note : ''));
+    const sd = shipDiff(o);
+    if(sd !== null && sd <= 1){
+      const shipTxt = sd < 0 ? 'เลยกำหนดส่งออก ' + (-sd) + ' วัน' : sd === 0 ? 'ต้องส่งออกวันนี้' : 'ต้องส่งออกพรุ่งนี้';
+      add('ship', sd <= 0 ? 3 : 2, '📦', tag + ' ' + shipTxt + ' — ตอนนี้อยู่ที่ ' + where);
+    }
     const ap = parseYmd(o.appointment_date);
     if(ap){
       const diff = Math.round((ap - today) / 86400000);
@@ -2192,7 +2212,7 @@ function renderAlerts(){
   bell.title = n ? 'มี ' + n + ' เรื่องที่ต้องทำ' + (hot ? ' (มีเรื่องด่วน)' : '') : 'ไม่มีเรื่องค้าง';
   ALERT_N = n; updateTitleBadge();
   const c = k=>ALERT_ITEMS.filter(i=>i.kind === k).length;
-  const chips = [['urgent', 'red', '🔥 ด่วน'], ['overdue', 'red', '⏰ เลยวันนัด'], ['soon', 'amber', '📅 นัดวันนี้/พรุ่งนี้'], ['stuck', 'amber', '🐢 ค้างนาน']].filter(x=>c(x[0])).map(x=>`<button type="button" class="chip ${x[1]}" data-open-bell>${x[2]} ${c(x[0])}</button>`).join('');
+  const chips = [['urgent', 'red', '🔥 ด่วน'], ['overdue', 'red', '⏰ เลยวันนัด'], ['ship', 'red', '📦 ต้องส่งออก'], ['soon', 'amber', '📅 นัดวันนี้/พรุ่งนี้'], ['stuck', 'amber', '🐢 ค้างนาน']].filter(x=>c(x[0])).map(x=>`<button type="button" class="chip ${x[1]}" data-open-bell>${x[2]} ${c(x[0])}</button>`).join('');
   ['pd-alert-chips', 'dp-alert-chips'].forEach(id=>{ const el = document.getElementById(id); if(el){ el.innerHTML = chips; el.querySelectorAll('[data-open-bell]').forEach(b=>b.addEventListener('click', ()=>toggleAlertPanel(true))); } });
   notifyNewAlerts(ALERT_ITEMS);
   if(document.getElementById('alert-panel').style.display !== 'none') renderAlertPanel();
@@ -2421,7 +2441,7 @@ function perfRange(){
 }
 function perfCompute(range, deptKey){
   const people = {};
-  const P = (name, e)=>people[name] || (people[name] = {name, dept:(e && e.department) || '', total:0, orders:new Set(), units:0, byStep:{}, work:[], wait:[], days:new Set(), urgent:0, details:[]});
+  const P = (name, e)=>people[name] || (people[name] = {name, dept:(e && e.department) || '', total:0, orders:new Set(), units:0, byStep:{}, byMat:{}, work:[], wait:[], days:new Set(), urgent:0, details:[]});
   EMPLOYEE_LIST.forEach(e=>P(String(e.name).trim(), e));
   NEW_ORDERS.forEach(o=>{
     DEPARTMENTS.forEach(d=>{
@@ -2433,6 +2453,7 @@ function perfCompute(range, deptKey){
       const by = String(rec.by || '').trim() || '(ไม่ระบุชื่อ)', p = P(by);
       const units = Number(o.qty) || 0, hasTime = s=>/T\d{2}:\d{2}/.test(String(s || ''));
       p.total++; p.orders.add(o._id); p.units += units; p.byStep[d.key] = (p.byStep[d.key] || 0) + 1;
+      if(PERF_MILL_KEYS.includes(d.key)) millCats(o, d.key).forEach(c=>{ p.byMat[c] = (p.byMat[c] || 0) + 1; });
       if(urgencyOf(o)) p.urgent++;
       if(endAt) p.days.add(ymdLocal(endAt));
       if(hasTime(rec.start) && hasTime(rec.end)){ const w = endAt - stampToDate(rec.start); if(w >= 0) p.work.push(w); }
@@ -2450,18 +2471,36 @@ function fmtDur(ms){
 }
 const avg = a=>a.length ? a.reduce((x, y)=>x + y, 0) / a.length : null;
 let PF_SELECTED = null;
+// milling people: one column per MATERIAL (Zirconia / Emax / Premill / PMMA / Wax / other), not per workflow step
+const PERF_MILL_KEYS = ['milling', 'milling_zir', 'milling_emax', 'milling_premill'];
+function perfStepCols(list){
+  const cols = []; let millDone = false;
+  DEPARTMENTS.forEach(d=>{
+    if(PERF_MILL_KEYS.includes(d.key)){
+      if(millDone) return; millDone = true;
+      MILL_COLS.forEach(m=>{ if(list.some(p=>p.byMat[m.k])) cols.push({key:'_m_' + m.k, label:'กลึง ' + m.label, mat:m.k}); });
+      return;
+    }
+    if(list.some(p=>p.byStep[d.key])) cols.push({key:d.key, label:d.label});
+  });
+  return cols;
+}
+function perfCell(p, c){ return c.mat ? (p.byMat[c.mat] || 0) : (p.byStep[c.key] || 0); }
+function perfCellTip(p, c){ return ''; }
 // ---- milling output per day by material (steps ticked "เสร็จแล้ว" in the milling steps) ----
-const MILL_COLS = [{k:'zir', label:'Zirconia'}, {k:'emax', label:'Emax'}, {k:'premill', label:'Premill'}, {k:'temp', label:'Temp (PMMA/Wax)'}, {k:'other', label:'อื่นๆ'}];
-function millCategory(o, stepKey){
-  if(stepKey === 'milling_zir') return 'zir';
-  if(stepKey === 'milling_emax') return 'emax';
-  if(stepKey === 'milling_premill') return 'premill';
-  const m = String(o.material || '').toLowerCase();
-  if(/zir/.test(m)) return 'zir';
-  if(/emax|e\.max/.test(m)) return 'emax';
-  if(/premill/.test(m)) return 'premill';
-  if(/temp|pmma|wax|ชั่วคราว|แว็กซ์|แวกซ์/.test(m)) return 'temp';
-  return 'other';
+const MILL_COLS = [{k:'zir', label:'Zirconia'}, {k:'emax', label:'Emax'}, {k:'premill', label:'Premill'}, {k:'pmma', label:'PMMA'}, {k:'wax', label:'Wax'}, {k:'other', label:'อื่นๆ'}];
+// which material(s) a finished milling step was: the lane says it for Zirconia/Emax/Premill; the old plain MILLING step is read from the case's material name (a mixed one like "Zir+Temp" counts in each material it names)
+function millCats(o, stepKey){
+  if(stepKey === 'milling_zir') return ['zir'];
+  if(stepKey === 'milling_emax') return ['emax'];
+  if(stepKey === 'milling_premill') return ['premill'];
+  const m = String(o.material || '').toLowerCase(), out = [];
+  if(/zir/.test(m)) out.push('zir');
+  if(/emax|e\.max/.test(m)) out.push('emax');
+  if(/premill/.test(m)) out.push('premill');
+  if(/pmma|temp|ชั่วคราว/.test(m)) out.push('pmma');
+  if(/wax|แว็กซ์|แวกซ์/.test(m)) out.push('wax');
+  return out.length ? out : ['other'];
 }
 function millByDay(range){
   const days = {};
@@ -2471,8 +2510,8 @@ function millByDay(range){
       if(rec.status !== 'เสร็จแล้ว') return;
       const endAt = stampToDate(rec.end); if(!endAt) return;
       if(range.from && endAt < range.from) return; if(range.to && endAt > range.to) return;
-      const day = ymdLocal(endAt), cat = millCategory(o, key), cell = ((days[day] = days[day] || {})[cat] = (days[day][cat] || {units:0, cases:0}));
-      cell.units += Number(o.qty) || 0; cell.cases++;
+      const day = ymdLocal(endAt);
+      millCats(o, key).forEach(cat=>{ const cell = ((days[day] = days[day] || {})[cat] = (days[day][cat] || {units:0, cases:0})); cell.units += Number(o.qty) || 0; cell.cases++; });
     });
   });
   return days;
@@ -2491,7 +2530,7 @@ function renderMillByDay(range){
   const gu = MILL_COLS.reduce((a, c)=>a + tot[c.k].units, 0), gn = MILL_COLS.reduce((a, c)=>a + tot[c.k].cases, 0);
   t.innerHTML = '<tr><th>วันที่</th>' + MILL_COLS.map(c=>`<th>${esc(c.label)}</th>`).join('') + '<th>รวม</th></tr>' + rows +
     '<tr class="pf-mill-tot"><td>รวมช่วงนี้</td>' + MILL_COLS.map(c=>`<td class="num">${cell(tot[c.k].cases ? tot[c.k] : null)}</td>`).join('') + `<td class="num">${cell({units:gu, cases:gn})}</td></tr>` +
-    '<tr><td colspan="' + (MILL_COLS.length + 2) + '" class="note" style="white-space:normal">ซี่ = จำนวนซี่ของเคสนั้น (ถ้าเคสเดียวกลึงสองวัสดุ จะนับจำนวนซี่เต็มทั้งสองช่อง) • วันที่ = วันที่ติ๊กเสร็จ • วัสดุแยกจากช่องกลึง (Zirconia/Emax/Premill) หรือจากชื่อวัสดุของเคสสำหรับช่อง MILLING เดิม</td></tr>';
+    '<tr><td colspan="' + (MILL_COLS.length + 2) + '" class="note" style="white-space:normal">ซี่ = จำนวนซี่ของเคสนั้น (ถ้าเคสเดียวมีสองวัสดุ เช่น Zir+Temp จะนับจำนวนซี่เต็มทั้งสองช่อง และช่อง "รวม" จะนับซ้ำ) • วันที่ = วันที่ติ๊กเสร็จ • วัสดุแยกจากช่องกลึง (Zirconia/Emax/Premill) หรือจากชื่อวัสดุของเคสสำหรับช่อง MILLING เดิม</td></tr>';
 }
 function renderPerf(){
   const tbl = document.getElementById('pf-table');
@@ -2507,13 +2546,13 @@ function renderPerf(){
   const allWork = [].concat(...list.map(p=>p.work)), allWait = [].concat(...list.map(p=>p.wait));
   const k = (n, l, c)=>`<div class="kpi ${c || ''}"><div class="num">${n}</div><div class="lbl">${l}</div></div>`;
   document.getElementById('pf-kpis').innerHTML = k(total, 'ขั้นตอนที่เสร็จ (' + esc(range.label) + ')') + k(cases.size, 'เคสที่เกี่ยวข้อง') + k(units, 'ซี่ที่ผ่านมือ') + k(active, 'คนที่มีผลงาน') + k(fmtDur(avg(allWork)), 'ทำจริงเฉลี่ย/ขั้น') + k(fmtDur(avg(allWait)), 'รอ→เสร็จเฉลี่ย/ขั้น');
-  const stepCols = DEPARTMENTS.filter(d=>list.some(p=>p.byStep[d.key]));
+  const stepCols = perfStepCols(list);
   const short = l=>String(l).replace(/ \(.*/, '').replace(/^พอชเลน \/ /, '');
   const max = Math.max(1, ...list.map(p=>p.total));
   if(!list.length){ tbl.innerHTML = '<tr><td class="empty">ยังไม่มีข้อมูลในช่วงนี้</td></tr>'; document.getElementById('pf-detail').innerHTML = ''; return; }
   tbl.innerHTML = '<tr><th>#</th><th>ชื่อ</th><th>แผนก</th><th>ขั้นเสร็จ</th><th style="min-width:110px"></th><th>เคส</th><th>ซี่</th>' + stepCols.map(d=>`<th title="${esc(d.label)}">${esc(short(d.label))}</th>`).join('') + '<th>วันที่มีผลงาน</th><th>เฉลี่ย/วัน</th><th>ทำจริง</th><th>รอ→เสร็จ</th><th>ด่วน</th></tr>' +
     list.map((p, i)=>`<tr class="${PF_SELECTED === p.name ? 'sel' : ''}"><td>${p.total ? i + 1 : '-'}</td><td><a href="#" data-pf="${esc(p.name)}" class="caselink">${esc(p.name)}</a></td><td>${esc(p.dept || '-')}</td><td class="num"><b>${p.total}</b></td><td><div style="height:8px;border-radius:4px;background:#EEF3F2"><div style="height:8px;border-radius:4px;background:var(--teal);width:${Math.round(p.total / max * 100)}%"></div></div></td><td class="num">${p.orders.size}</td><td class="num">${p.units}</td>` +
-      stepCols.map(d=>`<td class="num">${p.byStep[d.key] || '-'}</td>`).join('') + `<td class="num">${p.days.size || '-'}</td><td class="num">${p.days.size ? (p.total / p.days.size).toFixed(1) : '-'}</td><td>${fmtDur(avg(p.work))}</td><td>${fmtDur(avg(p.wait))}</td><td class="num">${p.urgent || '-'}</td></tr>`).join('');
+      stepCols.map(d=>`<td class="num" title="${esc(perfCellTip(p, d))}">${perfCell(p, d) || '-'}</td>`).join('') + `<td class="num">${p.days.size || '-'}</td><td class="num">${p.days.size ? (p.total / p.days.size).toFixed(1) : '-'}</td><td>${fmtDur(avg(p.work))}</td><td>${fmtDur(avg(p.wait))}</td><td class="num">${p.urgent || '-'}</td></tr>`).join('');
   tbl.querySelectorAll('[data-pf]').forEach(a=>a.addEventListener('click', e=>{ e.preventDefault(); PF_SELECTED = a.dataset.pf; renderPerf(); }));
   const sel = list.find(p=>p.name === PF_SELECTED), det = document.getElementById('pf-detail');
   if(!sel){ det.innerHTML = '<div class="note" style="margin-top:10px">กดชื่อคนในตารางเพื่อดูรายละเอียดเคสที่ทำ</div>'; return; }
@@ -2527,10 +2566,10 @@ function renderPerf(){
 }
 function perfExportRows(){
   const range = perfRange(), deptKey = document.getElementById('pf-dept').value, list = perfCompute(range, deptKey).filter(p=>p.total > 0).sort((a, b)=>b.total - a.total);
-  const stepCols = DEPARTMENTS.filter(d=>list.some(p=>p.byStep[d.key]));
+  const stepCols = perfStepCols(list);
   const head = ['อันดับ', 'ชื่อ', 'แผนก', 'ขั้นตอนที่เสร็จ', 'เคส', 'ซี่ที่ผ่านมือ'].concat(stepCols.map(d=>d.label), ['จำนวนวันที่มีผลงาน', 'เฉลี่ยต่อวัน', 'ทำจริงเฉลี่ย (ชม.)', 'รอ→เสร็จเฉลี่ย (ชม.)', 'เคสด่วน']);
   const h = ms=>ms === null ? '' : Math.round(ms / 36000) / 100;
-  const rows = [head].concat(list.map((p, i)=>[i + 1, p.name, p.dept, p.total, p.orders.size, p.units].concat(stepCols.map(d=>p.byStep[d.key] || 0), [p.days.size, p.days.size ? Math.round(p.total / p.days.size * 10) / 10 : '', h(avg(p.work)), h(avg(p.wait)), p.urgent])));
+  const rows = [head].concat(list.map((p, i)=>[i + 1, p.name, p.dept, p.total, p.orders.size, p.units].concat(stepCols.map(d=>perfCell(p, d)), [p.days.size, p.days.size ? Math.round(p.total / p.days.size * 10) / 10 : '', h(avg(p.work)), h(avg(p.wait)), p.urgent])));
   const det = [['ชื่อ', 'เลขเคส', 'ขั้นตอน', 'เสร็จเมื่อ', 'คลินิก', 'คนไข้', 'ซี่', 'เคสด่วน']];
   list.forEach(p=>p.details.slice().sort((a, b)=>(b.at || 0) - (a.at || 0)).forEach(x=>det.push([p.name, String(x.case_id ?? ''), x.step, x.at ? fmtStamp(ymdLocal(x.at) + 'T' + String(x.at.getHours()).padStart(2, '0') + ':' + String(x.at.getMinutes()).padStart(2, '0')) : '', x.clinic, String(x.patient ?? ''), x.units, x.urgent ? 'ด่วน' : ''])));
   return {range, rows, det};
@@ -3340,7 +3379,7 @@ function renderPending(){
   LAST_PENDING_LIST = sorted;
   if(!sorted.length){ t.innerHTML = '<tr><td class="empty">ไม่มีงานค้างในเดือนนี้ 🎉</td></tr>'; return; }
   LAST_PENDING_LIST = sorted;
-  const head = ['เลขเคส','คลินิก','คนไข้','วัสดุ','วันรับงาน','วันนัด','ตอนนี้อยู่ที่แผนก','ค้างในแผนก','ความคืบหน้า','ผู้รับผิดชอบ','คัดลอก'];
+  const head = ['เลขเคส','คลินิก','คนไข้','วัสดุ','วันรับงาน','วันนัด','วันส่งออก','ตอนนี้อยู่ที่แผนก','ค้างในแผนก','ความคืบหน้า','ผู้รับผิดชอบ','คัดลอก'];
   t.innerHTML = '<tr>' + head.map(h=>`<th>${h}</th>`).join('') + '</tr>' +
     sorted.slice(0,200).map(r=>`<tr>
       <td>${caseLink(r)} ${carryIds.has(r._id) ? '<span class="badge b-hold">ยกมา</span>' : ''}</td>
@@ -3349,6 +3388,7 @@ function renderPending(){
       <td>${esc(r.material ?? '-')}</td>
       <td>${esc(fmtDate(r.date_received))}</td>
       <td>${esc(fmtDate(r.appointment_date))}</td>
+      <td>${shipCell(r)}</td>
       <td>${esc(currentDeptLabel(r))}</td>
       <td>${daysCell(currentDays(r))}</td>
       <td>${progressStrip(r)}</td>
@@ -4854,7 +4894,7 @@ function renderDept(){
 
   const t = document.getElementById('dept-table');
   if(!rows.length){ t.innerHTML = '<tr><td class="empty">ไม่มีเคสที่เกี่ยวข้องกับแผนกนี้ตามเงื่อนไข</td></tr>'; return; }
-  const header = ['ทำแล้ว ✓','เลขเคส','คลินิก','คนไข้','วัสดุ','จำนวน','วันรับงาน','วันนัด (deadline)','ค้างในแผนก','ความคืบหน้า','สถานะแผนกนี้','เริ่ม (วัน-เวลา)','เสร็จ (วัน-เวลา)','ทำโดย',''];
+  const header = ['ทำแล้ว ✓','เลขเคส','คลินิก','คนไข้','วัสดุ','จำนวน','วันรับงาน','วันนัด (deadline)','วันส่งออก','ค้างในแผนก','ความคืบหน้า','สถานะแผนกนี้','เริ่ม (วัน-เวลา)','เสร็จ (วัน-เวลา)','ทำโดย',''];
   let html = '<tr>'+header.map(h=>`<th>${h}</th>`).join('')+'</tr>';
   rows.slice(0,300).forEach(({r,rec})=>{
     const overdue = isOverdue(r) && !['เสร็จแล้ว','ยกเลิก'].includes(rec.status);
@@ -4868,6 +4908,7 @@ function renderDept(){
       <td>${esc(r.qty??'-')}</td>
       <td>${esc(fmtDate(r.date_received))}</td>
       <td>${esc(fmtDate(r.appointment_date))}</td>
+      <td>${shipCell(r)}</td>
       <td>${isActiveAt(r, CURRENT_DEPT) ? daysCell(daysAtDept(r, CURRENT_DEPT)) : '-'}</td>
       <td>${progressStrip(r)}</td>
       <td><select class="dep-row-select" data-id="${esc(r._id)}">${DEP_STATUSES.map(s=>`<option value="${esc(s)}" ${s===rec.status?'selected':''}>${esc(s)}</option>`).join('')}</select></td>
