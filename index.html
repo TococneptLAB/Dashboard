@@ -261,7 +261,8 @@
   .step-in-box{margin:-2px 0 10px;padding:7px 10px;border:1px dashed #9BB5B2;border-radius:8px;background:#F4F9F8;font-size:13px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
   .step-in-box small{color:var(--muted);margin-left:3px;}
   .tg{display:inline-block;margin-right:5px;padding:1px 8px;border-radius:999px;font-size:11.5px;font-weight:800;white-space:nowrap;vertical-align:middle;border:1px solid transparent;}
-  .tg-abut{background:#E9E4F7;color:#4B3A8C;border-color:#CFC4EE;} .tg-zir{background:#E1F0F0;color:#0E6E6E;border-color:#B6DADA;} .tg-model{background:#FCE8EF;color:#A12A55;border-color:#F1C2D3;} .tg-pre{background:#E3EDF9;color:#1F5E9E;border-color:#BAD0EC;} .tg-emax{background:#FBEBD9;color:#A35A0A;border-color:#EFCDA3;}
+  .tg-abut{background:#E9E4F7;color:#4B3A8C;border-color:#CFC4EE;} .tg-zir{background:#E1F0F0;color:#0E6E6E;border-color:#B6DADA;} .cpd-row{border:1px solid var(--line);border-radius:10px;margin:6px 0;background:#fff;} .cpd-row>summary{cursor:pointer;padding:8px 12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;} .cpd-row .cpd-n{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;} .cpd-chip{font-size:12px;padding:1px 8px;border-radius:10px;background:#EEF3F2;} .cpd-chip.live{background:#FFF1B8;font-weight:700;} .cpd-cases{padding:2px 12px 10px;font-size:13.5px;} .cpd-cases table{width:100%;}
+  .pf-mill-tot td{font-weight:800;background:#F1F6F5;} .tg-model{background:#FCE8EF;color:#A12A55;border-color:#F1C2D3;} .tg-pre{background:#E3EDF9;color:#1F5E9E;border-color:#BAD0EC;} .tg-emax{background:#FBEBD9;color:#A35A0A;border-color:#EFCDA3;}
 </style>
 </head>
 <body>
@@ -446,6 +447,12 @@
     <div class="card">
       <h2>งานอยู่ที่แผนกไหนตอนนี้ (จำนวนเคส)</h2>
       <div id="chart-wip"></div>
+    </div>
+    <div class="card" id="coupon-by-doc-card">
+      <h2>🎟 คูปองรายคลินิก / หมอ <span class="tag" id="cpd-count">0</span></h2>
+      <div class="note" style="margin:0 0 8px">นับทุกเดือนรวมกัน (ไม่ขึ้นกับตัวเลือกเดือนด้านบน) เฉพาะเคสประเภท "คูปอง" กดที่แถวเพื่อดูรายการเคสของหมอท่านนั้น</div>
+      <input type="text" id="cpd-q" placeholder="ค้นหาคลินิก / หมอ..." style="max-width:320px;margin-bottom:8px">
+      <div id="cpd-list"></div>
     </div>
     <div class="cols2">
       <div class="card">
@@ -706,6 +713,8 @@
       <div class="kpis" id="pf-kpis"></div>
       <div class="tablewrap" style="max-height:560px"><table id="pf-table"></table></div>
       <div id="pf-detail"></div>
+      <h3 style="margin:18px 0 6px">⚙️ ยอดกลึงรายวัน แยกตามวัสดุ <small style="color:var(--muted);font-weight:400">(ตามช่วงเวลาที่เลือกด้านบน)</small></h3>
+      <div class="tablewrap" style="max-height:520px"><table id="pf-mill"></table></div>
       <div class="note">นับจาก <b>ชื่อผู้ใช้ที่กดติ๊กขั้นตอนเป็น "เสร็จแล้ว"</b> และเวลาที่กด ถ้าแอดมินติ๊กแทนช่าง จะนับเป็นของแอดมิน และถ้ามีคนแก้วันที่ของขั้นนั้นทีหลัง จะนับเป็นของคนที่แก้ล่าสุด • "ซี่ที่ผ่านมือ" = จำนวนซี่ของเคสในแต่ละขั้นที่เสร็จ (เคสเดียวผ่านหลายขั้นจะนับหลายครั้ง) • "ทำจริง" = เวลาเริ่ม→เสร็จ (ต้องมีการกด "เริ่มทำ") • "รอ→เสร็จ" = ตั้งแต่เคสถึงคิวจนเสร็จ รวมเวลารอ • เวลาเฉลี่ยคิดเฉพาะข้อมูลที่บันทึกเวลาไว้ (ข้อมูลเก่าก่อนมีเวลาจะไม่นับ) • ใช้เป็นข้อมูลประกอบ ไม่ควรใช้ตัดสินคนเดียว เพราะงานแต่ละประเภทยากง่ายต่างกัน</div>
     </div>
   </section>
@@ -796,7 +805,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-08 รุ่น 53 (เปิดเร็ว จำข้อมูลในเครื่อง 💾)";
+const APP_VERSION = "2026-10-08 รุ่น 55 (ยอดกลึงรายวันตามวัสดุ ⚙️)";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -2441,12 +2450,57 @@ function fmtDur(ms){
 }
 const avg = a=>a.length ? a.reduce((x, y)=>x + y, 0) / a.length : null;
 let PF_SELECTED = null;
+// ---- milling output per day by material (steps ticked "เสร็จแล้ว" in the milling steps) ----
+const MILL_COLS = [{k:'zir', label:'Zirconia'}, {k:'emax', label:'Emax'}, {k:'premill', label:'Premill'}, {k:'temp', label:'Temp (PMMA/Wax)'}, {k:'other', label:'อื่นๆ'}];
+function millCategory(o, stepKey){
+  if(stepKey === 'milling_zir') return 'zir';
+  if(stepKey === 'milling_emax') return 'emax';
+  if(stepKey === 'milling_premill') return 'premill';
+  const m = String(o.material || '').toLowerCase();
+  if(/zir/.test(m)) return 'zir';
+  if(/emax|e\.max/.test(m)) return 'emax';
+  if(/premill/.test(m)) return 'premill';
+  if(/temp|pmma|wax|ชั่วคราว|แว็กซ์|แวกซ์/.test(m)) return 'temp';
+  return 'other';
+}
+function millByDay(range){
+  const days = {};
+  NEW_ORDERS.forEach(o=>{
+    ['milling', 'milling_zir', 'milling_emax', 'milling_premill'].forEach(key=>{
+      const rec = depRecord(o, key);
+      if(rec.status !== 'เสร็จแล้ว') return;
+      const endAt = stampToDate(rec.end); if(!endAt) return;
+      if(range.from && endAt < range.from) return; if(range.to && endAt > range.to) return;
+      const day = ymdLocal(endAt), cat = millCategory(o, key), cell = ((days[day] = days[day] || {})[cat] = (days[day][cat] || {units:0, cases:0}));
+      cell.units += Number(o.qty) || 0; cell.cases++;
+    });
+  });
+  return days;
+}
+function renderMillByDay(range){
+  const t = document.getElementById('pf-mill'); if(!t) return;
+  const days = millByDay(range), keys = Object.keys(days).sort().reverse();
+  if(!keys.length){ t.innerHTML = '<tr><td class="empty">ยังไม่มีงานกลึงที่เสร็จในช่วงนี้ (ต้องมีวันที่เสร็จบันทึกไว้)</td></tr>'; return; }
+  const tot = {}; MILL_COLS.forEach(c=>tot[c.k] = {units:0, cases:0});
+  const cell = c=>c ? `<b>${c.units}</b> ซี่ <small style="color:var(--muted)">(${c.cases} เคส)</small>` : '-';
+  const rows = keys.map(day=>{
+    const r = days[day]; let u = 0, n = 0;
+    MILL_COLS.forEach(c=>{ if(r[c.k]){ u += r[c.k].units; n += r[c.k].cases; tot[c.k].units += r[c.k].units; tot[c.k].cases += r[c.k].cases; } });
+    return `<tr><td>${esc(fmtDate(day))}</td>` + MILL_COLS.map(c=>`<td class="num">${cell(r[c.k])}</td>`).join('') + `<td class="num">${cell({units:u, cases:n})}</td></tr>`;
+  }).join('');
+  const gu = MILL_COLS.reduce((a, c)=>a + tot[c.k].units, 0), gn = MILL_COLS.reduce((a, c)=>a + tot[c.k].cases, 0);
+  t.innerHTML = '<tr><th>วันที่</th>' + MILL_COLS.map(c=>`<th>${esc(c.label)}</th>`).join('') + '<th>รวม</th></tr>' + rows +
+    '<tr class="pf-mill-tot"><td>รวมช่วงนี้</td>' + MILL_COLS.map(c=>`<td class="num">${cell(tot[c.k].cases ? tot[c.k] : null)}</td>`).join('') + `<td class="num">${cell({units:gu, cases:gn})}</td></tr>` +
+    '<tr><td colspan="' + (MILL_COLS.length + 2) + '" class="note" style="white-space:normal">ซี่ = จำนวนซี่ของเคสนั้น (ถ้าเคสเดียวกลึงสองวัสดุ จะนับจำนวนซี่เต็มทั้งสองช่อง) • วันที่ = วันที่ติ๊กเสร็จ • วัสดุแยกจากช่องกลึง (Zirconia/Emax/Premill) หรือจากชื่อวัสดุของเคสสำหรับช่อง MILLING เดิม</td></tr>';
+}
 function renderPerf(){
   const tbl = document.getElementById('pf-table');
   if(!tbl || !canSeePerformance()) return;
   const dsel = document.getElementById('pf-dept');
   if(dsel.options.length <= 1) DEPARTMENTS.forEach(d=>dsel.add(new Option(d.label, d.key)));
-  const range = perfRange(), deptKey = dsel.value, list = perfCompute(range, deptKey).filter(p=>p.total > 0 || EMPLOYEE_LIST.some(e=>String(e.name).trim() === p.name))
+  const range = perfRange();
+  renderMillByDay(range);
+  const deptKey = dsel.value, list = perfCompute(range, deptKey).filter(p=>p.total > 0 || EMPLOYEE_LIST.some(e=>String(e.name).trim() === p.name))
     .sort((a, b)=>(b.total - a.total) || a.name.localeCompare(b.name, 'th'));
   const total = list.reduce((a, p)=>a + p.total, 0), units = list.reduce((a, p)=>a + p.units, 0), active = list.filter(p=>p.total > 0).length;
   const cases = new Set(); list.forEach(p=>p.orders.forEach(x=>cases.add(x)));
@@ -4880,7 +4934,37 @@ function fmtDate(s){
   if(isNaN(d)) return s;
   return d.toLocaleDateString('th-TH');
 }
+// ---- coupons per clinic / doctor (all months) ----
+// "มีอยู่" = ยังใช้ได้อยู่ (รออนุมัติ + อนุมัติแล้ว) ; ใช้แล้ว และ หมดอายุ/ยกเลิก นับแยก
+function couponGroups(q){
+  const g = {}, qq = String(q || '').trim().toLowerCase();
+  NEW_ORDERS.filter(o=>o.case_type === 'คูปอง').forEach(o=>{
+    const clinic = String(o.clinic || '').trim() || '(ไม่ระบุคลินิก)', doc = String(o.doctor || '').trim() || '(ไม่ระบุหมอ)', k = clinic + '\u0001' + doc;
+    (g[k] = g[k] || {clinic, doctor: doc, cases: []}).cases.push(o);
+  });
+  return Object.values(g).filter(x=>!qq || (x.clinic + ' ' + x.doctor).toLowerCase().includes(qq)).map(x=>{
+    const by = {}; x.cases.forEach(o=>{ const s = o.coupon_status || 'ไม่ระบุ'; by[s] = (by[s] || 0) + 1; });
+    x.by = by; x.total = x.cases.length; x.live = (by['รออนุมัติ'] || 0) + (by['อนุมัติแล้ว'] || 0);
+    x.cases.sort((a, b)=>String(b.date_received || '').localeCompare(String(a.date_received || '')));
+    return x;
+  }).sort((a, b)=>b.live - a.live || b.total - a.total || a.clinic.localeCompare(b.clinic));
+}
+function renderCouponByDoctor(){
+  const box = document.getElementById('cpd-list'); if(!box) return;
+  const open = new Set([...box.querySelectorAll('details[open]')].map(d=>d.dataset.k));
+  const list = couponGroups(document.getElementById('cpd-q').value);
+  document.getElementById('cpd-count').textContent = list.reduce((a, x)=>a + x.total, 0);
+  if(!list.length){ box.innerHTML = '<div class="note">ยังไม่มีเคสคูปอง' + (document.getElementById('cpd-q').value ? ' ที่ตรงกับคำค้น' : '') + '</div>'; return; }
+  box.innerHTML = list.map(x=>{
+    const k = x.clinic + '|' + x.doctor;
+    const chips = ['รออนุมัติ', 'อนุมัติแล้ว', 'ใช้คูปองแล้ว', 'คูปองหมดอายุ/ยกเลิก', 'ไม่ระบุ'].filter(s=>x.by[s]).map(s=>`<span class="cpd-chip ${s === 'อนุมัติแล้ว' || s === 'รออนุมัติ' ? 'live' : ''}">${esc(s)} ${x.by[s]}</span>`).join('');
+    const rows = x.cases.map(o=>`<tr><td>${esc(fmtDate(o.date_received))}</td><td><a href="#" class="caselink" data-open-case="${esc(o._id)}">${esc(o.case_id || '-')}</a></td><td>${esc(o.patient || '')}</td><td>${esc(o.material || '')}</td><td>${esc(o.coupon_status || '-')}</td><td>${esc(o.status || '')}</td></tr>`).join('');
+    return `<details class="cpd-row" data-k="${esc(k)}" ${open.has(k) ? 'open' : ''}><summary><b>${esc(x.clinic)}</b><span>👨‍⚕️ ${esc(x.doctor)}</span><span class="cpd-n"><span class="cpd-chip live" title="รออนุมัติ + อนุมัติแล้ว (ยังใช้ได้)">ยังใช้ได้ ${x.live}</span>${chips}<span class="cpd-chip">รวม ${x.total}</span></span></summary><div class="cpd-cases"><table><tr><th>วันรับงาน</th><th>เคส</th><th>คนไข้</th><th>วัสดุ</th><th>สถานะคูปอง</th><th>สถานะงาน</th></tr>${rows}</table></div></details>`;
+  }).join('');
+}
+document.getElementById('cpd-q').addEventListener('input', renderCouponByDoctor);
 function renderDash(){
+  renderCouponByDoctor();
   const data = allData();
   const total = data.length;
   const rework = data.filter(r=>r.is_rework===true).length;
