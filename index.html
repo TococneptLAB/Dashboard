@@ -805,7 +805,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-08 รุ่น 58 (ผลงานกลึงแยกวัสดุ Zir/Emax/Premill/PMMA/Wax)";
+const APP_VERSION = "2026-10-08 รุ่น 61 (วันส่งออกอยู่ก่อนวันนัด + ราคาสรุปรายเคส 💰)";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -1202,6 +1202,7 @@ const FORM_FIELDS = [
   {key:'color', label:'สี (Colour)', type:'text'},
   {key:'material', label:'วัสดุ (Material)', type:'list', opts:REFS.materials},
   {key:'qty', label:'จำนวน (ซี่)', type:'number'},
+  {key:'price_total', label:'ราคาสรุปเคสนี้ (บาท) — ถ้ากรอก ใช้แทนราคาต่อซี่ในการออกบิล', type:'number'},
   {key:'need_abutment', label:'ต้องสั่ง Abutment ไหม', type:'select2', opts:['ไม่ต้อง','ต้องสั่ง']},
   {key:'scan_system', label:'ระบบสแกน', type:'list', opts:REFS.scan_systems},
   {key:'has_scan', label:'มีไฟล์สแกน (ถ้ามี → พิมพ์โมเดล)', type:'select2', opts:['ไม่มี','มี']},
@@ -1209,8 +1210,8 @@ const FORM_FIELDS = [
   {key:'tech1', label:'ช่าง CAD/CAM', type:'list', opts:REFS.techs},
   {key:'tech2', label:'ช่าง Porcelain', type:'list', opts:REFS.techs},
   {key:'status', label:'สถานะรวม', type:'list', opts:REFS.statuses.filter(x=>x !== 'สถานะ'), default:'รับเข้าระบบ'},
+  {key:'ship_date', label:'วันส่งออก (ทีมผลิตต้องส่งก่อนวันนัด / ให้แมสมารับ)', type:'date'},
   {key:'appointment_date', label:'วันนัดคนไข้', type:'date'},
-  {key:'ship_date', label:'วันส่งออก (วันที่ต้องส่งงานออก / ให้แมสมารับ)', type:'date'},
   {key:'is_rework', label:'ประเภทงาน', type:'select2', opts:['งานปกติ','งานแก้ (Rework)']},
   {key:'file_link', label:'ลิงก์ไฟล์ / ภาพ (Google Drive ฯลฯ)', type:'text'},
   {key:'detail', label:'รายละเอียด / ข้อความจากแพทย์ / หมายเหตุ', type:'textarea'},
@@ -1346,6 +1347,7 @@ function readForm(){
   });
   o.is_rework = (o.is_rework === 'งานแก้ (Rework)');
   o.qty = parseFloat(o.qty) || 0;
+  o.price_total = (String(o.price_total).trim() === '' || !isFinite(parseFloat(o.price_total))) ? '' : Math.max(0, parseFloat(o.price_total));
   o.unit_label = 'ซี่';
   o.source_sheet = 'เว็บแอป (ใหม่)';
   o.sent_flag = o.status === 'ส่งแล้ว' ? 'ส่ง' : '';
@@ -1511,8 +1513,8 @@ function ticketHtml(o){
       <div><b>จำนวน</b>${esc(o.qty||'-')} ซี่</div>
       <div><b>ระบบสแกน</b>${esc(o.scan_system||'-')}</div>
       <div><b>วิธีจัดส่ง</b>${esc(o.delivery_method||'-')}</div>
-      <div><b>วันนัดคนไข้</b>${esc(o.appointment_date||'-')}</div>
       <div><b>วันส่งออก</b>${shipCell(o)}</div>
+      <div><b>วันนัดคนไข้</b>${esc(o.appointment_date||'-')}</div>
       <div><b>ประเภทเคส</b>${esc(o.case_type||'ปกติ')}${o.case_type==='คูปอง' ? ' (' + esc(o.coupon_status||'-') + ')' : ''}</div>
       <div><b>ต้องสั่ง Abutment</b>${esc(o.need_abutment||'ไม่ต้อง')}</div>
       <div style="grid-column:1/-1"><b>รายละเอียด/หมายเหตุ</b>${esc(o.detail||'-')}</div>
@@ -1628,7 +1630,7 @@ function renderCase(){
       ${f('ระบบรากฟัน', o.implant_system)}${f('ตำแหน่งฟัน', o.position)}${f('สี', o.color)}
       ${f('วัสดุ', o.material)}${f('จำนวน (ซี่)', o.qty)}${f('ระบบสแกน', o.scan_system)}
       ${toothTypesText(o.tooth_types) ? `<div style="grid-column:1/-1"><b>ชนิดงานรายซี่</b>${esc(toothTypesText(o.tooth_types))}</div>` : ''}${f('มีไฟล์สแกน', o.has_scan === 'มี' ? 'มี (พิมพ์โมเดล)' : 'ไม่มี')}
-      ${f('วันรับงาน', fmtDate(o.date_received))}${f('วันนัดคนไข้', o.appointment_date ? fmtDate(o.appointment_date) : '')}${f('วันส่งออก (กำหนด)', o.ship_date ? fmtDate(o.ship_date) : '')}${f('วันส่งงานจริง', deliveredDate(o) ? fmtStamp(deliveredDate(o)) : '')}
+      ${f('วันรับงาน', fmtDate(o.date_received))}${f('วันส่งออก (กำหนด)', o.ship_date ? fmtDate(o.ship_date) : '')}${f('วันนัดคนไข้', o.appointment_date ? fmtDate(o.appointment_date) : '')}${f('วันส่งงานจริง', deliveredDate(o) ? fmtStamp(deliveredDate(o)) : '')}
       ${f('ประเภทเคส', (o.case_type === 'คูปอง' ? 'คูปอง' + (o.coupon_status ? ' (' + o.coupon_status + ')' : '') : 'ปกติ') + (o.is_rework === true ? ' • งานแก้' : ''))}${f('วิธีจัดส่ง', o.delivery_method)}${f('คีย์โดย', o.created_by)}
     </div>
     ${o.detail ? `<div class="cm-note"><small>รายละเอียด / หมายเหตุ</small>${esc(o.detail)}</div>` : ''}
@@ -1637,7 +1639,7 @@ function renderCase(){
       <button class="btn ghost sm" id="cm-print">🖨 พิมพ์ใบงาน (มี QR)</button>
       ${admin ? '<button class="btn ghost sm" id="cm-edit">✏️ แก้ไขเคส</button>' : ''}
     </div>
-    <div class="cm-sec"><div id="cm-file-strip"></div>${urgentBoxHtml(o)}${taskBoxHtml(o)}<h3>ขั้นตอนของคุณ</h3>${stepHtml}${skippedHtml}</div>
+    <div class="cm-sec"><div id="cm-file-strip"></div>${urgentBoxHtml(o)}${taskBoxHtml(o)}${priceBoxHtml(o)}<h3>ขั้นตอนของคุณ</h3>${stepHtml}${skippedHtml}</div>
     ${abutSectionHtml(o)}
     <div class="cm-sec"><h3>ไฟล์ / การจัดส่ง</h3>
       <div class="grid form">
@@ -1691,6 +1693,7 @@ function renderCase(){
   bindAbutSection(o);
   bindUrgentBox(o);
   bindTaskBox(o);
+  bindPriceBox(o);
   document.getElementById('cm-copy').addEventListener('click', ()=>copyText(caseText(o), 'คัดลอกรายละเอียดแล้ว ✓'));
   const cmChat = document.getElementById('cm-chat'); if(cmChat) cmChat.addEventListener('click', ()=>{ closeCase(); openChat('all', '#' + (o.case_id || '') + ' '); });
   document.getElementById('cm-print').addEventListener('click', ()=>printTicket(o));
@@ -2363,6 +2366,18 @@ function abutOpen(o){ const a = ABUTMENTS.find(x=>x.order_id === o._id); return 
 function hasTask(o, key){ return key === 'abut' ? abutOpen(o) : taskKeysOf(o).includes(key); }
 function taskBadges(o){ return TASK_DEFS.filter(t=>hasTask(o, t.key)).map(t=>`<span class="tg ${t.cls}" title="ป้ายงาน: ${t.label}">${t.icon} ${t.label}</span>`).join(''); }
 function statusBadge(o){ return taskBadges(o) + `<span class="badge ${STATUS_BADGE[o.status] || ''}">${esc(o.status || '-')}</span>`; }
+function priceBoxHtml(o){
+  if(!isAdminUser(CURRENT_EMPLOYEE)) return '';
+  const cp = casePrice(o), prices = readPrices(), lp = priceFor(prices, rpName(o, 'clinic'), rpMaterial(o)), q = parseFloat(o.qty) || 0;
+  const hint = cp !== null ? 'ใช้ราคานี้ออกบิลแทนราคาต่อซี่' : (lp !== null ? 'ตอนนี้ใช้ราคาตามรายการ: ' + money(lp * q) + ' บาท (' + money(lp) + ' × ' + q + ' ซี่)' : '⚠ ยังไม่มีราคาในรายการ — ใส่ราคาสรุปได้ที่นี่');
+  return `<div class="urg-box" id="price-box"><b>💰 ราคาสรุปเคสนี้</b><span class="urg-ctl" style="margin-left:0"><input type="number" min="0" step="any" id="pb-input" value="${cp !== null ? esc(cp) : ''}" placeholder="บาท" style="width:130px"> <button type="button" class="btn primary sm" id="pb-save">บันทึก</button>${cp !== null ? ' <button type="button" class="btn ghost sm" id="pb-clear">ลบราคาสรุป</button>' : ''}</span><small style="color:var(--muted);margin-left:10px">${esc(hint)}</small></div>`;
+}
+function bindPriceBox(o){
+  const inp = document.getElementById('pb-input'); if(!inp) return;
+  const save = async v=>{ await patchOrder(o._id, {price_total: v}); showToast(v === '' ? 'ลบราคาสรุปแล้ว (กลับไปใช้ราคาตามรายการ)' : '✓ บันทึกราคาสรุป ' + money(v) + ' บาท'); renderAll(); renderCase(); };
+  document.getElementById('pb-save').addEventListener('click', ()=>{ const t = inp.value.trim(), n = parseFloat(t); if(t === '' ){ save(''); return; } if(!isFinite(n) || n < 0){ showToast('ใส่ราคาเป็นตัวเลข (บาท)'); return; } save(round2(n)); });
+  const c = document.getElementById('pb-clear'); if(c) c.addEventListener('click', ()=>save(''));
+}
 function taskBoxHtml(o){
   const admin = isAdminUser(CURRENT_EMPLOYEE);
   const btns = TASK_DEFS.map(t=>{
@@ -2452,7 +2467,7 @@ function perfCompute(range, deptKey){
       if(range.from || range.to){ if(!endAt) return; if(range.from && endAt < range.from) return; if(range.to && endAt > range.to) return; }
       const by = String(rec.by || '').trim() || '(ไม่ระบุชื่อ)', p = P(by);
       const units = Number(o.qty) || 0, hasTime = s=>/T\d{2}:\d{2}/.test(String(s || ''));
-      p.total++; p.orders.add(o._id); p.units += units; p.byStep[d.key] = (p.byStep[d.key] || 0) + 1;
+      p.total++; if(!p.orders.has(o._id)) p.units += units; p.orders.add(o._id); p.byStep[d.key] = (p.byStep[d.key] || 0) + 1;
       if(PERF_MILL_KEYS.includes(d.key)) millCats(o, d.key).forEach(c=>{ p.byMat[c] = (p.byMat[c] || 0) + 1; });
       if(urgencyOf(o)) p.urgent++;
       if(endAt) p.days.add(ymdLocal(endAt));
@@ -2541,8 +2556,9 @@ function renderPerf(){
   renderMillByDay(range);
   const deptKey = dsel.value, list = perfCompute(range, deptKey).filter(p=>p.total > 0 || EMPLOYEE_LIST.some(e=>String(e.name).trim() === p.name))
     .sort((a, b)=>(b.total - a.total) || a.name.localeCompare(b.name, 'th'));
-  const total = list.reduce((a, p)=>a + p.total, 0), units = list.reduce((a, p)=>a + p.units, 0), active = list.filter(p=>p.total > 0).length;
+  const total = list.reduce((a, p)=>a + p.total, 0), active = list.filter(p=>p.total > 0).length;
   const cases = new Set(); list.forEach(p=>p.orders.forEach(x=>cases.add(x)));
+  const units = [...cases].reduce((a, id)=>{ const o = NEW_ORDERS.find(x=>x._id === id); return a + (o ? Number(o.qty) || 0 : 0); }, 0);   // each case counted once, even if several people / steps touched it
   const allWork = [].concat(...list.map(p=>p.work)), allWait = [].concat(...list.map(p=>p.wait));
   const k = (n, l, c)=>`<div class="kpi ${c || ''}"><div class="num">${n}</div><div class="lbl">${l}</div></div>`;
   document.getElementById('pf-kpis').innerHTML = k(total, 'ขั้นตอนที่เสร็จ (' + esc(range.label) + ')') + k(cases.size, 'เคสที่เกี่ยวข้อง') + k(units, 'ซี่ที่ผ่านมือ') + k(active, 'คนที่มีผลงาน') + k(fmtDur(avg(allWork)), 'ทำจริงเฉลี่ย/ขั้น') + k(fmtDur(avg(allWait)), 'รอ→เสร็จเฉลี่ย/ขั้น');
@@ -3379,7 +3395,7 @@ function renderPending(){
   LAST_PENDING_LIST = sorted;
   if(!sorted.length){ t.innerHTML = '<tr><td class="empty">ไม่มีงานค้างในเดือนนี้ 🎉</td></tr>'; return; }
   LAST_PENDING_LIST = sorted;
-  const head = ['เลขเคส','คลินิก','คนไข้','วัสดุ','วันรับงาน','วันนัด','วันส่งออก','ตอนนี้อยู่ที่แผนก','ค้างในแผนก','ความคืบหน้า','ผู้รับผิดชอบ','คัดลอก'];
+  const head = ['เลขเคส','คลินิก','คนไข้','วัสดุ','วันรับงาน','วันส่งออก','วันนัด','ตอนนี้อยู่ที่แผนก','ค้างในแผนก','ความคืบหน้า','ผู้รับผิดชอบ','คัดลอก'];
   t.innerHTML = '<tr>' + head.map(h=>`<th>${h}</th>`).join('') + '</tr>' +
     sorted.slice(0,200).map(r=>`<tr>
       <td>${caseLink(r)} ${carryIds.has(r._id) ? '<span class="badge b-hold">ยกมา</span>' : ''}</td>
@@ -3387,8 +3403,8 @@ function renderPending(){
       <td>${esc(r.patient ?? '-')}</td>
       <td>${esc(r.material ?? '-')}</td>
       <td>${esc(fmtDate(r.date_received))}</td>
-      <td>${esc(fmtDate(r.appointment_date))}</td>
       <td>${shipCell(r)}</td>
+      <td>${esc(fmtDate(r.appointment_date))}</td>
       <td>${esc(currentDeptLabel(r))}</td>
       <td>${daysCell(currentDays(r))}</td>
       <td>${progressStrip(r)}</td>
@@ -3762,6 +3778,8 @@ async function saveSettingsPatch(fn){
   const cur = readPrices(); fn(cur);
   await setDeptRecord('_settings', 'prices', {status: JSON.stringify(cur)});
 }
+// a price typed on the case itself ("ราคาสรุป") wins over clinic price × qty; blank = use the price list
+function casePrice(o){ const v = o && o.price_total; if(v === undefined || v === null || String(v).trim() === '') return null; const n = Number(v); return isFinite(n) && n >= 0 ? n : null; }
 function priceFor(prices, clinic, mat){
   const c = prices.clinics[clinic] && prices.clinics[clinic][mat];
   if(c !== undefined && c !== null && c !== '') return Number(c);
@@ -3858,10 +3876,12 @@ function invoiceData(clinic){
     const q = parseFloat(r.qty) || 0, mat = rpMaterial(r);
     const isC = r.case_type === 'คูปอง', isR = r.is_rework === true;
     const free = (isC && freeC) || (isR && freeR);
-    const price = free ? 0 : priceFor(prices, clinic, mat);
+    const cp = free ? null : casePrice(r);
+    const price = free ? 0 : (cp !== null ? (q > 0 ? round2(cp / q) : cp) : priceFor(prices, clinic, mat));
     let note = isC ? 'คูปอง' : (isR ? 'งานแก้' : '');
+    if(cp !== null) note = (note ? note + ' • ' : '') + 'ราคาตามเคส';
     if(!free && price === null){ missing++; note = '⚠ ไม่มีราคา'; }
-    const amount = round2(q * (price || 0));
+    const amount = cp !== null ? round2(cp) : round2(q * (price || 0));
     subtotal += amount; qtySum += q;
     return [String(r.case_id ?? ''), fmtCE(r.date_received), String(r.patient ?? ''), mat, q, price === null ? '' : price, amount, note];
   });
@@ -4629,8 +4649,9 @@ function hbarsHtml(items, fmt){
 function bzRevenueOf(prices, o){
   const q = parseFloat(o.qty) || 0, mat = rpMaterial(o), clinic = rpName(o, 'clinic');
   const free = o.case_type === 'คูปอง' || o.is_rework === true;
+  const cp = free ? null : casePrice(o);
   const price = free ? 0 : priceFor(prices, clinic, mat);
-  return {q, mat, clinic, doctor: rpName(o, 'doctor'), amount: round2(q * (price || 0)), missing: !free && price === null};
+  return {q, mat, clinic, doctor: rpName(o, 'doctor'), amount: cp !== null ? round2(cp) : round2(q * (price || 0)), missing: !free && cp === null && price === null};
 }
 function bzShipDate(o){ return deliveredDate(o) || String(o.date_received || ''); }
 function bzMonthOf(dateStr){ const d = parseYmd(dateStr); return d ? d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') : 'unknown'; }
@@ -4894,7 +4915,7 @@ function renderDept(){
 
   const t = document.getElementById('dept-table');
   if(!rows.length){ t.innerHTML = '<tr><td class="empty">ไม่มีเคสที่เกี่ยวข้องกับแผนกนี้ตามเงื่อนไข</td></tr>'; return; }
-  const header = ['ทำแล้ว ✓','เลขเคส','คลินิก','คนไข้','วัสดุ','จำนวน','วันรับงาน','วันนัด (deadline)','วันส่งออก','ค้างในแผนก','ความคืบหน้า','สถานะแผนกนี้','เริ่ม (วัน-เวลา)','เสร็จ (วัน-เวลา)','ทำโดย',''];
+  const header = ['ทำแล้ว ✓','เลขเคส','คลินิก','คนไข้','วัสดุ','จำนวน','วันรับงาน','วันส่งออก','วันนัด (deadline)','ค้างในแผนก','ความคืบหน้า','สถานะแผนกนี้','เริ่ม (วัน-เวลา)','เสร็จ (วัน-เวลา)','ทำโดย',''];
   let html = '<tr>'+header.map(h=>`<th>${h}</th>`).join('')+'</tr>';
   rows.slice(0,300).forEach(({r,rec})=>{
     const overdue = isOverdue(r) && !['เสร็จแล้ว','ยกเลิก'].includes(rec.status);
@@ -4907,8 +4928,8 @@ function renderDept(){
       <td>${esc(r.material??'-')}</td>
       <td>${esc(r.qty??'-')}</td>
       <td>${esc(fmtDate(r.date_received))}</td>
-      <td>${esc(fmtDate(r.appointment_date))}</td>
       <td>${shipCell(r)}</td>
+      <td>${esc(fmtDate(r.appointment_date))}</td>
       <td>${isActiveAt(r, CURRENT_DEPT) ? daysCell(daysAtDept(r, CURRENT_DEPT)) : '-'}</td>
       <td>${progressStrip(r)}</td>
       <td><select class="dep-row-select" data-id="${esc(r._id)}">${DEP_STATUSES.map(s=>`<option value="${esc(s)}" ${s===rec.status?'selected':''}>${esc(s)}</option>`).join('')}</select></td>
