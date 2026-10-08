@@ -619,6 +619,7 @@
       <div class="note" id="bl-contact" style="color:var(--ink)"></div>
       <div class="note" id="bl-invstatus" style="color:var(--ink)"></div>
       <div class="tablewrap"><table id="bl-table"></table></div>
+      <div id="bl-case-prices" class="card" style="margin-top:12px;display:none"></div>
     </div>
   </section>
 
@@ -805,7 +806,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-08 รุ่น 61 (วันส่งออกอยู่ก่อนวันนัด + ราคาสรุปรายเคส 💰)";
+const APP_VERSION = "2026-10-08 รุ่น 63 (ใบงานมีสรุปเวลา ใครทำอะไร 🧾)";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -1488,10 +1489,33 @@ function qrSvg(text, px){
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${w}" width="${px}" height="${px}" shape-rendering="crispEdges"><rect width="100%" height="100%" fill="#fff"/><path d="${d}" fill="#000"/></svg>`;
   }catch(e){ return ''; }
 }
+// printed work order: steps already done in the system are filled in (who / start / finish / time taken); open steps stay blank for handwriting; a summary closes the sheet
+function ticketRows(o){
+  const hasTime = v=>/T\d{2}:\d{2}/.test(String(v || ''));
+  return DEPARTMENTS.filter(d=>depValue(o, d.key) !== 'ไม่เกี่ยวข้อง').map(d=>{
+    const r = depRecord(o, d.key), done = r.status === 'เสร็จแล้ว';
+    const by = done ? (r.by || (d.key === 'order_intake' ? (o.created_by || '') : '')) : '';
+    const endAt = stampToDate(done ? (r.end || (d.key === 'order_intake' ? o.date_received : '')) : ''), startAt = stampToDate(r.start);
+    const ms = (done && hasTime(r.start) && hasTime(r.end) && endAt && startAt && endAt >= startAt) ? endAt - startAt : null;
+    return {key:d.key, label:d.label, done, by, start:r.start || '', end:done ? (r.end || (d.key === 'order_intake' ? o.date_received || '' : '')) : '', ms, status:r.status};
+  });
+}
+function ticketSummaryHtml(o, rows){
+  const done = rows.filter(r=>r.done), cell = 'border:1px solid #888;padding:4px 6px;text-align:left';
+  const rec = parseYmd(o.date_received), fin = stampToDate(deliveredDate(o)), t0 = new Date(); t0.setHours(0, 0, 0, 0);
+  const dayN = (a, b)=>Math.max(0, Math.round((new Date(b.getFullYear(), b.getMonth(), b.getDate()) - new Date(a.getFullYear(), a.getMonth(), a.getDate())) / 86400000));
+  const total = rec ? (fin ? `รับงาน ${fmtDate(o.date_received)} → ส่งมอบ ${fmtStamp(deliveredDate(o))} = <b>${dayN(rec, fin)} วัน</b>` : `รับงาน ${fmtDate(o.date_received)} • ยังไม่ส่งมอบ (ผ่านมา <b>${dayN(rec, t0)} วัน</b> นับถึงวันที่พิมพ์)`) : '';
+  const per = {};
+  done.forEach(r=>{ const k = r.by || '(ไม่ระบุชื่อ)'; const x = per[k] || (per[k] = {steps:[], ms:0}); x.steps.push(r.label.replace(/ \(.*/, '')); if(r.ms) x.ms += r.ms; });
+  const people = Object.keys(per).map(k=>`<tr><td style="${cell}">${esc(k)}</td><td style="${cell}">${esc(per[k].steps.join(', '))}</td><td style="${cell}">${per[k].ms ? fmtDur(per[k].ms) : '-'}</td></tr>`).join('');
+  return `<div style="margin-top:12px;font-size:12px"><b>📊 สรุปเวลา / ใครทำอะไร</b> <span style="color:#555">(จากระบบ ณ ${fmtStamp(new Date().toISOString())})</span>
+    <div style="margin:4px 0">${total ? total + ' • ' : ''}ทำเสร็จแล้ว <b>${done.length}/${rows.length}</b> ขั้นตอน</div>
+    ${people ? `<table class="po-check" style="margin-top:4px"><tr><th>ชื่อ</th><th>ขั้นตอนที่ทำ</th><th>เวลาทำรวม</th></tr>${people}</table>` : '<div style="color:#555">ยังไม่มีขั้นตอนที่บันทึกเสร็จในระบบ — ช่องที่ว่างให้เขียนมือ แล้วพิมพ์ใบนี้ซ้ำตอนจบงานเพื่อให้สรุปครบ</div>'}</div>`;
+}
 function ticketHtml(o){
-  const steps = DEPARTMENTS.filter(d=>depValue(o, d.key) !== 'ไม่เกี่ยวข้อง');
-  const chk = '<table class="po-check"><tr><th>ขั้นตอน</th><th>ผู้ทำ</th><th>วันที่</th><th>ตรวจ ✓</th></tr>' +
-    steps.map(d=>`<tr><td>${esc(d.label)}</td><td style="width:28%"></td><td style="width:18%"></td><td style="width:10%"></td></tr>`).join('') + '</table>';
+  const rows = ticketRows(o);
+  const chk = '<table class="po-check"><tr><th>ขั้นตอน</th><th style="width:20%">ผู้ทำ</th><th style="width:16%">เริ่ม</th><th style="width:16%">เสร็จ</th><th style="width:11%">ใช้เวลา</th><th style="width:7%">ตรวจ ✓</th></tr>' +
+    rows.map(r=>`<tr><td>${esc(r.label)}</td><td>${esc(r.by)}</td><td>${esc(r.start ? fmtStamp(r.start) : '')}</td><td>${esc(r.end ? fmtStamp(r.end) : '')}</td><td>${r.ms !== null ? esc(fmtDur(r.ms)) : ''}</td><td style="text-align:center;font-weight:800">${r.done ? '✓' : ''}</td></tr>`).join('') + '</table>' + ticketSummaryHtml(o, rows);
   return `
     <div class="po-head"><div style="flex:1">
       <div class="po-title" style="text-align:left">ใบออเดอร์งาน (WORK ORDER)</div>
@@ -1614,7 +1638,7 @@ function renderCase(){
     return `<div class="cm-step ${curKeys.has(d.key) ? 'cur' : ''}"><span class="nm">${esc(d.label)}</span><span class="meta">${esc(meta)}${curKeys.has(d.key) ? ' ◀ ขั้นตอนปัจจุบัน' : ''}</span>` +
       (done ? `${stepUp(d)}<button class="btn ghost sm" data-step="undo" data-dept="${esc(d.key)}">↩ ยกเลิกเสร็จ</button>`
             : (r.status === 'กำลังดำเนินการ' ? '' : `<button class="btn ghost" data-step="start" data-dept="${esc(d.key)}">▶ เริ่มทำ</button>`) +
-              `${stepUp(d)}<button class="btn primary big" data-step="done" data-dept="${esc(d.key)}">${DONE_LABEL[d.key] || '✓ เสร็จแล้ว'}</button><button class="btn ghost sm" data-step="skip" data-dept="${esc(d.key)}" title="ขั้นตอนนี้ไม่เกี่ยวกับเคสนี้">ข้ามขั้นตอน</button>`) + '</div><div class="step-in" data-step-in="' + esc(d.key) + '"></div>';
+              `${stepUp(d)}${d.key === 'billing' ? billStepPriceHtml(o) : ''}<button class="btn primary big" data-step="done" data-dept="${esc(d.key)}">${DONE_LABEL[d.key] || '✓ เสร็จแล้ว'}</button><button class="btn ghost sm" data-step="skip" data-dept="${esc(d.key)}" title="ขั้นตอนนี้ไม่เกี่ยวกับเคสนี้">ข้ามขั้นตอน</button>`) + '</div><div class="step-in" data-step-in="' + esc(d.key) + '"></div>';
   }).join('') : '<div class="note">คุณไม่มีขั้นตอนที่อัปเดตได้ในเคสนี้ (หรือขั้นตอนของคุณไม่เกี่ยวกับเคสนี้)</div>';
   const skippedHtml = skipped.length ? '<div class="note" style="margin:10px 0 6px">ขั้นตอนของคุณที่ถูกข้ามไว้ (ไม่เกี่ยวข้อง) — ถ้าเคสนี้ต้องใช้ กดเปิดใช้ได้</div>' + skipped.map(d=>`<div class="cm-step" style="opacity:.85"><span class="nm">${esc(d.label)}</span><span class="meta">ไม่เกี่ยวข้องกับเคสนี้</span><button class="btn ghost sm" data-step="enable" data-dept="${esc(d.key)}">เปิดใช้ขั้นตอนนี้</button></div>`).join('') : '';
   const notes = notesOf(o._id);
@@ -1684,6 +1708,7 @@ function renderCase(){
         }
       }
     }
+    if(b.dataset.step === 'done' && b.dataset.dept === 'billing' && !(await billingPriceGate(o))) return;
     b.disabled = true;
     await setStep(CASE_OPEN_ID, b.dataset.dept, b.dataset.step);
     showToast({done:'✓ บันทึกแล้ว ' + nowStamp().replace('T', ' เวลา '), start:'▶ เริ่มทำแล้ว', undo:'ยกเลิกเครื่องหมายแล้ว', enable:'เปิดใช้ขั้นตอนแล้ว', skip:'ข้ามขั้นตอนแล้ว'}[b.dataset.step]);
@@ -2366,6 +2391,31 @@ function abutOpen(o){ const a = ABUTMENTS.find(x=>x.order_id === o._id); return 
 function hasTask(o, key){ return key === 'abut' ? abutOpen(o) : taskKeysOf(o).includes(key); }
 function taskBadges(o){ return TASK_DEFS.filter(t=>hasTask(o, t.key)).map(t=>`<span class="tg ${t.cls}" title="ป้ายงาน: ${t.label}">${t.icon} ${t.label}</span>`).join(''); }
 function statusBadge(o){ return taskBadges(o) + `<span class="badge ${STATUS_BADGE[o.status] || ''}">${esc(o.status || '-')}</span>`; }
+// at the billing step the admin types the case total right there; "ออกบิลแล้ว" saves it, and warns if the case still has no price at all
+function billStepPriceHtml(o){
+  if(!isAdminUser(CURRENT_EMPLOYEE)) return '';
+  const cp = casePrice(o);
+  return `<span class="bs-price" style="display:inline-flex;gap:6px;align-items:center;margin:0 8px 0 0"><label for="bs-price" style="font-weight:700">💰 ราคาสรุป</label><input type="number" min="0" step="any" id="bs-price" value="${cp !== null ? esc(cp) : ''}" placeholder="บาท" style="width:120px"></span>`;
+}
+async function billingPriceGate(o){            // returns false to stop "done"
+  if(!isAdminUser(CURRENT_EMPLOYEE)) return true;
+  const inp = document.getElementById('bs-price'), t = inp ? inp.value.trim() : '';
+  if(t !== ''){
+    const n = parseFloat(t);
+    if(!isFinite(n) || n < 0){ showToast('ใส่ราคาเป็นตัวเลข (บาท)'); if(inp) inp.focus(); return false; }
+    if(casePrice(o) !== round2(n)) await patchOrder(o._id, {price_total: round2(n)});
+    return true;
+  }
+  const free = o.case_type === 'คูปอง' || o.is_rework === true;
+  if(!free && casePrice(o) === null && priceFor(readPrices(), rpName(o, 'clinic'), rpMaterial(o)) === null){
+    if(window.confirm('เคสนี้ยังไม่มีราคา (ไม่มีราคาสรุป และไม่มีราคาต่อซี่ในรายการ)\n\nกด OK = ไปใส่ราคาก่อน\nกด Cancel = ออกบิลโดยยังไม่มีราคา')){
+      if(inp){ inp.focus(); if(inp.scrollIntoView) inp.scrollIntoView({block:'center'}); }
+      showToast('ใส่ราคาสรุปในช่อง 💰 แล้วกด "ออกบิลแล้ว" อีกครั้ง');
+      return false;
+    }
+  }
+  return true;
+}
 function priceBoxHtml(o){
   if(!isAdminUser(CURRENT_EMPLOYEE)) return '';
   const cp = casePrice(o), prices = readPrices(), lp = priceFor(prices, rpName(o, 'clinic'), rpMaterial(o)), q = parseFloat(o.qty) || 0;
@@ -3920,6 +3970,38 @@ function summaryAllRows(){
   out.push(['รวม', '', '', round2(tot)].concat(vatCols.length ? [round2(totVat), round2(tot + totVat)] : [], [miss ? '⚠ ' + miss + ' รายการ' : '']));
   return {rows: out, clinics};
 }
+// "กรอกราคาสรุปรายเคส" under the invoice table: one clinic = every case of the month; all clinics = only the cases that still have no price
+function billingOrders(clinic){
+  const month = billingMonth(), onlyDel = document.getElementById('bl-only-delivered').checked;
+  return NEW_ORDERS.map(withEffectiveStatus).filter(r=>(clinic === '*' || rpName(r, 'clinic') === clinic) && monthKeyOf(r) === month && r.status !== 'ยกเลิกเคส' && (!onlyDel || r.status === 'ส่งแล้ว'))
+    .sort((a, b)=>String(a.date_received || '').localeCompare(String(b.date_received || '')));
+}
+function renderCasePrices(clinic){
+  const box = document.getElementById('bl-case-prices'); if(!box) return;
+  const prices = readPrices(), freeC = document.getElementById('bl-free-coupon').checked, freeR = document.getElementById('bl-free-rework').checked;
+  const isFree = r=>(r.case_type === 'คูปอง' && freeC) || (r.is_rework === true && freeR);
+  const noPrice = r=>!isFree(r) && casePrice(r) === null && priceFor(prices, rpName(r, 'clinic'), rpMaterial(r)) === null;
+  let list = billingOrders(clinic);
+  if(clinic === '*') list = list.filter(noPrice);
+  if(!list.length){ box.style.display = 'none'; box.innerHTML = ''; return; }
+  box.style.display = '';
+  const rows = list.slice(0, 150).map(r=>{
+    const cp = casePrice(r), q = parseFloat(r.qty) || 0, lp = priceFor(prices, rpName(r, 'clinic'), rpMaterial(r));
+    const cur = isFree(r) ? 'ฟรี (' + (r.case_type === 'คูปอง' ? 'คูปอง' : 'งานแก้') + ')' : (cp !== null ? 'ราคาตามเคส' : (lp !== null ? money(lp * q) + ' (ตามรายการ)' : '<span class="miss">⚠ ยังไม่มีราคา</span>'));
+    return `<tr><td><a href="#" class="caselink" data-open-case="${esc(r._id)}">${esc(r.case_id || '-')}</a></td>` + (clinic === '*' ? `<td>${esc(rpName(r, 'clinic'))}</td>` : '') + `<td>${esc(r.patient || '')}</td><td>${esc(rpMaterial(r))}</td><td class="num">${q}</td><td>${cur}</td>
+      <td><input type="number" min="0" step="any" data-cp="${esc(r._id)}" value="${cp !== null ? esc(cp) : ''}" placeholder="บาท" style="width:120px"> <button type="button" class="btn primary sm" data-cp-save="${esc(r._id)}">บันทึก</button></td></tr>`;
+  }).join('');
+  box.innerHTML = `<h3 style="margin:0 0 4px">💰 กรอกราคาสรุปรายเคส ${clinic === '*' ? '<small style="color:var(--muted);font-weight:400">(เฉพาะเคสที่ยังไม่มีราคา)</small>' : ''}</h3><div class="note" style="margin:0 0 8px">ใส่ราคารวมของเคสแล้วกด "บันทึก" (หรือกด Enter) — ใช้แทนราคาต่อซี่ในใบแจ้งหนี้ • เว้นว่างแล้วบันทึก = ลบราคาสรุป กลับไปใช้ราคาตามรายการ</div><div class="tablewrap"><table><tr><th>เคส</th>${clinic === '*' ? '<th>คลินิก</th>' : ''}<th>คนไข้</th><th>วัสดุ</th><th>ซี่</th><th>ราคาตอนนี้</th><th>ราคาสรุป (บาท)</th></tr>${rows}</table></div>`;
+  const save = async id=>{
+    const inp = box.querySelector('[data-cp="' + id + '"]'), t = inp.value.trim(), n = parseFloat(t);
+    if(t !== '' && (!isFinite(n) || n < 0)){ showToast('ใส่ราคาเป็นตัวเลข (บาท)'); return; }
+    await patchOrder(id, {price_total: t === '' ? '' : round2(n)});
+    showToast(t === '' ? 'ลบราคาสรุปแล้ว' : '✓ บันทึกราคา ' + money(n) + ' บาท');
+    renderBilling(false);
+  };
+  box.querySelectorAll('[data-cp-save]').forEach(b=>b.addEventListener('click', ()=>save(b.dataset.cpSave)));
+  box.querySelectorAll('[data-cp]').forEach(i=>i.addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); save(i.dataset.cp); } }));
+}
 function renderBilling(force){
   const tbl = document.getElementById('bl-table');
   if(!tbl) return;
@@ -3933,11 +4015,13 @@ function renderBilling(force){
     tbl.innerHTML = rowsToTableHtml(a.rows);
     document.getElementById('bl-contact').textContent = '';
     renderInvoiceStatusLine('*');
+    renderCasePrices('*');
     document.getElementById('bl-note').textContent = `สรุปทุกคลินิก เดือน ${monthLabel(month)} (นับตามวันรับงาน${onlyDel ? ' เฉพาะงานที่ส่งแล้ว' : ''}) • เลือกคลินิกด้านบนเพื่อดูใบแจ้งหนี้รายเคส • เปลี่ยนเดือนที่ตัวเลือกมุมขวาบน`;
   } else {
     const inv = invoiceRows(clinic);
     tbl.innerHTML = rowsToTableHtml(inv.rows);
     renderInvoiceStatusLine(clinic);
+    renderCasePrices(clinic);
     const ct = contactFor(clinic);
     document.getElementById('bl-contact').textContent = ct ? '👤 ' + contactLines(ct).join(' • ') : '⚠ ไม่พบ "' + clinic + '" ในรายชื่อผู้ติดต่อ — ใบแจ้งหนี้จะไม่มีที่อยู่/เลขภาษี (ไปแท็บ "ผู้ติดต่อ" เพื่อเพิ่ม หรือตั้ง "ชื่อที่ใช้ในออเดอร์")';
     document.getElementById('bl-note').textContent = `${clinic} • ${monthLabel(month)} • ${inv.d.cases} เคส ${inv.d.qty} ซี่` + (inv.d.missing ? ` • ⚠ ${inv.d.missing} รายการยังไม่มีราคา (ไปตั้งราคาด้านบนแล้วกดบันทึก)` : '');
