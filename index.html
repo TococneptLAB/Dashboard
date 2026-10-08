@@ -452,6 +452,7 @@
       <h2>🎟 คูปองรายคลินิก / หมอ <span class="tag" id="cpd-count">0</span></h2>
       <input type="text" id="cpd-q" placeholder="ค้นหาคลินิก / หมอ..." style="max-width:320px;margin-bottom:8px">
       <div id="cpw-admin"></div>
+      <div class="cpr-bar" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0"><label style="font-size:12px">สรุปเดือน <input type="month" id="cpr-month" style="width:auto"></label><button type="button" class="btn ghost sm" id="cpr-btn">🖨 PDF สรุปคูปอง</button><span class="note" style="margin:0">เว้นเดือนว่าง = ยอดปัจจุบัน • พิมพ์ชื่อคลินิก/หมอในช่องค้นหาด้านบนเพื่อเลือกเฉพาะราย</span></div>
       <h3 style="margin:10px 0 4px">🎫 กระเป๋าคูปอง (ให้ไว้ / ใช้ไป / เหลือ แยกตามประเภท)</h3>
       <div id="cpw-list"></div>
       <h3 style="margin:16px 0 4px">เคสคูปองรายหมอ</h3>
@@ -5113,18 +5114,18 @@ function couponGroups(q){
 const CP_DEFAULT_KINDS = ['รากเทียม', 'ฟันธรรมดา'];
 function couponKinds(){ const k = readPrices().coupon_kinds; return k.length ? k : CP_DEFAULT_KINDS; }
 function cpNorm(x){ return String(x || '').trim().toLowerCase().replace(/\s+/g, ' '); }
-function couponWallets(){
+function couponWallets(upTo){
   const W = {}, mk = (clinic, doctor)=>{
     const k = cpNorm(clinic) + '\u0001' + cpNorm(doctor);
-    return W[k] || (W[k] = {key:k, clinic:String(clinic || '').trim() || '(ไม่ระบุคลินิก)', doctor:String(doctor || '').trim(), kinds:{}, grants:[], cases:[], unkinded:0, hasGrant:false});
+    return W[k] || (W[k] = {key:k, clinic:String(clinic || '').trim() || (String(doctor || '').trim() ? 'ทุกคลินิก' : '(ไม่ระบุคลินิก)'), doctor:String(doctor || '').trim(), kinds:{}, grants:[], cases:[], unkinded:0, hasGrant:false});
   };
   const kd = (w, kind)=>w.kinds[kind] || (w.kinds[kind] = {granted:0, used:0});
-  readPrices().coupon_grants.forEach(g=>{ const w = mk(g.clinic, g.doctor); w.hasGrant = true; kd(w, String(g.kind || '')).granted += Number(g.qty) || 0; w.grants.push(g); });
-  NEW_ORDERS.filter(o=>o.case_type === 'คูปอง' && o.status !== 'ยกเลิกเคส').forEach(o=>{
+  readPrices().coupon_grants.filter(g=>!upTo || String(g.date || '') <= upTo).forEach(g=>{ const w = mk(g.clinic, g.doctor); w.hasGrant = true; kd(w, String(g.kind || '')).granted += Number(g.qty) || 0; w.grants.push(g); });
+  NEW_ORDERS.filter(o=>o.case_type === 'คูปอง' && o.status !== 'ยกเลิกเคส' && (!upTo || String(o.date_received || '').slice(0, 10) <= upTo)).forEach(o=>{
     const kind = String(o.coupon_kind || '').trim(), counted = o.coupon_status !== 'คูปองหมดอายุ/ยกเลิก';
-    const own = W[cpNorm(o.clinic) + '\u0001' + cpNorm(o.doctor)], clin = W[cpNorm(o.clinic) + '\u0001'];
+    const own = W[cpNorm(o.clinic) + '\u0001' + cpNorm(o.doctor)], clin = W[cpNorm(o.clinic) + '\u0001'], docw = cpNorm(o.doctor) ? W['\u0001' + cpNorm(o.doctor)] : null;
     let w = null;
-    if(kind){ if(own && own.kinds[kind] && own.kinds[kind].granted) w = own; else if(clin && clin.kinds[kind] && clin.kinds[kind].granted) w = clin; }
+    if(kind){ const has = x=>x && x.kinds[kind] && x.kinds[kind].granted; if(has(own)) w = own; else if(has(clin)) w = clin; else if(has(docw)) w = docw; }
     if(!w) w = own || mk(o.clinic, o.doctor);
     w.cases.push(o);
     if(!counted) return;
@@ -5172,7 +5173,7 @@ function renderCouponAdmin(force){
   if(!CPW_FORM_OPEN){ box.innerHTML = '<button type="button" class="btn primary sm" id="cpw-open">＋ เพิ่มคูปองให้หมอ/คลินิก</button>'; document.getElementById('cpw-open').addEventListener('click', ()=>{ CPW_FORM_OPEN = true; renderCouponAdmin(true); }); return; }
   const kinds = couponKinds(), keep = id=>{ const e = document.getElementById(id); return e ? e.value : ''; };
   const v = {clinic: keep('cpw-clinic'), doctor: keep('cpw-doctor'), kind: keep('cpw-kind'), qty: keep('cpw-qty') || '1', note: keep('cpw-note')};
-  box.innerHTML = `<div class="cpw-form"><div><label>คลินิก</label><input id="cpw-clinic" list="dl-clinic-form" autocomplete="off" value="${esc(v.clinic)}" placeholder="ชื่อคลินิก"></div>
+  box.innerHTML = `<div class="cpw-form"><div><label>คลินิก (เว้นว่าง = หมอทำหลายคลินิก)</label><input id="cpw-clinic" list="dl-clinic-form" autocomplete="off" value="${esc(v.clinic)}" placeholder="ชื่อคลินิก"></div>
     <div><label>หมอ (เว้นว่าง = ทั้งคลินิก)</label><input id="cpw-doctor" list="dl-doctors" autocomplete="off" value="${esc(v.doctor)}" placeholder="ชื่อหมอ"></div>
     <div><label>ประเภทคูปอง</label><select id="cpw-kind">${kinds.map(k=>`<option value="${esc(k)}" ${k === v.kind ? 'selected' : ''}>${esc(k)}</option>`).join('')}<option value="__new__">＋ เพิ่มประเภทใหม่…</option></select></div>
     <div><label>จำนวนซี่ (ใส่ - เพื่อหักออก)</label><input id="cpw-qty" type="number" step="1" value="${esc(v.qty)}" style="width:90px"></div>
@@ -5188,14 +5189,14 @@ function renderCouponAdmin(force){
   document.getElementById('cpw-add').addEventListener('click', async ()=>{
     const clinic = document.getElementById('cpw-clinic').value.trim(), doctor = document.getElementById('cpw-doctor').value.trim(), kind = document.getElementById('cpw-kind').value;
     const qty = parseInt(document.getElementById('cpw-qty').value, 10), note = document.getElementById('cpw-note').value.trim().slice(0, 120);
-    if(!clinic){ showToast('ใส่ชื่อคลินิก'); return; }
+    if(!clinic && !doctor){ showToast('ใส่ชื่อคลินิก หรือชื่อหมอ (หมอที่ทำหลายคลินิก เว้นคลินิกว่างได้)'); return; }
     if(!kind || kind === '__new__'){ showToast('เลือกประเภทคูปอง'); return; }
     if(!isFinite(qty) || qty === 0){ showToast('จำนวนต้องเป็นตัวเลข (ไม่ใช่ 0)'); return; }
     const probe = readPrices(); probe.coupon_grants = probe.coupon_grants.concat({id:'x', clinic, doctor, kind, qty, note, date:'2000-01-01', by:''});
     if(JSON.stringify(probe).length > 42000){ showToast('พื้นที่เก็บคูปองเต็ม — ลบรายการเก่าที่ไม่ใช้แล้วก่อน'); return; }
-    const canon = canonName('clinics', clinic) || clinic;
+    const canon = clinic ? (canonName('clinics', clinic) || clinic) : '';
     await saveSettingsPatch(cur=>{ cur.coupon_grants.push({id:'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), clinic: canon, doctor, kind, qty, note, date: todayLocal(), by: CURRENT_EMPLOYEE.name}); });
-    showToast('✓ เพิ่มคูปอง ' + kind + ' ' + qty + ' ใบ ให้ ' + canon + (doctor ? ' / ' + doctor : ' (ทั้งคลินิก)'));
+    showToast('✓ เพิ่มคูปอง ' + kind + ' ' + qty + ' ใบ ให้ ' + canon + (clinic ? (doctor ? ' / ' + doctor : ' (ทั้งคลินิก)') : ' (หมอ ทุกคลินิก)'));
     document.getElementById('cpw-qty').value = '1'; document.getElementById('cpw-note').value = '';
     renderCouponByDoctor();
   });
@@ -5216,11 +5217,12 @@ function couponHint(){
   const kind = g('f_coupon_kind'), clinic = g('f_clinic'), doctor = g('f_doctor');
   if(!clinic.trim()) return;
   if(!kind){ box.textContent = 'เลือกประเภทคูปอง เพื่อหักจากกระเป๋าคูปองของหมอ'; return; }
-  const W = couponWallets(), own = W.find(w=>w.key === cpNorm(clinic) + '\u0001' + cpNorm(doctor)), clin = W.find(w=>w.key === cpNorm(clinic) + '\u0001');
-  const w = (own && own.kinds[kind] && own.kinds[kind].granted) ? own : ((clin && clin.kinds[kind] && clin.kinds[kind].granted) ? clin : null);
+  const W = couponWallets(), fw = k=>W.find(w=>w.key === k), has = x=>x && x.kinds[kind] && x.kinds[kind].granted;
+  const own = fw(cpNorm(clinic) + '\u0001' + cpNorm(doctor)), clin = fw(cpNorm(clinic) + '\u0001'), docw = cpNorm(doctor) ? fw('\u0001' + cpNorm(doctor)) : null;
+  const w = has(own) ? own : has(clin) ? clin : has(docw) ? docw : null;
   if(!w){ box.className = 'note warn'; box.textContent = '⚠ ยังไม่ได้ให้คูปอง "' + kind + '" แก่ ' + (doctor || clinic) + ' (เพิ่มได้ที่แดชบอร์ด 🎟)'; return; }
   const x = w.kinds[kind], left = x.granted - x.used, editing = typeof EDIT_ID !== 'undefined' && EDIT_ID && w.cases.some(o=>o._id === EDIT_ID);
-  const who = w.doctor ? w.doctor : 'ทั้งคลินิก ' + w.clinic;
+  const who = w.doctor ? w.doctor + (w.key.startsWith('\u0001') ? ' (ทุกคลินิก)' : '') : 'ทั้งคลินิก ' + w.clinic;
   if(editing) box.textContent = '🎫 ' + who + ' • ' + kind + ' เหลือ ' + left + ' ซี่ (รวมเคสนี้แล้ว)';
   else if(left <= 0){ box.className = 'note warn'; box.textContent = '⚠ ' + who + ' ไม่มีคูปอง "' + kind + '" เหลือแล้ว (ให้ ' + x.granted + ' ใช้ ' + x.used + ')'; }
   else box.textContent = '🎫 ' + who + ' • ' + kind + ' เหลือ ' + left + ' ซี่ → หลังบันทึกเคสนี้เหลือ ' + (left - 1);
@@ -5231,6 +5233,31 @@ function setupCouponKindField(){
   refreshCouponKindSelect();
   ['f_case_type', 'f_coupon_kind', 'f_clinic', 'f_doctor'].forEach(id=>{ const e = document.getElementById(id); if(e){ e.addEventListener('change', couponHint); e.addEventListener('input', couponHint); } });
 }
+function couponReportPdf(){
+  const ym = String(document.getElementById('cpr-month').value || ''), qq = String(document.getElementById('cpd-q').value || '').trim().toLowerCase();
+  let upTo = '';
+  if(ym){ const [y, m] = ym.split('-').map(Number); upTo = ym + '-' + String(new Date(y, m, 0).getDate()).padStart(2, '0'); }
+  const list = couponWallets(upTo).filter(w=>!qq || (w.clinic + ' ' + w.doctor).toLowerCase().includes(qq));
+  if(!list.length){ showToast('ไม่มีกระเป๋าคูปองให้สรุป'); return; }
+  const inMonth = o=>!ym || String(o.date_received || '').slice(0, 7) === ym, cnt = o=>o.coupon_status !== 'คูปองหมดอายุ/ยกเลิก';
+  const q = o=>Math.max(0, Number(o.qty)) || 1;
+  const sum = [['คลินิก', 'หมอ', 'ประเภทคูปอง', 'ให้ไว้ (ซี่)', 'ใช้สะสม (ซี่)', ym ? 'ใช้ในเดือนนี้ (ซี่)' : 'ใช้ (ซี่)', 'เหลือ (ซี่)']];
+  const det = [['วันรับงาน', 'คลินิก', 'หมอ', 'เคส', 'คนไข้', 'ประเภทคูปอง', 'ซี่', 'สถานะคูปอง']];
+  let tg = 0, tu = 0;
+  list.forEach(w=>{
+    Object.keys(w.kinds).forEach(k=>{
+      const x = w.kinds[k], mUsed = w.cases.filter(o=>cnt(o) && inMonth(o) && String(o.coupon_kind || '').trim() === k).reduce((a, o)=>a + q(o), 0);
+      sum.push([w.clinic, w.doctor || '(ทั้งคลินิก)', k, x.granted, x.used, mUsed, x.granted - x.used]); tg += x.granted; tu += x.used;
+    });
+    if(w.unkinded) sum.push([w.clinic, w.doctor || '(ทั้งคลินิก)', 'ยังไม่ระบุประเภท (ไม่ถูกหัก)', '-', '-', '-', '-']);
+    w.cases.filter(inMonth).sort((a, b)=>String(a.date_received || '').localeCompare(String(b.date_received || ''))).forEach(o=>det.push([fmtDate(o.date_received), w.clinic, o.doctor || '', o.case_id || '', o.patient || '', o.coupon_kind || '— ไม่ระบุ', q(o), o.coupon_status || '-']));
+  });
+  const when = ym ? 'ยอด ณ สิ้นเดือน ' + ym : 'ยอด ณ วันที่ ' + fmtDate(todayLocal());
+  const sections = [{heading:'สรุปยอดคูปองคงเหลือ — ' + when, kpi:'ให้ไว้รวม ' + tg.toLocaleString() + ' ซี่ • ใช้สะสม ' + tu.toLocaleString() + ' ซี่ • เหลือ ' + (tg - tu).toLocaleString() + ' ซี่', rows:sum}];
+  if(det.length > 1) sections.push({heading:'รายการเคสคูปอง' + (ym ? ' ประจำเดือน ' + ym : ''), rows:det, pageBreak:true});
+  printPdf('สรุปคูปอง' + (ym ? '_' + ym : '_' + todayLocal()), 'สรุปคูปอง' + (qq ? ' (ค้นหา: ' + qq + ')' : ''), sections);
+}
+document.getElementById('cpr-btn').addEventListener('click', couponReportPdf);
 function renderCouponByDoctor(){
   renderCouponAdmin(); renderCouponWallets();
   const box = document.getElementById('cpd-list'); if(!box) return;
