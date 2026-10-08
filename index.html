@@ -262,7 +262,7 @@
   .step-in-box small{color:var(--muted);margin-left:3px;}
   .tg{display:inline-block;margin-right:5px;padding:1px 8px;border-radius:999px;font-size:11.5px;font-weight:800;white-space:nowrap;vertical-align:middle;border:1px solid transparent;}
   .tg-abut{background:#E9E4F7;color:#4B3A8C;border-color:#CFC4EE;} .tg-zir{background:#E1F0F0;color:#0E6E6E;border-color:#B6DADA;} .cpd-row{border:1px solid var(--line);border-radius:10px;margin:6px 0;background:#fff;} .cpd-row>summary{cursor:pointer;padding:8px 12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;} .cpd-row .cpd-n{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;} .cpd-chip{font-size:12px;padding:1px 8px;border-radius:10px;background:#EEF3F2;} .cpd-chip.live{background:#FFF1B8;font-weight:700;} .cpd-cases{padding:2px 12px 10px;font-size:13.5px;} .cpd-cases table{width:100%;}
-  .pf-mill-tot td{font-weight:800;background:#F1F6F5;} .ship-chip{display:inline-block;margin-left:4px;padding:0 7px;border-radius:9px;font-size:11.5px;font-weight:700;} .ship-today{background:#D64535;color:#fff;} .ship-late{background:#8E1F14;color:#fff;} .ship-soon{background:#FFE2A8;color:#7A4B00;} .tg-model{background:#FCE8EF;color:#A12A55;border-color:#F1C2D3;} .tg-pre{background:#E3EDF9;color:#1F5E9E;border-color:#BAD0EC;} .tg-emax{background:#FBEBD9;color:#A35A0A;border-color:#EFCDA3;}
+  .pf-mill-tot td{font-weight:800;background:#F1F6F5;} .ship-chip{display:inline-block;margin-left:4px;padding:0 7px;border-radius:9px;font-size:11.5px;font-weight:700;} .ship-today{background:#D64535;color:#fff;} .ship-late{background:#8E1F14;color:#fff;} .ship-soon{background:#FFE2A8;color:#7A4B00;} .cpd-chip.wal{background:#DDEFEA;font-weight:700;} .cpd-chip.zero{background:#FFE2A8;color:#7A4B00;} .cpd-chip.neg{background:#D64535;color:#fff;} .cpw-form{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;border:1px dashed var(--line);border-radius:10px;padding:10px;margin:6px 0 10px;background:#F8FBFA;} .cpw-form label{display:block;font-size:12px;color:var(--muted);} .cpw-form input,.cpw-form select{min-width:120px;} #cp-hint.warn{color:#B3261E;font-weight:700;} .tg-model{background:#FCE8EF;color:#A12A55;border-color:#F1C2D3;} .tg-pre{background:#E3EDF9;color:#1F5E9E;border-color:#BAD0EC;} .tg-emax{background:#FBEBD9;color:#A35A0A;border-color:#EFCDA3;}
 </style>
 </head>
 <body>
@@ -450,8 +450,12 @@
     </div>
     <div class="card" id="coupon-by-doc-card">
       <h2>🎟 คูปองรายคลินิก / หมอ <span class="tag" id="cpd-count">0</span></h2>
-      <div class="note" style="margin:0 0 8px">นับทุกเดือนรวมกัน (ไม่ขึ้นกับตัวเลือกเดือนด้านบน) เฉพาะเคสประเภท "คูปอง" กดที่แถวเพื่อดูรายการเคสของหมอท่านนั้น</div>
       <input type="text" id="cpd-q" placeholder="ค้นหาคลินิก / หมอ..." style="max-width:320px;margin-bottom:8px">
+      <div id="cpw-admin"></div>
+      <h3 style="margin:10px 0 4px">🎫 กระเป๋าคูปอง (ให้ไว้ / ใช้ไป / เหลือ แยกตามประเภท)</h3>
+      <div id="cpw-list"></div>
+      <h3 style="margin:16px 0 4px">เคสคูปองรายหมอ</h3>
+      <div class="note" style="margin:0 0 8px">นับทุกเดือนรวมกัน (ไม่ขึ้นกับตัวเลือกเดือนด้านบน) เฉพาะเคสประเภท "คูปอง" กดที่แถวเพื่อดูรายการเคสของหมอท่านนั้น</div>
       <div id="cpd-list"></div>
     </div>
     <div class="cols2">
@@ -806,7 +810,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-08 รุ่น 63 (ใบงานมีสรุปเวลา ใครทำอะไร 🧾)";
+const APP_VERSION = "2026-10-08 รุ่น 64 (กระเป๋าคูปองนับเป็นซี่ 🎫 + ใบสั่งงานกระชับ)";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -945,6 +949,7 @@ function applyBootstrap(r){
   EMPLOYEE_LIST = r.employees || [];
   applyOverridesFromServer(r.overrides || []);
   rebuildOrders();
+  if(typeof refreshCouponKindSelect === 'function') refreshCouponKindSelect();
 }
 let SHOWING_CACHE = false;
 let LAST_SIG = '';
@@ -1195,6 +1200,7 @@ const FORM_FIELDS = [
   {key:'urgent_note', label:'ข้อความถึงทีม (เช่น คนไข้รอ / หมอนัดพรุ่งนี้)', type:'text'},
   {key:'tasks', label:'ป้ายงาน (ติ๊กได้หลายอัน)', type:'tasks'},
   {key:'coupon_status', label:'สถานะคูปอง (ถ้าเป็นคูปอง)', type:'list', opts:REFS.coupon_statuses},
+  {key:'coupon_kind', label:'ประเภทคูปอง (หักจากกระเป๋าคูปองของหมอ)', type:'list', opts:[]},
   {key:'clinic', label:'คลินิก (พิมพ์ค้นหา หรือพิมพ์ชื่อเองได้)', type:'combo'},
   {key:'doctor', label:'แพทย์', type:'text'},
   {key:'patient', label:'คนไข้', type:'text'},
@@ -1298,6 +1304,7 @@ function buildOrderForm(){
   document.getElementById('f_clinic').addEventListener('input', clinicHint);
   document.getElementById('clinic-search-btn').addEventListener('click', toggleClinicPicker);
   document.getElementById('clinic-quick-add').addEventListener('click', e=>{ e.preventDefault(); quickAddClinic(); });
+  setupCouponKindField();
   refreshClinicSelect();
   bindOrderFiles();
   bindTaskBoxes();
@@ -1512,10 +1519,16 @@ function ticketSummaryHtml(o, rows){
     <div style="margin:4px 0">${total ? total + ' • ' : ''}ทำเสร็จแล้ว <b>${done.length}/${rows.length}</b> ขั้นตอน</div>
     ${people ? `<table class="po-check" style="margin-top:4px"><tr><th>ชื่อ</th><th>ขั้นตอนที่ทำ</th><th>เวลาทำรวม</th></tr>${people}</table>` : '<div style="color:#555">ยังไม่มีขั้นตอนที่บันทึกเสร็จในระบบ — ช่องที่ว่างให้เขียนมือ แล้วพิมพ์ใบนี้ซ้ำตอนจบงานเพื่อให้สรุปครบ</div>'}</div>`;
 }
+function toothTypesShort(str){
+  const m = toothFromString(str), g = {};
+  FDI_ALL.forEach(t=>{ if(m[t]){ const l = toothTypeOf(m[t]).label; (g[l] = g[l] || []).push(t); } });
+  const ks = Object.keys(g); if(!ks.length) return '';
+  return ks.length === 1 ? ks[0] + ' × ' + g[ks[0]].length + ' ซี่' : ks.map(k=>k + ' × ' + g[k].length + ' (' + g[k].join(',') + ')').join(' • ');
+}
 function ticketHtml(o){
   const rows = ticketRows(o);
-  const chk = '<table class="po-check"><tr><th>ขั้นตอน</th><th style="width:20%">ผู้ทำ</th><th style="width:16%">เริ่ม</th><th style="width:16%">เสร็จ</th><th style="width:11%">ใช้เวลา</th><th style="width:7%">ตรวจ ✓</th></tr>' +
-    rows.map(r=>`<tr><td>${esc(r.label)}</td><td>${esc(r.by)}</td><td>${esc(r.start ? fmtStamp(r.start) : '')}</td><td>${esc(r.end ? fmtStamp(r.end) : '')}</td><td>${r.ms !== null ? esc(fmtDur(r.ms)) : ''}</td><td style="text-align:center;font-weight:800">${r.done ? '✓' : ''}</td></tr>`).join('') + '</table>' + ticketSummaryHtml(o, rows);
+  const chk = '<table class="po-check"><tr><th>ขั้นตอน</th><th style="width:22%">ผู้ทำ</th><th style="width:30%">เวลาเสร็จ</th><th style="width:9%">ตรวจ ✓</th></tr>' +
+    rows.map(r=>`<tr><td>${esc(r.label)}</td><td>${esc(r.by)}</td><td>${esc(r.end ? fmtStamp(r.end) : '')}</td><td style="text-align:center;font-weight:800">${r.done ? '✓' : ''}</td></tr>`).join('') + '</table>' + ticketSummaryHtml(o, rows);
   return `
     <div class="po-head"><div style="flex:1">
       <div class="po-title" style="text-align:left">ใบออเดอร์งาน (WORK ORDER)</div>
@@ -1530,7 +1543,7 @@ function ticketHtml(o){
       <div><b>คนไข้</b>${esc(o.patient||'-')}</div>
       <div><b>ระบบรากฟันเทียม</b>${esc(o.implant_system||'-')}</div>
       <div><b>ตำแหน่งฟัน</b>${esc(o.position||'-')}</div>
-      <div style="grid-column:1/-1"><b>ชนิดงานรายซี่</b>${esc(toothTypesText(o.tooth_types) || '-')}</div>
+      <div style="grid-column:1/-1"><b>ชนิดงานรายซี่</b>${esc(toothTypesShort(o.tooth_types) || '-')}</div>
       <div><b>มีไฟล์สแกน</b>${esc(o.has_scan||'ไม่มี')}</div>
       <div><b>สี</b>${esc(o.color||'-')}</div>
       <div><b>วัสดุ</b>${esc(o.material||'-')}</div>
@@ -1539,7 +1552,7 @@ function ticketHtml(o){
       <div><b>วิธีจัดส่ง</b>${esc(o.delivery_method||'-')}</div>
       <div><b>วันส่งออก</b>${shipCell(o)}</div>
       <div><b>วันนัดคนไข้</b>${esc(o.appointment_date||'-')}</div>
-      <div><b>ประเภทเคส</b>${esc(o.case_type||'ปกติ')}${o.case_type==='คูปอง' ? ' (' + esc(o.coupon_status||'-') + ')' : ''}</div>
+      <div><b>ประเภทเคส</b>${esc(o.case_type||'ปกติ')}${o.case_type==='คูปอง' ? ' (' + esc(o.coupon_status||'-') + (o.coupon_kind ? ' • ' + esc(o.coupon_kind) : '') + ')' : ''}</div>
       <div><b>ต้องสั่ง Abutment</b>${esc(o.need_abutment||'ไม่ต้อง')}</div>
       <div style="grid-column:1/-1"><b>รายละเอียด/หมายเหตุ</b>${esc(o.detail||'-')}</div>
     </div>${chk}
@@ -3820,8 +3833,8 @@ document.getElementById('sr-pdf').addEventListener('click', ()=>{
 let PRICES_WORK = null, BL_DIRTY = false, BL_EXTRA = [];
 function readPrices(){
   const rec = DEP_OVERRIDES['_settings'] && DEP_OVERRIDES['_settings']['prices'];
-  const p = {default:{}, clinics:{}, hidden:[], targets:{}, credit_days:0, clinics_imported:false, share_all:true};
-  if(rec && rec.status){ try{ const v = JSON.parse(rec.status); p.default = v.default || {}; p.clinics = v.clinics || {}; p.hidden = Array.isArray(v.hidden) ? v.hidden : []; p.targets = (v.targets && typeof v.targets === 'object') ? v.targets : {}; p.credit_days = Number(v.credit_days) > 0 ? Number(v.credit_days) : 0; p.clinics_imported = !!v.clinics_imported; p.share_all = v.share_all === undefined ? true : !!v.share_all; }catch(e){} }
+  const p = {default:{}, clinics:{}, hidden:[], targets:{}, credit_days:0, clinics_imported:false, share_all:true, coupon_kinds:[], coupon_grants:[]};
+  if(rec && rec.status){ try{ const v = JSON.parse(rec.status); p.default = v.default || {}; p.clinics = v.clinics || {}; p.hidden = Array.isArray(v.hidden) ? v.hidden : []; p.targets = (v.targets && typeof v.targets === 'object') ? v.targets : {}; p.credit_days = Number(v.credit_days) > 0 ? Number(v.credit_days) : 0; p.clinics_imported = !!v.clinics_imported; p.share_all = v.share_all === undefined ? true : !!v.share_all; p.coupon_kinds = Array.isArray(v.coupon_kinds) ? v.coupon_kinds.map(x=>String(x)).filter(Boolean) : []; p.coupon_grants = Array.isArray(v.coupon_grants) ? v.coupon_grants.filter(g=>g && g.id) : []; }catch(e){} }
   return p;
 }
 async function saveSettingsPatch(fn){
@@ -5095,7 +5108,131 @@ function couponGroups(q){
     return x;
   }).sort((a, b)=>b.live - a.live || b.total - a.total || a.clinic.localeCompare(b.clinic));
 }
+// ---- coupon wallets: coupons GIVEN to a doctor (or a whole clinic) by kind; each coupon case with a kind uses one ----
+// grants live inside the shared prices setting (coupon_grants / coupon_kinds), so no new server version is needed
+const CP_DEFAULT_KINDS = ['รากเทียม', 'ฟันธรรมดา'];
+function couponKinds(){ const k = readPrices().coupon_kinds; return k.length ? k : CP_DEFAULT_KINDS; }
+function cpNorm(x){ return String(x || '').trim().toLowerCase().replace(/\s+/g, ' '); }
+function couponWallets(){
+  const W = {}, mk = (clinic, doctor)=>{
+    const k = cpNorm(clinic) + '\u0001' + cpNorm(doctor);
+    return W[k] || (W[k] = {key:k, clinic:String(clinic || '').trim() || '(ไม่ระบุคลินิก)', doctor:String(doctor || '').trim(), kinds:{}, grants:[], cases:[], unkinded:0, hasGrant:false});
+  };
+  const kd = (w, kind)=>w.kinds[kind] || (w.kinds[kind] = {granted:0, used:0});
+  readPrices().coupon_grants.forEach(g=>{ const w = mk(g.clinic, g.doctor); w.hasGrant = true; kd(w, String(g.kind || '')).granted += Number(g.qty) || 0; w.grants.push(g); });
+  NEW_ORDERS.filter(o=>o.case_type === 'คูปอง' && o.status !== 'ยกเลิกเคส').forEach(o=>{
+    const kind = String(o.coupon_kind || '').trim(), counted = o.coupon_status !== 'คูปองหมดอายุ/ยกเลิก';
+    const own = W[cpNorm(o.clinic) + '\u0001' + cpNorm(o.doctor)], clin = W[cpNorm(o.clinic) + '\u0001'];
+    let w = null;
+    if(kind){ if(own && own.kinds[kind] && own.kinds[kind].granted) w = own; else if(clin && clin.kinds[kind] && clin.kinds[kind].granted) w = clin; }
+    if(!w) w = own || mk(o.clinic, o.doctor);
+    w.cases.push(o);
+    if(!counted) return;
+    if(!kind){ w.unkinded++; return; }
+    kd(w, kind).used += Math.max(0, Number(o.qty)) || 1;
+  });
+  return Object.values(W).filter(w=>w.hasGrant || Object.values(w.kinds).some(k=>k.used > 0))
+    .sort((a, b)=>a.clinic.localeCompare(b.clinic, 'th') || a.doctor.localeCompare(b.doctor, 'th'));
+}
+function walletChips(w){
+  const kinds = [...new Set(couponKinds().concat(Object.keys(w.kinds)))].filter(k=>w.kinds[k]);
+  const chips = kinds.map(k=>{
+    const x = w.kinds[k], left = x.granted - x.used;
+    const label = x.granted ? (left < 0 ? `${esc(k)} เกิน ${-left}` : `${esc(k)} เหลือ ${left}/${x.granted}`) : `${esc(k)} ใช้ ${x.used} (ยังไม่ได้ให้ไว้)`;
+    return `<span class="cpd-chip wal ${left < 0 || !x.granted ? 'neg' : left === 0 ? 'zero' : ''}" title="ให้ไว้ ${x.granted} • ใช้ไป ${x.used}">${label}</span>`;
+  });
+  if(w.unkinded) chips.push(`<span class="cpd-chip" title="เคสคูปองที่ยังไม่ได้เลือกประเภท จึงยังไม่ถูกหักจากกระเป๋า">ไม่ระบุประเภท ${w.unkinded}</span>`);
+  return chips.join('');
+}
+function renderCouponWallets(){
+  const box = document.getElementById('cpw-list'); if(!box) return;
+  if(typeof refreshCouponKindSelect==='function') refreshCouponKindSelect();
+  const admin = isAdminUser(CURRENT_EMPLOYEE), qq = String(document.getElementById('cpd-q').value || '').trim().toLowerCase();
+  const open = new Set([...box.querySelectorAll('details[open]')].map(d=>d.dataset.k));
+  const list = couponWallets().filter(w=>!qq || (w.clinic + ' ' + w.doctor).toLowerCase().includes(qq));
+  if(!list.length){ box.innerHTML = '<div class="note">ยังไม่ได้ให้คูปองกับใคร' + (admin ? ' — กด "＋ เพิ่มคูปองให้หมอ/คลินิก" ด้านบน' : '') + '</div>'; return; }
+  box.innerHTML = list.map(w=>{
+    const gr = w.grants.slice().sort((a, b)=>String(b.date || '').localeCompare(String(a.date || ''))).map(g=>`<tr><td>${esc(fmtDate(g.date))}</td><td>${esc(g.kind)}</td><td class="num">${Number(g.qty) > 0 ? '+' : ''}${esc(g.qty)}</td><td>${esc(g.note || '')}</td><td>${esc(g.by || '')}</td>${admin ? `<td><button type="button" class="btn ghost sm" data-cpw-del="${esc(g.id)}">ลบ</button></td>` : ''}</tr>`).join('');
+    const cs = w.cases.slice().sort((a, b)=>String(b.date_received || '').localeCompare(String(a.date_received || ''))).map(o=>`<tr><td>${esc(fmtDate(o.date_received))}</td><td><a href="#" class="caselink" data-open-case="${esc(o._id)}">${esc(o.case_id || '-')}</a></td><td>${esc(o.doctor || '')}</td><td>${esc(o.coupon_kind || '— ไม่ระบุ')}</td><td>${esc(o.coupon_status || '-')}</td></tr>`).join('');
+    return `<details class="cpd-row" data-k="${esc(w.key)}" ${open.has(w.key) ? 'open' : ''}><summary><b>${esc(w.clinic)}</b><span>${w.doctor ? '👨‍⚕️ ' + esc(w.doctor) : '🏥 ทั้งคลินิก'}</span><span class="cpd-n">${walletChips(w)}</span></summary><div class="cpd-cases">
+      <b>ประวัติการให้คูปอง</b>${gr ? `<table><tr><th>วันที่</th><th>ประเภท</th><th>จำนวน</th><th>หมายเหตุ</th><th>โดย</th>${admin ? '<th></th>' : ''}</tr>${gr}</table>` : '<div class="note">ยังไม่มีการให้คูปอง (มีแต่เคสที่ใช้)</div>'}
+      <b style="display:block;margin-top:8px">เคสที่หักจากกระเป๋านี้</b>${cs ? `<table><tr><th>วันรับงาน</th><th>เคส</th><th>หมอ</th><th>ประเภท</th><th>สถานะคูปอง</th></tr>${cs}</table>` : '<div class="note">ยังไม่มี</div>'}</div></details>`;
+  }).join('');
+  box.querySelectorAll('[data-cpw-del]').forEach(b=>b.addEventListener('click', async ()=>{
+    if(!window.confirm('ลบรายการให้คูปองนี้? (ยอดคงเหลือจะลดลงตามจำนวนที่ลบ)')) return;
+    await saveSettingsPatch(cur=>{ cur.coupon_grants = cur.coupon_grants.filter(g=>g.id !== b.dataset.cpwDel); });
+    showToast('ลบแล้ว'); renderCouponByDoctor();
+  }));
+}
+let CPW_FORM_OPEN = false;
+function renderCouponAdmin(force){
+  const box = document.getElementById('cpw-admin'); if(!box) return;
+  if(!isAdminUser(CURRENT_EMPLOYEE)){ box.innerHTML = ''; return; }
+  if(!force && CPW_FORM_OPEN && document.getElementById('cpw-clinic')) return;      // do not wipe what is being typed when the page refreshes
+  if(!CPW_FORM_OPEN){ box.innerHTML = '<button type="button" class="btn primary sm" id="cpw-open">＋ เพิ่มคูปองให้หมอ/คลินิก</button>'; document.getElementById('cpw-open').addEventListener('click', ()=>{ CPW_FORM_OPEN = true; renderCouponAdmin(true); }); return; }
+  const kinds = couponKinds(), keep = id=>{ const e = document.getElementById(id); return e ? e.value : ''; };
+  const v = {clinic: keep('cpw-clinic'), doctor: keep('cpw-doctor'), kind: keep('cpw-kind'), qty: keep('cpw-qty') || '1', note: keep('cpw-note')};
+  box.innerHTML = `<div class="cpw-form"><div><label>คลินิก</label><input id="cpw-clinic" list="dl-clinic-form" autocomplete="off" value="${esc(v.clinic)}" placeholder="ชื่อคลินิก"></div>
+    <div><label>หมอ (เว้นว่าง = ทั้งคลินิก)</label><input id="cpw-doctor" list="dl-doctors" autocomplete="off" value="${esc(v.doctor)}" placeholder="ชื่อหมอ"></div>
+    <div><label>ประเภทคูปอง</label><select id="cpw-kind">${kinds.map(k=>`<option value="${esc(k)}" ${k === v.kind ? 'selected' : ''}>${esc(k)}</option>`).join('')}<option value="__new__">＋ เพิ่มประเภทใหม่…</option></select></div>
+    <div><label>จำนวนซี่ (ใส่ - เพื่อหักออก)</label><input id="cpw-qty" type="number" step="1" value="${esc(v.qty)}" style="width:90px"></div>
+    <div style="flex:1;min-width:140px"><label>หมายเหตุ</label><input id="cpw-note" value="${esc(v.note)}" placeholder="เช่น ซื้อ 10 แถม 1 / โปรเดือนนี้" style="width:100%"></div>
+    <div><button type="button" class="btn primary" id="cpw-add">เพิ่มคูปอง</button> <button type="button" class="btn ghost" id="cpw-cancel">ปิด</button></div></div>`;
+  document.getElementById('cpw-cancel').addEventListener('click', ()=>{ CPW_FORM_OPEN = false; renderCouponAdmin(true); });
+  document.getElementById('cpw-kind').addEventListener('change', async e=>{
+    if(e.target.value !== '__new__') return;
+    const nm = String(window.prompt('ชื่อประเภทคูปองใหม่ (เช่น Zirconia, คูปองส่วนลด)') || '').trim().slice(0, 40);
+    if(nm && !couponKinds().includes(nm)) await saveSettingsPatch(cur=>{ cur.coupon_kinds = couponKinds().concat(nm); });
+    renderCouponAdmin(true); const sel = document.getElementById('cpw-kind'); if(sel && nm) sel.value = nm;
+  });
+  document.getElementById('cpw-add').addEventListener('click', async ()=>{
+    const clinic = document.getElementById('cpw-clinic').value.trim(), doctor = document.getElementById('cpw-doctor').value.trim(), kind = document.getElementById('cpw-kind').value;
+    const qty = parseInt(document.getElementById('cpw-qty').value, 10), note = document.getElementById('cpw-note').value.trim().slice(0, 120);
+    if(!clinic){ showToast('ใส่ชื่อคลินิก'); return; }
+    if(!kind || kind === '__new__'){ showToast('เลือกประเภทคูปอง'); return; }
+    if(!isFinite(qty) || qty === 0){ showToast('จำนวนต้องเป็นตัวเลข (ไม่ใช่ 0)'); return; }
+    const probe = readPrices(); probe.coupon_grants = probe.coupon_grants.concat({id:'x', clinic, doctor, kind, qty, note, date:'2000-01-01', by:''});
+    if(JSON.stringify(probe).length > 42000){ showToast('พื้นที่เก็บคูปองเต็ม — ลบรายการเก่าที่ไม่ใช้แล้วก่อน'); return; }
+    const canon = canonName('clinics', clinic) || clinic;
+    await saveSettingsPatch(cur=>{ cur.coupon_grants.push({id:'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), clinic: canon, doctor, kind, qty, note, date: todayLocal(), by: CURRENT_EMPLOYEE.name}); });
+    showToast('✓ เพิ่มคูปอง ' + kind + ' ' + qty + ' ใบ ให้ ' + canon + (doctor ? ' / ' + doctor : ' (ทั้งคลินิก)'));
+    document.getElementById('cpw-qty').value = '1'; document.getElementById('cpw-note').value = '';
+    renderCouponByDoctor();
+  });
+}
+// order form: pick the coupon kind, and see right away what that doctor has left
+function refreshCouponKindSelect(){
+  const el = document.getElementById('f_coupon_kind'); if(!el) return;
+  const cur = el.value, kinds = couponKinds();
+  el.innerHTML = '<option value="">-- เลือก --</option>' + kinds.map(k=>`<option value="${esc(k)}">${esc(k)}</option>`).join('');
+  if(cur && !kinds.includes(cur)) el.add(new Option(cur, cur));
+  el.value = cur;
+}
+function couponHint(){
+  const box = document.getElementById('cp-hint'); if(!box) return;
+  const g = id=>{ const e = document.getElementById(id); return e ? e.value : ''; };
+  box.className = 'note'; box.textContent = '';
+  if(g('f_case_type') !== 'คูปอง') return;
+  const kind = g('f_coupon_kind'), clinic = g('f_clinic'), doctor = g('f_doctor');
+  if(!clinic.trim()) return;
+  if(!kind){ box.textContent = 'เลือกประเภทคูปอง เพื่อหักจากกระเป๋าคูปองของหมอ'; return; }
+  const W = couponWallets(), own = W.find(w=>w.key === cpNorm(clinic) + '\u0001' + cpNorm(doctor)), clin = W.find(w=>w.key === cpNorm(clinic) + '\u0001');
+  const w = (own && own.kinds[kind] && own.kinds[kind].granted) ? own : ((clin && clin.kinds[kind] && clin.kinds[kind].granted) ? clin : null);
+  if(!w){ box.className = 'note warn'; box.textContent = '⚠ ยังไม่ได้ให้คูปอง "' + kind + '" แก่ ' + (doctor || clinic) + ' (เพิ่มได้ที่แดชบอร์ด 🎟)'; return; }
+  const x = w.kinds[kind], left = x.granted - x.used, editing = typeof EDIT_ID !== 'undefined' && EDIT_ID && w.cases.some(o=>o._id === EDIT_ID);
+  const who = w.doctor ? w.doctor : 'ทั้งคลินิก ' + w.clinic;
+  if(editing) box.textContent = '🎫 ' + who + ' • ' + kind + ' เหลือ ' + left + ' ซี่ (รวมเคสนี้แล้ว)';
+  else if(left <= 0){ box.className = 'note warn'; box.textContent = '⚠ ' + who + ' ไม่มีคูปอง "' + kind + '" เหลือแล้ว (ให้ ' + x.granted + ' ใช้ ' + x.used + ')'; }
+  else box.textContent = '🎫 ' + who + ' • ' + kind + ' เหลือ ' + left + ' ซี่ → หลังบันทึกเคสนี้เหลือ ' + (left - 1);
+}
+function setupCouponKindField(){
+  const el = document.getElementById('f_coupon_kind'); if(!el) return;
+  el.closest('.field').insertAdjacentHTML('beforeend', '<div id="cp-hint" class="note" style="margin-top:4px"></div>');
+  refreshCouponKindSelect();
+  ['f_case_type', 'f_coupon_kind', 'f_clinic', 'f_doctor'].forEach(id=>{ const e = document.getElementById(id); if(e){ e.addEventListener('change', couponHint); e.addEventListener('input', couponHint); } });
+}
 function renderCouponByDoctor(){
+  renderCouponAdmin(); renderCouponWallets();
   const box = document.getElementById('cpd-list'); if(!box) return;
   const open = new Set([...box.querySelectorAll('details[open]')].map(d=>d.dataset.k));
   const list = couponGroups(document.getElementById('cpd-q').value);
