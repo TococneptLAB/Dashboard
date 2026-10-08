@@ -796,7 +796,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-08 รุ่น 52 (ป้ายงาน ทำ Model 🦷)";
+const APP_VERSION = "2026-10-08 รุ่น 53 (เปิดเร็ว จำข้อมูลในเครื่อง 💾)";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -870,6 +870,7 @@ function clearEmployeeSession(){
   CURRENT_EMPLOYEE = null;
   if(typeof chatReset === 'function') chatReset();
   try{ localStorage.removeItem('totu_employee'); }catch(e){}
+  cacheClear();
 }
 
 // ---------- New orders (shared, via backend) ----------
@@ -904,6 +905,38 @@ function rebuildOrders(){
   gone.sort((a,b)=>ts(b) - ts(a));
   NEW_ORDERS = live; DELETED_ORDERS = gone;
 }
+// ---------- Local copy (open instantly, refresh behind the scenes) ----------
+// The last answer from the server is kept in this browser, per person. On the next visit the page is drawn from it at once
+// and the real data replaces it a moment later. It is wiped on log-out / when the session expires (shared PCs).
+const CACHE_KEY = 'totu_cache_v1';
+function cachePut(r){
+  try{
+    if(!CURRENT_EMPLOYEE || !r || !r.ok) return;
+    localStorage.setItem(CACHE_KEY, JSON.stringify({who: CURRENT_EMPLOYEE.name, api: API_URL, at: Date.now(), data: r}));
+  }catch(e){ try{ localStorage.removeItem(CACHE_KEY); }catch(e2){} }      // too big / blocked: just work without it
+}
+function cacheGet(){
+  try{
+    const c = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+    if(c && CURRENT_EMPLOYEE && c.who === CURRENT_EMPLOYEE.name && c.api === API_URL && c.data && c.data.ok) return c;
+  }catch(e){}
+  return null;
+}
+function cacheClear(){ try{ localStorage.removeItem(CACHE_KEY); }catch(e){} }
+function applyBootstrap(r){
+  LAST_SIG = quickSig(r);
+  RAW_ORDERS = r.orders || [];
+  CONTACTS = r.contacts || [];
+  INVOICES = r.invoices || [];
+  FILE_COUNTS = r.file_counts || {};
+  SERVER_VER = r.server_version || 0;
+  ABUTMENTS = r.abutments || [];
+  rebuildContactIndex();
+  EMPLOYEE_LIST = r.employees || [];
+  applyOverridesFromServer(r.overrides || []);
+  rebuildOrders();
+}
+let SHOWING_CACHE = false;
 let LAST_SIG = '';
 function quickSig(r){ try{ return JSON.stringify([r.orders, r.overrides, r.contacts, r.invoices, r.abutments, r.file_counts, r.employees, r.server_version]); }catch(e){ return String(Math.random()); } }
 async function loadNewOrders(skipIfSame){
@@ -912,19 +945,11 @@ async function loadNewOrders(skipIfSame){
     const t0 = Date.now();
     const r = await apiPost({action:'bootstrap'});
     const ms = Date.now() - t0;
-    if(r && r.ok && skipIfSame && quickSig(r) === LAST_SIG){ setSyncStatus(true, ms); return 'same'; }
+    if(r && r.ok && skipIfSame && !SHOWING_CACHE && quickSig(r) === LAST_SIG){ setSyncStatus(true, ms); return 'same'; }
     if(r && r.ok){
-      LAST_SIG = quickSig(r);
-      RAW_ORDERS = r.orders || [];
-      CONTACTS = r.contacts || [];
-      INVOICES = r.invoices || [];
-      FILE_COUNTS = r.file_counts || {};
-      SERVER_VER = r.server_version || 0;
-      ABUTMENTS = r.abutments || [];
-      rebuildContactIndex();
-      EMPLOYEE_LIST = r.employees || [];
-      applyOverridesFromServer(r.overrides || []);
-      rebuildOrders();
+      applyBootstrap(r);
+      cachePut(r);
+      SHOWING_CACHE = false;
       setSyncStatus(true, ms);
       return true;
     }
@@ -2644,7 +2669,7 @@ async function chatPoll(){
     if(CHAT.open && !document.hidden) chatMarkRead(CHAT.room);
     renderChatBadge();
     if(CHAT.open) renderChat(true);
-  } finally { CHAT.busy = false; }
+  } catch(e){ /* offline: try again at the next tick */ } finally { CHAT.busy = false; }
 }
 function chatNotify(list){
   const me = chatMe(), re = new RegExp('@' + me.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![\\w])', 'i');
@@ -5309,6 +5334,19 @@ async function init(){
   }
 
   document.querySelector('.app').style.display = 'none';
+  loadEmployeeSession();
+  const copy = CURRENT_EMPLOYEE ? cacheGet() : null;
+  if(copy){
+    // instant start from the copy kept in this browser; the real data follows in the background
+    applyBootstrap(copy.data); SHOWING_CACHE = true;
+    showApp(); startPolling();
+    const el = document.getElementById('sync-ms'); if(el){ el.textContent = '💾 กำลังอัปเดต…'; el.title = 'แสดงข้อมูลที่จำไว้ในเครื่อง (' + new Date(copy.at).toLocaleTimeString('th-TH') + ') กำลังดึงข้อมูลล่าสุด'; }
+    apiGet({action:'names'}).then(r=>{ NAMES_LIST = (r && r.names) || NAMES_LIST; }).catch(()=>{});
+    const ok = await loadNewOrders();
+    if(ok === true && CURRENT_EMPLOYEE){ applyRole(); renderAll(); }
+    else if(!ok && CURRENT_EMPLOYEE){ const e2 = document.getElementById('sync-ms'); if(e2) e2.textContent = '💾 ออฟไลน์'; setSyncStatus(false); }
+    return;
+  }
   try{
     const r = await apiGet({action:'names'});
     NAMES_LIST = (r && r.names) || [];
@@ -5317,7 +5355,6 @@ async function init(){
     return;
   }
 
-  loadEmployeeSession();
   if(CURRENT_EMPLOYEE){
     if(await loadNewOrders()){ showApp(); startPolling(); return; }
     if(CURRENT_EMPLOYEE){ showLogin('เชื่อมต่อไม่ได้ ลองใหม่อีกครั้ง'); return; }   // network problem: keep the session
