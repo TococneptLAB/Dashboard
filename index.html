@@ -374,6 +374,7 @@
       <button data-tab="abutment">รอ Abutment</button>
       <button data-tab="dept">สถานะแผนก</button>
       <button data-tab="dash">แดชบอร์ด</button>
+      <button data-tab="coupon">🎟 คูปอง</button>
       <button data-tab="overview">ภาพรวมรายได้</button>
       <button data-tab="report">สรุปหมอ / คลินิก</button>
       <button data-tab="perf">ผลงานรายคน</button>
@@ -482,17 +483,8 @@
     </div>
   </section>
 
-  <!-- DASHBOARD TAB -->
-  <section id="view-dash" class="view">
-    <div class="kpis" id="kpi-row"></div>
-    <div class="card">
-      <h2>งานค้างแยกตามแผนก (Department Backlog)</h2>
-      <div class="tablewrap"><table id="dept-backlog-table"></table></div>
-    </div>
-    <div class="card">
-      <h2>งานอยู่ที่แผนกไหนตอนนี้ (จำนวนเคส)</h2>
-      <div id="chart-wip"></div>
-    </div>
+  <!-- COUPON TAB -->
+  <section id="view-coupon" class="view">
     <div class="card" id="coupon-by-doc-card">
       <h2>🎟 คูปองรายคลินิก / หมอ <span class="tag" id="cpd-count">0</span></h2>
       <input type="text" id="cpd-q" placeholder="ค้นหาคลินิก / หมอ..." style="max-width:320px;margin-bottom:8px">
@@ -503,6 +495,19 @@
       <h3 style="margin:16px 0 4px">เคสคูปองรายหมอ</h3>
       <div class="note" style="margin:0 0 8px">นับทุกเดือนรวมกัน (ไม่ขึ้นกับตัวเลือกเดือนด้านบน) เฉพาะเคสประเภท "คูปอง" กดที่แถวเพื่อดูรายการเคสของหมอท่านนั้น</div>
       <div id="cpd-list"></div>
+    </div>
+  </section>
+
+  <!-- DASHBOARD TAB -->
+  <section id="view-dash" class="view">
+    <div class="kpis" id="kpi-row"></div>
+    <div class="card">
+      <h2>งานค้างแยกตามแผนก (Department Backlog)</h2>
+      <div class="tablewrap"><table id="dept-backlog-table"></table></div>
+    </div>
+    <div class="card">
+      <h2>งานอยู่ที่แผนกไหนตอนนี้ (จำนวนเคส)</h2>
+      <div id="chart-wip"></div>
     </div>
     <div class="cols2">
       <div class="card">
@@ -875,7 +880,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-09 รุ่น 71 (แท็บ ส่งออกแล้ว: ดูงานที่ส่งแล้ว กรองเดือน/คลินิก ส่งออก Excel/PDF) • ต้องใช้ backend v16";
+const APP_VERSION = "2026-10-09 รุ่น 72 (แยกคูปองออกจากแดชบอร์ดเป็นแท็บ 🎟 คูปอง เฉพาะแอดมิน/CEO) • ต้องใช้ backend v16";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -5475,7 +5480,6 @@ function renderCouponByDoctor(){
 }
 document.getElementById('cpd-q').addEventListener('input', renderCouponByDoctor);
 function renderDash(){
-  renderCouponByDoctor();
   const data = allData();
   const total = data.length;
   const rework = data.filter(r=>r.is_rework===true).length;
@@ -5677,7 +5681,7 @@ function renderServerBanner(){
   if(rs) rs.addEventListener('click', e=>{ e.preventDefault(); try{ localStorage.removeItem('totu_api_url'); }catch(x){} location.reload(); });
 }
 const TAB_RENDERERS = {
-  order: ()=>{ refreshClinicSelect(); renderRecentOrders(); }, pending: ()=>renderPending(), delivery: ()=>renderDelivery(), dept: ()=>renderDept(), dash: ()=>renderDash(),
+  order: ()=>{ refreshClinicSelect(); renderRecentOrders(); }, pending: ()=>renderPending(), delivery: ()=>renderDelivery(), dept: ()=>renderDept(), dash: ()=>renderDash(), coupon: ()=>renderCouponByDoctor(),
   overview: ()=>renderOverview(), report: ()=>renderReport(), billing: ()=>renderBilling(false), contacts: ()=>renderContacts(), perm: ()=>renderPerm(),
   search: ()=>renderSearch(), shipped: ()=>renderShipped(), rework: ()=>renderRework(), abutment: ()=>renderAbutTab(), perf: ()=>renderPerf()
 };
@@ -5889,6 +5893,7 @@ function applyDeptRelevance(){
 let LAST_DEPT_SIG = null;
 function tabAllowed(tab){
   if(isAdminUser(CURRENT_EMPLOYEE) || NORMAL_TABS.includes(tab)) return true;
+  if(tab === 'coupon') return canSeeCoupons(CURRENT_EMPLOYEE);
   if(tab === 'abutment') return canManageAbutment();
   if(tab === 'perf') return canSeePerformance();
   return tab === 'delivery' && allowedDeptKeys().includes('delivery');
