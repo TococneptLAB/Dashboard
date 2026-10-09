@@ -380,6 +380,7 @@
       <button data-tab="billing">ราคา / บิล</button>
       <button data-tab="contacts">ผู้ติดต่อ</button>
       <button data-tab="perm">สิทธิ์พนักงาน</button>
+      <button data-tab="shipped">ส่งออกแล้ว</button>
       <button data-tab="search">ค้นหา / ตรวจสอบงาน</button>
       <button data-tab="rework">งานแก้</button>
     </nav>
@@ -808,6 +809,20 @@
   </section>
 
   <!-- SEARCH TAB -->
+  <section id="view-shipped" class="view">
+    <div class="card">
+      <h2>📦 ส่งออกแล้ว <span class="tag" id="sh-count">0</span></h2>
+      <div class="filters">
+        <select id="sh-month" title="เดือนที่ส่งมอบ"></select>
+        <input id="sh-q" placeholder="ค้นหา: เลขเคส / คนไข้ / แพทย์ / คลินิก" style="min-width:240px">
+        <select id="sh-clinic"><option value="">ทุกคลินิก</option></select>
+        <button class="btn ghost sm" id="sh-xlsx">⬇ Excel</button> <button class="btn ghost sm" id="sh-pdf">🖨 PDF</button>
+      </div>
+      <div class="kpis" id="sh-kpis"></div>
+      <div class="tablewrap" style="max-height:640px"><table id="sh-table"></table></div>
+      <div class="note">เคสที่กดส่งมอบ (DELIVERY) เสร็จแล้ว จัดตามวันที่ส่งมอบจริง • "ตรงเวลา" = ส่งมอบไม่เกินวันส่งออกที่ตั้งไว้ (ถ้าไม่ได้ตั้งวันส่งออก ใช้วันนัดคนไข้) • กดเลขเคสเพื่อดูว่าใครทำขั้นไหนเมื่อไหร่</div>
+    </div>
+  </section>
   <section id="view-search" class="view">
     <div class="card">
       <h2>ค้นหา / ตรวจสอบงาน</h2>
@@ -860,7 +875,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-09 รุ่น 70 (รับออเดอร์อัตโนมัติ ไม่ต้องกดยืนยัน + แจ้งเตือนไฟล์ใหม่ 📎 + ลิงก์ Exocad 🦷) • ต้องใช้ backend v16";
+const APP_VERSION = "2026-10-09 รุ่น 71 (แท็บ ส่งออกแล้ว: ดูงานที่ส่งแล้ว กรองเดือน/คลินิก ส่งออก Excel/PDF) • ต้องใช้ backend v16";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -3523,6 +3538,57 @@ document.getElementById('sr-xlsx').addEventListener('click', ()=>{
   downloadXlsx('ผลค้นหา-' + safeFileName(monthLabel(SELECTED_MONTH)) + '.xlsx', [{name:'ผลค้นหา', rows: exportRows(LAST_SEARCH_LIST, true)}]);
 });
 
+// ---------- Shipped tab: everything already handed over ----------
+function shippedRows(){
+  const q = String(document.getElementById('sh-q').value || '').trim().toLowerCase(), month = document.getElementById('sh-month').value, clinic = document.getElementById('sh-clinic').value;
+  const out = [];
+  NEW_ORDERS.concat(HISTORICAL).map(withEffectiveStatus).forEach(o=>{
+    if(o.status !== 'ส่งแล้ว') return;
+    const rec = depRecord(o, 'delivery'), fin = stampToDate(rec.end || '') || parseYmd(o.date_delivered || '') || null;
+    const finKey = fin ? ymdLocal(fin) : '', mk = finKey ? finKey.slice(0, 7) : 'unknown';
+    if(month && month !== 'all' && mk !== month) return;
+    if(clinic && rpName(o, 'clinic') !== clinic) return;
+    if(q && ![o.case_id, o.patient, o.doctor, o.clinic].some(v=>v && String(v).toLowerCase().includes(q))) return;
+    const rec0 = parseYmd(o.date_received), plan = parseYmd(o.ship_date) || parseYmd(o.appointment_date);
+    const dayN = (a, b)=>Math.round((new Date(b.getFullYear(), b.getMonth(), b.getDate()) - new Date(a.getFullYear(), a.getMonth(), a.getDate())) / 86400000);
+    const took = (rec0 && fin) ? Math.max(0, dayN(rec0, fin)) : null, late = (plan && fin) ? dayN(plan, fin) : null;
+    out.push({o, fin, finKey, took, late, planKind: parseYmd(o.ship_date) ? 'ส่งออก' : (parseYmd(o.appointment_date) ? 'นัด' : ''), by: rec.by || ''});
+  });
+  return out.sort((a, b)=>String(b.finKey).localeCompare(String(a.finKey)) || String(b.o.case_id).localeCompare(String(a.o.case_id)));
+}
+let LAST_SHIPPED = [];
+function renderShipped(){
+  const tbl = document.getElementById('sh-table'); if(!tbl) return;
+  const msel = document.getElementById('sh-month'), csel = document.getElementById('sh-clinic');
+  if(!msel.dataset.built || msel.dataset.n !== String(NEW_ORDERS.length + HISTORICAL.length)){
+    const keep = msel.value, ks = new Set([currentMonthKey()]);
+    NEW_ORDERS.concat(HISTORICAL).map(withEffectiveStatus).forEach(o=>{ if(o.status === 'ส่งแล้ว'){ const f = stampToDate(depRecord(o, 'delivery').end || ''); if(f) ks.add(ymdLocal(f).slice(0, 7)); } });
+    msel.innerHTML = '<option value="all">ทุกเดือน</option>' + Array.from(ks).sort().reverse().map(k=>`<option value="${esc(k)}">${esc(monthLabel(k))}</option>`).join('');
+    msel.value = keep && [...msel.options].some(o=>o.value === keep) ? keep : currentMonthKey();
+    msel.dataset.built = '1'; msel.dataset.n = String(NEW_ORDERS.length + HISTORICAL.length);
+    const cs = new Set(); NEW_ORDERS.concat(HISTORICAL).forEach(o=>{ if(o.status === 'ส่งแล้ว' || depValue(o, 'delivery') === 'เสร็จแล้ว') cs.add(rpName(o, 'clinic')); });
+    const ck = csel.value; csel.innerHTML = '<option value="">ทุกคลินิก</option>' + Array.from(cs).filter(Boolean).sort((a, b)=>a.localeCompare(b, 'th')).map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+    csel.value = ck;
+  }
+  const list = shippedRows(); LAST_SHIPPED = list;
+  document.getElementById('sh-count').textContent = list.length;
+  const units = list.reduce((a, x)=>a + (Number(x.o.qty) || 0), 0), judged = list.filter(x=>x.late !== null), onTime = judged.filter(x=>x.late <= 0).length;
+  const tk = list.filter(x=>x.took !== null), avg = tk.length ? tk.reduce((a, x)=>a + x.took, 0) / tk.length : null;
+  document.getElementById('sh-kpis').innerHTML = [['ส่งมอบแล้ว (เคส)', list.length.toLocaleString()], ['ซี่รวม', units.toLocaleString()], ['ตรงเวลา', judged.length ? onTime + '/' + judged.length + ' (' + Math.round(onTime * 100 / judged.length) + '%)' : '-'], ['ใช้เวลาเฉลี่ย', avg === null ? '-' : avg.toFixed(1) + ' วัน']].map(k=>`<div class="kpi"><div class="num">${esc(k[1])}</div><div class="lbl">${esc(k[0])}</div></div>`).join('');
+  if(!list.length){ tbl.innerHTML = '<tr><td class="empty">ยังไม่มีเคสที่ส่งมอบในช่วงนี้</td></tr>'; return; }
+  const lateTxt = x=>x.late === null ? '-' : x.late <= 0 ? '<span style="color:var(--ok);font-weight:700">✓ ตรงเวลา</span>' : '<span style="color:var(--rose);font-weight:700">⚠ เลย ' + x.late + ' วัน</span>';
+  tbl.innerHTML = '<tr>' + ['ส่งมอบเมื่อ', 'เลขเคส', 'คลินิก', 'แพทย์', 'คนไข้', 'วัสดุ', 'ซี่', 'วันรับงาน', 'วันส่งออก', 'วันนัด', 'ใช้เวลา', 'ตรงเวลา', 'ผู้ส่งมอบ', 'วิธีจัดส่ง', 'Tracking'].map(h=>`<th>${h}</th>`).join('') + '</tr>' +
+    list.slice(0, 400).map(x=>{ const o = x.o; return `<tr><td>${esc(x.fin ? fmtStamp(depRecord(o, 'delivery').end) : '-')}</td><td>${caseLink(o)}</td><td>${esc(rpName(o, 'clinic') || '-')}</td><td>${esc(o.doctor || '-')}</td><td>${esc(o.patient || '-')}</td><td>${esc(o.material || '-')}</td><td>${esc(o.qty ?? '-')}</td><td>${esc(fmtDate(o.date_received))}</td><td>${esc(o.ship_date ? fmtDate(o.ship_date) : '-')}</td><td>${esc(o.appointment_date ? fmtDate(o.appointment_date) : '-')}</td><td>${x.took === null ? '-' : x.took + ' วัน'}</td><td>${lateTxt(x)}</td><td>${esc(x.by || '-')}</td><td>${esc(o.delivery_method || '-')}</td><td>${esc(o.tracking_no || '-')}</td></tr>`; }).join('') + (list.length > 400 ? `<tr><td colspan="15" class="empty">แสดง 400 รายการแรกจาก ${list.length} (ใช้ตัวกรองเพื่อดูส่วนที่เหลือ)</td></tr>` : '');
+}
+['sh-month', 'sh-clinic'].forEach(id=>document.getElementById(id).addEventListener('change', renderShipped));
+document.getElementById('sh-q').addEventListener('input', renderShipped);
+function shippedExportRows(){
+  const head = ['ส่งมอบเมื่อ', 'เลขเคส', 'คลินิก', 'แพทย์', 'คนไข้', 'วัสดุ', 'ซี่', 'วันรับงาน', 'วันส่งออก', 'วันนัด', 'ใช้เวลา (วัน)', 'ตรงเวลา', 'ผู้ส่งมอบ', 'วิธีจัดส่ง', 'Tracking'];
+  return [head].concat(LAST_SHIPPED.map(x=>{ const o = x.o; return [x.fin ? fmtStamp(depRecord(o, 'delivery').end) : '', o.case_id || '', rpName(o, 'clinic') || '', o.doctor || '', o.patient || '', o.material || '', o.qty ?? '', fmtDate(o.date_received), o.ship_date ? fmtDate(o.ship_date) : '', o.appointment_date ? fmtDate(o.appointment_date) : '', x.took === null ? '' : x.took, x.late === null ? '' : (x.late <= 0 ? 'ตรงเวลา' : 'เลย ' + x.late + ' วัน'), x.by || '', o.delivery_method || '', o.tracking_no || '']; }));
+}
+document.getElementById('sh-xlsx').addEventListener('click', ()=>{ if(!LAST_SHIPPED.length){ showToast('ไม่มีรายการให้ดาวน์โหลด'); return; } downloadXlsx('ส่งออกแล้ว-' + safeFileName(document.getElementById('sh-month').value) + '.xlsx', [{name:'ส่งออกแล้ว', rows: shippedExportRows()}]); });
+document.getElementById('sh-pdf').addEventListener('click', ()=>{ if(!LAST_SHIPPED.length){ showToast('ไม่มีรายการให้พิมพ์'); return; } printPdf('ส่งออกแล้ว_' + document.getElementById('sh-month').value, 'รายการส่งออกแล้ว • ' + (document.getElementById('sh-month').value === 'all' ? 'ทุกเดือน' : monthLabel(document.getElementById('sh-month').value)), [{heading:'', kpi:document.getElementById('sh-kpis').textContent.replace(/\s+/g, ' ').trim(), rows: shippedExportRows()}]); });
+
 // ---------- Pending tab: what is still open this month ----------
 function pendingBase(){
   return NEW_ORDERS.concat(HISTORICAL).map(withEffectiveStatus)
@@ -5613,7 +5679,7 @@ function renderServerBanner(){
 const TAB_RENDERERS = {
   order: ()=>{ refreshClinicSelect(); renderRecentOrders(); }, pending: ()=>renderPending(), delivery: ()=>renderDelivery(), dept: ()=>renderDept(), dash: ()=>renderDash(),
   overview: ()=>renderOverview(), report: ()=>renderReport(), billing: ()=>renderBilling(false), contacts: ()=>renderContacts(), perm: ()=>renderPerm(),
-  search: ()=>renderSearch(), rework: ()=>renderRework(), abutment: ()=>renderAbutTab(), perf: ()=>renderPerf()
+  search: ()=>renderSearch(), shipped: ()=>renderShipped(), rework: ()=>renderRework(), abutment: ()=>renderAbutTab(), perf: ()=>renderPerf()
 };
 function activeTabName(){ const b = document.querySelector('nav.tabs button.active'); return b ? b.dataset.tab : 'order'; }
 // only the tab you are looking at is drawn (the others are drawn when you open them): keeps refreshes fast with thousands of orders
@@ -5681,7 +5747,7 @@ document.getElementById('logout-btn').addEventListener('click', ()=>doLogout('')
 
 // Roles: admin = all tabs | everyone else = only "search" (ตรวจสอบงาน) + "dept" (สถานะแผนก)
 // A person counts as admin if role = admin, or (role blank and department = Admin)
-const NORMAL_TABS = ['pending', 'search', 'dept'];
+const NORMAL_TABS = ['pending', 'search', 'dept', 'shipped'];
 function isCeoUser(emp){
   if(!emp) return false;
   return String(emp.role || '').trim().toLowerCase() === 'ceo' || String(emp.department || '').trim().toLowerCase() === 'ceo';
