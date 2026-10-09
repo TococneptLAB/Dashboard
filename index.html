@@ -202,6 +202,7 @@
   .dep-tick.dt-prog{background:#FFF3DC;border-color:var(--amber);color:#8A5200;}
   .dep-tick.dt-done{background:#E4F3EA;border-color:var(--ok);color:var(--ok);}
   .dep-tick:disabled{opacity:.5;}
+  .exo-chip{display:inline-block;background:#E6F1FA;color:#1F5E94;border:1px solid #B9D6EE;border-radius:999px;padding:1px 8px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;}
   .wip-p{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:10px;background:#fff;}
   .wip-p b.nm{font-size:15px;}
   .wip-p .wi{display:flex;gap:8px;flex-wrap:wrap;align-items:baseline;padding:5px 0;border-top:1px dashed var(--line);font-size:13.5px;}
@@ -859,7 +860,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-08 รุ่น 67 (ใครกำลังทำอะไร 👷 + รับงาน→เสร็จ 📱)";
+const APP_VERSION = "2026-10-09 รุ่น 68 (ลิงก์ Exocad 🦷 + แจ้งเตือนงานเข้าแผนก 🆕 + สแกนดิจิทัลข้าม SCAN + กลึงไม่รอ Abutment) • ต้องใช้ backend v16";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -1137,7 +1138,7 @@ function arrivalDate(r, deptKey){
   const target = DEPARTMENTS.find(x=>x.key === deptKey) || {};
   for(const d of DEPARTMENTS){
     if(d.key === deptKey) break;
-    if(d.parallel && !target.join) continue;      // a parallel step does not delay the steps that run beside it
+    if(!delaysArrival(d, target)) continue;      // a side step does not delay the steps that run beside it
     const rec = depRecord(r, d.key);
     if(rec.status === 'เสร็จแล้ว' && rec.end){
       const t = parseYmd(rec.end);
@@ -1634,7 +1635,8 @@ function urgencyOf(o){ const p = String((o && o.priority) || ''); return p === '
 function urgBadge(o){ const u = urgencyOf(o); return u === 2 ? `<span class="urg urg2" title="${esc(o.urgent_note || '')}">🚨 ด่วนมาก</span>` : u === 1 ? `<span class="urg urg1" title="${esc(o.urgent_note || '')}">🔥 ด่วน</span>` : ''; }
 function caseLink(r){
   const n = FILE_COUNTS[r._id];
-  return `<a href="#" class="caselink" data-open-case="${esc(r._id)}" title="เปิดรายละเอียดเคส">${esc(r.case_id ?? '-')}</a>` + urgBadge(r) + (n ? ` <a href="#" class="filebadge" data-open-case="${esc(r._id)}" data-goto-files="1" title="มีไฟล์แนบ ${n} ไฟล์ — กดเพื่อดู/ดาวน์โหลด" style="font-size:11px;color:var(--teal);white-space:nowrap;font-weight:700;text-decoration:none">📎${n}</a>` : '');
+  const exo = safeUrl(r.exocad_link) ? ` <a href="${esc(safeUrl(r.exocad_link))}" target="_blank" rel="noopener" class="exo-chip" title="เปิดดูดีไซน์ 3D (Exocad WebView)">🦷 3D</a>` : '';
+  return `<a href="#" class="caselink" data-open-case="${esc(r._id)}" title="เปิดรายละเอียดเคส">${esc(r.case_id ?? '-')}</a>` + urgBadge(r) + exo + (n ? ` <a href="#" class="filebadge" data-open-case="${esc(r._id)}" data-goto-files="1" title="มีไฟล์แนบ ${n} ไฟล์ — กดเพื่อดู/ดาวน์โหลด" style="font-size:11px;color:var(--teal);white-space:nowrap;font-weight:700;text-decoration:none">📎${n}</a>` : '');
 }
 function notesOf(id){
   const out = [];
@@ -1725,7 +1727,7 @@ function renderCase(){
       <button class="btn ghost sm" id="cm-print">🖨 พิมพ์ใบงาน (มี QR)</button>
       ${admin ? '<button class="btn ghost sm" id="cm-edit">✏️ แก้ไขเคส</button>' : ''}
     </div>
-    <div class="cm-sec"><div id="cm-file-strip"></div>${urgentBoxHtml(o)}${taskBoxHtml(o)}${priceBoxHtml(o)}<h3>ขั้นตอนของคุณ</h3>${stepHtml}${skippedHtml}</div>
+    <div class="cm-sec"><div id="cm-file-strip"></div>${urgentBoxHtml(o)}${exocadBoxHtml(o)}${taskBoxHtml(o)}${priceBoxHtml(o)}<h3>ขั้นตอนของคุณ</h3>${stepHtml}${skippedHtml}</div>
     ${abutSectionHtml(o)}
     <div class="cm-sec"><h3>ไฟล์ / การจัดส่ง</h3>
       <div class="grid form">
@@ -1780,7 +1782,7 @@ function renderCase(){
   bindAbutSection(o);
   bindUrgentBox(o);
   bindTaskBox(o);
-  bindPriceBox(o);
+  bindPriceBox(o); bindExocadBox(o);
   document.getElementById('cm-copy').addEventListener('click', ()=>copyText(caseText(o), 'คัดลอกรายละเอียดแล้ว ✓'));
   const cmChat = document.getElementById('cm-chat'); if(cmChat) cmChat.addEventListener('click', ()=>{ closeCase(); openChat('all', '#' + (o.case_id || '') + ' '); });
   document.getElementById('cm-print').addEventListener('click', ()=>printTicket(o));
@@ -2220,13 +2222,24 @@ function arrivalInfo(r, deptKey){
   const target = DEPARTMENTS.find(x=>x.key === deptKey) || {};
   for(const d of DEPARTMENTS){
     if(d.key === deptKey) break;
-    if(d.parallel && !target.join) continue;
+    if(!delaysArrival(d, target)) continue;
     const rec = depRecord(r, d.key);
     if(rec.status === 'เสร็จแล้ว' && rec.end){ const t = stampToDate(rec.end); if(t && (!best || t > best)){ best = t; raw = String(rec.end); } }
   }
   return {date: best, raw};
 }
 function arrivalStamp(r, deptKey){ return arrivalInfo(r, deptKey).date; }
+function arrivalBy(r, deptKey){      // who finished the step that sent the job here (so people are not notified about their own work)
+  let best = null, by = '';
+  const target = DEPARTMENTS.find(x=>x.key === deptKey) || {};
+  for(const d of DEPARTMENTS){
+    if(d.key === deptKey) break;
+    if(!delaysArrival(d, target)) continue;
+    const rec = depRecord(r, d.key);
+    if(rec.status === 'เสร็จแล้ว' && rec.end){ const t = stampToDate(rec.end); if(t && (!best || t >= best)){ best = t; by = String(rec.by || (d.key === 'order_intake' ? (r.created_by || '') : '')); } }
+  }
+  return by;
+}
 const ALERT_BASE_TITLE = document.title;
 let ALERT_ITEMS = [], LAST_ALERT_IDS = null;
 function alertSeenKey(){ return 'totu_seen_' + (CURRENT_EMPLOYEE ? CURRENT_EMPLOYEE.name : ''); }
@@ -2261,7 +2274,7 @@ function computeAlerts(){
     }
     const days = currentDays(o);
     if(days !== '' && days >= WARN_DAYS) add('stuck', 2, '🐢', tag + ' ค้างที่ ' + where + ' ' + days + ' วัน');
-    if(!admin && !foreign){ const t = arrivalStamp(o, my[0].key); if(t && t.getTime() > seenAt) add('new', 1, '🆕', tag + ' ถึงขั้น ' + where + ' แล้ว (ถึงคิวคุณ)' + (FILE_COUNTS[o._id] ? ' • มีไฟล์แนบรอ ' + FILE_COUNTS[o._id] + ' ไฟล์' : '')); }
+    if(!admin && !foreign){ my.forEach(d=>{ const t = arrivalStamp(o, d.key); if(t && t.getTime() > seenAt) out.push({id: 'new:' + o._id + ':' + d.key, kind: 'new', level: 2, by: arrivalBy(o, d.key), icon: '🆕', text: tag + ' ถึงขั้น ' + d.label + ' แล้ว — อย่าลืมทำ' + (safeUrl(o.exocad_link) ? ' • 🦷 มีลิงก์ดูดีไซน์ 3D' : '') + (FILE_COUNTS[o._id] ? ' • มีไฟล์แนบรอ ' + FILE_COUNTS[o._id] + ' ไฟล์' : ''), orderId: o._id}); }); }
   });
   if(canManageAbutment()){
     ABUTMENTS.filter(a=>a.status === 'requested' || a.status === 'ordered').forEach(a=>{
@@ -2280,11 +2293,12 @@ function computeAlerts(){
 function notifyNewAlerts(items){
   const ids = new Set(items.map(i=>i.id));
   if(LAST_ALERT_IDS){
-    const fresh = items.filter(i=>i.level >= 3 && !LAST_ALERT_IDS.has(i.id));
+    const me = CURRENT_EMPLOYEE ? CURRENT_EMPLOYEE.name : '', fresh = items.filter(i=>(i.level >= 3 || (i.kind === 'new' && i.by !== me)) && !LAST_ALERT_IDS.has(i.id));
     if(fresh.length){
-      showToast('🔔 แจ้งเตือนด่วนใหม่ ' + fresh.length + ' รายการ: ' + fresh[0].text);
+      const hasNew = fresh.some(f=>f.kind === 'new');
+      showToast((hasNew ? '🆕 มีงานเข้าแผนกคุณ ' : '🔔 แจ้งเตือนด่วนใหม่ ') + fresh.length + ' รายการ: ' + fresh[0].text);
       try{
-        if(typeof Notification !== 'undefined' && Notification.permission === 'granted' && document.hidden) new Notification('TOTU Concept — แจ้งเตือนด่วน ' + fresh.length + ' รายการ', {body: fresh.slice(0, 3).map(f=>f.text).join('\n'), tag: 'totu-alert'});
+        if(typeof Notification !== 'undefined' && Notification.permission === 'granted' && document.hidden) new Notification('TOTU Concept — ' + (hasNew ? 'มีงานเข้าแผนกคุณ ' : 'แจ้งเตือนด่วน ') + fresh.length + ' รายการ', {body: fresh.slice(0, 3).map(f=>f.text).join('\n'), tag: 'totu-alert'});
         if(navigator.vibrate) navigator.vibrate(200);
       }catch(e){ /* not supported here */ }
     }
@@ -2489,6 +2503,26 @@ function bindPriceBox(o){
   const save = async v=>{ await patchOrder(o._id, {price_total: v}); showToast(v === '' ? 'ลบราคาสรุปแล้ว (กลับไปใช้ราคาตามรายการ)' : '✓ บันทึกราคาสรุป ' + money(v) + ' บาท'); renderAll(); renderCase(); };
   document.getElementById('pb-save').addEventListener('click', ()=>{ const t = inp.value.trim(), n = parseFloat(t); if(t === '' ){ save(''); return; } if(!isFinite(n) || n < 0){ showToast('ใส่ราคาเป็นตัวเลข (บาท)'); return; } save(round2(n)); });
   const c = document.getElementById('pb-clear'); if(c) c.addEventListener('click', ()=>save(''));
+}
+const EXOCAD_MIN = 16;
+function canEditExocad(){ return !!CURRENT_EMPLOYEE && (isAdminUser(CURRENT_EMPLOYEE) || (SERVER_VER >= EXOCAD_MIN && allowedDeptKeys().includes('design'))); }
+function exocadBoxHtml(o){
+  const url = safeUrl(o.exocad_link), edit = canEditExocad();
+  if(!url && !edit) return '';
+  return `<div class="urg-box" id="exocad-box"><b>🦷 ดีไซน์ 3D (Exocad WebView)</b><span class="urg-ctl" style="margin-left:0;flex-wrap:wrap">` +
+    (url ? `<a class="btn primary sm" href="${esc(url)}" target="_blank" rel="noopener" style="text-decoration:none">🔗 เปิดดูดีไซน์ 3D</a>` : '<small style="color:var(--muted)">ทีมดีไซน์ยังไม่ได้ใส่ลิงก์</small>') +
+    (edit ? ` <input type="url" id="exo-input" value="${esc(url)}" placeholder="วางลิงก์ Exocad WebView (https://...)" style="min-width:220px;flex:1"> <button type="button" class="btn ghost sm" id="exo-save">บันทึกลิงก์</button>${url ? ' <button type="button" class="btn ghost sm" id="exo-clear">ลบ</button>' : ''}` : '') +
+    `</span></div>`;
+}
+function bindExocadBox(o){
+  const inp = document.getElementById('exo-input'); if(!inp) return;
+  const save = async v=>{
+    await patchOrder(o._id, {exocad_link: v});
+    showToast(v === '' ? 'ลบลิงก์ Exocad แล้ว' : '✓ บันทึกลิงก์ Exocad แล้ว แผนกถัดไปกดเปิดดูได้เลย');
+    renderAll(); renderCase();
+  };
+  document.getElementById('exo-save').addEventListener('click', ()=>{ const v = inp.value.trim(); if(v && !/^https?:\/\//i.test(v)){ showToast('ลิงก์ต้องขึ้นต้นด้วย http:// หรือ https://'); return; } save(v); });
+  const c = document.getElementById('exo-clear'); if(c) c.addEventListener('click', ()=>save(''));
 }
 function taskBoxHtml(o){
   const admin = isAdminUser(CURRENT_EMPLOYEE);
@@ -5688,18 +5722,32 @@ function responsibleFor(deptKey){
 }
 // A step flagged "parallel" (MODEL PRINTING) starts as soon as the steps before it are done, without blocking the next step.
 // A step flagged "join" (ALL CERAMIC) waits for every parallel step before it.
+// Abutment ordering / receiving run BESIDE milling and colouring (the lab does not wait for the abutment): they join again only at QC.
+const SIDE_KEYS = ['abutment', 'receive'];
+function isSideStep(d){ return !!d.parallel || SIDE_KEYS.includes(d.key); }
 function activeDeptsOf(r){
   if(r.status === 'ยกเลิกเคส' || r.status === 'ส่งแล้ว') return [];
   const act = [], pend = [];
   let barrier = false;
   for(const d of DEPARTMENTS){
     if(DONE_STATES.includes(depValue(r, d.key))) continue;
-    if(d.parallel){ if(!barrier) act.push(d); pend.push(d); continue; }
+    if(isSideStep(d)){
+      const blocked = d.key === 'receive' && !DONE_STATES.includes(depValue(r, 'abutment'));      // goods can only be received after they are ordered
+      if(!barrier && !blocked) act.push(d);
+      pend.push(d); continue;
+    }
     if(barrier) continue;
-    if(d.join && pend.length){ barrier = true; continue; }
+    if(d.key === 'qc' ? pend.length : (d.join && pend.some(x=>x.parallel))){ barrier = true; continue; }
     act.push(d); barrier = true;
   }
   return act;
+}
+// does a finished step 'd' delay the arrival at 'target'? (side steps only matter for the step that waits for them)
+function delaysArrival(d, target){
+  if(!isSideStep(d)) return true;
+  if(target.key === 'qc') return true;
+  if(target.join) return !!d.parallel;
+  return false;
 }
 function isActiveAt(r, key){ return activeDeptsOf(r).some(d=>d.key === key); }
 function currentDeptOf(r){
@@ -5725,7 +5773,7 @@ const NON_DIGITAL_SCAN = ['รอยพิมพ์', 'ส่งแมส', 'EMS
 function LANES_ON(){ return SERVER_VER >= 12; }
 function depRelevance(material, needAbutment, hasScan){
   const m = String(material || '').toLowerCase();
-  const rel = {order_intake:true, scan:true, design:true, model_printing: !!hasScan, abutment:false, receive:false,
+  const rel = {order_intake:true, scan:!hasScan, design:true, model_printing: !!hasScan, abutment:false, receive:false,
                milling:true, all_ceramic:false, qc:true, billing:true, delivery:true};
   if(needAbutment){ rel.abutment = true; rel.receive = true; }
   // MILLING is split by material (needs the v12 server): Zirconia / Emax / Premill lanes, everything else stays on "MILLING (อื่นๆ)"
