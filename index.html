@@ -880,7 +880,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-09 รุ่น 72 (แยกคูปองออกจากแดชบอร์ดเป็นแท็บ 🎟 คูปอง เฉพาะแอดมิน/CEO) • ต้องใช้ backend v16";
+const APP_VERSION = "2026-10-09 รุ่น 74 (คิว Milling ตามวัสดุปัจจุบัน แก้เคส Emax ที่ไปค้างใน Zirconia + ข้อความคูปองหักตามจำนวนซี่) • ต้องใช้ backend v16";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -1103,10 +1103,23 @@ function startPolling(){
 }
 let POLLING = false, LAST_POLL = Date.now();
 
+const MILL_LANE_KEYS = ['milling_zir', 'milling_emax', 'milling_premill'];
 function depRecord(row, deptKey){
   const ov = (DEP_OVERRIDES[row._id] && DEP_OVERRIDES[row._id][deptKey]) || {};
   let st = ov.status || row['dep_'+deptKey] || 'ไม่เกี่ยวข้อง';
   if(deptKey === 'order_intake' && (st === 'รอดำเนินการ' || st === 'กำลังดำเนินการ')) st = 'เสร็จแล้ว';      // creating the order IS receiving it: nobody has to confirm this step
+  // the milling lane follows the CURRENT material: a case edited from Zirconia to Emax must not stay in the Zirconia queue
+  // (only untouched lanes are swapped; a lane opened by a ป้ายงาน tag or already started is never touched)
+  if(MILL_LANE_KEYS.includes(deptKey) && LANES_ON() && row.material && row.dep_order_intake){
+    const raw = k=>{ const o2 = (DEP_OVERRIDES[row._id] && DEP_OVERRIDES[row._id][k]) || {}; return {st:o2.status || row['dep_'+k] || 'ไม่เกี่ยวข้อง', began:!!(o2.start || row['dep_'+k+'_start'])}; };
+    const rel = depRelevance(row.material, false, false), tagOf = k=>Object.keys(MILL_LANES).find(t=>MILL_LANES[t] === k);
+    const stale = k=>{ const r = raw(k); return r.st === 'รอดำเนินการ' && !r.began && !rel[k] && !hasTask(row, tagOf(k)); };
+    if(MILL_LANE_KEYS.some(stale)){
+      const r = raw(deptKey);
+      if(stale(deptKey)) st = 'ไม่เกี่ยวข้อง';
+      else if(rel[deptKey] && r.st === 'ไม่เกี่ยวข้อง' && !r.began) st = 'รอดำเนินการ';
+    }
+  }
   return {
     status: st,
     start: ov.start || row['dep_'+deptKey+'_start'] || '',
@@ -5417,7 +5430,7 @@ function couponHint(){
   const g = id=>{ const e = document.getElementById(id); return e ? e.value : ''; };
   box.className = 'note'; box.textContent = '';
   if(g('f_case_type') !== 'คูปอง') return;
-  const kind = g('f_coupon_kind'), clinic = g('f_clinic'), doctor = g('f_doctor');
+  const kind = g('f_coupon_kind'), clinic = g('f_clinic'), doctor = g('f_doctor'), need = Math.max(1, Math.round(Number(g('f_qty'))) || 1);
   if(!clinic.trim()) return;
   if(!kind){ box.textContent = 'เลือกประเภทคูปอง เพื่อหักจากกระเป๋าคูปองของหมอ'; return; }
   const W = couponWallets(), fw = k=>W.find(w=>w.key === k), has = x=>x && x.kinds[kind] && x.kinds[kind].granted;
@@ -5428,13 +5441,13 @@ function couponHint(){
   const who = w.doctor ? w.doctor + (w.key.startsWith('\u0001') ? ' (ทุกคลินิก)' : '') : 'ทั้งคลินิก ' + w.clinic;
   if(editing) box.textContent = '🎫 ' + who + ' • ' + kind + ' เหลือ ' + left + ' ซี่ (รวมเคสนี้แล้ว)';
   else if(left <= 0){ box.className = 'note warn'; box.textContent = '⚠ ' + who + ' ไม่มีคูปอง "' + kind + '" เหลือแล้ว (ให้ ' + x.granted + ' ใช้ ' + x.used + ')'; }
-  else box.textContent = '🎫 ' + who + ' • ' + kind + ' เหลือ ' + left + ' ซี่ → หลังบันทึกเคสนี้เหลือ ' + (left - 1);
+  else { if(left < need) box.className = 'note warn'; box.textContent = '🎫 ' + who + ' • ' + kind + ' เหลือ ' + left + ' ซี่ → เคสนี้ใช้ ' + need + ' ซี่ หลังบันทึกเหลือ ' + (left - need) + (left - need < 0 ? ' (เกิน ' + (need - left) + ' ซี่)' : ''); }
 }
 function setupCouponKindField(){
   const el = document.getElementById('f_coupon_kind'); if(!el) return;
   el.closest('.field').insertAdjacentHTML('beforeend', '<div id="cp-hint" class="note" style="margin-top:4px"></div>');
   refreshCouponKindSelect();
-  ['f_case_type', 'f_coupon_kind', 'f_clinic', 'f_doctor'].forEach(id=>{ const e = document.getElementById(id); if(e){ e.addEventListener('change', couponHint); e.addEventListener('input', couponHint); } });
+  ['f_case_type', 'f_coupon_kind', 'f_clinic', 'f_doctor', 'f_qty'].forEach(id=>{ const e = document.getElementById(id); if(e){ e.addEventListener('change', couponHint); e.addEventListener('input', couponHint); } });
 }
 function couponReportPdf(){
   const ym = String(document.getElementById('cpr-month').value || ''), qq = String(document.getElementById('cpd-q').value || '').trim().toLowerCase();
