@@ -860,7 +860,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-09 รุ่น 68 (ลิงก์ Exocad 🦷 + แจ้งเตือนงานเข้าแผนก 🆕 + สแกนดิจิทัลข้าม SCAN + กลึงไม่รอ Abutment) • ต้องใช้ backend v16";
+const APP_VERSION = "2026-10-09 รุ่น 69 (แจ้งเตือนไฟล์ใหม่ 📎 + ลิงก์ Exocad 🦷 + แจ้งงานเข้าแผนก 🆕) • ต้องใช้ backend v16";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -944,7 +944,7 @@ const NEEDED_SERVER = 10;
 const FILE_ANY_TOKENS = ['files', 'file', 'upload', 'ไฟล์', 'อัปโหลด', 'อัพโหลด'];
 let SERVER_VER = NEEDED_SERVER;
 let ABUTMENTS = [];
-let FILE_COUNTS = {}, CASE_FILES = {}, UPLOADING = false, FILE_CHUNK = 6 * 1024 * 1024;
+let FILE_COUNTS = {}, FILE_COUNTS_PRIMED = false, FILE_NEWS = [], CASE_FILES = {}, UPLOADING = false, FILE_CHUNK = 6 * 1024 * 1024;
 let NEW_ORDERS = [];       // live orders (edits applied, deleted ones removed)
 let DELETED_ORDERS = [];   // soft-deleted orders (kept in the sheet, can be restored)
 let RAW_ORDERS = [];       // orders exactly as saved in the sheet
@@ -992,7 +992,13 @@ function applyBootstrap(r){
   RAW_ORDERS = r.orders || [];
   CONTACTS = r.contacts || [];
   INVOICES = r.invoices || [];
+  const prevCounts = FILE_COUNTS, firstApply = !FILE_COUNTS_PRIMED;
   FILE_COUNTS = r.file_counts || {};
+  if(!firstApply && !SHOWING_CACHE){      // somebody uploaded a file to a case since the last poll (own uploads update FILE_COUNTS right away, so they never show up here)
+    Object.keys(FILE_COUNTS).forEach(id=>{ const add = (FILE_COUNTS[id] || 0) - (prevCounts[id] || 0); if(add > 0) FILE_NEWS.push({orderId:id, add, total:FILE_COUNTS[id], at:Date.now()}); });
+    if(FILE_NEWS.length > 200) FILE_NEWS.splice(0, FILE_NEWS.length - 200);
+  }
+  FILE_COUNTS_PRIMED = true;
   SERVER_VER = r.server_version || 0;
   ABUTMENTS = r.abutments || [];
   rebuildContactIndex();
@@ -2276,6 +2282,16 @@ function computeAlerts(){
     if(days !== '' && days >= WARN_DAYS) add('stuck', 2, '🐢', tag + ' ค้างที่ ' + where + ' ' + days + ' วัน');
     if(!admin && !foreign){ my.forEach(d=>{ const t = arrivalStamp(o, d.key); if(t && t.getTime() > seenAt) out.push({id: 'new:' + o._id + ':' + d.key, kind: 'new', level: 2, by: arrivalBy(o, d.key), icon: '🆕', text: tag + ' ถึงขั้น ' + d.label + ' แล้ว — อย่าลืมทำ' + (safeUrl(o.exocad_link) ? ' • 🦷 มีลิงก์ดูดีไซน์ 3D' : '') + (FILE_COUNTS[o._id] ? ' • มีไฟล์แนบรอ ' + FILE_COUNTS[o._id] + ' ไฟล์' : ''), orderId: o._id}); }); }
   });
+  if(!admin){      // new files uploaded to a case that is at one of my steps
+    const byOrder = {};
+    FILE_NEWS.filter(n=>n.at > seenAt).forEach(n=>{ const b = byOrder[n.orderId] || (byOrder[n.orderId] = {add:0, total:0}); b.add += n.add; b.total = n.total; });
+    Object.keys(byOrder).forEach(id=>{
+      const o = orderById(id); if(!o) return;
+      const act = activeDeptsOf(withEffectiveStatus(o)).filter(d=>mine.includes(d.key)); if(!act.length) return;
+      const b = byOrder[id];
+      out.push({id:'file:' + id + ':' + b.total, kind:'file', level:2, icon:'📎', orderId:id, text:String(o.case_id || '') + (o.patient ? ' (' + o.patient + ')' : '') + ' มีไฟล์ใหม่ ' + b.add + ' ไฟล์ — เคสอยู่ที่ ' + act.map(d=>d.label).join(' + ') + ' (เปิดเคสเพื่อดาวน์โหลด)'});
+    });
+  }
   if(canManageAbutment()){
     ABUTMENTS.filter(a=>a.status === 'requested' || a.status === 'ordered').forEach(a=>{
       const o = orderById(a.order_id); if(!o) return;
@@ -2293,12 +2309,12 @@ function computeAlerts(){
 function notifyNewAlerts(items){
   const ids = new Set(items.map(i=>i.id));
   if(LAST_ALERT_IDS){
-    const me = CURRENT_EMPLOYEE ? CURRENT_EMPLOYEE.name : '', fresh = items.filter(i=>(i.level >= 3 || (i.kind === 'new' && i.by !== me)) && !LAST_ALERT_IDS.has(i.id));
+    const me = CURRENT_EMPLOYEE ? CURRENT_EMPLOYEE.name : '', fresh = items.filter(i=>(i.level >= 3 || i.kind === 'file' || (i.kind === 'new' && i.by !== me)) && !LAST_ALERT_IDS.has(i.id));
     if(fresh.length){
-      const hasNew = fresh.some(f=>f.kind === 'new');
-      showToast((hasNew ? '🆕 มีงานเข้าแผนกคุณ ' : '🔔 แจ้งเตือนด่วนใหม่ ') + fresh.length + ' รายการ: ' + fresh[0].text);
+      const hasNew = fresh.some(f=>f.kind === 'new' || f.kind === 'file');
+      showToast((fresh.every(f=>f.kind === 'file') ? '📎 มีไฟล์ใหม่ในเคสของแผนกคุณ ' : hasNew ? '🆕 มีงานเข้าแผนกคุณ ' : '🔔 แจ้งเตือนด่วนใหม่ ') + fresh.length + ' รายการ: ' + fresh[0].text);
       try{
-        if(typeof Notification !== 'undefined' && Notification.permission === 'granted' && document.hidden) new Notification('TOTU Concept — ' + (hasNew ? 'มีงานเข้าแผนกคุณ ' : 'แจ้งเตือนด่วน ') + fresh.length + ' รายการ', {body: fresh.slice(0, 3).map(f=>f.text).join('\n'), tag: 'totu-alert'});
+        if(typeof Notification !== 'undefined' && Notification.permission === 'granted' && document.hidden) new Notification('TOTU Concept — ' + (fresh.every(f=>f.kind === 'file') ? 'มีไฟล์ใหม่ ' : hasNew ? 'มีงานเข้าแผนกคุณ ' : 'แจ้งเตือนด่วน ') + fresh.length + ' รายการ', {body: fresh.slice(0, 3).map(f=>f.text).join('\n'), tag: 'totu-alert'});
         if(navigator.vibrate) navigator.vibrate(200);
       }catch(e){ /* not supported here */ }
     }
