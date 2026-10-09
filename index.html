@@ -860,7 +860,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-09 รุ่น 69 (แจ้งเตือนไฟล์ใหม่ 📎 + ลิงก์ Exocad 🦷 + แจ้งงานเข้าแผนก 🆕) • ต้องใช้ backend v16";
+const APP_VERSION = "2026-10-09 รุ่น 70 (รับออเดอร์อัตโนมัติ ไม่ต้องกดยืนยัน + แจ้งเตือนไฟล์ใหม่ 📎 + ลิงก์ Exocad 🦷) • ต้องใช้ backend v16";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -1085,8 +1085,10 @@ let POLLING = false, LAST_POLL = Date.now();
 
 function depRecord(row, deptKey){
   const ov = (DEP_OVERRIDES[row._id] && DEP_OVERRIDES[row._id][deptKey]) || {};
+  let st = ov.status || row['dep_'+deptKey] || 'ไม่เกี่ยวข้อง';
+  if(deptKey === 'order_intake' && (st === 'รอดำเนินการ' || st === 'กำลังดำเนินการ')) st = 'เสร็จแล้ว';      // creating the order IS receiving it: nobody has to confirm this step
   return {
-    status: ov.status || row['dep_'+deptKey] || 'ไม่เกี่ยวข้อง',
+    status: st,
     start: ov.start || row['dep_'+deptKey+'_start'] || '',
     end: ov.end || row['dep_'+deptKey+'_end'] || '',
     by: ov.updated_by || '',
@@ -5069,10 +5071,10 @@ document.getElementById('bz-target-save').addEventListener('click', async ()=>{
 document.getElementById('bl-record').addEventListener('click', recordInvoices);
 
 // ---------- Department Status tab ----------
-let CURRENT_DEPT = DEPARTMENTS[0].key;
+let CURRENT_DEPT = (DEPARTMENTS.find(d=>d.key !== 'order_intake') || DEPARTMENTS[0]).key;
 function buildDeptChips(){
   const wrap = document.getElementById('dept-chips');
-  const allowed = allowedDeptKeys();
+  const allowed = allowedDeptKeys().filter(k=>k !== 'order_intake');      // no tab for ORDER INTAKE: it is done automatically when the order is created
   const list = DEPARTMENTS.filter(d=>allowed.includes(d.key));
   if(!list.length){
     wrap.innerHTML = '<span class="note">ยังไม่ได้กำหนดแผนกที่รับผิดชอบ หรือชื่อแผนกในคอลัมน์ depts ไม่ถูกต้อง (ติดต่อแอดมิน)</span>';
@@ -5843,7 +5845,7 @@ function applyRole(){
     }
   }
 
-  const allowed = allowedDeptKeys();
+  const allowed = allowedDeptKeys().filter(k=>k !== 'order_intake');
   const sig = allowed.join(',');
   if(sig !== LAST_DEPT_SIG){
     LAST_DEPT_SIG = sig;
