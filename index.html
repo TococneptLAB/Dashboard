@@ -881,7 +881,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-09 รุ่น 80 (คิว Milling ตามวัสดุ รวมเคสที่ค้างใน MILLING อื่นๆ + รับของปุ่มเดียว + คูปองหลายประเภท) • ต้องใช้ backend v16";
+const APP_VERSION = "2026-10-09 รุ่น 82 (ประเภทเคสมีตัวเลือก งานแก้ ในฟอร์มสร้างออเดอร์) • ต้องใช้ backend v16";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -1420,6 +1420,19 @@ function buildOrderForm(){
   cidEl.addEventListener('input', ()=>{ cidEl.dataset.manual = '1'; });
   document.getElementById('f_date_received').addEventListener('change', refreshAutoCaseId);
   document.getElementById('f_is_rework').addEventListener('change', refreshAutoCaseId);
+  { // "งานแก้" is also offered in the case-type list; it simply switches the rework flag (and the Fix case number) on
+    const ct = document.getElementById('f_case_type'), rw = document.getElementById('f_is_rework');
+    if(ct && rw){
+      if(![...ct.options].some(op=>op.value === 'งานแก้')) ct.add(new Option('งานแก้', 'งานแก้'));
+      ct.addEventListener('change', ()=>{
+        if(ct.value === 'งานแก้') rw.value = 'งานแก้ (Rework)'; else if(rw.value === 'งานแก้ (Rework)' && ct.value === 'ปกติ') rw.value = 'งานปกติ';
+        rw.dispatchEvent(new Event('change', {bubbles:true}));
+      });
+      rw.addEventListener('change', ()=>{
+        if(rw.value === 'งานแก้ (Rework)' && (ct.value === 'ปกติ' || !ct.value)) ct.value = 'งานแก้'; else if(rw.value !== 'งานแก้ (Rework)' && ct.value === 'งานแก้') ct.value = 'ปกติ';
+      });
+    }
+  }
   refreshAutoCaseId();
   const matSel = document.getElementById('f_material');
   if(matSel) matSel.addEventListener('change', applyDeptRelevance);
@@ -1457,7 +1470,8 @@ function readForm(){
     const el = document.getElementById('f_'+f.key);
     o[f.key] = el.value;
   });
-  o.is_rework = (o.is_rework === 'งานแก้ (Rework)');
+  o.is_rework = (o.is_rework === 'งานแก้ (Rework)') || o.case_type === 'งานแก้';
+  if(o.case_type === 'งานแก้') o.case_type = 'ปกติ';      // stored as a normal case with the rework flag
   o.qty = parseFloat(o.qty) || 0;
   o.price_total = (String(o.price_total).trim() === '' || !isFinite(parseFloat(o.price_total))) ? '' : Math.max(0, parseFloat(o.price_total));
   o.unit_label = 'ซี่';
@@ -3460,6 +3474,7 @@ function startEdit(id){
     if(el.tagName === 'SELECT' && v !== '' && ![...el.options].some(op=>op.value === String(v))) el.add(new Option(String(v), String(v)));
     el.value = v;
   });
+  { const ct = document.getElementById('f_case_type'); if(ct && o.is_rework === true && o.case_type !== 'คูปอง'){ if(![...ct.options].some(op=>op.value === 'งานแก้')) ct.add(new Option('งานแก้', 'งานแก้')); ct.value = 'งานแก้'; } }
   document.getElementById('f_case_id').dataset.manual = '1';
   document.getElementById('f_has_scan').dataset.manual = '1';
   syncTaskBoxes();
@@ -5415,13 +5430,13 @@ function renderCouponWallets(){
   if(!list.length){ box.innerHTML = '<div class="note">ยังไม่ได้ให้คูปองกับใคร' + (admin ? ' — กด "＋ เพิ่มคูปองให้หมอ/คลินิก" ด้านบน' : '') + '</div>'; return; }
   box.innerHTML = list.map(w=>{
     const gr = w.grants.slice().sort((a, b)=>String(b.date || '').localeCompare(String(a.date || ''))).map(g=>`<tr><td>${esc(fmtDate(g.date))}</td><td>${esc(g.kind)}</td><td class="num">${Number(g.qty) > 0 ? '+' : ''}${esc(g.qty)}</td><td>${esc(g.note || '')}</td><td>${esc(g.by || '')}</td>${admin ? `<td><button type="button" class="btn ghost sm" data-cpw-del="${esc(g.id)}">ลบ</button></td>` : ''}</tr>`).join('');
-    const cs = w.cases.slice().sort((a, b)=>String(b.date_received || '').localeCompare(String(a.date_received || ''))).map(o=>`<tr><td>${esc(fmtDate(o.date_received))}</td><td><a href="#" class="caselink" data-open-case="${esc(o._id)}">${esc(o.case_id || '-')}</a></td><td>${esc(o.doctor || '')}</td><td>${couponKindText(o) ? esc(couponKindText(o)) : (admin ? `<select data-cpw-kind="${esc(o._id)}" style="width:auto"><option value="">— เลือกประเภทเพื่อหักคูปอง —</option>${couponKinds().map(k=>`<option>${esc(k)}</option>`).join('')}</select>` : '— ไม่ระบุ')}${admin ? ` <button type="button" class="btn ghost sm" data-cpw-split="${esc(o._id)}" title="เคสนี้ใช้คูปองหลายประเภท">แบ่งประเภท</button>` : ''}</td><td>${esc(o.coupon_status || '-')}</td></tr>`).join('');
+    const cs = w.cases.slice().sort((a, b)=>String(b.date_received || '').localeCompare(String(a.date_received || ''))).map(o=>`<tr><td>${esc(fmtDate(o.date_received))}</td><td><a href="#" class="caselink" data-open-case="${esc(o._id)}">${esc(o.case_id || '-')}</a></td><td>${esc(o.doctor || '')}</td><td>${couponKindText(o) ? esc(couponKindText(o)) : (admin ? `<select data-cpw-kind="${esc(o._id)}" style="width:auto"><option value="">— เลือกประเภทเพื่อหักคูปอง —</option>${couponKinds().map(k=>`<option>${esc(k)}</option>`).join('')}</select>` : '— ไม่ระบุ')}${admin && (Number(o.qty) || 1) >= 2 ? ` <a href="#" data-cpw-split="${esc(o._id)}" title="ใช้เมื่อเคสนี้ใช้คูปองหลายประเภท เช่น 1 ซี่ธรรมดา + 1 ซี่รากเทียม" style="font-size:12px;color:#777;white-space:nowrap">✎ แบ่งประเภท</a>` : ''}</td><td>${esc(o.coupon_status || '-')}</td></tr>`).join('');
     return `<details class="cpd-row" data-k="${esc(w.key)}" ${open.has(w.key) ? 'open' : ''}><summary><b>${esc(w.clinic)}</b><span>${w.doctor ? '👨‍⚕️ ' + esc(w.doctor) : '🏥 ทั้งคลินิก'}</span><span class="cpd-n">${walletChips(w)}</span></summary><div class="cpd-cases">
       <b>ประวัติการให้คูปอง</b>${gr ? `<table><tr><th>วันที่</th><th>ประเภท</th><th>จำนวน</th><th>หมายเหตุ</th><th>โดย</th>${admin ? '<th></th>' : ''}</tr>${gr}</table>` : '<div class="note">ยังไม่มีการให้คูปอง (มีแต่เคสที่ใช้)</div>'}
       <b style="display:block;margin-top:8px">เคสที่หักจากกระเป๋านี้</b>${cs ? `<table><tr><th>วันรับงาน</th><th>เคส</th><th>หมอ</th><th>ประเภท</th><th>สถานะคูปอง</th></tr>${cs}</table>` : '<div class="note">ยังไม่มี</div>'}</div></details>`;
   }).join('');
   renderCouponMerge();
-  box.querySelectorAll('[data-cpw-split]').forEach(b=>b.addEventListener('click', ()=>openSplitEditor(b.dataset.cpwSplit)));
+  box.querySelectorAll('[data-cpw-split]').forEach(b=>b.addEventListener('click', e=>{ e.preventDefault(); openSplitEditor(b.dataset.cpwSplit); }));
   box.querySelectorAll('[data-cpw-kind]').forEach(sel=>sel.addEventListener('change', async ()=>{
     if(!sel.value) return;
     await patchOrder(sel.dataset.cpwKind, {coupon_kind: sel.value});
