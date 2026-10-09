@@ -202,6 +202,11 @@
   .dep-tick.dt-prog{background:#FFF3DC;border-color:var(--amber);color:#8A5200;}
   .dep-tick.dt-done{background:#E4F3EA;border-color:var(--ok);color:var(--ok);}
   .dep-tick:disabled{opacity:.5;}
+  .wip-p{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:10px;background:#fff;}
+  .wip-p b.nm{font-size:15px;}
+  .wip-p .wi{display:flex;gap:8px;flex-wrap:wrap;align-items:baseline;padding:5px 0;border-top:1px dashed var(--line);font-size:13.5px;}
+  .wip-p .wi .st{font-weight:700;color:#8A5200;}
+  .wip-p .wi small{color:var(--muted);}
   /* ---- phone layout: department work list as big tap-able cards ---- */
   @media (max-width:700px){
     html,body{max-width:100%;overflow-x:hidden;}
@@ -459,6 +464,8 @@
         <select id="dep-f-status"><option value="">สถานะแผนกทั้งหมด</option></select>
 <select id="dep-f-view" title="มุมมองงาน">
           <option value="queue">งานรอทำ (ถึงแผนกนี้แล้ว)</option>
+          <option value="wip">🔧 งานที่ฉันรับไว้ (กำลังทำ)</option>
+          <option value="wipall">▶ กำลังทำทั้งแผนก (ทุกคน)</option>
           <option value="ahead">ทำล่วงหน้าได้ (ยังไม่ถึงคิว)</option>
           <option value="done">ทำเสร็จแล้ว (แผนกนี้)</option>
           <option value="mine">ที่ฉันกดเสร็จเอง</option>
@@ -744,6 +751,11 @@
 
   <!-- PERFORMANCE TAB -->
   <section id="view-perf" class="view">
+    <div class="card" id="wip-board-card">
+      <h2>👷 ตอนนี้ใครกำลังทำอะไรอยู่ <span class="tag" id="wip-count">0</span></h2>
+      <div class="note" style="margin:0 0 8px">งานที่ช่างกด "📥 รับงาน" ไว้แล้วยังไม่กดเสร็จ จัดตามชื่อคน (เสร็จแล้ววันนี้ดูที่ตารางผลงานรายคนด้านล่าง)</div>
+      <div id="wip-board"></div>
+    </div>
     <div class="card">
       <h2>ผลงานรายคน <span class="tag">PERFORMANCE</span></h2>
       <div class="filters">
@@ -847,7 +859,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-08 รุ่น 65 (มือถือ: ปุ่มรับงาน→เสร็จ 📱 + คูปอง + ใบสั่งงานกระชับ)";
+const APP_VERSION = "2026-10-08 รุ่น 67 (ใครกำลังทำอะไร 👷 + รับงาน→เสร็จ 📱)";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -2647,9 +2659,33 @@ function renderMillByDay(range){
     '<tr class="pf-mill-tot"><td>รวมช่วงนี้</td>' + MILL_COLS.map(c=>`<td class="num">${cell(tot[c.k].cases ? tot[c.k] : null)}</td>`).join('') + `<td class="num">${cell({units:gu, cases:gn})}</td></tr>` +
     '<tr><td colspan="' + (MILL_COLS.length + 2) + '" class="note" style="white-space:normal">ซี่ = จำนวนซี่ของเคสนั้น (ถ้าเคสเดียวมีสองวัสดุ เช่น Zir+Temp จะนับจำนวนซี่เต็มทั้งสองช่อง และช่อง "รวม" จะนับซ้ำ) • วันที่ = วันที่ติ๊กเสร็จ • วัสดุแยกจากช่องกลึง (Zirconia/Emax/Premill) หรือจากชื่อวัสดุของเคสสำหรับช่อง MILLING เดิม</td></tr>';
 }
+function renderWipBoard(){
+  const box = document.getElementById('wip-board'); if(!box) return;
+  const by = {};
+  NEW_ORDERS.forEach(o=>{
+    if(o.status === 'ยกเลิกเคส' || o.status === 'ส่งแล้ว') return;
+    DEPARTMENTS.forEach(d=>{
+      const rec = depRecord(o, d.key);
+      if(rec.status !== 'กำลังดำเนินการ') return;
+      const who = String(rec.by || '').trim() || '(ไม่ระบุชื่อ)';
+      (by[who] = by[who] || []).push({o, d, start: rec.start});
+    });
+  });
+  const names = Object.keys(by).sort((a, b)=>by[b].length - by[a].length || a.localeCompare(b, 'th'));
+  document.getElementById('wip-count').textContent = names.reduce((a, n)=>a + by[n].length, 0);
+  if(!names.length){ box.innerHTML = '<div class="note">ตอนนี้ยังไม่มีใครกดรับงานค้างไว้</div>'; return; }
+  const emp = n=>EMPLOYEE_LIST.find(e=>String(e.name).trim() === n);
+  box.innerHTML = names.map(n=>{
+    const items = by[n].sort((a, b)=>String(a.start || '').localeCompare(String(b.start || '')));
+    const e = emp(n);
+    return `<div class="wip-p"><b class="nm">${esc(n)}</b> <small style="color:var(--muted)">${esc((e && e.department) || '')} • กำลังทำ ${items.length} งาน</small>` +
+      items.map(x=>`<div class="wi"><span class="st">${esc(x.d.label.replace(/ \(.*/, ''))}</span><a href="#" class="caselink" data-open-case="${esc(x.o._id)}"><b>${esc(x.o.case_id || '-')}</b></a><span>${esc(x.o.patient || '')}</span><small>${esc(rpName(x.o, 'clinic') || '')} • ${esc(x.o.qty || '-')} ซี่ ${x.start ? '• รับเมื่อ ' + esc(fmtStamp(x.start)) : ''}</small></div>`).join('') + '</div>';
+  }).join('');
+}
 function renderPerf(){
   const tbl = document.getElementById('pf-table');
   if(!tbl || !canSeePerformance()) return;
+  renderWipBoard();
   const dsel = document.getElementById('pf-dept');
   if(dsel.options.length <= 1) DEPARTMENTS.forEach(d=>dsel.add(new Option(d.label, d.key)));
   const range = perfRange();
@@ -5041,12 +5077,15 @@ function renderDept(){
   const doneN = rows.filter(x=>x.rec.status === 'เสร็จแล้ว').length;
   const myName = CURRENT_EMPLOYEE ? CURRENT_EMPLOYEE.name : '';
   const view = document.getElementById('dep-f-view').value;
-  if(view === 'queue') rows = rows.filter(x=>isActiveAt(x.r, CURRENT_DEPT));
+  const wipMine = rows.filter(x=>x.rec.status === 'กำลังดำเนินการ' && x.rec.by === myName && x.r.status !== 'ยกเลิกเคส').length;
+  if(view === 'wip') rows = rows.filter(x=>x.rec.status === 'กำลังดำเนินการ' && x.rec.by === myName && x.r.status !== 'ยกเลิกเคส');
+  else if(view === 'wipall') rows = rows.filter(x=>x.rec.status === 'กำลังดำเนินการ' && x.r.status !== 'ยกเลิกเคส');
+  else if(view === 'queue') rows = rows.filter(x=>isActiveAt(x.r, CURRENT_DEPT));
   else if(view === 'ahead') rows = rows.filter(x=>!DONE_STATES.includes(x.rec.status) && x.rec.status !== 'ไม่เกี่ยวข้อง' && x.r.status !== 'ส่งแล้ว' && x.r.status !== 'ยกเลิกเคส' && !isActiveAt(x.r, CURRENT_DEPT));
   else if(view === 'done') rows = rows.filter(x=>x.rec.status === 'เสร็จแล้ว');
   else if(view === 'mine') rows = rows.filter(x=>x.rec.status === 'เสร็จแล้ว' && x.rec.by === myName);
   const overdueN = rows.filter(x=>isOverdue(x.r) && !['เสร็จแล้ว','ยกเลิก'].includes(x.rec.status)).length;
-  document.getElementById('dept-count-note').textContent = `${DEPARTMENTS.find(d=>d.key===CURRENT_DEPT).label}: รอทำ ${queueN} • ทำเสร็จแล้ว ${doneN} • แสดง ${rows.length.toLocaleString()} เคส${overdueN?` • เกินกำหนด ${overdueN} เคส`:''} (แสดงสูงสุด 300 แถวแรก)`;
+  document.getElementById('dept-count-note').textContent = `${DEPARTMENTS.find(d=>d.key===CURRENT_DEPT).label}: รอทำ ${queueN} • 🔧 ฉันรับไว้ ${wipMine} • ทำเสร็จแล้ว ${doneN} • แสดง ${rows.length.toLocaleString()} เคส${overdueN?` • เกินกำหนด ${overdueN} เคส`:''} (แสดงสูงสุด 300 แถวแรก)`;
 
   const t = document.getElementById('dept-table');
   if(!rows.length){ t.innerHTML = '<tr><td class="empty">ไม่มีเคสที่เกี่ยวข้องกับแผนกนี้ตามเงื่อนไข</td></tr>'; return; }
