@@ -881,7 +881,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-09 รุ่น 77 (เคสที่มีไฟล์สแกนแล้ว ข้าม SCAN ไป Design เสมอ รวมเคสเก่าที่ค้าง SCAN) • ต้องใช้ backend v16";
+const APP_VERSION = "2026-10-09 รุ่น 80 (คิว Milling ตามวัสดุ รวมเคสที่ค้างใน MILLING อื่นๆ + รับของปุ่มเดียว + คูปองหลายประเภท) • ต้องใช้ backend v16";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -1111,13 +1111,16 @@ function depRecord(row, deptKey){
   if(deptKey === 'order_intake' && (st === 'รอดำเนินการ' || st === 'กำลังดำเนินการ')) st = 'เสร็จแล้ว';      // creating the order IS receiving it: nobody has to confirm this step
   // the milling lane follows the CURRENT material: a case edited from Zirconia to Emax must not stay in the Zirconia queue
   // (only untouched lanes are swapped; a lane opened by a ป้ายงาน tag or already started is never touched)
-  if(MILL_LANE_KEYS.includes(deptKey) && LANES_ON() && row.material && row.dep_order_intake){
+  if((deptKey === 'milling' || MILL_LANE_KEYS.includes(deptKey)) && LANES_ON() && row.material && row.dep_order_intake){
     const raw = k=>{ const o2 = (DEP_OVERRIDES[row._id] && DEP_OVERRIDES[row._id][k]) || {}; return {st:o2.status || row['dep_'+k] || 'ไม่เกี่ยวข้อง', began:!!(o2.start || row['dep_'+k+'_start'])}; };
     const rel = depRelevance(row.material, false, false), tagOf = k=>Object.keys(MILL_LANES).find(t=>MILL_LANES[t] === k);
     const stale = k=>{ const r = raw(k); return r.st === 'รอดำเนินการ' && !r.began && !rel[k] && !hasTask(row, tagOf(k)); };
-    if(MILL_LANE_KEYS.some(stale)){
+    const laneAware = MILL_LANE_KEYS.some(k=>row['dep_'+k] !== undefined), anyLane = MILL_LANE_KEYS.some(k=>rel[k]);
+    const staleBase = laneAware && anyLane && (()=>{ const r = raw('milling'); return r.st === 'รอดำเนินการ' && !r.began; })();      // plain MILLING left open on a case that belongs to a lane (orders from before lanes, which have no lane fields at all, stay as they are)
+    if(staleBase || MILL_LANE_KEYS.some(stale)){
       const r = raw(deptKey);
-      if(stale(deptKey)) st = 'ไม่เกี่ยวข้อง';
+      if(deptKey === 'milling'){ if(staleBase) st = 'ไม่เกี่ยวข้อง'; }
+      else if(stale(deptKey)) st = 'ไม่เกี่ยวข้อง';
       else if(rel[deptKey] && r.st === 'ไม่เกี่ยวข้อง' && !r.began) st = 'รอดำเนินการ';
     }
   }
@@ -1653,7 +1656,7 @@ function ticketHtml(o){
       <div><b>วิธีจัดส่ง</b>${esc(o.delivery_method||'-')}</div>
       <div><b>วันส่งออก</b>${shipCell(o)}</div>
       <div><b>วันนัดคนไข้</b>${esc(o.appointment_date||'-')}</div>
-      <div><b>ประเภทเคส</b>${esc(o.case_type||'ปกติ')}${o.case_type==='คูปอง' ? ' (' + esc(o.coupon_status||'-') + (o.coupon_kind ? ' • ' + esc(o.coupon_kind) : '') + ')' : ''}</div>
+      <div><b>ประเภทเคส</b>${esc(o.case_type||'ปกติ')}${o.case_type==='คูปอง' ? ' (' + esc(o.coupon_status||'-') + (couponKindText(o) ? ' • ' + esc(couponKindText(o)) : '') + ')' : ''}</div>
       <div><b>ต้องสั่ง Abutment</b>${esc(o.need_abutment||'ไม่ต้อง')}</div>
       <div style="grid-column:1/-1"><b>รายละเอียด/หมายเหตุ</b>${esc(o.detail||'-')}</div>
     </div>${chk}
@@ -5241,7 +5244,8 @@ function renderDept(){
     const overdue = isOverdue(r) && !['เสร็จแล้ว','ยกเลิก'].includes(rec.status);
     const isDone = rec.status === 'เสร็จแล้ว';
     html += `<tr>
-      <td style="text-align:center">${(()=>{ const st = isDone ? 'done' : rec.status === 'กำลังดำเนินการ' ? 'prog' : 'wait'; return `<button type="button" class="dep-tick dt-${st}" data-st="${st}" data-id="${esc(r._id)}" title="${st === 'wait' ? 'กดเพื่อรับงานเข้าแผนก' : st === 'prog' ? 'กดเมื่อทำเสร็จแล้ว' : 'กดเพื่อยกเลิกเสร็จ (กลับไปรอทำ)'}">${st === 'wait' ? '📥 รับงาน' : st === 'prog' ? '▶ กำลังทำ<br>กด = เสร็จ' : '✓ เสร็จแล้ว'}</button>`; })()}</td>
+      <td style="text-align:center">${(()=>{ const st = isDone ? 'done' : rec.status === 'กำลังดำเนินการ' ? 'prog' : 'wait', one = CURRENT_DEPT === 'receive';      // goods arrive in one tap: no "accept" stage
+        return `<button type="button" class="dep-tick dt-${st}" data-st="${st}" data-id="${esc(r._id)}" title="${one ? (st === 'done' ? 'กดเพื่อยกเลิก (กลับไปรอของ)' : 'กดเมื่อได้รับของแล้ว') : st === 'wait' ? 'กดเพื่อรับงานเข้าแผนก' : st === 'prog' ? 'กดเมื่อทำเสร็จแล้ว' : 'กดเพื่อยกเลิกเสร็จ (กลับไปรอทำ)'}">${one ? (st === 'done' ? '✓ ได้รับของแล้ว' : '📦 ได้รับของแล้ว') : st === 'wait' ? '📥 รับงาน' : st === 'prog' ? '▶ กำลังทำ<br>กด = เสร็จ' : '✓ เสร็จแล้ว'}</button>`; })()}</td>
       <td>${caseLink(r)}</td>
       <td>${esc(r.clinic??'-')}</td>
       <td>${esc(r.patient??'-')}</td>
@@ -5282,7 +5286,10 @@ function renderDept(){
     cb.addEventListener('click', async ()=>{
       const st = cb.dataset.st, id = cb.dataset.id, now = nowStamp();
       cb.disabled = true;
-      if(st === 'wait'){
+      if(st === 'wait' && CURRENT_DEPT === 'receive'){
+        await setDeptRecord(id, CURRENT_DEPT, {status:'เสร็จแล้ว', start: now, end: now});
+        showToast('📦 บันทึกว่าได้รับของแล้ว');
+      } else if(st === 'wait'){
         await setDeptRecord(id, CURRENT_DEPT, {status:'กำลังดำเนินการ', start: now});
         showToast('📥 รับงานเข้าแผนกแล้ว — กดอีกครั้งเมื่อทำเสร็จ');
       } else if(st === 'prog'){
@@ -5290,7 +5297,7 @@ function renderDept(){
         showToast('✓ บันทึกว่าทำเสร็จแล้ว (ดูได้ที่มุมมอง "ทำเสร็จแล้ว")');
       } else {
         await setDeptRecord(id, CURRENT_DEPT, {status:'รอดำเนินการ', end:''});
-        showToast('ยกเลิกเสร็จแล้ว งานกลับไปรอทำ');
+        showToast(CURRENT_DEPT === 'receive' ? 'ยกเลิกแล้ว กลับไปรอของ' : 'ยกเลิกเสร็จแล้ว งานกลับไปรอทำ');
       }
       renderDash();
       renderDept();
@@ -5353,6 +5360,17 @@ function cpAutoTo(name){
 function cpAliasTo(name){ const n = cpNorm(name); if(!n) return ''; const a = readPrices().coupon_aliases.find(x=>cpNorm(x.from) === n); return a ? (cpNorm(a.to) === n ? '' : a.to) : cpAutoTo(name); }
 function cpClin(name){ return cpNorm(cpAliasTo(name) || name); }
 function cpClinName(name){ return cpAliasTo(name) || name; }
+// one case can use several coupon kinds (e.g. 1 crown + 1 implant crown): coupon_split = "ประเภท:ซี่|ประเภท:ซี่"
+function couponParts(o){
+  const raw = String(o.coupon_split || '').trim();
+  if(raw){
+    const out = raw.split('|').map(x=>{ const i = x.lastIndexOf(':'); return {kind: x.slice(0, i).trim(), qty: Math.max(0, Math.round(Number(x.slice(i + 1)) || 0))}; }).filter(x=>x.kind && x.qty > 0);
+    if(out.length) return out;
+  }
+  const k = String(o.coupon_kind || '').trim();
+  return k ? [{kind:k, qty: Math.max(0, Number(o.qty)) || 1}] : [];
+}
+function couponKindText(o){ const p = couponParts(o); return p.length > 1 || String(o.coupon_split || '').trim() ? p.map(x=>x.kind + ' ' + x.qty).join(' + ') : (o.coupon_kind || ''); }
 function couponWallets(upTo){
   const W = {}, mk = (clinic, doctor)=>{
     const k = cpClin(clinic) + '\u0001' + cpNorm(doctor);
@@ -5361,16 +5379,19 @@ function couponWallets(upTo){
   const kd = (w, kind)=>w.kinds[kind] || (w.kinds[kind] = {granted:0, used:0});
   readPrices().coupon_grants.filter(g=>!upTo || String(g.date || '') <= upTo).forEach(g=>{ const w = mk(g.clinic, g.doctor); w.hasGrant = true; kd(w, String(g.kind || '')).granted += Number(g.qty) || 0; w.grants.push(g); });
   NEW_ORDERS.filter(o=>o.case_type === 'คูปอง' && o.status !== 'ยกเลิกเคส' && (!upTo || String(o.date_received || '').slice(0, 10) <= upTo)).forEach(o=>{
-    const kind = String(o.coupon_kind || '').trim(), counted = o.coupon_status !== 'คูปองหมดอายุ/ยกเลิก';
+    const parts = couponParts(o), counted = o.coupon_status !== 'คูปองหมดอายุ/ยกเลิก';
     const own = W[cpClin(o.clinic) + '\u0001' + cpNorm(o.doctor)], clin = W[cpClin(o.clinic) + '\u0001'], docw = cpNorm(o.doctor) ? W['\u0001' + cpNorm(o.doctor)] : null;
-    let w = null;
-    if(kind){ const has = x=>x && x.kinds[kind] && x.kinds[kind].granted; if(has(own)) w = own; else if(has(clin)) w = clin; else if(has(docw)) w = docw; }
-    if(!w && !kind) w = (own && own.hasGrant) ? own : (clin && clin.hasGrant) ? clin : (docw && docw.hasGrant) ? docw : null;      // a case with no kind yet sits in the wallet it will be taken from, so it can be fixed there
-    if(!w) w = own || mk(o.clinic, o.doctor);
-    w.cases.push(o);
-    if(!counted) return;
-    if(!kind){ w.unkinded++; return; }
-    kd(w, kind).used += Math.max(0, Number(o.qty)) || 1;
+    if(!parts.length){
+      const w = ((own && own.hasGrant) ? own : (clin && clin.hasGrant) ? clin : (docw && docw.hasGrant) ? docw : null) || own || mk(o.clinic, o.doctor);      // no kind yet: it sits in the wallet it will be taken from, so it can be fixed there
+      w.cases.push(o); if(counted) w.unkinded++;
+      return;
+    }
+    parts.forEach(pt=>{
+      const has = x=>x && x.kinds[pt.kind] && x.kinds[pt.kind].granted;
+      const w = has(own) ? own : has(clin) ? clin : has(docw) ? docw : (own || mk(o.clinic, o.doctor));
+      if(!w.cases.includes(o)) w.cases.push(o);
+      if(counted) kd(w, pt.kind).used += pt.qty;
+    });
   });
   return Object.values(W).filter(w=>w.hasGrant || w.unkinded > 0 || Object.values(w.kinds).some(k=>k.used > 0))
     .sort((a, b)=>a.clinic.localeCompare(b.clinic, 'th') || a.doctor.localeCompare(b.doctor, 'th'));
@@ -5394,12 +5415,13 @@ function renderCouponWallets(){
   if(!list.length){ box.innerHTML = '<div class="note">ยังไม่ได้ให้คูปองกับใคร' + (admin ? ' — กด "＋ เพิ่มคูปองให้หมอ/คลินิก" ด้านบน' : '') + '</div>'; return; }
   box.innerHTML = list.map(w=>{
     const gr = w.grants.slice().sort((a, b)=>String(b.date || '').localeCompare(String(a.date || ''))).map(g=>`<tr><td>${esc(fmtDate(g.date))}</td><td>${esc(g.kind)}</td><td class="num">${Number(g.qty) > 0 ? '+' : ''}${esc(g.qty)}</td><td>${esc(g.note || '')}</td><td>${esc(g.by || '')}</td>${admin ? `<td><button type="button" class="btn ghost sm" data-cpw-del="${esc(g.id)}">ลบ</button></td>` : ''}</tr>`).join('');
-    const cs = w.cases.slice().sort((a, b)=>String(b.date_received || '').localeCompare(String(a.date_received || ''))).map(o=>`<tr><td>${esc(fmtDate(o.date_received))}</td><td><a href="#" class="caselink" data-open-case="${esc(o._id)}">${esc(o.case_id || '-')}</a></td><td>${esc(o.doctor || '')}</td><td>${o.coupon_kind ? esc(o.coupon_kind) : (admin ? `<select data-cpw-kind="${esc(o._id)}" style="width:auto"><option value="">— เลือกประเภทเพื่อหักคูปอง —</option>${couponKinds().map(k=>`<option>${esc(k)}</option>`).join('')}</select>` : '— ไม่ระบุ')}</td><td>${esc(o.coupon_status || '-')}</td></tr>`).join('');
+    const cs = w.cases.slice().sort((a, b)=>String(b.date_received || '').localeCompare(String(a.date_received || ''))).map(o=>`<tr><td>${esc(fmtDate(o.date_received))}</td><td><a href="#" class="caselink" data-open-case="${esc(o._id)}">${esc(o.case_id || '-')}</a></td><td>${esc(o.doctor || '')}</td><td>${couponKindText(o) ? esc(couponKindText(o)) : (admin ? `<select data-cpw-kind="${esc(o._id)}" style="width:auto"><option value="">— เลือกประเภทเพื่อหักคูปอง —</option>${couponKinds().map(k=>`<option>${esc(k)}</option>`).join('')}</select>` : '— ไม่ระบุ')}${admin ? ` <button type="button" class="btn ghost sm" data-cpw-split="${esc(o._id)}" title="เคสนี้ใช้คูปองหลายประเภท">แบ่งประเภท</button>` : ''}</td><td>${esc(o.coupon_status || '-')}</td></tr>`).join('');
     return `<details class="cpd-row" data-k="${esc(w.key)}" ${open.has(w.key) ? 'open' : ''}><summary><b>${esc(w.clinic)}</b><span>${w.doctor ? '👨‍⚕️ ' + esc(w.doctor) : '🏥 ทั้งคลินิก'}</span><span class="cpd-n">${walletChips(w)}</span></summary><div class="cpd-cases">
       <b>ประวัติการให้คูปอง</b>${gr ? `<table><tr><th>วันที่</th><th>ประเภท</th><th>จำนวน</th><th>หมายเหตุ</th><th>โดย</th>${admin ? '<th></th>' : ''}</tr>${gr}</table>` : '<div class="note">ยังไม่มีการให้คูปอง (มีแต่เคสที่ใช้)</div>'}
       <b style="display:block;margin-top:8px">เคสที่หักจากกระเป๋านี้</b>${cs ? `<table><tr><th>วันรับงาน</th><th>เคส</th><th>หมอ</th><th>ประเภท</th><th>สถานะคูปอง</th></tr>${cs}</table>` : '<div class="note">ยังไม่มี</div>'}</div></details>`;
   }).join('');
   renderCouponMerge();
+  box.querySelectorAll('[data-cpw-split]').forEach(b=>b.addEventListener('click', ()=>openSplitEditor(b.dataset.cpwSplit)));
   box.querySelectorAll('[data-cpw-kind]').forEach(sel=>sel.addEventListener('change', async ()=>{
     if(!sel.value) return;
     await patchOrder(sel.dataset.cpwKind, {coupon_kind: sel.value});
@@ -5410,6 +5432,28 @@ function renderCouponWallets(){
     await saveSettingsPatch(cur=>{ cur.coupon_grants = cur.coupon_grants.filter(g=>g.id !== b.dataset.cpwDel); });
     showToast('ลบแล้ว'); renderCouponByDoctor();
   }));
+}
+function openSplitEditor(id){
+  const o = NEW_ORDERS.find(x=>x._id === id); if(!o) return;
+  const old = document.getElementById('cps-modal'); if(old) old.remove();
+  const total = Math.max(0, Number(o.qty)) || 1, kinds = couponKinds(), cur = couponParts(o);
+  const rowHtml = (k, n)=>`<div class="cps-row" style="display:flex;gap:8px;margin:6px 0;align-items:center"><select class="cps-k" style="flex:1"><option value="">— ประเภท —</option>${kinds.map(x=>`<option ${x === k ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select><input class="cps-n" type="number" min="1" step="1" value="${esc(n)}" style="width:80px"> ซี่</div>`;
+  const m = document.createElement('div'); m.id = 'cps-modal';
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+  m.innerHTML = `<div style="background:#fff;border-radius:12px;padding:20px;max-width:460px;width:100%"><h3 style="margin:0 0 4px">แบ่งคูปองเคส ${esc(o.case_id || '')}</h3><div class="note" style="margin:0 0 8px">เคสนี้ ${total} ซี่ — ใส่ว่าใช้คูปองประเภทไหนกี่ซี่ (รวมควรเท่ากับ ${total})</div><div id="cps-rows">${(cur.length ? cur : [{kind:'', qty:total}]).map(x=>rowHtml(x.kind, x.qty)).join('')}</div><button type="button" class="btn ghost sm" id="cps-more">＋ เพิ่มอีกประเภท</button><div id="cps-warn" class="note" style="margin:8px 0"></div><div style="display:flex;gap:8px;justify-content:flex-end"><button type="button" class="btn ghost" id="cps-cancel">ยกเลิก</button><button type="button" class="btn primary" id="cps-save">บันทึก</button></div></div>`;
+  document.body.appendChild(m);
+  const read = ()=>[...m.querySelectorAll('.cps-row')].map(r=>({kind:r.querySelector('.cps-k').value, qty:Math.round(Number(r.querySelector('.cps-n').value) || 0)})).filter(x=>x.kind && x.qty > 0);
+  const warn = ()=>{ const sum = read().reduce((a, x)=>a + x.qty, 0); const w = m.querySelector('#cps-warn'); w.className = 'note' + (sum !== total ? ' warn' : ''); w.textContent = 'รวม ' + sum + ' / ' + total + ' ซี่' + (sum !== total ? ' (ไม่เท่ากับจำนวนซี่ของเคส — บันทึกได้ แต่ตรวจอีกครั้ง)' : ' ✓'); };
+  m.addEventListener('input', warn); m.addEventListener('change', warn); warn();
+  m.querySelector('#cps-more').addEventListener('click', ()=>{ m.querySelector('#cps-rows').insertAdjacentHTML('beforeend', rowHtml('', 1)); warn(); });
+  m.querySelector('#cps-cancel').addEventListener('click', ()=>m.remove());
+  m.querySelector('#cps-save').addEventListener('click', async ()=>{
+    const parts = read(); if(!parts.length){ showToast('เลือกประเภทอย่างน้อย 1 ประเภท'); return; }
+    const merged = {}; parts.forEach(x=>{ merged[x.kind] = (merged[x.kind] || 0) + x.qty; });
+    const list = Object.keys(merged).map(k=>({kind:k, qty:merged[k]}));
+    await patchOrder(id, {coupon_split: list.length > 1 ? list.map(x=>x.kind + ':' + x.qty).join('|') : '', coupon_kind: list[0].kind});
+    m.remove(); showToast('บันทึกแล้ว — หักคูปอง ' + list.map(x=>x.kind + ' ' + x.qty).join(' + ') + ' ✓'); renderCouponByDoctor();
+  });
 }
 function renderCouponMerge(){
   const m = document.getElementById('cpw-merge'); if(!m) return;
@@ -5515,11 +5559,11 @@ function couponReportPdf(){
   let tg = 0, tu = 0;
   list.forEach(w=>{
     Object.keys(w.kinds).forEach(k=>{
-      const x = w.kinds[k], mUsed = w.cases.filter(o=>cnt(o) && inMonth(o) && String(o.coupon_kind || '').trim() === k).reduce((a, o)=>a + q(o), 0);
+      const x = w.kinds[k], mUsed = w.cases.filter(o=>cnt(o) && inMonth(o)).reduce((a, o)=>a + couponParts(o).filter(pt=>pt.kind === k).reduce((b, pt)=>b + pt.qty, 0), 0);
       sum.push([w.clinic, w.doctor || '(ทั้งคลินิก)', k, x.granted, x.used, mUsed, x.granted - x.used]); tg += x.granted; tu += x.used;
     });
     if(w.unkinded) sum.push([w.clinic, w.doctor || '(ทั้งคลินิก)', 'ยังไม่ระบุประเภท (ไม่ถูกหัก)', '-', '-', '-', '-']);
-    w.cases.filter(inMonth).sort((a, b)=>String(a.date_received || '').localeCompare(String(b.date_received || ''))).forEach(o=>det.push([fmtDate(o.date_received), w.clinic, o.doctor || '', o.case_id || '', o.patient || '', o.coupon_kind || '— ไม่ระบุ', q(o), o.coupon_status || '-']));
+    w.cases.filter(inMonth).sort((a, b)=>String(a.date_received || '').localeCompare(String(b.date_received || ''))).forEach(o=>det.push([fmtDate(o.date_received), w.clinic, o.doctor || '', o.case_id || '', o.patient || '', couponKindText(o) || '— ไม่ระบุ', q(o), o.coupon_status || '-']));
   });
   const when = ym ? 'ยอด ณ สิ้นเดือน ' + ym : 'ยอด ณ วันที่ ' + fmtDate(todayLocal());
   const sections = [{heading:'สรุปยอดคูปองคงเหลือ — ' + when, kpi:'ให้ไว้รวม ' + tg.toLocaleString() + ' ซี่ • ใช้สะสม ' + tu.toLocaleString() + ' ซี่ • เหลือ ' + (tg - tu).toLocaleString() + ' ซี่', rows:sum}];
