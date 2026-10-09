@@ -197,9 +197,16 @@
   .tt-num.sel{color:var(--ink);font-weight:700;}
   .tt-mode.active{background:#0B2B36;color:#fff;border-color:#0B2B36;}
 
+  .dep-tick{border:2px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:8px 12px;font:inherit;font-weight:700;font-size:13.5px;cursor:pointer;min-width:96px;line-height:1.25;}
+  .dep-tick.dt-wait{border-color:var(--teal);color:var(--teal);}
+  .dep-tick.dt-prog{background:#FFF3DC;border-color:var(--amber);color:#8A5200;}
+  .dep-tick.dt-done{background:#E4F3EA;border-color:var(--ok);color:var(--ok);}
+  .dep-tick:disabled{opacity:.5;}
   /* ---- phone layout: department work list as big tap-able cards ---- */
   @media (max-width:700px){
+    html,body{max-width:100%;overflow-x:hidden;}
     body{font-size:15px;}
+    .card,.wrap,main{min-width:0;max-width:100%;}
     nav.tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;}
     nav.tabs button{flex:0 0 auto;white-space:nowrap;padding:11px 16px;}
     .filters > *{flex:1 1 100%;min-width:0;}
@@ -208,11 +215,11 @@
     #dept-table .tablewrap,.tablewrap:has(#dept-table){max-height:none;border:0;overflow:visible;}
     #dept-table,#dept-table tbody{display:block;width:100%;}
     #dept-table tr:first-child{display:none;}
-    #dept-table tr{display:grid;grid-template-columns:64px 1fr;gap:2px 10px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:10px;}
-    #dept-table td{display:none;border:0;padding:0;background:transparent !important;}
+    #dept-table tr{display:grid;grid-template-columns:104px minmax(0,1fr);gap:2px 10px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:10px;}
+    #dept-table td{display:none;border:0;padding:0;background:transparent !important;min-width:0;white-space:normal !important;overflow-wrap:anywhere;word-break:break-word;}
     .progress-legend{display:none;}
     #dept-table td:nth-child(1){display:flex;grid-row:1 / span 4;justify-content:center;align-items:center;}
-    #dept-table td:nth-child(1) input{width:44px !important;height:44px !important;}
+    #dept-table td:nth-child(1) .dep-tick{width:100%;min-height:64px;font-size:15px;}
     #dept-table td:nth-child(2){display:block;font-size:17px;font-weight:800;}
     #dept-table td:nth-child(3),#dept-table td:nth-child(4){display:block;font-size:14px;}
     #dept-table td:nth-child(5){display:block;font-size:13px;color:var(--muted);}
@@ -462,7 +469,7 @@
       <div class="note progress-legend"></div>
       <div class="note" id="dept-count-note"></div>
       <div class="tablewrap"><table id="dept-table"></table></div>
-      <div class="note">ติ๊ก ✓ ที่ช่องหน้าแถวเมื่อแผนกของคุณทำงานนั้นเสร็จ ระบบบันทึกชื่อและวันที่ให้ทันที งานจะย้ายไปอยู่ที่มุมมอง "ทำเสร็จแล้ว" (ติ๊กผิดกดซ้ำเพื่อยกเลิกได้) ใช้ dropdown เมื่ออยากตั้งสถานะอื่น เช่น กำลังทำ / ระงับ / ยกเลิก</div>
+      <div class="note">กดปุ่มหน้าแถว <b>ครั้งที่ 1 = 📥 รับงาน</b> (ระบบจดเวลารับ) • <b>ครั้งที่ 2 = ✓ เสร็จ</b> (จดเวลาเสร็จและชื่อคนทำ) • กดปุ่มเขียวอีกครั้งเพื่อยกเลิกเสร็จ งานจะย้ายไปมุมมอง "ทำเสร็จแล้ว" • ใช้ dropdown (บนคอม) เมื่ออยากตั้งสถานะอื่น เช่น ระงับ / ยกเลิก</div>
     </div>
   </section>
 
@@ -840,7 +847,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-08 รุ่น 64 (กระเป๋าคูปองนับเป็นซี่ 🎫 + ใบสั่งงานกระชับ)";
+const APP_VERSION = "2026-10-08 รุ่น 65 (มือถือ: ปุ่มรับงาน→เสร็จ 📱 + คูปอง + ใบสั่งงานกระชับ)";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -5049,7 +5056,7 @@ function renderDept(){
     const overdue = isOverdue(r) && !['เสร็จแล้ว','ยกเลิก'].includes(rec.status);
     const isDone = rec.status === 'เสร็จแล้ว';
     html += `<tr>
-      <td style="text-align:center"><input type="checkbox" class="dep-tick" data-id="${esc(r._id)}" ${isDone?'checked':''} title="ติ๊กเมื่อแผนกคุณทำงานนี้เสร็จแล้ว" style="width:22px;height:22px;cursor:pointer;accent-color:#0E6E6E"></td>
+      <td style="text-align:center">${(()=>{ const st = isDone ? 'done' : rec.status === 'กำลังดำเนินการ' ? 'prog' : 'wait'; return `<button type="button" class="dep-tick dt-${st}" data-st="${st}" data-id="${esc(r._id)}" title="${st === 'wait' ? 'กดเพื่อรับงานเข้าแผนก' : st === 'prog' ? 'กดเมื่อทำเสร็จแล้ว' : 'กดเพื่อยกเลิกเสร็จ (กลับไปรอทำ)'}">${st === 'wait' ? '📥 รับงาน' : st === 'prog' ? '▶ กำลังทำ<br>กด = เสร็จ' : '✓ เสร็จแล้ว'}</button>`; })()}</td>
       <td>${caseLink(r)}</td>
       <td>${esc(r.clinic??'-')}</td>
       <td>${esc(r.patient??'-')}</td>
@@ -5087,14 +5094,18 @@ function renderDept(){
     });
   });
   t.querySelectorAll('.dep-tick').forEach(cb=>{
-    cb.addEventListener('change', async ()=>{
-      const today = nowStamp();
-      if(cb.checked){
-        await setDeptRecord(cb.dataset.id, CURRENT_DEPT, {status:'เสร็จแล้ว', end: today});
+    cb.addEventListener('click', async ()=>{
+      const st = cb.dataset.st, id = cb.dataset.id, now = nowStamp();
+      cb.disabled = true;
+      if(st === 'wait'){
+        await setDeptRecord(id, CURRENT_DEPT, {status:'กำลังดำเนินการ', start: now});
+        showToast('📥 รับงานเข้าแผนกแล้ว — กดอีกครั้งเมื่อทำเสร็จ');
+      } else if(st === 'prog'){
+        await setDeptRecord(id, CURRENT_DEPT, {status:'เสร็จแล้ว', end: now});
         showToast('✓ บันทึกว่าทำเสร็จแล้ว (ดูได้ที่มุมมอง "ทำเสร็จแล้ว")');
       } else {
-        await setDeptRecord(cb.dataset.id, CURRENT_DEPT, {status:'รอดำเนินการ', end:''});
-        showToast('ยกเลิกเครื่องหมายแล้ว งานกลับไปรอทำ');
+        await setDeptRecord(id, CURRENT_DEPT, {status:'รอดำเนินการ', end:''});
+        showToast('ยกเลิกเสร็จแล้ว งานกลับไปรอทำ');
       }
       renderDash();
       renderDept();
