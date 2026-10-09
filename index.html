@@ -881,7 +881,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-09 รุ่น 76 (รวมชื่อคลินิกที่สะกดต่างกันในระบบคูปอง) • ต้องใช้ backend v16";
+const APP_VERSION = "2026-10-09 รุ่น 77 (เคสที่มีไฟล์สแกนแล้ว ข้าม SCAN ไป Design เสมอ รวมเคสเก่าที่ค้าง SCAN) • ต้องใช้ backend v16";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -1119,6 +1119,15 @@ function depRecord(row, deptKey){
       const r = raw(deptKey);
       if(stale(deptKey)) st = 'ไม่เกี่ยวข้อง';
       else if(rel[deptKey] && r.st === 'ไม่เกี่ยวข้อง' && !r.began) st = 'รอดำเนินการ';
+    }
+  }
+  // a case that already has a scan file (digital scanner) never waits at SCAN: it starts at DESIGN (older cases saved before that rule are re-read here; started steps are never touched)
+  if((deptKey === 'scan' || deptKey === 'model_printing') && row.has_scan === 'มี' && row.dep_order_intake){
+    const rawOf = k=>{ const o2 = (DEP_OVERRIDES[row._id] && DEP_OVERRIDES[row._id][k]) || {}; return {st:o2.status || row['dep_'+k] || 'ไม่เกี่ยวข้อง', began:!!(o2.start || row['dep_'+k+'_start'])}; };
+    const sc = rawOf('scan'), hasOv = !!(DEP_OVERRIDES[row._id] && DEP_OVERRIDES[row._id].scan && DEP_OVERRIDES[row._id].scan.status);      // someone set SCAN by hand (e.g. re-enabled it): respect that
+    if(sc.st === 'รอดำเนินการ' && !sc.began && !hasOv){
+      if(deptKey === 'scan') st = 'ไม่เกี่ยวข้อง';
+      else { const mp = rawOf('model_printing'); if(mp.st === 'ไม่เกี่ยวข้อง' && !mp.began) st = 'รอดำเนินการ'; }
     }
   }
   return {
