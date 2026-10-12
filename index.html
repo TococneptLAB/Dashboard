@@ -893,7 +893,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-12 รุ่น 91 (ปุ่ม 📦 ได้รับ Abutment โชว์ให้ทุกแผนกเสมอ + บอกถ้าหลังบ้านยังเก่า) • ต้องใช้ backend v18";
+const APP_VERSION = "2026-10-12 รุ่น 92 (ไทม์ไลน์/ขั้นตอนบอกว่าใครกดรับงาน (เริ่มทำ)) • ต้องใช้ backend v18";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -1743,7 +1743,7 @@ function timelineOf(o){
   DEPARTMENTS.forEach(d=>{
     if(d.key === 'order_intake') return;
     const r = depRecord(o, d.key);
-    if(r.start && r.status !== 'ไม่เกี่ยวข้อง') ev.push({t:r.start, text:'▶ ' + d.label + ' เริ่มทำ'});
+    if(r.start && r.status !== 'ไม่เกี่ยวข้อง') ev.push({t:r.start, text:'▶ ' + d.label + ' เริ่มทำ' + (r.status === 'กำลังดำเนินการ' && r.by ? ' — โดย ' + r.by : '')});
     if(r.status === 'เสร็จแล้ว') ev.push({t:r.end || '', text:'✓ ' + d.label + ' เสร็จ' + (r.by ? ' — โดย ' + r.by : '')});
     else if(r.status === 'ระงับชั่วคราว') ev.push({t:r.end || r.start || '', text:'⏸ ' + d.label + ' ระงับชั่วคราว' + (r.by ? ' — โดย ' + r.by : '')});
     else if(r.status === 'ยกเลิก') ev.push({t:r.end || r.start || '', text:'✕ ' + d.label + ' ยกเลิก' + (r.by ? ' — โดย ' + r.by : '')});
@@ -1782,7 +1782,7 @@ function renderCase(){
   const stepHtml = steps.length ? steps.map(d=>{
     const r = depRecord(o, d.key), done = r.status === 'เสร็จแล้ว';
     const who = r.by || (d.key === 'order_intake' ? (o.created_by || '') : '');
-    const meta = done ? ('เสร็จ ' + (r.end ? fmtStamp(r.end) : '') + (who ? ' • โดย ' + who : '')) : r.status + (r.start ? ' • เริ่ม ' + fmtStamp(r.start) : '');
+    const meta = done ? ('เสร็จ ' + (r.end ? fmtStamp(r.end) : '') + (who ? ' • โดย ' + who : '')) : r.status + (r.start ? ' • เริ่ม ' + fmtStamp(r.start) : '') + (r.status === 'กำลังดำเนินการ' && r.by ? ' • โดย ' + r.by : '');
     return `<div class="cm-step ${curKeys.has(d.key) ? 'cur' : ''}"><span class="nm">${esc(d.label)}</span><span class="meta">${esc(meta)}${curKeys.has(d.key) ? ' ◀ ขั้นตอนปัจจุบัน' : ''}</span>` +
       (done ? `${stepUp(d)}<button class="btn ghost sm" data-step="undo" data-dept="${esc(d.key)}">↩ ยกเลิกเสร็จ</button>`
             : (r.status === 'กำลังดำเนินการ' ? '' : `<button class="btn ghost" data-step="start" data-dept="${esc(d.key)}">▶ เริ่มทำ</button>`) +
