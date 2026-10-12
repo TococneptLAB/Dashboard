@@ -893,7 +893,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-12 รุ่น 87 (แชท: #เลขเคสงานแก้ เช่น #699222Fix1 กดเปิดเคสได้) • ต้องใช้ backend v17";
+const APP_VERSION = "2026-10-12 รุ่น 89 (ทุกแผนกกด 📦 ได้รับ Abutment ได้) • ต้องใช้ backend v18";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -975,6 +975,7 @@ let CONTACTS = [], CONTACT_IDX = {};
 let INVOICES = [];
 const NEEDED_SERVER = 10;
 const PIN_MIN = 17;
+const ABUT_RECEIVE_ALL_MIN = 18;
 const FILE_ANY_TOKENS = ['files', 'file', 'upload', 'ไฟล์', 'อัปโหลด', 'อัพโหลด'];
 let SERVER_VER = NEEDED_SERVER;
 let ABUTMENTS = [];
@@ -2890,7 +2891,8 @@ function chatRoomLabel(room){
 }
 function chatLinkify(text){
   let h = esc(text);
-  h = h.replace(/#(\d{5,12}(?:Fix\d*)?)/gi, (mm, cid)=>{ const lc = cid.toLowerCase(); const o = NEW_ORDERS.find(x=>String(x.case_id).trim().toLowerCase() === lc); return o ? `<a href="#" class="caselink" data-open-case="${esc(o._id)}">#${cid}</a>` : mm; });
+  const cnorm = v=>String(v ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');   // งานแก้พิมพ์เลขเคสเองได้ (699222Fix1 / 699222 Fix 1 / 699222-fix1) → เทียบแบบไม่สนช่องว่าง/ขีด/ตัวใหญ่เล็ก
+  h = h.replace(/#(\d{5,12}(?:[ _-]?fix[ _-]?\d+)?)/gi, (mm, cid)=>{ const lc = cnorm(cid); const o = NEW_ORDERS.find(x=>cnorm(x.case_id) === lc); return o ? `<a href="#" class="caselink" data-open-case="${esc(o._id)}">#${cid}</a>` : mm; });
   h = h.replace(/@([^\s@#<]+)/g, (mm, nm)=>{ const e = EMPLOYEE_LIST.find(x=>String(x.name).trim().toLowerCase() === nm.toLowerCase()); return e ? `<span class="mention">@${esc(e.name)}</span>` : mm; });
   return h.replace(/\n/g, '<br>');
 }
@@ -3357,6 +3359,9 @@ function abutSectionHtml(o){
       <div class="ab-grid"><div><b>ยี่ห้อ</b> ${esc(a.brand || '-')}</div><div><b>รุ่น / ขนาด</b> ${esc(a.spec || '-')}</div><div><b>จำนวน</b> ${esc(a.qty || '-')}</div><div><b>ร้านที่สั่ง</b> ${esc(a.supplier || '-')}</div>
       <div><b>สั่งเมื่อ</b> ${esc(a.ordered_at ? fmtStamp(a.ordered_at) : '-')}</div><div><b>คาดว่าจะมา</b> ${esc(a.eta ? fmtDate(a.eta) : '-')}</div><div><b>เลขพัสดุ</b> ${esc(a.tracking_no || '-')}</div><div><b>ได้รับเมื่อ</b> ${esc(a.received_at ? fmtStamp(a.received_at) : '-')}</div></div>
       ${a.note ? `<div style="font-size:12.5px"><b>โน้ต:</b> ${esc(a.note)}</div>` : ''}</div>`;
+    if(!manage && (a.status === 'requested' || a.status === 'ordered') && SERVER_VER >= ABUT_RECEIVE_ALL_MIN){
+      inner += '<div class="actions" style="margin-bottom:6px"><button class="btn primary" id="ab-q-received">📦 ได้รับของแล้ว (ตอนนี้)</button></div><div class="note">ได้รับ Abutment แล้ว? ใครก็กดบันทึกได้ ระบบจดชื่อและเวลาไว้ให้</div>';
+    }
     if(manage){
       inner += `<div class="actions" style="margin-bottom:6px"><button class="btn ghost" id="ab-open-form">✏️ บันทึก / แก้ไขรายละเอียดการสั่ง</button>
         ${a.status === 'requested' ? '<button class="btn primary" id="ab-q-ordered">✓ สั่งแล้ว (ตอนนี้)</button>' : ''}${a.status === 'ordered' ? '<button class="btn primary" id="ab-q-received">📦 ได้รับของแล้ว (ตอนนี้)</button>' : ''}</div>`;
