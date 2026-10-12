@@ -3,6 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="TOTU Lab">
+<meta name="theme-color" content="#0B2B36">
 <title>TOTU Concept - ระบบใบออเดอร์งาน &amp; ตรวจสอบสถานะ</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
@@ -881,7 +888,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbzPZhnaqTXBvDP3LW
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-09 รุ่น 82 (ประเภทเคสมีตัวเลือก งานแก้ ในฟอร์มสร้างออเดอร์) • ต้องใช้ backend v16";
+const APP_VERSION = "2026-10-11 รุ่น 83 (ไอคอนโลโก้แล็บสำหรับ shortcut มือถือ) • ต้องใช้ backend v16";
 // ============================================================
 
 // ---------- Load embedded data ----------
