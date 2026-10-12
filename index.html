@@ -893,7 +893,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-12 รุ่น 89 (ทุกแผนกกด 📦 ได้รับ Abutment ได้) • ต้องใช้ backend v18";
+const APP_VERSION = "2026-10-12 รุ่น 90 (เคสงานแก้ไม่ตัดคูปอง) • ต้องใช้ backend v18";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -5420,7 +5420,7 @@ function fmtDate(s){
 // "มีอยู่" = ยังใช้ได้อยู่ (รออนุมัติ + อนุมัติแล้ว) ; ใช้แล้ว และ หมดอายุ/ยกเลิก นับแยก
 function couponGroups(q){
   const g = {}, qq = String(q || '').trim().toLowerCase();
-  NEW_ORDERS.filter(o=>o.case_type === 'คูปอง').forEach(o=>{
+  NEW_ORDERS.filter(o=>isCouponCase(o)).forEach(o=>{
     const clinic = String(o.clinic || '').trim() || '(ไม่ระบุคลินิก)', doc = String(o.doctor || '').trim() || '(ไม่ระบุหมอ)', k = clinic + '\u0001' + doc;
     (g[k] = g[k] || {clinic, doctor: doc, cases: []}).cases.push(o);
   });
@@ -5460,6 +5460,8 @@ function couponParts(o){
   return k ? [{kind:k, qty: Math.max(0, Number(o.qty)) || 1}] : [];
 }
 function couponKindText(o){ const p = couponParts(o); return p.length > 1 || String(o.coupon_split || '').trim() ? p.map(x=>x.kind + ' ' + x.qty).join(' + ') : (o.coupon_kind || ''); }
+// งานแก้ (Rework) ไม่ตัดคูปอง แม้จะถูกตั้งประเภทเคสเป็นคูปองไว้
+function isCouponCase(o){ return !!o && o.case_type === 'คูปอง' && o.is_rework !== true; }
 function couponWallets(upTo){
   const W = {}, mk = (clinic, doctor)=>{
     const k = cpClin(clinic) + '\u0001' + cpNorm(doctor);
@@ -5467,7 +5469,7 @@ function couponWallets(upTo){
   };
   const kd = (w, kind)=>w.kinds[kind] || (w.kinds[kind] = {granted:0, used:0});
   readPrices().coupon_grants.filter(g=>!upTo || String(g.date || '') <= upTo).forEach(g=>{ const w = mk(g.clinic, g.doctor); w.hasGrant = true; kd(w, String(g.kind || '')).granted += Number(g.qty) || 0; w.grants.push(g); });
-  NEW_ORDERS.filter(o=>o.case_type === 'คูปอง' && o.status !== 'ยกเลิกเคส' && (!upTo || String(o.date_received || '').slice(0, 10) <= upTo)).forEach(o=>{
+  NEW_ORDERS.filter(o=>isCouponCase(o) && o.status !== 'ยกเลิกเคส' && (!upTo || String(o.date_received || '').slice(0, 10) <= upTo)).forEach(o=>{
     const parts = couponParts(o), counted = o.coupon_status !== 'คูปองหมดอายุ/ยกเลิก';
     const own = W[cpClin(o.clinic) + '\u0001' + cpNorm(o.doctor)], clin = W[cpClin(o.clinic) + '\u0001'], docw = cpNorm(o.doctor) ? W['\u0001' + cpNorm(o.doctor)] : null;
     if(!parts.length){
@@ -5549,8 +5551,8 @@ function renderCouponMerge(){
   if(!isAdminUser(CURRENT_EMPLOYEE)){ m.innerHTML = ''; return; }
   const P = readPrices(), grantClinics = [...new Set(P.coupon_grants.map(g=>String(g.clinic || '').trim()).filter(Boolean))];
   const gset = new Set(grantClinics.map(cpNorm));
-  const caseNames = [...new Set(NEW_ORDERS.filter(o=>o.case_type === 'คูปอง').map(o=>String(o.clinic || '').trim()).filter(Boolean))].filter(n=>!gset.has(cpNorm(n)) && !cpAliasTo(n));
-  const autos = [...new Set(NEW_ORDERS.filter(o=>o.case_type === 'คูปอง').map(o=>String(o.clinic || '').trim()).filter(Boolean))].filter(n=>!P.coupon_aliases.some(a=>cpNorm(a.from) === cpNorm(n)) && cpAutoTo(n)).map(n=>`<div style="margin:4px 0">${esc(n)} <b>=</b> ${esc(cpAutoTo(n))} <span class="note" style="margin:0">(รวมให้อัตโนมัติ เพราะชื่อใกล้เคียงกัน)</span></div>`).join('');
+  const caseNames = [...new Set(NEW_ORDERS.filter(o=>isCouponCase(o)).map(o=>String(o.clinic || '').trim()).filter(Boolean))].filter(n=>!gset.has(cpNorm(n)) && !cpAliasTo(n));
+  const autos = [...new Set(NEW_ORDERS.filter(o=>isCouponCase(o)).map(o=>String(o.clinic || '').trim()).filter(Boolean))].filter(n=>!P.coupon_aliases.some(a=>cpNorm(a.from) === cpNorm(n)) && cpAutoTo(n)).map(n=>`<div style="margin:4px 0">${esc(n)} <b>=</b> ${esc(cpAutoTo(n))} <span class="note" style="margin:0">(รวมให้อัตโนมัติ เพราะชื่อใกล้เคียงกัน)</span></div>`).join('');
   const list = autos + P.coupon_aliases.map(a=>`<div style="margin:4px 0">${esc(a.from)} <b>=</b> ${esc(a.to)} <button type="button" class="btn ghost sm" data-cpm-del="${esc(a.from)}">เลิกรวม</button></div>`).join('');
   m.innerHTML = `<details style="margin:8px 0"><summary style="cursor:pointer;font-weight:700">🔗 รวมชื่อคลินิกที่สะกดต่างกัน${P.coupon_aliases.length ? ' (' + P.coupon_aliases.length + ')' : ''}</summary>
     <div class="note" style="margin:6px 0">ถ้าเคสคูปองใช้ชื่อคลินิกไม่ตรงกับที่ให้คูปองไว้ ให้เลือกรวมกันตรงนี้ ระบบจะหักจากกระเป๋าเดียวกัน (ไม่เปลี่ยนชื่อในออเดอร์)</div>${list}
