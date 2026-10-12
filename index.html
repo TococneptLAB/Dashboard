@@ -371,7 +371,7 @@
     <div class="month-pick" id="month-pick"><label for="month-select" style="margin:0">เดือน</label><select id="month-select"></select></div>
     <div class="user-chip" id="user-chip" style="display:none">
       <button id="setup-btn" class="btn ghost sm" type="button" style="display:none;margin-right:6px" title="สร้างลิงก์ส่งให้พนักงาน: เครื่องที่เปิดลิงก์จะเปลี่ยนมาใช้ระบบหลังบ้านตัวเดียวกับเครื่องนี้">📲 ตั้งค่าเครื่องพนักงาน</button><button id="chat-btn" class="bell" type="button" style="display:none" title="แชท">💬<span id="chat-n"></span></button><button id="remind-btn" class="bell" type="button" style="display:none" title="อย่าลืม: งานที่ต้องสั่ง/กลึง">📌<span id="remind-n"></span></button><button id="bell" class="bell" title="แจ้งเตือน: สิ่งที่ต้องทำ" type="button">🔔<span id="bell-n"></span></button><span class="sync-dot" id="sync-dot"></span><span id="sync-ms" style="font-size:11px;color:var(--muted);margin-left:4px"></span>
-      <span>สวัสดี, <b id="user-name-display"></b></span>
+      <span>สวัสดี, <b id="user-name-display"></b></span> <button id="pin-btn" class="btn ghost sm" type="button" title="เปลี่ยน PIN ของฉัน" style="margin:0 4px">🔑 PIN</button>
       <button id="logout-btn">ออกจากระบบ</button>
     </div>
     <div id="server-banner"></div>
@@ -893,7 +893,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-12 รุ่น 85 (หน้าแผนกแยกปุ่ม งานในแผนก / งานที่ฉันรับแล้ว / เสร็จแล้ว) • ต้องใช้ backend v16";
+const APP_VERSION = "2026-10-12 รุ่น 87 (แชท: #เลขเคสงานแก้ เช่น #699222Fix1 กดเปิดเคสได้) • ต้องใช้ backend v17";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -937,7 +937,7 @@ async function apiPost(body){
   if(r && r.ok === false && r.error === 'auth' && body.action !== 'login') doLogout('เซสชันหมดอายุ หรือ PIN ถูกเปลี่ยน กรุณาล็อกอินใหม่');
   return r;
 }
-const API_ERRORS = {forbidden:'ไม่มีสิทธิ์ทำรายการนี้', duplicate_case_id:'เลขเคสนี้มีอยู่แล้ว', duplicate_id:'ออเดอร์นี้ถูกบันทึกไปแล้ว', bad_link:'ลิงก์ต้องขึ้นต้นด้วย http:// หรือ https://', busy:'ระบบกำลังยุ่ง ลองใหม่อีกครั้ง', bad_date:'วันที่/เวลาไม่ถูกต้อง', not_in_trash:'ต้องอยู่ในถังขยะก่อนจึงลบถาวรได้',  bad_parts:'ส่งไฟล์ไม่ครบ ลองอัปโหลดใหม่', no_order:'ไม่พบออเดอร์นี้ในระบบ', too_many:'เคสนี้มีไฟล์แนบเต็มจำนวนแล้ว', not_found:'ไม่พบไฟล์นี้แล้ว', duplicate_code:'รหัสผู้ติดต่อนี้มีอยู่แล้ว', bad_contact:'กรอกรหัสและชื่อให้ครบ', bad_invoice:'ข้อมูลบิลไม่ถูกต้อง (ตรวจวันที่/ยอดเงิน)', too_many:'มีผู้ติดต่อเต็มจำนวนแล้ว', bad_status:'สถานะไม่ถูกต้อง', too_large:'ข้อมูลยาวเกินไป'};
+const API_ERRORS = {forbidden:'ไม่มีสิทธิ์ทำรายการนี้', duplicate_case_id:'เลขเคสนี้มีอยู่แล้ว', duplicate_id:'ออเดอร์นี้ถูกบันทึกไปแล้ว', bad_link:'ลิงก์ต้องขึ้นต้นด้วย http:// หรือ https://', busy:'ระบบกำลังยุ่ง ลองใหม่อีกครั้ง', bad_date:'วันที่/เวลาไม่ถูกต้อง', not_in_trash:'ต้องอยู่ในถังขยะก่อนจึงลบถาวรได้',  bad_parts:'ส่งไฟล์ไม่ครบ ลองอัปโหลดใหม่', no_order:'ไม่พบออเดอร์นี้ในระบบ', too_many:'เคสนี้มีไฟล์แนบเต็มจำนวนแล้ว', not_found:'ไม่พบไฟล์นี้แล้ว', duplicate_code:'รหัสผู้ติดต่อนี้มีอยู่แล้ว', bad_contact:'กรอกรหัสและชื่อให้ครบ', bad_invoice:'ข้อมูลบิลไม่ถูกต้อง (ตรวจวันที่/ยอดเงิน)', too_many:'มีผู้ติดต่อเต็มจำนวนแล้ว', bad_pin:'PIN ต้องเป็นตัวเลขหรือตัวอักษรอังกฤษ 4–12 ตัว', wrong_old_pin:'PIN เดิมไม่ถูกต้อง', bad_status:'สถานะไม่ถูกต้อง', too_large:'ข้อมูลยาวเกินไป'};
 function apiErrorText(r){
   if(r && r.error === 'unknown_action') return 'Apps Script ที่ Deploy อยู่เก่ากว่าหน้าเว็บ (ไม่รู้จักคำสั่งนี้) — วางโค้ด GoogleAppsScript_Code_v' + NEEDED_SERVER + '.gs แล้ว Deploy เวอร์ชันใหม่';
   return API_ERRORS[r && r.error] || ('ผิดพลาด: ' + ((r && r.error) || 'ไม่ทราบสาเหตุ')); }
@@ -974,6 +974,7 @@ function clearEmployeeSession(){
 let CONTACTS = [], CONTACT_IDX = {};
 let INVOICES = [];
 const NEEDED_SERVER = 10;
+const PIN_MIN = 17;
 const FILE_ANY_TOKENS = ['files', 'file', 'upload', 'ไฟล์', 'อัปโหลด', 'อัพโหลด'];
 let SERVER_VER = NEEDED_SERVER;
 let ABUTMENTS = [];
@@ -1020,7 +1021,9 @@ function cacheGet(){
   return null;
 }
 function cacheClear(){ try{ localStorage.removeItem(CACHE_KEY); }catch(e){} }
+let LAST_BOOT = null;
 function applyBootstrap(r){
+  LAST_BOOT = r;
   LAST_SIG = quickSig(r);
   RAW_ORDERS = r.orders || [];
   CONTACTS = r.contacts || [];
@@ -2887,7 +2890,7 @@ function chatRoomLabel(room){
 }
 function chatLinkify(text){
   let h = esc(text);
-  h = h.replace(/#(\d{5,12})/g, (mm, cid)=>{ const o = NEW_ORDERS.find(x=>String(x.case_id).trim() === cid); return o ? `<a href="#" class="caselink" data-open-case="${esc(o._id)}">#${cid}</a>` : mm; });
+  h = h.replace(/#(\d{5,12}(?:Fix\d*)?)/gi, (mm, cid)=>{ const lc = cid.toLowerCase(); const o = NEW_ORDERS.find(x=>String(x.case_id).trim().toLowerCase() === lc); return o ? `<a href="#" class="caselink" data-open-case="${esc(o._id)}">#${cid}</a>` : mm; });
   h = h.replace(/@([^\s@#<]+)/g, (mm, nm)=>{ const e = EMPLOYEE_LIST.find(x=>String(x.name).trim().toLowerCase() === nm.toLowerCase()); return e ? `<span class="mention">@${esc(e.name)}</span>` : mm; });
   return h.replace(/\n/g, '<br>');
 }
@@ -3901,9 +3904,10 @@ function renderConn(){
   el.innerHTML = `<div class="ab-card" style="margin-bottom:12px"><b>🔌 การเชื่อมต่อระบบ (ของเครื่องนี้)</b>
     <div class="ab-grid"><div><b>หน้าเว็บ</b> ${esc(APP_VERSION)}</div><div><b>Apps Script (หลังบ้าน)</b> ${SERVER_VER ? 'เวอร์ชัน ' + SERVER_VER : 'เก่ามาก'} ${okv ? '<span style="color:#2F7D4F">✓ ใช้ได้</span>' : '<span style="color:var(--rose)">⚠ ต้องเวอร์ชัน ' + NEEDED_SERVER + ' ขึ้นไป</span>'}</div></div>
     <div style="font-size:12.5px;word-break:break-all"><b>ลิงก์ที่ใช้:</b> <code>${esc(API_URL)}</code><br>${overridden ? '⚠ <b>ตั้งเฉพาะเครื่องนี้</b> เครื่องอื่นของพนักงานยังใช้ลิงก์ที่ฝังในไฟล์เว็บ (ถ้าต่างกัน พนักงานจะเห็นข้อมูลไม่ตรงกัน เช่น มองไม่เห็นไฟล์แนบ)' : 'ฝังอยู่ในไฟล์เว็บ ทุกเครื่องใช้ลิงก์เดียวกันนี้'}</div>
-    <div class="actions" style="margin-top:8px"><button class="btn ghost sm" id="conn-copy">📋 คัดลอกลิงก์ที่ใช้อยู่</button><button class="btn primary sm" id="conn-setup">📲 ลิงก์ตั้งค่าเครื่องพนักงาน</button><button class="btn ghost sm" id="conn-organize" title="ย้ายโฟลเดอร์ไฟล์แนบของเคสเก่าเข้าโฟลเดอร์รายเดือนใน Google Drive (ลิงก์ไฟล์เดิมยังใช้ได้)">📁 จัดไฟล์เดิมเข้าโฟลเดอร์รายเดือน</button><a class="btn ghost sm" href="${esc(API_URL)}?action=names" target="_blank" rel="noopener" style="text-decoration:none">เปิดตรวจเวอร์ชัน</a>${overridden ? '<button class="btn ghost sm" id="conn-reset">กลับไปใช้ลิงก์ในไฟล์เว็บ</button>' : ''}</div>
+    <div class="actions" style="margin-top:8px"><button class="btn ghost sm" id="conn-copy">📋 คัดลอกลิงก์ที่ใช้อยู่</button><button class="btn primary sm" id="conn-setup">📲 ลิงก์ตั้งค่าเครื่องพนักงาน</button><button class="btn primary sm" id="conn-backup" title="ดาวน์โหลดออเดอร์ สถานะ ผู้ติดต่อ บิล เป็นไฟล์ Excel เก็บไว้เอง (ไม่รวมไฟล์แนบใน Drive)">💾 ดาวน์โหลดสำรองข้อมูล (Excel)</button><button class="btn ghost sm" id="conn-organize" title="ย้ายโฟลเดอร์ไฟล์แนบของเคสเก่าเข้าโฟลเดอร์รายเดือนใน Google Drive (ลิงก์ไฟล์เดิมยังใช้ได้)">📁 จัดไฟล์เดิมเข้าโฟลเดอร์รายเดือน</button><a class="btn ghost sm" href="${esc(API_URL)}?action=names" target="_blank" rel="noopener" style="text-decoration:none">เปิดตรวจเวอร์ชัน</a>${overridden ? '<button class="btn ghost sm" id="conn-reset">กลับไปใช้ลิงก์ในไฟล์เว็บ</button>' : ''}</div>
     ${LANES_ON() ? '<div class="note" style="margin:8px 0 0;color:#2F7D4F">✓ แยกช่อง MILLING (Zirconia / Emax / Premill) เปิดใช้งานแล้ว</div>' : '<div class="note" style="margin:8px 0 0">แยกช่อง MILLING (Zirconia / Emax / Premill) ยังปิดอยู่ — ต้องอัปเดต Apps Script เป็นเวอร์ชัน 12</div>'}
     <div class="note" style="margin:8px 0 0">ถ้าพนักงานบางคน<b>มองไม่เห็นไฟล์ที่คนอื่นแนบ</b>: เครื่องของเขาน่าจะยังเชื่อมต่อลิงก์ระบบหลังบ้านรุ่นเก่า ให้ส่งลิงก์ที่คัดลอกจากปุ่มด้านบนให้ผู้พัฒนาฝังลงไฟล์เว็บ (ครั้งเดียว ทุกเครื่องเปลี่ยนพร้อมกัน) หรืออัปเดตลิงก์เดิมให้เป็นโค้ดรุ่นใหม่ แล้วให้ทุกเครื่องกด Ctrl+F5</div></div>`;
+  document.getElementById('conn-backup').addEventListener('click', ()=>{ downloadXlsx('สำรองข้อมูล TOTU ' + todayLocal() + '.xlsx', backupSheets()); });
   document.getElementById('conn-copy').addEventListener('click', ()=>copyText(API_URL, 'คัดลอกลิงก์แล้ว ✓ วางส่งให้ผู้พัฒนาในแชทได้เลย'));
   document.getElementById('conn-setup').addEventListener('click', ()=>document.getElementById('setup-btn').click());
   document.getElementById('conn-organize').addEventListener('click', async e=>{
@@ -3917,6 +3921,50 @@ function renderConn(){
   const rs = document.getElementById('conn-reset');
   if(rs) rs.addEventListener('click', ()=>{ try{ localStorage.removeItem('totu_api_url'); }catch(e){} location.reload(); });
 }
+function openPinDialog(target){
+  const self = !target || target === CURRENT_EMPLOYEE.name, admin = isAdminUser(CURRENT_EMPLOYEE);
+  if(SERVER_VER < PIN_MIN){ showToast('ต้องอัปเดต Apps Script เป็นเวอร์ชัน ' + PIN_MIN + ' ก่อน จึงจะเปลี่ยน PIN ได้'); return; }
+  const old = document.getElementById('pin-modal'); if(old) old.remove();
+  const needOld = self && !admin;
+  const m = document.createElement('div'); m.id = 'pin-modal';
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+  m.innerHTML = `<div style="background:#fff;border-radius:12px;padding:20px;max-width:380px;width:100%"><h3 style="margin:0 0 8px">🔑 ${self ? 'เปลี่ยน PIN ของฉัน' : 'ตั้ง PIN ใหม่ให้ ' + esc(target)}</h3>
+    ${needOld ? '<label>PIN เดิม</label><input id="pin-old" type="password" autocomplete="off" style="width:100%">' : ''}
+    <label>PIN ใหม่ (ตัวเลข/ตัวอักษรอังกฤษ 4–12 ตัว)</label><input id="pin-new" type="password" autocomplete="off" style="width:100%">
+    <label>พิมพ์ PIN ใหม่อีกครั้ง</label><input id="pin-new2" type="password" autocomplete="off" style="width:100%">
+    <div id="pin-err" class="note" style="color:var(--rose);min-height:18px"></div>
+    ${self ? '' : '<div class="note">คนนี้จะถูกออกจากระบบทุกเครื่อง และต้องล็อกอินด้วย PIN ใหม่ — แจ้งเขาด้วย</div>'}
+    <div style="display:flex;gap:8px;justify-content:flex-end"><button type="button" class="btn ghost" id="pin-cancel">ยกเลิก</button><button type="button" class="btn primary" id="pin-save">บันทึก</button></div></div>`;
+  document.body.appendChild(m);
+  m.querySelector('#pin-cancel').addEventListener('click', ()=>m.remove());
+  m.querySelector('#pin-save').addEventListener('click', async ()=>{
+    const v = id=>{ const e = m.querySelector(id); return e ? e.value.trim() : ''; }, err = m.querySelector('#pin-err');
+    const np = v('#pin-new');
+    if(!/^[0-9A-Za-z]{4,12}$/.test(np)){ err.textContent = 'PIN ต้องเป็นตัวเลขหรือตัวอักษรอังกฤษ 4–12 ตัว'; return; }
+    if(np !== v('#pin-new2')){ err.textContent = 'PIN ใหม่สองช่องไม่ตรงกัน'; return; }
+    if(needOld && !v('#pin-old')){ err.textContent = 'กรอก PIN เดิมด้วย'; return; }
+    const b = m.querySelector('#pin-save'); b.disabled = true;
+    const r = await apiPost({action:'setPin', target: self ? '' : target, newPin: np, oldPin: v('#pin-old')});
+    b.disabled = false;
+    if(!(r && r.ok)){ err.textContent = apiErrorText(r); return; }
+    if(self && r.token){ saveEmployeeSession(Object.assign({}, CURRENT_EMPLOYEE, {token: r.token})); }
+    m.remove(); showToast('เปลี่ยน PIN แล้ว ✓' + (self ? '' : ' (' + target + ' ต้องล็อกอินใหม่)'));
+  });
+}
+function backupSheets(){
+  const b = LAST_BOOT || {}, flat = (list, pick)=>{
+    list = list || []; const keys = []; list.forEach(o=>Object.keys(o).forEach(k=>{ if((!pick || pick(k)) && !keys.includes(k)) keys.push(k); }));
+    return [keys].concat(list.map(o=>keys.map(k=>{ const v = o[k]; return v === null || v === undefined ? '' : (typeof v === 'object' ? JSON.stringify(v) : v); })));
+  };
+  return [
+    {name:'ออเดอร์', rows: flat(b.orders || RAW_ORDERS)},
+    {name:'สถานะแผนก', rows: flat(b.overrides)},
+    {name:'ผู้ติดต่อ', rows: flat(b.contacts)},
+    {name:'บิล', rows: flat(b.invoices)},
+    {name:'Abutment', rows: flat(b.abutments)},
+    {name:'พนักงาน (ไม่มี PIN)', rows: flat(b.employees, k=>k !== 'pin' && k !== 'token')},
+  ];
+}
 function renderPerm(){
   renderConn();
   const t = document.getElementById('perm-table');
@@ -3929,7 +3977,7 @@ function renderPerm(){
     const gaps = DEPARTMENTS.filter(d=>d.key !== 'order_intake' && !EMPLOYEE_LIST.some(e=>!isAdminUser(e) && allowedDeptKeys(e).includes(d.key)));
     gapEl.innerHTML = '<div class="note" style="margin:0 0 10px">💡 ให้ใครอัปโหลดรูป/ไฟล์ได้<b>ทุกขั้นตอน</b>: ใส่คำว่า <code>Files</code> ต่อท้ายในช่อง depts ของคนนั้น เช่น <code>CADCAM, Files</code> (ไม่ได้สิทธิ์ติ๊กขั้นตอนของแผนกอื่นเพิ่ม)</div>' + (gaps.length ? '<div class="note" style="color:var(--rose);font-weight:600;margin:0 0 10px">⚠ แผนกที่ยังไม่มีพนักงานทั่วไปรับผิดชอบ (มีแต่แอดมินที่กดได้): ' + gaps.map(d=>esc(d.label)).join(', ') + ' — เพิ่มชื่อพนักงานในชีท Employees แล้วใส่แผนกในช่อง depts (เช่น <code>Delivery</code> สำหรับคนส่งของ)</div>' : '');
   }
-  const head = ['พนักงาน','ทีม (department)','ระดับ','เมนูที่เห็น','สร้างออเดอร์','แก้ไข / ลบออเดอร์','สรุปหมอ / คลินิก / แดชบอร์ด','แก้สถานะแผนก (เฉพาะแผนกนี้)','อัปโหลดไฟล์'];
+  const head = ['พนักงาน','ทีม (department)','ระดับ','เมนูที่เห็น','สร้างออเดอร์','แก้ไข / ลบออเดอร์','สรุปหมอ / คลินิก / แดชบอร์ด','แก้สถานะแผนก (เฉพาะแผนกนี้)','อัปโหลดไฟล์','PIN'];
   const rows = EMPLOYEE_LIST.map(e=>{
     const admin = isAdminUser(e);
     const ex = explicitDeptKeys(e);
@@ -3946,9 +3994,10 @@ function renderPerm(){
       <td style="white-space:normal;min-width:200px">${esc(menus)}</td>
       <td style="text-align:center">${admin ? yes : no}</td><td style="text-align:center">${admin ? yes : no}</td><td style="text-align:center">${admin ? yes : no}</td>
       <td style="white-space:normal;min-width:220px">${depTxt}</td>
-      <td style="white-space:normal;min-width:150px">${canUploadAnyStep(e) ? '<b style="color:#2F7D4F">ทุกขั้นตอน</b>' + (admin ? '' : ' (Files)') : 'ขั้นของตัวเอง + ทั่วไป'}</td></tr>`;
+      <td style="white-space:normal;min-width:150px">${canUploadAnyStep(e) ? '<b style="color:#2F7D4F">ทุกขั้นตอน</b>' + (admin ? '' : ' (Files)') : 'ขั้นของตัวเอง + ทั่วไป'}</td><td><button type="button" class="btn ghost sm" data-setpin="${esc(e.name)}">🔑 ตั้ง PIN ใหม่</button></td></tr>`;
   });
   t.innerHTML = '<tr>' + head.map(h=>`<th>${h}</th>`).join('') + '</tr>' + rows.join('');
+  t.querySelectorAll('[data-setpin]').forEach(b=>b.addEventListener('click', ()=>openPinDialog(b.dataset.setpin)));
 }
 
 
@@ -5893,6 +5942,7 @@ document.getElementById('login-btn').addEventListener('click', async ()=>{
   }
 });
 document.getElementById('logout-btn').addEventListener('click', ()=>doLogout(''));
+document.getElementById('pin-btn').addEventListener('click', ()=>openPinDialog(''));
 
 // Roles: admin = all tabs | everyone else = only "search" (ตรวจสอบงาน) + "dept" (สถานะแผนก)
 // A person counts as admin if role = admin, or (role blank and department = Admin)
