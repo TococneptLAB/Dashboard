@@ -103,6 +103,10 @@
   .dep-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer;background:#fff;}
   .dep-chip.active{background:var(--ink);color:#fff;border-color:var(--ink);}
   .dep-row-select{padding:5px 8px;font-size:12.5px;border-radius:6px;}
+  .dep-views{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px;}
+  .dep-views button{flex:1 1 150px;border:2px solid var(--line);background:#fff;color:var(--ink);border-radius:12px;padding:12px 14px;font:inherit;font-weight:700;font-size:15px;cursor:pointer;line-height:1.3;}
+  .dep-views button.on{background:var(--ink);color:#fff;border-color:var(--ink);}
+  .dep-views button b{font-size:18px;margin-left:4px;}
   .dep-cards{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
   #login-screen{position:fixed;inset:0;background:var(--paper);z-index:100;display:flex;align-items:center;justify-content:center;}
   .login-box{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:32px;width:340px;max-width:90vw;}
@@ -469,6 +473,7 @@
       <h2>สถานะแผนก <span class="tag">DEPARTMENT STATUS</span></h2>
       <div id="dp-alert-chips" class="alert-chips"></div>
       <div class="dep-cards" id="dept-chips"></div>
+      <div class="dep-views" id="dep-views"></div>
       <div class="filters">
         <input id="dep-f-text" placeholder="ค้นหา: เลขเคส / คนไข้ / คลินิก" style="min-width:240px">
         <select id="dep-f-status"><option value="">สถานะแผนกทั้งหมด</option></select>
@@ -888,7 +893,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-12 รุ่น 84 (ย้ายหลังบ้านไปบัญชี Google ใหม่ ลิงก์ Apps Script ใหม่) • ต้องใช้ backend v16";
+const APP_VERSION = "2026-10-12 รุ่น 85 (หน้าแผนกแยกปุ่ม งานในแผนก / งานที่ฉันรับแล้ว / เสร็จแล้ว) • ต้องใช้ backend v16";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -5248,14 +5253,22 @@ function renderDept(){
   const doneN = rows.filter(x=>x.rec.status === 'เสร็จแล้ว').length;
   const myName = CURRENT_EMPLOYEE ? CURRENT_EMPLOYEE.name : '';
   const view = document.getElementById('dep-f-view').value;
+  const isMyWip = x=>x.rec.status === 'กำลังดำเนินการ' && x.rec.by === myName && x.r.status !== 'ยกเลิกเคส';
+  const queueOnlyN = rows.filter(x=>isActiveAt(x.r, CURRENT_DEPT) && !isMyWip(x)).length;
   const wipMine = rows.filter(x=>x.rec.status === 'กำลังดำเนินการ' && x.rec.by === myName && x.r.status !== 'ยกเลิกเคส').length;
   if(view === 'wip') rows = rows.filter(x=>x.rec.status === 'กำลังดำเนินการ' && x.rec.by === myName && x.r.status !== 'ยกเลิกเคส');
   else if(view === 'wipall') rows = rows.filter(x=>x.rec.status === 'กำลังดำเนินการ' && x.r.status !== 'ยกเลิกเคส');
-  else if(view === 'queue') rows = rows.filter(x=>isActiveAt(x.r, CURRENT_DEPT));
+  else if(view === 'queue') rows = rows.filter(x=>isActiveAt(x.r, CURRENT_DEPT) && !(x.rec.status === 'กำลังดำเนินการ' && x.rec.by === myName && x.r.status !== 'ยกเลิกเคส'));
   else if(view === 'ahead') rows = rows.filter(x=>!DONE_STATES.includes(x.rec.status) && x.rec.status !== 'ไม่เกี่ยวข้อง' && x.r.status !== 'ส่งแล้ว' && x.r.status !== 'ยกเลิกเคส' && !isActiveAt(x.r, CURRENT_DEPT));
   else if(view === 'done') rows = rows.filter(x=>x.rec.status === 'เสร็จแล้ว');
   else if(view === 'mine') rows = rows.filter(x=>x.rec.status === 'เสร็จแล้ว' && x.rec.by === myName);
   const overdueN = rows.filter(x=>isOverdue(x.r) && !['เสร็จแล้ว','ยกเลิก'].includes(x.rec.status)).length;
+  const vb = document.getElementById('dep-views');
+  if(vb){
+    vb.innerHTML = [['queue','📋 งานในแผนก (รอรับ)', queueOnlyN],['wip','🔧 งานที่ฉันรับแล้ว', wipMine],['done','✓ เสร็จแล้ว', doneN]]
+      .map(([k,l,n])=>`<button type="button" data-v="${k}" class="${view===k?'on':''}">${l}<b>${n}</b></button>`).join('');
+    vb.querySelectorAll('button').forEach(b=>b.addEventListener('click', ()=>{ document.getElementById('dep-f-view').value = b.dataset.v; renderDept(); }));
+  }
   document.getElementById('dept-count-note').textContent = `${DEPARTMENTS.find(d=>d.key===CURRENT_DEPT).label}: รอทำ ${queueN} • 🔧 ฉันรับไว้ ${wipMine} • ทำเสร็จแล้ว ${doneN} • แสดง ${rows.length.toLocaleString()} เคส${overdueN?` • เกินกำหนด ${overdueN} เคส`:''} (แสดงสูงสุด 300 แถวแรก)`;
 
   const t = document.getElementById('dept-table');
