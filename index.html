@@ -893,7 +893,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-12 รุ่น 90 (เคสงานแก้ไม่ตัดคูปอง) • ต้องใช้ backend v18";
+const APP_VERSION = "2026-10-12 รุ่น 91 (ปุ่ม 📦 ได้รับ Abutment โชว์ให้ทุกแผนกเสมอ + บอกถ้าหลังบ้านยังเก่า) • ต้องใช้ backend v18";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -3359,7 +3359,7 @@ function abutSectionHtml(o){
       <div class="ab-grid"><div><b>ยี่ห้อ</b> ${esc(a.brand || '-')}</div><div><b>รุ่น / ขนาด</b> ${esc(a.spec || '-')}</div><div><b>จำนวน</b> ${esc(a.qty || '-')}</div><div><b>ร้านที่สั่ง</b> ${esc(a.supplier || '-')}</div>
       <div><b>สั่งเมื่อ</b> ${esc(a.ordered_at ? fmtStamp(a.ordered_at) : '-')}</div><div><b>คาดว่าจะมา</b> ${esc(a.eta ? fmtDate(a.eta) : '-')}</div><div><b>เลขพัสดุ</b> ${esc(a.tracking_no || '-')}</div><div><b>ได้รับเมื่อ</b> ${esc(a.received_at ? fmtStamp(a.received_at) : '-')}</div></div>
       ${a.note ? `<div style="font-size:12.5px"><b>โน้ต:</b> ${esc(a.note)}</div>` : ''}</div>`;
-    if(!manage && (a.status === 'requested' || a.status === 'ordered') && SERVER_VER >= ABUT_RECEIVE_ALL_MIN){
+    if(!manage && (a.status === 'requested' || a.status === 'ordered')){
       inner += '<div class="actions" style="margin-bottom:6px"><button class="btn primary" id="ab-q-received">📦 ได้รับของแล้ว (ตอนนี้)</button></div><div class="note">ได้รับ Abutment แล้ว? ใครก็กดบันทึกได้ ระบบจดชื่อและเวลาไว้ให้</div>';
     }
     if(manage){
@@ -3418,7 +3418,10 @@ function bindAbutSection(o){
     await abutCall({action:'saveAbutment', order_id:id, case_id:caseId, fields:{status:'cancelled'}}, 'ยกเลิกการสั่งแล้ว');
   });
   if(g('ab-q-ordered')) g('ab-q-ordered').addEventListener('click', ()=>abutCall({action:'saveAbutment', order_id:id, case_id:caseId, fields:{status:'ordered', ordered_at:nowStamp()}}, '✓ บันทึกว่าสั่งแล้ว ' + nowStamp().replace('T', ' เวลา ')));
-  if(g('ab-q-received')) g('ab-q-received').addEventListener('click', ()=>abutCall({action:'saveAbutment', order_id:id, case_id:caseId, fields:{status:'received', received_at:nowStamp()}}, '📦 บันทึกว่าได้รับของแล้ว ' + nowStamp().replace('T', ' เวลา ')));
+  if(g('ab-q-received')) g('ab-q-received').addEventListener('click', async ()=>{
+    if(!canManageAbutment() && SERVER_VER < ABUT_RECEIVE_ALL_MIN){ showToast('ระบบหลังบ้าน (Apps Script) ยังเป็นเวอร์ชัน ' + SERVER_VER + ' — ต้องให้แอดมินอัปเดตเป็นเวอร์ชัน ' + ABUT_RECEIVE_ALL_MIN + ' ก่อน แผนกอื่นจึงจะกดได้'); return; }
+    await abutCall({action:'saveAbutment', order_id:id, case_id:caseId, fields:{status:'received', received_at:nowStamp()}}, '📦 บันทึกว่าได้รับของแล้ว ' + nowStamp().replace('T', ' เวลา '));
+  });
 }
 function abutRowsForTab(){
   const f = document.getElementById('ab-filter').value, q = normKey(document.getElementById('ab-q').value);
