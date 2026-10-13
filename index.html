@@ -893,7 +893,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-12 รุ่น 92 (ไทม์ไลน์/ขั้นตอนบอกว่าใครกดรับงาน (เริ่มทำ)) • ต้องใช้ backend v18";
+const APP_VERSION = "2026-10-12 รุ่น 93 (คูปอง: รวมชื่อคลินิกที่ต่างกันแค่สระ/วรรณยุกต์/อักขระซ่อน เช่น จั่นเจา) • ต้องใช้ backend v18";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -5440,7 +5440,7 @@ const CP_DEFAULT_KINDS = ['รากเทียม', 'ฟันธรรมด�
 function couponKinds(){ const k = readPrices().coupon_kinds; return k.length ? k : CP_DEFAULT_KINDS; }
 function cpNorm(x){ return String(x || '').trim().toLowerCase().replace(/\s+/g, ' '); }
 // two spellings of one clinic (e.g. "คลินิกทันตกรรมหมอจั่นเจา" = "คลินิกทันตกรรมจั่นเจา") are joined for coupons only: the order itself is not renamed
-function cpCore(name){ return cpNorm(name).replace(/คลินิกทันตกรรม|ทันตแพทย์|ทันตกรรม|คลินิก|ศูนย์|หมอ|ทพ\.?|ทพญ\.?|dental|clinic|dentist|dr\.?/g, '').replace(/[\s().,_\-\/]+/g, ''); }
+function cpCore(name){ return cpNorm(name).normalize('NFC').replace(/[\u200B-\u200D\uFEFF]/g, '').replace(/คลินิกทันตกรรม|ทันตแพทย์|ทันตกรรม|คลินิก|ศูนย์|หมอ|ทพ\.?|ทพญ\.?|dental|clinic|dentist|dr\.?/g, '').replace(/[\s().,_\-\/]+/g, '').replace(/[\u0E31\u0E34-\u0E3A\u0E47-\u0E4E]/g, ''); }   // เทียบแบบไม่สนสระบน/ล่างและวรรณยุกต์ (พิมพ์สลับลำดับ ั ่ ก็ยังเป็นชื่อเดียวกัน)
 // a case clinic written a little differently from the clinic that holds the coupons ("…หมอจั่นเจา" vs "…จั่นเจา") joins it automatically when exactly one coupon clinic has the same core name
 function cpAutoTo(name){
   const n = cpNorm(name), core = cpCore(name); if(!n || core.length < 3) return '';
