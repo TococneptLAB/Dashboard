@@ -916,7 +916,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-12 รุ่น 99 (คูปอง: ตารางสรุปรายคลินิก + Excel • ฟอร์ม Abutment มีแคตตาล็อก 7 ระบบ) • ต้องใช้ backend v20";
+const APP_VERSION = "2026-10-12 รุ่น 100 (คูปอง: PDF มีตารางสรุปรายคลินิกหน้าแรก + ตารางสรุปบนหน้าจอ + Excel) • ต้องใช้ backend v20";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -5937,7 +5937,9 @@ function couponReportPdf(){
     w.cases.filter(inMonth).sort((a, b)=>String(a.date_received || '').localeCompare(String(b.date_received || ''))).forEach(o=>det.push([fmtDate(o.date_received), w.clinic, o.doctor || '', o.case_id || '', o.patient || '', couponKindText(o) || '— ไม่ระบุ', q(o), o.coupon_status || '-']));
   });
   const when = ym ? 'ยอด ณ สิ้นเดือน ' + ym : 'ยอด ณ วันที่ ' + fmtDate(todayLocal());
-  const sections = [{heading:'สรุปยอดคูปองคงเหลือ — ' + when, kpi:'ให้ไว้รวม ' + tg.toLocaleString() + ' ซี่ • ใช้สะสม ' + tu.toLocaleString() + ' ซี่ • เหลือ ' + (tg - tu).toLocaleString() + ' ซี่', rows:sum}];
+  const crow = couponClinicRows(list), ckinds = [...new Set(couponKinds().concat(...crow.map(r=>Object.keys(r.kinds))))].filter(k=>crow.some(r=>r.kinds[k]));
+  const cmat = [['คลินิก'].concat(ckinds.map(k=>k + ' (เหลือ / ให้ไว้)'), ['รวมเหลือ', 'หมายเหตุ'])].concat(crow.map(r=>[r.clinic].concat(ckinds.map(k=>{ const x = r.kinds[k]; return x ? (x.granted - x.used) + ' / ' + x.granted : '–'; }), [Object.values(r.kinds).reduce((a, x)=>a + x.granted - x.used, 0), r.unkinded ? 'ยังไม่ระบุประเภท ' + r.unkinded + ' เคส' : ''])));
+  const sections = [{heading:'สรุปคูปองรายคลินิก — ' + when, kpi:crow.length + ' คลินิก • ให้ไว้รวม ' + tg.toLocaleString() + ' ซี่ • ใช้สะสม ' + tu.toLocaleString() + ' ซี่ • เหลือ ' + (tg - tu).toLocaleString() + ' ซี่', rows:cmat}, {heading:'รายละเอียดแยกตามหมอ / ประเภท — ' + when,rows:sum}];
   if(det.length > 1) sections.push({heading:'รายการเคสคูปอง' + (ym ? ' ประจำเดือน ' + ym : ''), rows:det, pageBreak:true});
   printPdf('สรุปคูปอง' + (ym ? '_' + ym : '_' + todayLocal()), 'สรุปคูปอง' + (qq ? ' (ค้นหา: ' + qq + ')' : ''), sections);
 }
