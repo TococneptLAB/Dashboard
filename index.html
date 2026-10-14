@@ -509,6 +509,7 @@
       <div id="cpw-admin"></div>
       <div id="cpw-merge"></div>
       <div class="cpr-bar" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0"><label style="font-size:12px">สรุปเดือน <input type="month" id="cpr-month" style="width:auto"></label><button type="button" class="btn ghost sm" id="cpr-btn">🖨 PDF สรุปคูปอง</button><span class="note" style="margin:0">เว้นเดือนว่าง = ยอดปัจจุบัน • พิมพ์ชื่อคลินิก/หมอในช่องค้นหาด้านบนเพื่อเลือกเฉพาะราย</span></div>
+      <div id="cpw-summary"></div>
       <h3 style="margin:10px 0 4px">🎫 กระเป๋าคูปอง (ให้ไว้ / ใช้ไป / เหลือ แยกตามประเภท)</h3>
       <div id="cpw-list"></div>
       <h3 style="margin:16px 0 4px">เคสคูปองรายหมอ</h3>
@@ -915,7 +916,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-12 รุ่น 98 (ฟอร์มสั่ง Abutment: เลือกจากแคตตาล็อก 7 ระบบ) • ต้องใช้ backend v20";
+const APP_VERSION = "2026-10-12 รุ่น 99 (คูปอง: ตารางสรุปรายคลินิก + Excel • ฟอร์ม Abutment มีแคตตาล็อก 7 ระบบ) • ต้องใช้ backend v20";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -3613,12 +3614,14 @@ const ABUT_CATALOG = (()=>{
   ];
   // Biotem AR Ti-base: Tibs-0{cuff}{open/H code} + suffix
   const biotemTb = (openCode, suf)=>[].concat(...[1, 2, 3, 4].map(c=>[['4.0 open', openCode, 'Open'], ['4.0', '4', 'Cylinder'], ['6.0', '6', 'Cylinder']].map(([h, k, nm])=>({ref:'Tibs-0' + c + k + ' ' + suf, gh:c, h, type:nm}))));
+  const biotemCem = (base, suf, maxC)=>[].concat(...[['4.0', '4', 4], ['5.5', '5', maxC], ['7.0', '7', maxC]].map(([h, k, mc])=>{ const o = []; for(let c = 1; c <= mc; c++) o.push({ref:'SAAT ' + base + c + k + ' ' + suf, gh:c, h, type:'Hex'}); return o; }));
   const biotem = [
     {key:'tibs', name:'AR Ti-base Abutment', dia:[
       ['4.0 N (Narrow) Hex', biotemTb('1', 'MSA').map(i=>Object.assign(i, {type:i.type + ' Hex'}))],
       ['4.0 N (Narrow) Non-hex', biotemTb('1', 'MNSA').map(i=>Object.assign(i, {type:i.type + ' Non-hex'}))],
       ['4.0 R (Regular) Hex', biotemTb('2', 'SA').map(i=>Object.assign(i, {type:i.type + ' Hex'}))],
       ['4.0 R (Regular) Non-hex', biotemTb('2', 'NSA').map(i=>Object.assign(i, {type:i.type + ' Non-hex'}))]]},
+    {key:'cem', name:'Cemented Abutment (Hex)', dia:[['4.5 N (Narrow)', biotemCem('305', 'MSA', 4)], ['4.5 R (Regular)', biotemCem('455', 'SA', 6)], ['5.5 R (Regular)', biotemCem('556', 'SA', 6)], ['6.5 R (Regular)', biotemCem('657', 'SA', 6)]]},
     {key:'multi', name:'Multi Ti-base (Non-hex, สำหรับ bridge)', dia:[['N / R', [{ref:'MTB48 S', type:'Non-hex'}]]]}
   ];
   return [
@@ -5749,12 +5752,37 @@ function walletChips(w){
   if(w.unkinded) chips.push(`<span class="cpd-chip neg" title="เคสคูปองที่ยังไม่ได้เลือกประเภท จึงยังไม่ถูกหักจากกระเป๋า">⚠ ยังไม่เลือกประเภท ${w.unkinded} เคส</span>`);
   return chips.join('');
 }
+function couponClinicRows(list){
+  const by = {};
+  list.forEach(w=>{
+    const r = by[w.clinic] || (by[w.clinic] = {clinic:w.clinic, kinds:{}, unkinded:0, docs:0});
+    r.docs++; r.unkinded += w.unkinded || 0;
+    Object.keys(w.kinds).forEach(k=>{ const x = r.kinds[k] || (r.kinds[k] = {granted:0, used:0}); x.granted += w.kinds[k].granted; x.used += w.kinds[k].used; });
+  });
+  return Object.values(by).sort((a, b)=>a.clinic.localeCompare(b.clinic, 'th'));
+}
+function renderCouponSummary(list){
+  const box = document.getElementById('cpw-summary'); if(!box) return;
+  const rows = couponClinicRows(list);
+  if(!rows.length){ box.innerHTML = ''; return; }
+  const kinds = [...new Set(couponKinds().concat(...rows.map(r=>Object.keys(r.kinds))))].filter(k=>rows.some(r=>r.kinds[k]));
+  const cell = x=>{ if(!x) return '<td class="num" style="color:#aaa">–</td>'; const left = x.granted - x.used; return `<td class="num" style="${left < 0 ? 'color:#b00020;font-weight:700' : left === 0 ? 'color:#b26a00;font-weight:700' : 'font-weight:700'}" title="ให้ไว้ ${x.granted} • ใช้ไป ${x.used}">${left}<span style="font-weight:400;color:#6b7a77;font-size:11px"> / ${x.granted}</span></td>`; };
+  box.innerHTML = `<h3 style="margin:10px 0 2px">📊 สรุปคูปองรายคลินิก (เหลือ / ให้ไว้ ทั้งหมด)</h3><div class="note" style="margin:0 0 6px">รวมทุกหมอของคลินิกนั้น • ตัวเลขแดง = ใช้เกินที่ให้ไว้ • ส้ม = หมดพอดี</div>
+    <div class="tablewrap" style="max-height:340px;overflow:auto"><table id="cpw-sum-table"><tr><th>คลินิก</th>${kinds.map(k=>'<th>' + esc(k) + '</th>').join('')}<th>รวมเหลือ</th><th></th></tr>${rows.map(r=>{
+      const tl = Object.values(r.kinds).reduce((a, x)=>a + x.granted - x.used, 0);
+      return `<tr><td><b>${esc(r.clinic)}</b></td>${kinds.map(k=>cell(r.kinds[k])).join('')}<td class="num"><b>${tl}</b></td><td>${r.unkinded ? '<span class="cpd-chip neg" title="เคสคูปองที่ยังไม่ได้เลือกประเภท">⚠ ยังไม่ระบุประเภท ' + r.unkinded + '</span>' : ''}</td></tr>`;
+    }).join('')}</table></div><div class="actions" style="margin:6px 0"><button type="button" class="btn ghost sm" id="cpw-sum-xlsx">⬇ Excel สรุปรายคลินิก</button></div>`;
+  document.getElementById('cpw-sum-xlsx').addEventListener('click', ()=>{
+    downloadXlsx('สรุปคูปองรายคลินิก ' + todayLocal() + '.xlsx', [{name:'สรุปรายคลินิก', rows:[['คลินิก'].concat(...kinds.map(k=>[k + ' ให้ไว้', k + ' ใช้', k + ' เหลือ']), ['รวมเหลือ', 'เคสยังไม่ระบุประเภท'])].concat(rows.map(r=>[r.clinic].concat(...kinds.map(k=>{ const x = r.kinds[k]; return x ? [x.granted, x.used, x.granted - x.used] : ['', '', '']; }), [Object.values(r.kinds).reduce((a, x)=>a + x.granted - x.used, 0), r.unkinded])))}]);
+  });
+}
 function renderCouponWallets(){
   const box = document.getElementById('cpw-list'); if(!box) return;
   if(typeof refreshCouponKindSelect==='function') refreshCouponKindSelect();
   const admin = isAdminUser(CURRENT_EMPLOYEE), qq = String(document.getElementById('cpd-q').value || '').trim().toLowerCase();
   const open = new Set([...box.querySelectorAll('details[open]')].map(d=>d.dataset.k));
   const list = couponWallets().filter(w=>!qq || (w.clinic + ' ' + w.doctor).toLowerCase().includes(qq));
+  renderCouponSummary(list);
   if(!list.length){ box.innerHTML = '<div class="note">ยังไม่ได้ให้คูปองกับใคร' + (admin ? ' — กด "＋ เพิ่มคูปองให้หมอ/คลินิก" ด้านบน' : '') + '</div>'; return; }
   box.innerHTML = list.map(w=>{
     const gr = w.grants.slice().sort((a, b)=>String(b.date || '').localeCompare(String(a.date || ''))).map(g=>`<tr><td>${esc(fmtDate(g.date))}</td><td>${esc(g.kind)}</td><td class="num">${Number(g.qty) > 0 ? '+' : ''}${esc(g.qty)}</td><td>${esc(g.note || '')}</td><td>${esc(g.by || '')}</td>${admin ? `<td><button type="button" class="btn ghost sm" data-cpw-del="${esc(g.id)}">ลบ</button></td>` : ''}</tr>`).join('');
