@@ -915,7 +915,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-12 รุ่น 97 (หน้าแผนก: คอลัมน์ ขอให้ใครทำ ระบุคนดีไซน์/ช่าง) • ต้องใช้ backend v20";
+const APP_VERSION = "2026-10-12 รุ่น 98 (ฟอร์มสั่ง Abutment: เลือกจากแคตตาล็อก Dentium/Osstem) • ต้องใช้ backend v20";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -3395,7 +3395,7 @@ function abutSectionHtml(o){
     }
   }
   if(manage && (a || stepsOn)){
-    inner += `<div id="ab-form" class="cm-note" style="display:none"><div class="grid form">
+    inner += `<div id="ab-form" class="cm-note" style="display:none"><div class="grid form">${abutPickerHtml()}
       <div class="field"><label>สถานะ</label><select id="ab_status"><option value="requested">รอสั่ง</option><option value="ordered">สั่งแล้ว รอของ</option><option value="received">ได้รับของแล้ว</option><option value="cancelled">ยกเลิก</option></select></div>
       <div class="field"><label>ยี่ห้อ / ระบบ</label><input id="ab_brand" list="dl-systems"></div>
       <div class="field"><label>รุ่น / ขนาด</label><input id="ab_spec" placeholder="เช่น Ti-base Ø4.5 GH2"></div>
@@ -3427,7 +3427,7 @@ function bindAbutSection(o){
     if(note === null) return;
     await abutCall({action:'requestAbutment', order_id:id, case_id:caseId, note:String(note).trim()}, '🔩 ส่งคำขอสั่ง Abutment แล้ว ขั้นตอนเปิดให้เคสนี้แล้ว');
   });
-  const form = g('ab-form');
+  const form = g('ab-form'); bindAbutPicker(g);
   const open = ()=>{
     if(!form) return;
     const v = (k, val)=>{ g(k).value = val || ''; };
@@ -3548,6 +3548,77 @@ function abutRowsForTab(){
     if(!q) return true;
     return [x.o.case_id, rpName(x.o, 'clinic'), x.o.patient, x.a.supplier, x.a.brand, x.a.spec, x.a.tracking_no].some(v=>normKey(v).includes(q));
   }).sort((p, r)=>(abutOverdue(r.a) - abutOverdue(p.a)) || ((abutDays(r.a) || 0) - (abutDays(p.a) || 0)));
+}
+const ABUT_CATALOG = (()=>{
+  const p2 = n=>String(Math.round(n * 10)).padStart(2, '0');
+  const HN = (hex, non, gh, extra)=>[Object.assign({ref:hex, gh, type:'Hex'}, extra), Object.assign({ref:non, gh, type:'Non-hex'}, extra)];
+  const dab = (d, gh)=>[].concat(...gh.map(g=>[{ref:'DAB ' + d + ' ' + p2(g) + ' H', gh:g, type:'Hex'}]));
+  const cd = (d, gh)=>[].concat(...gh.map(g=>HN('CDAB ' + d + ' ' + p2(g) + ' HE', 'CDAB ' + d + ' ' + p2(g) + ' NE', g)));
+  const bda = (c, gh)=>[].concat(...gh.map(g=>HN('BDA' + c + ' ' + p2(g) + ' H', 'BDA' + c + ' ' + p2(g) + ' N', g)));
+  const pairs = (fn, gh)=>[].concat(...gh.map(g=>fn(g)));
+  // Osstem TS Transfer: GSTA + D + H + G/H + (1|2|0)
+  const hCode = {'4.0':'4', '5.5':'6', '7.0':'7'};
+  const ts = (pre, dCode, hs, ghs, tail, dia)=>[].concat(...hs.map(h=>[].concat(...ghs.map(g=>HN(pre + ' ' + dCode + hCode[h] + g + tail, pre + ' ' + dCode + hCode[h] + g + tail + 'N', g, {h})))));
+  const G14 = [1, 2, 3, 4], G57 = [5, 6, 7], G47 = [1, 2, 3, 4, 5, 6, 7];
+  const tsT = (pre, dCode, hs, tail)=>ts(pre, dCode, hs, G47, tail);
+  const spA = (suf)=>[].concat(...[1, 2].map(g=>[].concat(...[3, 5].map(h=>HN('TSPTB 4' + h + g + suf, 'TSPTB 4' + h + g + suf + 'N', g, {h:h + '.0'})))));
+  const spBItems = (d, suf)=>{ const o = []; [1, 2, 3, 4].forEach(g=>[['Open', '4', suf], ['Cylinder H4', '4', 'C'], ['Cylinder H6', '6', suf]].forEach(([nm, h, sf])=>HN('TSPL ' + d + h + g + sf, 'TSPL ' + d + h + g + sf + 'N', g, {h:h + '.0', kind:nm}).forEach(it=>{ it.type = nm + ' ' + it.type; o.push(it); }))); return o; };
+  const dentiumSL = [
+    {key:'dual', name:'Dual Abutment [Hex]', dia:[['4.5', dab('45', [1, 1.5, 2.5, 3.5, 4.5, 5.5])], ['5.5', dab('55', [1.5, 2.5, 3.5, 4.5, 5.5])], ['6.5', dab('65', [1.5, 2.5, 3.5, 4.5, 5.5])]]},
+    {key:'tibase', name:'Ti-Base Custom Abutment', dia:[['4.5', cd('45', [0.5, 1.5])], ['5.5', cd('55', [1, 2])]]},
+    {key:'blank', name:'Titanium Abutment Blank', dia:[['10', HN('CMAB 10 HAL', 'CMAB 10 NA')], ['14', HN('CMAB 14 HAL', 'CMAB 14 NA')]]}
+  ];
+  const brTissue = [
+    {key:'sml', name:'Screw Metal Link (H5.5)', dia:[['4.0', pairs(g=>HN('BSMI40 ' + p2(g) + ' H', 'BSMI40 ' + p2(g) + ' N', g), [1, 2, 3])]]},
+    {key:'tibase', name:'Ti-Base', dia:[['3.8 (หน้า)', pairs(g=>HN('BDDC38' + p2(g) + 'HO', 'BDDC38' + p2(g) + 'NO', g), [0.5, 1, 2])], ['5.0 (หลัง)', pairs(g=>HN('BDDC50' + p2(g) + 'H', 'BDDC50' + p2(g) + 'N', g), [1, 2])]]},
+    {key:'digital', name:'Digital Abutment (H4.5)', dia:[['3.8 (หน้า)', pairs(g=>HN('BDSC38' + p2(g) + 'H', 'BDSC38' + p2(g) + 'N', g), [0.5, 1, 2])], ['5.0 (หลัง)', pairs(g=>HN('BDSC50' + p2(g) + 'H', 'BDSC50' + p2(g) + 'N', g), [1, 2])]]}
+  ];
+  const brBone = [
+    {key:'tibase', name:'Ti-Base', dia:[['3.8 (หน้า)', pairs(g=>HN('BDDA38' + p2(g) + 'HO', 'BDDA38' + p2(g) + 'N', g), [1.5, 2.5, 3.5])], ['5.0 (หลัง)', pairs(g=>HN('BDDA50' + p2(g) + 'H', 'BDDA50' + p2(g) + 'N', g), [2.5, 3.5])]]},
+    {key:'digital', name:'Digital Abutment', dia:[['3.8 (หน้า)', pairs(g=>HN('BDS38' + p2(g) + 'H', 'BDS38' + p2(g) + 'N', g), [1, 2, 3])], ['5.0 (หลัง)', pairs(g=>HN('BDS50' + p2(g) + 'H', 'BDS50' + p2(g) + 'N', g), [2, 3])]]},
+    {key:'dual', name:'Dual Abutment', dia:[['4.0 (H6.0)', bda('38', [1.5, 2.5, 3.5, 4.5, 5.5])], ['5.0 (H5.5)', bda('50', [1.5, 2.5, 3.5, 4.5, 5.5])], ['6.2 (H5.0)', bda('62', [1.5, 2.5, 3.5, 4.5, 5.5])]]},
+    {key:'blank', name:'Ti-Blank', dia:[['10', HN('BXTB10H', 'BXTB10N')], ['14', HN('BXTB14H', 'BXTB14N')]]}
+  ];
+  const osstem = [
+    {key:'ta', name:'Transfer Abutment', dia:[
+      ['4.0 Mini', ts('GSTA', '4', ['5.5', '7.0'], G47, '2')],
+      ['4.5 Mini', ts('GSTA', '4', ['5.5', '7.0'], G47, '1')],
+      ['4.5 Regular', ts('GSTAS', '4', ['5.5', '7.0'], G47, '1')],
+      ['5.0 Regular', ts('GSTA', '5', ['4.0', '5.5', '7.0'], G47, '0')],
+      ['6.0 Regular', ts('GSTA', '6', ['4.0', '5.5', '7.0'], G47, '0')],
+      ['7.0 Regular', ts('GSTA', '7', ['4.0', '5.5'], G47, '0')]]},
+    {key:'la', name:'Link Abutment for Public (A)', dia:[['4.0 Mini', spA('M')], ['4.5 Regular', spA('R')]]},
+    {key:'lb', name:'Link Abutment for Public (B)', dia:[['4.0 Mini', spBItems('40', 'M')], ['4.5 Regular', spBItems('45', 'R')]]},
+    {key:'lc', name:'Link Abutment for Cerec (G/H 0.6)', dia:[['4.5 Mini', HN('TSCT BM', 'TSCT BMN')], ['4.5 Regular', HN('TSCT BR', 'TSCT BRN')]]}
+  ];
+  return [
+    {key:'sl', name:'Dentium SuperLine', lines:dentiumSL},
+    {key:'bt', name:'Dentium Bright (Tissue level)', lines:brTissue},
+    {key:'bb', name:'Dentium Bright (Bone level)', lines:brBone},
+    {key:'os', name:'Osstem TS', lines:osstem}
+  ];
+})();
+function abutPickerHtml(){
+  return '<div class="field" style="grid-column:1/-1"><label>🧩 เลือกจากแคตตาล็อก (เลือกแล้วระบบกรอกยี่ห้อ/รุ่นให้)</label><div style="display:flex;gap:6px;flex-wrap:wrap">'
+    + '<select id="dc_brand"><option value="">— ยี่ห้อ/ระบบ —</option>' + ABUT_CATALOG.map(b=>'<option value="' + b.key + '">' + esc(b.name) + '</option>').join('') + '</select>'
+    + '<select id="dc_line" disabled><option value="">— ชนิด —</option></select>'
+    + '<select id="dc_dia" disabled><option value="">— เส้นผ่านศูนย์กลาง —</option></select>'
+    + '<select id="dc_item" disabled><option value="">— G/H · ชนิด —</option></select></div></div>';
+}
+function abutItemLabel(it){ return (it.gh ? 'G/H ' + it.gh + ' · ' : '') + (it.h ? 'H' + it.h + ' · ' : '') + it.type + ' · ' + it.ref; }
+function bindAbutPicker(g){
+  const brand = g('dc_brand'), line = g('dc_line'), dia = g('dc_dia'), item = g('dc_item'); if(!brand) return;
+  const B = ()=>ABUT_CATALOG.find(x=>x.key === brand.value), L = ()=>{ const b = B(); return b && b.lines.find(x=>x.key === line.value); };
+  const reset = (el, ph, opts)=>{ el.innerHTML = '<option value="">' + ph + '</option>' + opts; el.disabled = !opts; };
+  brand.addEventListener('change', ()=>{ const b = B(); reset(line, '— ชนิด —', b ? b.lines.map(l=>'<option value="' + l.key + '">' + esc(l.name) + '</option>').join('') : ''); reset(dia, '— เส้นผ่านศูนย์กลาง —', ''); reset(item, '— G/H · ชนิด —', ''); });
+  line.addEventListener('change', ()=>{ const l = L(); reset(dia, '— เส้นผ่านศูนย์กลาง —', l ? l.dia.map(d=>'<option value="' + esc(d[0]) + '">Ø ' + esc(d[0]) + '</option>').join('') : ''); reset(item, '— G/H · ชนิด —', ''); });
+  dia.addEventListener('change', ()=>{ const l = L(), d = l && l.dia.find(x=>x[0] === dia.value); reset(item, '— G/H · ชนิด —', d ? d[1].map((it, i)=>'<option value="' + i + '">' + esc(abutItemLabel(it)) + '</option>').join('') : ''); });
+  item.addEventListener('change', ()=>{
+    const b = B(), l = L(), d = l && l.dia.find(x=>x[0] === dia.value), it = d && d[1][+item.value]; if(!it || item.value === '') return;
+    g('ab_brand').value = b.name;
+    g('ab_spec').value = it.ref + ' — ' + l.name + ' Ø' + d[0] + (it.gh ? ' G/H ' + it.gh : '') + (it.h ? ' H' + it.h : '') + ' ' + it.type;
+    if(!g('ab_qty').value.trim()) g('ab_qty').value = '1';
+  });
 }
 function renderAbutTab(){
   const t = document.getElementById('ab-table');
