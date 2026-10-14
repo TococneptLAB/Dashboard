@@ -916,7 +916,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-12 รุ่น 100 (Abutment: สั่งได้หลายรหัสในเคสเดียว • คูปอง: PDF + ตารางสรุปรายคลินิก) • ต้องใช้ backend v20";
+const APP_VERSION = "2026-10-12 รุ่น 102 (Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -3384,7 +3384,7 @@ function abutSectionHtml(o){
     inner += `<div class="ab-card"><div><span class="badge ${AB_BADGE[a.status] || ''}">${esc(AB_STATUS[a.status] || a.status)}</span>
       ${od ? `<span class="badge b-hold" style="margin-left:6px">เกินกำหนด ${od} วัน</span>` : ''}
       <span style="color:var(--muted);font-size:12px;margin-left:8px">ขอโดย ${esc(a.requested_by || '-')} • ${esc(fmtStamp(a.requested_at))}${days !== null && a.status !== 'received' ? ' • ค้าง ' + days + ' วัน' : ''}</span></div>
-      <div class="ab-grid"><div><b>ยี่ห้อ</b> ${esc(a.brand || '-')}</div><div><b>รุ่น / ขนาด</b> ${esc(a.spec || '-')}</div><div><b>จำนวน</b> ${esc(a.qty || '-')}</div><div><b>ร้านที่สั่ง</b> ${esc(a.supplier || '-')}</div>
+      <div class="ab-grid"><div><b>ยี่ห้อ</b> ${esc(a.brand || '-')}</div><div><b>รุ่น / ขนาด</b> ${abutSpecHtml(a.spec)}</div><div><b>จำนวน</b> ${esc(a.qty || '-')}</div><div><b>ร้านที่สั่ง</b> ${esc(a.supplier || '-')}</div>
       <div><b>สั่งเมื่อ</b> ${esc(a.ordered_at ? fmtStamp(a.ordered_at) : '-')}</div><div><b>คาดว่าจะมา</b> ${esc(a.eta ? fmtDate(a.eta) : '-')}</div><div><b>เลขพัสดุ</b> ${esc(a.tracking_no || '-')}</div><div><b>ได้รับเมื่อ</b> ${esc(a.received_at ? fmtStamp(a.received_at) : '-')}</div></div>
       ${a.note ? `<div style="font-size:12.5px"><b>โน้ต:</b> ${esc(a.note)}</div>` : ''}</div>`;
     if(!manage && (a.status === 'requested' || a.status === 'ordered')){
@@ -3428,7 +3428,7 @@ function bindAbutSection(o){
     if(note === null) return;
     await abutCall({action:'requestAbutment', order_id:id, case_id:caseId, note:String(note).trim()}, '🔩 ส่งคำขอสั่ง Abutment แล้ว ขั้นตอนเปิดให้เคสนี้แล้ว');
   });
-  const form = g('ab-form'); bindAbutPicker(g);
+  const form = g('ab-form'); bindAbutPicker(g, o);
   const open = ()=>{
     if(!form) return;
     const v = (k, val)=>{ g(k).value = val || ''; };
@@ -3624,6 +3624,7 @@ const ABUT_CATALOG = (()=>{
     {key:'cem', name:'Cemented Abutment (Hex)', dia:[['4.5 N (Narrow)', biotemCem('305', 'MSA', 4)], ['4.5 R (Regular)', biotemCem('455', 'SA', 6)], ['5.5 R (Regular)', biotemCem('556', 'SA', 6)], ['6.5 R (Regular)', biotemCem('657', 'SA', 6)]]},
     {key:'multi', name:'Multi Ti-base (Non-hex, สำหรับ bridge)', dia:[['N / R', [{ref:'MTB48 S', type:'Non-hex'}]]]}
   ];
+  const straumann = [{key: "asc", name: "Variobase ASC / Crown AS (Angled Solution)", dia: [["BLX Ø4.5", [{ref: "062.4972", type: "⚠ ยังไม่ยืนยัน", gh: 1.5, h: "5.5"}]], ["NC Ø4.1", [{ref: "022.0084", type: "", gh: 1, h: "3.5"}, {ref: "022.0093", type: "", gh: 1, h: "5.5"}]], ["RC Ø4.7", [{ref: "022.0087", type: "", gh: 1, h: "3.5"}, {ref: "022.0096", type: "", gh: 1, h: "5.5"}]], ["RN Ø5.1", [{ref: "048.880", type: "", h: "6"}]], ["WN Ø7", [{ref: "048.881", type: "", h: "6.5"}]], ["WT Ø7", [{ref: "037.2203", type: "", h: "7.5"}]]]}, {key: "str", name: "Variobase Straight (Crown)", dia: [["BLX RB Ø3.8", [{ref: "062.4934", type: "⚠ ยังไม่ยืนยัน", gh: 1.5, h: "5.5"}, {ref: "062.4935", type: "⚠ ยังไม่ยืนยัน", gh: 2.5, h: "5.5"}, {ref: "062.4936", type: "⚠ ยังไม่ยืนยัน", gh: 3.5, h: "5.5"}]], ["BLX WB Ø5.5", [{ref: "062.4953", type: "⚠ ยังไม่ยืนยัน", gh: 0.75, h: "5.5"}, {ref: "062.4954", type: "⚠ ยังไม่ยืนยัน", gh: 1.5, h: "5.5"}]], ["BLX WB Ø4.5", [{ref: "062.4944", type: "⚠ ยังไม่ยืนยัน", gh: 1.5, h: "5.5"}, {ref: "062.4945", type: "⚠ ยังไม่ยืนยัน", gh: 2.5, h: "5.5"}, {ref: "062.4946", type: "⚠ ยังไม่ยืนยัน", gh: 3.5, h: "5.5"}]], ["NC Ø3.8", [{ref: "025.2921", type: "⚠ ยังไม่ยืนยัน", gh: 1, h: "3.5"}, {ref: "022.0027", type: "", gh: 1, h: "5.5"}, {ref: "022.0102", type: "", gh: 2, h: "3.5"}, {ref: "022.0106", type: "", gh: 2, h: "5.5"}, {ref: "022.0104", type: "", gh: 3, h: "3.5"}, {ref: "022.0108", type: "", gh: 3, h: "5.5"}]], ["RC Ø4.5", [{ref: "025.4921", type: "⚠ ยังไม่ยืนยัน", gh: 1, h: "3.5"}, {ref: "022.0026", type: "", gh: 1, h: "5.5"}, {ref: "022.0103", type: "", gh: 2, h: "3.5"}, {ref: "022.0107", type: "", gh: 2, h: "5.5"}, {ref: "022.0105", type: "", gh: 3, h: "3.5"}, {ref: "022.0109", type: "", gh: 3, h: "5.5"}]], ["RN", [{ref: "022.0022", type: "⚠ ยังไม่ยืนยัน", h: "6"}]], ["WN", [{ref: "022.0023", type: "⚠ ยังไม่ยืนยัน", h: "6.5"}]], ["WT Ø7", [{ref: "037.2201", type: "", h: "6.5"}]]]}];
   return [
     {key:'sl', name:'Dentium SuperLine', lines:dentiumSL},
     {key:'bt', name:'Dentium Bright (Tissue level)', lines:brTissue},
@@ -3631,7 +3632,8 @@ const ABUT_CATALOG = (()=>{
     {key:'os', name:'Osstem TS', lines:osstem},
     {key:'nb', name:'Neobiotech IS', lines:neobiotech},
     {key:'nd', name:'Neodent GM', lines:neodent},
-    {key:'bt2', name:'Biotem AR', lines:biotem}
+    {key:'bt2', name:'Biotem AR', lines:biotem},
+    {key:'st', name:'Straumann Variobase', lines:straumann}
   ];
 })();
 function abutPickerHtml(){
@@ -3642,7 +3644,7 @@ function abutPickerHtml(){
     + '<select id="dc_item" disabled><option value="">— G/H · ชนิด —</option></select></div><div id="dc_list" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"></div><div class="note" style="margin-top:2px">เลือกรุ่นแล้วจะเพิ่มเข้ารายการทันที — เลือกอีกรุ่นเพื่อสั่งเพิ่มได้หลายรหัส</div></div>';
 }
 function abutItemLabel(it){ return (it.gh ? 'G/H ' + it.gh + ' · ' : '') + (it.h ? 'H' + it.h + ' · ' : '') + (it.type ? it.type + ' · ' : '') + it.ref; }
-function bindAbutPicker(g){
+function bindAbutPicker(g, o){
   const brand = g('dc_brand'), line = g('dc_line'), dia = g('dc_dia'), item = g('dc_item'); if(!brand) return;
   const B = ()=>ABUT_CATALOG.find(x=>x.key === brand.value), L = ()=>{ const b = B(); return b && b.lines.find(x=>x.key === line.value); };
   const reset = (el, ph, opts)=>{ el.innerHTML = '<option value="">' + ph + '</option>' + opts; el.disabled = !opts; };
@@ -3650,15 +3652,21 @@ function bindAbutPicker(g){
   line.addEventListener('change', ()=>{ const l = L(); reset(dia, '— เส้นผ่านศูนย์กลาง —', l ? l.dia.map(d=>'<option value="' + esc(d[0]) + '">Ø ' + esc(d[0]) + '</option>').join('') : ''); reset(item, '— G/H · ชนิด —', ''); });
   dia.addEventListener('change', ()=>{ const l = L(), d = l && l.dia.find(x=>x[0] === dia.value); reset(item, '— G/H · ชนิด —', d ? d[1].map((it, i)=>'<option value="' + i + '">' + esc(abutItemLabel(it)) + '</option>').join('') : ''); });
   const picked = [];
+  if(g('dc_list') && !g('dc_pos-note')) g('dc_list').insertAdjacentHTML('afterend', '<div id="dc_pos-note" class="note" style="margin-top:4px">' + (o && o.position ? 'ซี่ของเคสนี้: <b>' + esc(o.position) + '</b> — ' : '') + 'พิมพ์ในช่องของแต่ละรหัสว่าใช้กับซี่ไหน (ไม่บังคับ)</div>');
   const sync = ()=>{
     const box = g('dc_list');
-    box.innerHTML = picked.map((x, i)=>`<span class="cpd-chip wal" style="display:inline-flex;gap:4px;align-items:center"><b>${esc(x.ref)}</b><input type="number" min="1" value="${x.qty}" data-i="${i}" class="dc-q" style="width:48px;padding:2px 4px"> ซี่ <a href="#" data-dc-del="${i}" style="text-decoration:none">✕</a></span>`).join('');
+    box.innerHTML = picked.map((x, i)=>`<span class="cpd-chip wal" style="display:inline-flex;gap:4px;align-items:center;flex-wrap:wrap"><b>${esc(x.ref)}</b><input type="number" min="1" value="${x.qty}" data-i="${i}" class="dc-q" style="width:48px;padding:2px 4px" title="จำนวน (ชิ้น)"> ชิ้น <input type="text" value="${esc(x.teeth || '')}" data-i="${i}" class="dc-t" placeholder="ใช้ซี่ไหน เช่น 36" maxlength="20" style="width:120px;padding:2px 4px"> <a href="#" data-dc-del="${i}" style="text-decoration:none">✕</a></span>`).join('');
+    box.querySelectorAll('.dc-t').forEach(inp=>inp.addEventListener('input', ()=>{ picked[+inp.dataset.i].teeth = inp.value.trim(); fill(); }));
     box.querySelectorAll('.dc-q').forEach(inp=>inp.addEventListener('change', ()=>{ picked[+inp.dataset.i].qty = Math.max(1, Math.round(Number(inp.value)) || 1); sync(); }));
     box.querySelectorAll('[data-dc-del]').forEach(a=>a.addEventListener('click', e=>{ e.preventDefault(); picked.splice(+a.dataset.dcDel, 1); sync(); }));
+    fill();
+  };
+  const fill = ()=>{
     if(!picked.length) return;
     g('ab_brand').value = [...new Set(picked.map(x=>x.brand))].join(' / ');
-    let sp = picked.map(x=>x.spec + (x.qty > 1 ? ' ×' + x.qty : '')).join(' + ');
-    if(sp.length > 195) sp = picked.map(x=>x.ref + (x.qty > 1 ? ' ×' + x.qty : '')).join(' + ');      // the server keeps 200 characters: fall back to the codes only
+    const tail = x=>(x.qty > 1 ? ' ×' + x.qty : '') + (x.teeth ? ' (ซี่ ' + x.teeth + ')' : '');
+    let sp = picked.map(x=>x.spec + tail(x)).join(' + ');
+    if(sp.length > 195) sp = picked.map(x=>x.ref + tail(x)).join(' + ');      // the server keeps 200 characters: fall back to the codes only
     g('ab_spec').value = sp;
     g('ab_qty').value = String(picked.reduce((a, x)=>a + x.qty, 0));
   };
@@ -3669,6 +3677,17 @@ function bindAbutPicker(g){
     if(same) same.qty++; else picked.push({ref:it.ref, brand:b.name, spec, qty:1});
     item.value = ''; sync();
   });
+}
+function abutSpecHtml(spec){
+  const parts = String(spec || '').split(' + ').map(x=>x.trim()).filter(Boolean);
+  if(parts.length < 2) return esc(spec || '-');
+  return '<ol style="margin:2px 0 0;padding-left:20px">' + parts.map(x=>{
+    const m = x.match(/^(\S+(?: \S+)?)\s+—\s+(.*)$/) || x.match(/^(.+?)(\s×\d+.*)$/);
+    const teeth = (x.match(/\(ซี่ ([^)]*)\)/) || [])[1], qty = (x.match(/×(\d+)/) || [])[1];
+    const code = x.split(' — ')[0].replace(/\s×\d+.*$/, '').replace(/\s\(ซี่.*$/, '');
+    const desc = x.indexOf(' — ') >= 0 ? x.slice(x.indexOf(' — ') + 3).replace(/\s×\d+.*$/, '').replace(/\s\(ซี่.*$/, '') : '';
+    return '<li><b>' + esc(code) + '</b>' + (qty ? ' <span class="badge b-prog">×' + qty + '</span>' : '') + (teeth ? ' <span class="badge b-wait">ซี่ ' + esc(teeth) + '</span>' : '') + (desc ? '<div class="note" style="margin:0">' + esc(desc) + '</div>' : '') + '</li>';
+  }).join('') + '</ol>';
 }
 function renderAbutTab(){
   const t = document.getElementById('ab-table');
@@ -3686,7 +3705,7 @@ function renderAbutTab(){
   t.innerHTML = '<tr><th>เลขเคส</th><th>คลินิก</th><th>คนไข้</th><th>ตำแหน่งฟัน</th><th>ยี่ห้อ / รุ่น</th><th>จำนวน</th><th>ร้านที่สั่ง</th><th>สถานะ</th><th>ขอโดย</th><th>ค้าง</th><th>คาดว่าจะมา</th><th>เลขพัสดุ</th><th></th></tr>' +
     rows.map(({a, o})=>{
       const od = abutOverdue(a), dd = abutDays(a);
-      return `<tr><td>${caseLink(o)}</td><td>${esc(rpName(o, 'clinic'))}</td><td>${esc(o.patient || '-')}</td><td>${esc(o.position || '-')}</td><td>${esc([a.brand, a.spec].filter(Boolean).join(' ') || '-')}</td><td>${esc(a.qty || '-')}</td><td>${esc(a.supplier || '-')}</td>
+      return `<tr><td>${caseLink(o)}</td><td>${esc(rpName(o, 'clinic'))}</td><td>${esc(o.patient || '-')}</td><td>${esc(o.position || '-')}</td><td>${a.brand ? esc(a.brand) + ' ' : ''}${abutSpecHtml(a.spec)}</td><td>${esc(a.qty || '-')}</td><td>${esc(a.supplier || '-')}</td>
         <td><span class="badge ${AB_BADGE[a.status] || ''}">${esc(AB_STATUS[a.status] || a.status)}</span></td><td>${esc(a.requested_by || '-')}<div style="font-size:11px;color:var(--muted)">${esc(fmtStamp(a.requested_at))}</div></td>
         <td>${a.status === 'received' || a.status === 'cancelled' ? '-' : daysCell(dd)}</td><td>${a.eta ? esc(fmtDate(a.eta)) : '-'}${od ? `<div><span class="badge b-hold">เกิน ${od} วัน</span></div>` : ''}</td><td>${esc(a.tracking_no || '-')}</td>
         <td style="white-space:nowrap">${a.status === 'requested' ? `<button class="btn primary sm" data-ab-q="ordered" data-id="${esc(a.order_id)}">✓ สั่งแล้ว</button>` : ''}${a.status === 'ordered' ? `<button class="btn primary sm" data-ab-q="received" data-id="${esc(a.order_id)}">📦 รับของแล้ว</button>` : ''} <button class="btn ghost sm" data-open-case="${esc(a.order_id)}">✏️ รายละเอียด</button></td></tr>`;
