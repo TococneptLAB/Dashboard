@@ -237,17 +237,19 @@
     .progress-legend{display:none;}
     #dept-table td:nth-child(1){display:flex;grid-row:1 / span 4;justify-content:center;align-items:center;}
     #dept-table td:nth-child(1) .dep-tick{width:100%;min-height:64px;font-size:15px;}
-    #dept-table td:nth-child(2){display:block;font-size:17px;font-weight:800;}
-    #dept-table td:nth-child(3),#dept-table td:nth-child(4){display:block;font-size:14px;}
-    #dept-table td:nth-child(5){display:block;font-size:13px;color:var(--muted);}
-    #dept-table td:nth-child(5)::after{content:" • " attr(data-q) ;}
-    #dept-table td:nth-child(8),#dept-table td:nth-child(9){display:block;grid-column:2;font-size:13px;}
-    #dept-table td:nth-child(8)::before{content:"ส่งออก: ";color:var(--muted);}
-    #dept-table td:nth-child(9)::before{content:"นัด: ";color:var(--muted);}
-    #dept-table td:nth-child(15){display:block;grid-column:2;font-size:14px;font-weight:700;color:#8A5200;}
-    #dept-table td:nth-child(15):empty{display:none;}
-    #dept-table td:nth-child(16){display:block;grid-column:2;}
+    #dept-table td:nth-child(2){display:block;grid-column:2;font-size:13px;order:1;}
+    #dept-table td:nth-child(2) select{width:100%;min-height:40px;font-size:14px;}
+    #dept-table td:nth-child(3){display:block;font-size:17px;font-weight:800;}
+    #dept-table td:nth-child(4),#dept-table td:nth-child(5){display:block;font-size:14px;}
+    #dept-table td:nth-child(6){display:block;font-size:13px;color:var(--muted);}
+    #dept-table td:nth-child(6)::after{content:" • " attr(data-q) ;}
+    #dept-table td:nth-child(9),#dept-table td:nth-child(10){display:block;grid-column:2;font-size:13px;}
+    #dept-table td:nth-child(9)::before{content:"ส่งออก: ";color:var(--muted);}
+    #dept-table td:nth-child(10)::before{content:"นัด: ";color:var(--muted);}
+    #dept-table td:nth-child(16){order:0;display:block;grid-column:2;font-size:14px;font-weight:700;color:#8A5200;}
     #dept-table td:nth-child(16):empty{display:none;}
+    #dept-table td:nth-child(17){display:block;grid-column:2;}
+    #dept-table td:nth-child(17):empty{display:none;}
   }
   @media (pointer:coarse){
     .cm-step .btn{min-height:44px;padding:8px 16px;font-size:14.5px;}
@@ -483,6 +485,7 @@
 <select id="dep-f-view" title="มุมมองงาน">
           <option value="queue">งานรอทำ (ถึงแผนกนี้แล้ว)</option>
           <option value="wip">🔧 งานที่ฉันรับไว้ (กำลังทำ)</option>
+          <option value="forme">👤 ขอให้ฉันทำ</option>
           <option value="wipall">▶ กำลังทำทั้งแผนก (ทุกคน)</option>
           <option value="ahead">ทำล่วงหน้าได้ (ยังไม่ถึงคิว)</option>
           <option value="done">ทำเสร็จแล้ว (แผนกนี้)</option>
@@ -912,7 +915,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-12 รุ่น 96 (ส่งงานแล็บนอก: Milling / Abutment + แท็บ 🏭 แล็บนอก) • ต้องใช้ backend v19";
+const APP_VERSION = "2026-10-12 รุ่น 97 (หน้าแผนก: คอลัมน์ ขอให้ใครทำ ระบุคนดีไซน์/ช่าง) • ต้องใช้ backend v20";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -996,6 +999,7 @@ const NEEDED_SERVER = 10;
 const PIN_MIN = 17;
 const ABUT_RECEIVE_ALL_MIN = 18;
 const OUTSOURCE_MIN = 19;
+const ASSIGN_MIN = 20;
 const FILE_ANY_TOKENS = ['files', 'file', 'upload', 'ไฟล์', 'อัปโหลด', 'อัพโหลด'];
 let SERVER_VER = NEEDED_SERVER;
 let ABUTMENTS = [];
@@ -1802,7 +1806,8 @@ function renderCase(){
   const stepHtml = steps.length ? steps.map(d=>{
     const r = depRecord(o, d.key), done = r.status === 'เสร็จแล้ว';
     const who = r.by || (d.key === 'order_intake' ? (o.created_by || '') : '');
-    const meta = done ? ('เสร็จ ' + (r.end ? fmtStamp(r.end) : '') + (who ? ' • โดย ' + who : '')) : r.status + (r.start ? ' • เริ่ม ' + fmtStamp(r.start) : '') + (r.status === 'กำลังดำเนินการ' && r.by ? ' • โดย ' + r.by : '');
+    const asg = assignedTo(o, d.key);
+    const meta = done ? ('เสร็จ ' + (r.end ? fmtStamp(r.end) : '') + (who ? ' • โดย ' + who : '')) : r.status + (r.start ? ' • เริ่ม ' + fmtStamp(r.start) : '') + (r.status === 'กำลังดำเนินการ' && r.by ? ' • โดย ' + r.by : '') + (asg && !done ? ' • 👤 ขอให้ ' + asg + ' ทำ' : '');
     return `<div class="cm-step ${curKeys.has(d.key) ? 'cur' : ''}"><span class="nm">${esc(d.label)}</span><span class="meta">${esc(meta)}${curKeys.has(d.key) ? ' ◀ ขั้นตอนปัจจุบัน' : ''}</span>` +
       (done ? `${stepUp(d)}<button class="btn ghost sm" data-step="undo" data-dept="${esc(d.key)}">↩ ยกเลิกเสร็จ</button>`
             : (r.status === 'กำลังดำเนินการ' ? '' : `<button class="btn ghost" data-step="start" data-dept="${esc(d.key)}">▶ เริ่มทำ</button>`) +
@@ -5402,6 +5407,19 @@ function toDateTimeInputVal(v){
   const m = /^(\d{4}-\d{2}-\d{2})(?:[T ](\d{2}:\d{2}))?/.exec(String(v));
   return m ? m[1] + 'T' + (m[2] || '00:00') : '';
 }
+
+// ---------- "ขอให้ <ชื่อ> ทำ" ต่อขั้นตอน: order.assign = JSON {deptKey: ชื่อพนักงาน} ----------
+function assignOf(o){ try{ const v = JSON.parse((o && o.assign) || ''); return v && typeof v === 'object' ? v : {}; }catch(e){ return {}; } }
+function assignedTo(o, deptKey){ return String(assignOf(o)[deptKey] || ''); }
+function assignCandidates(deptKey){ return EMPLOYEE_LIST.filter(e=>!isAdminUser(e) && allowedDeptKeys(e).includes(deptKey)).map(e=>e.name).sort((a, b)=>a.localeCompare(b, 'th')); }
+function canAssign(deptKey){ return isAdminUser(CURRENT_EMPLOYEE) || (SERVER_VER >= ASSIGN_MIN && allowedDeptKeys().includes(deptKey)); }
+async function setAssign(id, deptKey, name){
+  const o = orderById(id); if(!o) return;
+  if(!isAdminUser(CURRENT_EMPLOYEE) && SERVER_VER < ASSIGN_MIN){ showToast('ระบบหลังบ้าน (Apps Script) ยังเป็นเวอร์ชัน ' + SERVER_VER + ' — ต้องอัปเดตเป็นเวอร์ชัน ' + ASSIGN_MIN + ' ก่อน จึงจะระบุคนทำได้'); return; }
+  const cur = Object.assign({}, assignOf(o)); if(name) cur[deptKey] = name; else delete cur[deptKey];
+  await patchOrder(id, {assign: Object.keys(cur).length ? JSON.stringify(cur) : ''});
+  showToast(name ? '👤 ขอให้ ' + name + ' ทำแล้ว' : 'ล้างการระบุคนทำแล้ว');
+}
 function renderDept(){
   renderLegends();
   const noteEl = document.getElementById('dept-count-note');
@@ -5426,6 +5444,7 @@ function renderDept(){
   const queueOnlyN = rows.filter(x=>isActiveAt(x.r, CURRENT_DEPT) && !isMyWip(x)).length;
   const wipMine = rows.filter(x=>x.rec.status === 'กำลังดำเนินการ' && x.rec.by === myName && x.r.status !== 'ยกเลิกเคส').length;
   if(view === 'wip') rows = rows.filter(x=>x.rec.status === 'กำลังดำเนินการ' && x.rec.by === myName && x.r.status !== 'ยกเลิกเคส');
+  else if(view === 'forme') rows = rows.filter(x=>assignedTo(x.r, CURRENT_DEPT) === myName && x.rec.status !== 'เสร็จแล้ว' && x.r.status !== 'ยกเลิกเคส');
   else if(view === 'wipall') rows = rows.filter(x=>x.rec.status === 'กำลังดำเนินการ' && x.r.status !== 'ยกเลิกเคส');
   else if(view === 'queue') rows = rows.filter(x=>isActiveAt(x.r, CURRENT_DEPT) && !(x.rec.status === 'กำลังดำเนินการ' && x.rec.by === myName && x.r.status !== 'ยกเลิกเคส'));
   else if(view === 'ahead') rows = rows.filter(x=>!DONE_STATES.includes(x.rec.status) && x.rec.status !== 'ไม่เกี่ยวข้อง' && x.r.status !== 'ส่งแล้ว' && x.r.status !== 'ยกเลิกเคส' && !isActiveAt(x.r, CURRENT_DEPT));
@@ -5442,7 +5461,7 @@ function renderDept(){
 
   const t = document.getElementById('dept-table');
   if(!rows.length){ t.innerHTML = '<tr><td class="empty">ไม่มีเคสที่เกี่ยวข้องกับแผนกนี้ตามเงื่อนไข</td></tr>'; return; }
-  const header = ['ทำแล้ว ✓','เลขเคส','คลินิก','คนไข้','วัสดุ','จำนวน','วันรับงาน','วันส่งออก','วันนัด (deadline)','ค้างในแผนก','ความคืบหน้า','สถานะแผนกนี้','เริ่ม (วัน-เวลา)','เสร็จ (วัน-เวลา)','ทำโดย',''];
+  const header = ['ทำแล้ว ✓','ขอให้ใครทำ','เลขเคส','คลินิก','คนไข้','วัสดุ','จำนวน','วันรับงาน','วันส่งออก','วันนัด (deadline)','ค้างในแผนก','ความคืบหน้า','สถานะแผนกนี้','เริ่ม (วัน-เวลา)','เสร็จ (วัน-เวลา)','ทำโดย',''];
   let html = '<tr>'+header.map(h=>`<th>${h}</th>`).join('')+'</tr>';
   rows.slice(0,300).forEach(({r,rec})=>{
     const overdue = isOverdue(r) && !['เสร็จแล้ว','ยกเลิก'].includes(rec.status);
@@ -5450,6 +5469,10 @@ function renderDept(){
     html += `<tr>
       <td style="text-align:center">${(()=>{ const st = isDone ? 'done' : rec.status === 'กำลังดำเนินการ' ? 'prog' : 'wait', one = CURRENT_DEPT === 'receive';      // goods arrive in one tap: no "accept" stage
         return `<button type="button" class="dep-tick dt-${st}" data-st="${st}" data-id="${esc(r._id)}" title="${one ? (st === 'done' ? 'กดเพื่อยกเลิก (กลับไปรอของ)' : 'กดเมื่อได้รับของแล้ว') : st === 'wait' ? 'กดเพื่อรับงานเข้าแผนก' : st === 'prog' ? 'กดเมื่อทำเสร็จแล้ว' : 'กดเพื่อยกเลิกเสร็จ (กลับไปรอทำ)'}">${one ? (st === 'done' ? '✓ ได้รับของแล้ว' : '📦 ได้รับของแล้ว') : st === 'wait' ? '📥 รับงาน' : st === 'prog' ? '▶ กำลังทำ<br>กด = เสร็จ' : '✓ เสร็จแล้ว'}</button>`; })()}</td>
+      <td>${(()=>{ const who = assignedTo(r, CURRENT_DEPT), me = CURRENT_EMPLOYEE ? CURRENT_EMPLOYEE.name : '';
+        if(!canAssign(CURRENT_DEPT)) return who ? `<span class="badge ${who === me ? 'b-prog' : 'b-wait'}">👤 ${esc(who)}</span>` : '';
+        const names = assignCandidates(CURRENT_DEPT); if(who && !names.includes(who)) names.push(who);
+        return `<select class="dep-assign" data-id="${esc(r._id)}" title="ระบุว่าให้ใครทำขั้นตอนนี้ของเคสนี้" style="font-size:12.5px;padding:5px 6px;${who ? 'font-weight:700;' : ''}"><option value="">— ใครก็ได้ —</option>${names.map(n=>`<option ${n === who ? 'selected' : ''} ${n === me ? 'style="font-weight:700"' : ''}>${esc(n)}</option>`).join('')}</select>`; })()}</td>
       <td>${caseLink(r)}</td>
       <td>${esc(r.clinic??'-')}</td>
       <td>${esc(r.patient??'-')}</td>
@@ -5510,6 +5533,7 @@ function renderDept(){
   t.querySelectorAll('.dep-row-start').forEach(inp=>{
     inp.addEventListener('change', async ()=>{ await setDeptRecord(inp.dataset.id, CURRENT_DEPT, {start: inp.value}); });
   });
+  t.querySelectorAll('.dep-assign').forEach(sel=>sel.addEventListener('change', ()=>setAssign(sel.dataset.id, CURRENT_DEPT, sel.value)));
   t.querySelectorAll('.dep-row-end').forEach(inp=>{
     inp.addEventListener('change', async ()=>{ await setDeptRecord(inp.dataset.id, CURRENT_DEPT, {end: inp.value}); });
   });
