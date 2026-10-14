@@ -916,7 +916,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-12 รุ่น 100 (คูปอง: PDF มีตารางสรุปรายคลินิกหน้าแรก + ตารางสรุปบนหน้าจอ + Excel) • ต้องใช้ backend v20";
+const APP_VERSION = "2026-10-12 รุ่น 100 (Abutment: สั่งได้หลายรหัสในเคสเดียว • คูปอง: PDF + ตารางสรุปรายคลินิก) • ต้องใช้ backend v20";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -3639,7 +3639,7 @@ function abutPickerHtml(){
     + '<select id="dc_brand"><option value="">— ยี่ห้อ/ระบบ —</option>' + ABUT_CATALOG.map(b=>'<option value="' + b.key + '">' + esc(b.name) + '</option>').join('') + '</select>'
     + '<select id="dc_line" disabled><option value="">— ชนิด —</option></select>'
     + '<select id="dc_dia" disabled><option value="">— เส้นผ่านศูนย์กลาง —</option></select>'
-    + '<select id="dc_item" disabled><option value="">— G/H · ชนิด —</option></select></div></div>';
+    + '<select id="dc_item" disabled><option value="">— G/H · ชนิด —</option></select></div><div id="dc_list" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"></div><div class="note" style="margin-top:2px">เลือกรุ่นแล้วจะเพิ่มเข้ารายการทันที — เลือกอีกรุ่นเพื่อสั่งเพิ่มได้หลายรหัส</div></div>';
 }
 function abutItemLabel(it){ return (it.gh ? 'G/H ' + it.gh + ' · ' : '') + (it.h ? 'H' + it.h + ' · ' : '') + (it.type ? it.type + ' · ' : '') + it.ref; }
 function bindAbutPicker(g){
@@ -3649,11 +3649,25 @@ function bindAbutPicker(g){
   brand.addEventListener('change', ()=>{ const b = B(); reset(line, '— ชนิด —', b ? b.lines.map(l=>'<option value="' + l.key + '">' + esc(l.name) + '</option>').join('') : ''); reset(dia, '— เส้นผ่านศูนย์กลาง —', ''); reset(item, '— G/H · ชนิด —', ''); });
   line.addEventListener('change', ()=>{ const l = L(); reset(dia, '— เส้นผ่านศูนย์กลาง —', l ? l.dia.map(d=>'<option value="' + esc(d[0]) + '">Ø ' + esc(d[0]) + '</option>').join('') : ''); reset(item, '— G/H · ชนิด —', ''); });
   dia.addEventListener('change', ()=>{ const l = L(), d = l && l.dia.find(x=>x[0] === dia.value); reset(item, '— G/H · ชนิด —', d ? d[1].map((it, i)=>'<option value="' + i + '">' + esc(abutItemLabel(it)) + '</option>').join('') : ''); });
+  const picked = [];
+  const sync = ()=>{
+    const box = g('dc_list');
+    box.innerHTML = picked.map((x, i)=>`<span class="cpd-chip wal" style="display:inline-flex;gap:4px;align-items:center"><b>${esc(x.ref)}</b><input type="number" min="1" value="${x.qty}" data-i="${i}" class="dc-q" style="width:48px;padding:2px 4px"> ซี่ <a href="#" data-dc-del="${i}" style="text-decoration:none">✕</a></span>`).join('');
+    box.querySelectorAll('.dc-q').forEach(inp=>inp.addEventListener('change', ()=>{ picked[+inp.dataset.i].qty = Math.max(1, Math.round(Number(inp.value)) || 1); sync(); }));
+    box.querySelectorAll('[data-dc-del]').forEach(a=>a.addEventListener('click', e=>{ e.preventDefault(); picked.splice(+a.dataset.dcDel, 1); sync(); }));
+    if(!picked.length) return;
+    g('ab_brand').value = [...new Set(picked.map(x=>x.brand))].join(' / ');
+    let sp = picked.map(x=>x.spec + (x.qty > 1 ? ' ×' + x.qty : '')).join(' + ');
+    if(sp.length > 195) sp = picked.map(x=>x.ref + (x.qty > 1 ? ' ×' + x.qty : '')).join(' + ');      // the server keeps 200 characters: fall back to the codes only
+    g('ab_spec').value = sp;
+    g('ab_qty').value = String(picked.reduce((a, x)=>a + x.qty, 0));
+  };
   item.addEventListener('change', ()=>{
     const b = B(), l = L(), d = l && l.dia.find(x=>x[0] === dia.value), it = d && d[1][+item.value]; if(!it || item.value === '') return;
-    g('ab_brand').value = b.name;
-    g('ab_spec').value = it.ref + ' — ' + l.name + ' Ø' + d[0] + (it.gh ? ' G/H ' + it.gh : '') + (it.h ? ' H' + it.h : '') + ' ' + it.type;
-    if(!g('ab_qty').value.trim()) g('ab_qty').value = '1';
+    const spec = it.ref + ' — ' + l.name + ' Ø' + d[0] + (it.gh ? ' G/H ' + it.gh : '') + (it.h ? ' H' + it.h : '') + (it.type ? ' ' + it.type : '');
+    const same = picked.find(x=>x.ref === it.ref && x.brand === b.name);
+    if(same) same.qty++; else picked.push({ref:it.ref, brand:b.name, spec, qty:1});
+    item.value = ''; sync();
   });
 }
 function renderAbutTab(){
