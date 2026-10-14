@@ -915,7 +915,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-12 รุ่น 98 (ฟอร์มสั่ง Abutment: เลือกจากแคตตาล็อก Dentium/Osstem) • ต้องใช้ backend v20";
+const APP_VERSION = "2026-10-12 รุ่น 98 (ฟอร์มสั่ง Abutment: เลือกจากแคตตาล็อก 6 ระบบ) • ต้องใช้ backend v20";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -3591,11 +3591,33 @@ const ABUT_CATALOG = (()=>{
     {key:'lb', name:'Link Abutment for Public (B)', dia:[['4.0 Mini', spBItems('40', 'M')], ['4.5 Regular', spBItems('45', 'R')]]},
     {key:'lc', name:'Link Abutment for Cerec (G/H 0.6)', dia:[['4.5 Mini', HN('TSCT BM', 'TSCT BMN')], ['4.5 Regular', HN('TSCT BR', 'TSCT BRN')]]}
   ];
+  // Neobiotech IS: ISAH/ISAS + D + cuff + length code (4.0 -> 40, 5.5 -> 5, 7.0 -> 7)
+  const lenCode = {'4.0':'40', '5.5':'5', '7.0':'7'};
+  const neoCem = (pre, dCode, lens)=>[].concat(...[1, 2, 3, 4, 5].map(c=>lens.map(l=>({ref:pre + dCode + c + lenCode[l], gh:c, h:l, type:'Cuff ' + c + ' · Length ' + l}))));
+  const neoDia = (pre, lens65)=>[['4.5', neoCem(pre, '4', ['4.0', '5.5', '7.0'])], ['5.2', neoCem(pre, '5', ['4.0', '5.5', '7.0'])], ['5.7', neoCem(pre, '6', ['4.0', '5.5', '7.0'])], ['6.5', neoCem(pre, '7', lens65)]];
+  const neobiotech = [
+    {key:'ish', name:'IS Cemented Abutment (Hex)', dia:[['3.5 (S-Narrow, H7.0)', [[3, '3537'], [4, '3547'], [5, '3557'], [7, '3577']].map(([c, k])=>({ref:'ISAH' + k, gh:c, h:'7.0', type:'Cuff ' + c + ' · Length 7.0'}))]].concat(neoDia('ISAH', ['4.0', '5.5']))},
+    {key:'iss', name:'IS Cemented Abutment (SCRP)', dia:neoDia('ISAS', ['4.0', '5.5', '7.0'])},
+    {key:'link', name:'Titanium Link Abutment (IS/IT)', dia:[['IS 4.0 (Hex)', [{ref:'ISLKH4015NB', type:'Hex'}]], ['IS 4.5 (Hex)', [{ref:'ISLKH4515NB', type:'Hex'}]], ['IT 5.5', [{ref:'ITLKO5515NB', type:'Octa'}, {ref:'ITLKN5515NB', type:'Non-Octa'}]]]}
+  ];
+  // Neodent GM (ref ตามแคตตาล็อก, G/H = 0.8/1.5/2.5/3.5/4.5)
+  const gmRows = (rows, ghs)=>rows.map(([d, codes])=>[d, codes.map((c, i)=>({ref:'135.' + c, gh:ghs[i], type:'GM'}))]);
+  const GH5 = [0.8, 1.5, 2.5, 3.5, 4.5], GH4 = [1.5, 2.5, 3.5, 4.5];
+  const neodent = [
+    {key:'tb4', name:'GM Titanium Base (Exact) — cementable 4 mm', dia:gmRows([['3.5', [355, 356, 357, 358, 359]], ['4.5', [367, 368, 369, 370, 371]], ['5.5', [379, 380, 381, 382, 383]]], GH5).concat(gmRows([['6.5', [391, 392, 393, 394]]], GH4))},
+    {key:'tb6', name:'GM Titanium Base (Exact) — cementable 6 mm', dia:gmRows([['3.5', [361, 362, 363, 364, 365]], ['4.5', [373, 374, 375, 376, 377]], ['5.5', [385, 386, 387, 388, 389]]], GH5).concat(gmRows([['6.5', [395, 396, 397, 398]]], GH4))},
+    {key:'burn', name:'GM Titanium Base Burn-out Coping', dia:[['3.5', [{ref:'118.322', h:'4.0', type:'4.0 mm'}, {ref:'118.323', h:'6.0', type:'6.0 mm'}]], ['4.5', [{ref:'118.325', h:'4.0', type:'4.0 mm'}, {ref:'118.327', h:'6.0', type:'6.0 mm'}]], ['5.5', [{ref:'118.329', h:'4.0', type:'4.0 mm'}, {ref:'118.342', h:'6.0', type:'6.0 mm'}]]]},
+    {key:'as4', name:'GM Titanium Base Angled (AS) — 4 mm', dia:gmRows([['4.0', [327, 328, 329]], ['4.5', [333, 334, 335]], ['5.5', [339, 340, 341]]], [0.8, 1.5, 2.5])},
+    {key:'as6', name:'GM Titanium Base Angled (AS) — 6 mm', dia:gmRows([['4.0', [330, 331, 332]], ['4.5', [336, 337, 338]], ['5.5', [342, 343, 344]]], [0.8, 1.5, 2.5])},
+    {key:'bridge', name:'GM Titanium Base for Bridge', dia:gmRows([['3.5', [399, 400, 401, 402, 403]], ['4.5', [404, 405, 406, 407, 408]], ['5.5', [409, 410, 411, 412, 413]]], GH5)}
+  ];
   return [
     {key:'sl', name:'Dentium SuperLine', lines:dentiumSL},
     {key:'bt', name:'Dentium Bright (Tissue level)', lines:brTissue},
     {key:'bb', name:'Dentium Bright (Bone level)', lines:brBone},
-    {key:'os', name:'Osstem TS', lines:osstem}
+    {key:'os', name:'Osstem TS', lines:osstem},
+    {key:'nb', name:'Neobiotech IS', lines:neobiotech},
+    {key:'nd', name:'Neodent GM', lines:neodent}
   ];
 })();
 function abutPickerHtml(){
@@ -3605,7 +3627,7 @@ function abutPickerHtml(){
     + '<select id="dc_dia" disabled><option value="">— เส้นผ่านศูนย์กลาง —</option></select>'
     + '<select id="dc_item" disabled><option value="">— G/H · ชนิด —</option></select></div></div>';
 }
-function abutItemLabel(it){ return (it.gh ? 'G/H ' + it.gh + ' · ' : '') + (it.h ? 'H' + it.h + ' · ' : '') + it.type + ' · ' + it.ref; }
+function abutItemLabel(it){ return (it.gh ? 'G/H ' + it.gh + ' · ' : '') + (it.h ? 'H' + it.h + ' · ' : '') + (it.type ? it.type + ' · ' : '') + it.ref; }
 function bindAbutPicker(g){
   const brand = g('dc_brand'), line = g('dc_line'), dia = g('dc_dia'), item = g('dc_item'); if(!brand) return;
   const B = ()=>ABUT_CATALOG.find(x=>x.key === brand.value), L = ()=>{ const b = B(); return b && b.lines.find(x=>x.key === line.value); };
