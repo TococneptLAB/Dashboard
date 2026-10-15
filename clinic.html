@@ -31,6 +31,7 @@ button{background:var(--ink);color:#000;border:0;border-radius:10px;padding:13px
 .steps{display:flex;gap:4px;margin-top:14px;flex-wrap:wrap}
 .st{flex:1;min-width:84px;font-size:11.5px;color:var(--mute);border-top:3px solid var(--line);padding-top:5px}
 .st.done{border-color:#6b8f6b;color:#9fd29f}.st.doing{border-color:var(--accent);color:var(--accent);font-weight:500}.st.next{border-color:var(--accent);color:var(--ink)}
+.ab{margin-top:10px;font-size:13.5px;color:var(--warn);border-left:2px solid var(--warn);padding:2px 0 2px 10px}.ab.got{color:#9fd29f;border-color:#6b8f6b}.ab b{font-weight:500}.ab .sp{color:var(--mute);font-size:12.5px;margin:2px 0}.ab span{color:var(--mute)}
 .empty{color:var(--mute);margin-top:30px}
 .back{font-size:14px;color:var(--ink);text-decoration:none;border:1px solid var(--line);border-radius:99px;padding:7px 16px}.back:hover{border-color:var(--accent);color:var(--accent)}
 footer{margin-top:50px;color:var(--mute);font-size:12.5px}
@@ -43,11 +44,21 @@ footer{margin-top:50px;color:var(--mute);font-size:12.5px}
 <div class="err" id="err"></div>
 <div id="out"></div>
 <p style="margin-top:34px"><a href="./" class="back">← กลับหน้าแรก</a></p>
+<p class="sub" style="margin-top:26px;font-size:12.5px"><span style="color:#9fd29f">▬</span> เสร็จแล้ว &nbsp; <span style="color:var(--accent)">▬</span> กำลังทำ / ถึงคิว &nbsp; <span style="color:#555">▬</span> ยังไม่ถึงขั้นตอน</p>
 <footer>ข้อมูลอัปเดตตามที่แล็บบันทึกในระบบ หากมีข้อสงสัยกรุณาติดต่อแล็บทาง LINE @toconcept</footer>
 </div>
 <script>
 var API = '';
 function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m];}); }
+// คำศัพท์แล็บทันตกรรม: ชื่อขั้นตอนที่เซิร์ฟเวอร์ส่งมา -> คำที่คลินิกคุ้นเคย
+var LAB={'รับงานเข้าแล็บ':'รับเคสเข้าแล็บ','สแกน':'สแกน / รับไฟล์','ออกแบบ':'ออกแบบ (CAD Design)','พิมพ์โมเดล':'พิมพ์โมเดล 3D','สั่ง/รอ Abutment':'สั่ง / รอ Abutment','ผลิต (กัด/อัด)':'กัด / อัดชิ้นงาน','ตกแต่งสี / เคลือบ':'ลงสี & Glaze','ตรวจคุณภาพ (QC)':'QC ตรวจงานก่อนส่ง','เตรียมจัดส่ง':'แพ็คงาน / รอจัดส่ง'};
+function lab(l){ return LAB[l]||l; }
+function pill(c){
+  if(c.delivered) return 'ส่งมอบแล้ว';
+  if(/พัก/.test(c.status)) return c.status;
+  for(var i=0;i<c.stages.length;i++){ var s=c.stages[i]; if(s.state==='doing') return 'กำลังทำ: '+lab(s.label); if(s.state==='next') return 'ถึงคิว: '+lab(s.label); }
+  return 'แพ็คงาน / รอจัดส่ง';
+}
 function fd(s){ if(!s) return '-'; var m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s); return m? m[3]+'/'+m[2]+'/'+(+m[1]+543) : s; }
 fetch('config.json').then(function(r){return r.json();}).then(function(c){ API=c.api_url; var q=new URLSearchParams(location.search).get('c'); if(q){ document.getElementById('code').value=q.toUpperCase(); go(); } }).catch(function(){});
 document.getElementById('f').addEventListener('submit', function(e){ e.preventDefault(); go(); });
@@ -62,10 +73,11 @@ function go(){
     var h='<div class="hd"><b>'+esc(r.clinic)+'</b><span>'+r.cases.length+' เคส</span></div>';
     if(!r.cases.length) h+='<div class="empty">ขณะนี้ไม่มีเคสที่อยู่ในแล็บ</div>';
     r.cases.forEach(function(c){
-      h+='<div class="case'+(c.delivered?' done':'')+'"><div class="top"><span class="cid">'+esc(c.case_id)+'</span><span class="pill '+(c.delivered?'d':(/พัก/.test(c.status)?'h':''))+'">'+esc(c.status)+'</span></div>'+
+      h+='<div class="case'+(c.delivered?' done':'')+'"><div class="top"><span class="cid">'+esc(c.case_id)+'</span><span class="pill '+(c.delivered?'d':(/พัก/.test(c.status)?'h':''))+'">'+esc(pill(c))+'</span></div>'+
       '<div class="meta"><b>'+esc(c.patient||'-')+'</b>'+(c.doctor?' · '+esc(c.doctor):'')+' · '+esc(c.material||'')+(c.qty?' × '+esc(c.qty):'')+'</div>'+
       '<div class="meta">รับงาน '+fd(c.date_received)+(c.ship_date?' · กำหนดส่งออก '+fd(c.ship_date):'')+(c.appointment_date?' · นัดคนไข้ '+fd(c.appointment_date):'')+(c.tracking_no?' · เลขพัสดุ <b>'+esc(c.tracking_no)+'</b>':'')+'</div>'+
-      '<div class="steps">'+c.stages.map(function(s){ return '<div class="st '+(s.state==='todo'?'':s.state)+'">'+esc(s.label)+'</div>'; }).join('')+'</div></div>';
+      (c.abutments&&c.abutments.length?c.abutments.map(function(a){ var ST={received:'ได้รับ Abutment แล้ว',ordered:'สั่งแล้ว รอของมาถึง',requested:'กำลังดำเนินการสั่ง'}; return '<div class="ab'+(a.state==='received'?' got':'')+'">🔩 <b>'+(a.state==='received'?'':'รอ ')+'Abutment: '+esc(a.brand)+'</b>'+(a.spec?'<div class="sp">'+esc(a.spec).split(' + ').join('<br>')+'</div>':'')+'<span> — '+ST[a.state]+(a.qty>1&&!a.spec?' × '+a.qty:'')+'</span></div>'; }).join(''):'')+
+      '<div class="steps">'+c.stages.map(function(s){ return '<div class="st '+(s.state==='todo'?'':s.state)+'">'+esc(lab(s.label))+'</div>'; }).join('')+'</div></div>';
     });
     out.innerHTML=h;
   }).catch(function(){ out.innerHTML=''; err.textContent='เชื่อมต่อไม่ได้ ลองใหม่อีกครั้ง'; });
