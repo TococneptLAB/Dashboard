@@ -916,7 +916,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-12 รุ่น 107 (คูปอง: ช่อง ใช้ไปแล้ว (ข้อมูลเก่า) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
+const APP_VERSION = "2026-10-12 รุ่น 108 (คูปอง: แก้จำนวน/หมายเหตุของรายการที่ให้ไว้ได้ • คูปอง: ช่อง ใช้ไปแล้ว (ข้อมูลเก่า) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -5846,7 +5846,7 @@ function renderCouponWallets(){
   renderCouponSummary(list);
   if(!list.length){ box.innerHTML = '<div class="note">ยังไม่ได้ให้คูปองกับใคร' + (admin ? ' — กด "＋ เพิ่มคูปองให้หมอ/คลินิก" ด้านบน' : '') + '</div>'; return; }
   box.innerHTML = list.map(w=>{
-    const gr = w.grants.slice().sort((a, b)=>String(b.date || '').localeCompare(String(a.date || ''))).map(g=>`<tr><td>${esc(fmtDate(g.date))}</td><td>${esc(g.kind)}</td><td class="num">${Number(g.qty) > 0 ? '+' : ''}${esc(g.qty)}</td><td>${esc(g.note || '')}</td><td>${esc(g.by || '')}</td>${admin ? `<td><button type="button" class="btn ghost sm" data-cpw-del="${esc(g.id)}">ลบ</button></td>` : ''}</tr>`).join('');
+    const gr = w.grants.slice().sort((a, b)=>String(b.date || '').localeCompare(String(a.date || ''))).map(g=>`<tr data-gid="${esc(g.id)}"><td>${esc(fmtDate(g.date))}</td><td>${esc(g.kind)}</td><td class="num">${Number(g.qty) > 0 ? '+' : ''}${esc(g.qty)}</td><td>${esc(g.note || '')}</td><td>${esc(g.by || '')}</td>${admin ? `<td style="white-space:nowrap"><button type="button" class="btn ghost sm" data-cpw-edit="${esc(g.id)}">✏️ แก้</button> <button type="button" class="btn ghost sm" data-cpw-del="${esc(g.id)}">ลบ</button></td>` : ''}</tr>`).join('');
     const cs = w.cases.slice().sort((a, b)=>String(b.date_received || '').localeCompare(String(a.date_received || ''))).map(o=>`<tr><td>${esc(fmtDate(o.date_received))}</td><td><a href="#" class="caselink" data-open-case="${esc(o._id)}">${esc(o.case_id || '-')}</a></td><td>${esc(o.doctor || '')}</td><td>${couponKindText(o) ? esc(couponKindText(o)) : (admin ? `<select data-cpw-kind="${esc(o._id)}" style="width:auto"><option value="">— เลือกประเภทเพื่อหักคูปอง —</option>${couponKinds().map(k=>`<option>${esc(k)}</option>`).join('')}</select>` : '— ไม่ระบุ')}${admin && (Number(o.qty) || 1) >= 2 ? ` <a href="#" data-cpw-split="${esc(o._id)}" title="ใช้เมื่อเคสนี้ใช้คูปองหลายประเภท เช่น 1 ซี่ธรรมดา + 1 ซี่รากเทียม" style="font-size:12px;color:#777;white-space:nowrap">✎ แบ่งประเภท</a>` : ''}</td><td>${esc(o.coupon_status || '-')}</td></tr>`).join('');
     return `<details class="cpd-row" data-k="${esc(w.key)}" ${open.has(w.key) ? 'open' : ''}><summary><b>${esc(w.clinic)}</b><span>${w.doctor ? '👨‍⚕️ ' + esc(w.doctor) : '🏥 ทั้งคลินิก'}</span><span class="cpd-n">${walletChips(w)}</span></summary><div class="cpd-cases">
       <b>ประวัติการให้คูปอง</b>${gr ? `<table><tr><th>วันที่</th><th>ประเภท</th><th>จำนวน</th><th>หมายเหตุ</th><th>โดย</th>${admin ? '<th></th>' : ''}</tr>${gr}</table>` : '<div class="note">ยังไม่มีการให้คูปอง (มีแต่เคสที่ใช้)</div>'}
@@ -5858,6 +5858,20 @@ function renderCouponWallets(){
     if(!sel.value) return;
     await patchOrder(sel.dataset.cpwKind, {coupon_kind: sel.value});
     showToast('บันทึกประเภทคูปองแล้ว — หักจากกระเป๋าแล้ว ✓'); renderCouponByDoctor();
+  }));
+  box.querySelectorAll('[data-cpw-edit]').forEach(b=>b.addEventListener('click', ()=>{
+    const id = b.dataset.cpwEdit, tr = b.closest('tr'), g = readPrices().coupon_grants.find(x=>x.id === id); if(!g || !tr) return;
+    const tds = tr.querySelectorAll('td');
+    tds[2].innerHTML = '<input type="number" step="1" class="cpw-e-qty" value="' + esc(g.qty) + '" style="width:80px">';
+    tds[3].innerHTML = '<input type="text" class="cpw-e-note" maxlength="120" value="' + esc(g.note || '') + '" style="width:100%;min-width:160px">';
+    tds[tds.length - 1].innerHTML = '<button type="button" class="btn primary sm cpw-e-save">บันทึก</button> <button type="button" class="btn ghost sm cpw-e-cancel">ยกเลิก</button>';
+    tr.querySelector('.cpw-e-cancel').addEventListener('click', ()=>renderCouponByDoctor());
+    tr.querySelector('.cpw-e-save').addEventListener('click', async ()=>{
+      const qty = parseInt(tr.querySelector('.cpw-e-qty').value, 10), note = tr.querySelector('.cpw-e-note').value.trim().slice(0, 120);
+      if(!isFinite(qty) || qty === 0){ showToast('จำนวนต้องเป็นตัวเลข (ไม่ใช่ 0)'); return; }
+      await saveSettingsPatch(cur=>{ const x = cur.coupon_grants.find(y=>y.id === id); if(x){ x.qty = qty; x.note = note; } });
+      showToast('✓ แก้รายการแล้ว'); renderCouponByDoctor();
+    });
   }));
   box.querySelectorAll('[data-cpw-del]').forEach(b=>b.addEventListener('click', async ()=>{
     if(!window.confirm('ลบรายการให้คูปองนี้? (ยอดคงเหลือจะลดลงตามจำนวนที่ลบ)')) return;
