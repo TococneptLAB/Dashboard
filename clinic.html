@@ -87,6 +87,7 @@ function go(){
     r.cases.forEach(function(c){
       h+='<div class="case'+(c.delivered?' done':'')+'"><div class="top"><span class="cid">'+esc(c.case_id)+'</span><span class="pill '+(c.delivered?'d':(/พัก/.test(c.status)?'h':''))+'">'+esc(pill(c))+'</span></div>'+
       '<div class="meta"><b>'+esc(c.patient||'-')+'</b>'+(c.doctor?' · '+esc(c.doctor):'')+' · '+esc(c.material||'')+(c.qty?' × '+esc(c.qty):'')+'</div>'+
+      ((c.teeth||c.shade||c.implant_system)?'<div class="meta dt">'+(c.teeth?'🦷 ซี่ <b>'+esc(c.teeth)+'</b>':'')+(c.shade?' · สี <b>'+esc(c.shade)+'</b>':'')+(c.implant_system?' · รากเทียม <b>'+esc(c.implant_system)+'</b>':'')+'</div>':'')+
       '<div class="meta">รับงาน '+fd(c.date_received)+(c.ship_date?' · กำหนดส่งออก '+fd(c.ship_date):'')+(c.appointment_date?' · นัดคนไข้ '+fd(c.appointment_date):'')+(c.tracking_no?' · เลขพัสดุ <b>'+esc(c.tracking_no)+'</b>':'')+'</div>'+
       (c.abutments&&c.abutments.length?c.abutments.map(function(a){ var ST={received:'ได้รับ Abutment แล้ว',ordered:'สั่งแล้ว รอของมาถึง',requested:'กำลังดำเนินการสั่ง'}; return '<div class="ab'+(a.state==='received'?' got':'')+'">🔩 <b>'+(a.state==='received'?'':'รอ ')+'Abutment: '+esc(a.brand)+'</b>'+(a.spec?'<div class="sp">'+esc(a.spec).split(' + ').join('<br>')+'</div>':'')+'<span> — '+ST[a.state]+(a.qty>1&&!a.spec?' × '+a.qty:'')+'</span></div>'; }).join(''):'')+
       '<div class="steps">'+c.stages.map(function(s){ return '<div class="st '+(s.state==='todo'?'':s.state)+'">'+esc(lab(s.label))+'</div>'; }).join('')+'</div></div>';
