@@ -597,6 +597,7 @@
     <div class="card"><h2>🔑 รหัสให้คลินิกตรวจสอบงาน <span class="tag">CLINIC PORTAL</span></h2>
       <div class="note" id="web-note"></div>
       <div class="filters"><input id="web-clinic" list="web-clinic-dl" placeholder="ชื่อคลินิก (ตามที่ใช้ในออเดอร์)" style="min-width:280px"><datalist id="web-clinic-dl"></datalist><button class="btn primary" id="web-make">➕ สร้างรหัสให้คลินิกนี้</button></div>
+      <div class="note" id="web-match" style="margin:4px 0 8px"></div>
       <div class="tablewrap"><table id="web-codes"></table></div></div>
     <div class="card"><h2>📝 คลินิกลงทะเบียนใหม่ (จากหน้าเว็บ) <span class="tag" id="web-lead-n">0</span></h2>
       <div class="tablewrap"><table id="web-leads"></table></div></div>
@@ -926,7 +927,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-12 รุ่น 112 (แท็บ 🌐 เว็บลูกค้า: ปุ่ม 🔑 ทำรหัสจากรายชื่อคลินิกที่สมัคร) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
+const APP_VERSION = "2026-10-12 รุ่น 113 (แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -6270,6 +6271,29 @@ const TAB_RENDERERS = {
 };
 // ---------- 🌐 เว็บลูกค้า: รหัสให้คลินิกดูสถานะงานเอง + รายชื่อคลินิกที่สมัครผ่านหน้าเว็บ (backend v21) ----------
 const WEB_NEEDED = 21, LEAD_STATUSES = ['ใหม่', 'ติดต่อแล้ว', 'เปิดบัญชีแล้ว', 'ไม่สนใจ'];
+// same name-matching rule as the server (clinicCore_): spelling variants of one clinic are the same clinic
+function webCore(n){ return String(n || '').toLowerCase().replace(/\s+/g, '').replace(/คลินิกทันตกรรม|ทันตแพทย์|ทันตกรรม|คลินิก|คลีนิก|ศูนย์|หมอ|ทพ\.?|ทพญ\.?|dental|clinic|dentist|dr\.?/g, '').replace(/[().,_\-\/]+/g, '').replace(/[\u0E31\u0E34-\u0E3A\u0E47-\u0E4E]/g, ''); }
+function webMatches(name){
+  const core = webCore(name), res = {n:0, names:{}};
+  if(core.length < 2) return res;
+  NEW_ORDERS.forEach(o=>{ if(o.status !== 'ยกเลิกเคส' && o.clinic && webCore(o.clinic) === core){ res.n++; res.names[o.clinic] = (res.names[o.clinic] || 0) + 1; } });
+  return res;
+}
+function webNearest(name){
+  const core = webCore(name), seen = {}, out = [];
+  if(core.length < 2) return out;
+  NEW_ORDERS.forEach(o=>{ const c = String(o.clinic || '').trim(); if(!c || seen[c]) return; seen[c] = 1; const k = webCore(c); if(k.length >= 2 && k !== core && (k.includes(core) || core.includes(k) || cpLev1(k, core))) out.push(c); });
+  return out.slice(0, 6);
+}
+function showWebMatch(){
+  const box = document.getElementById('web-match'), v = document.getElementById('web-clinic').value.trim();
+  if(!box) return; if(!v){ box.innerHTML = ''; return; }
+  const m = webMatches(v);
+  if(m.n){ box.innerHTML = '✓ คลินิกนี้จะเห็น <b>' + m.n + ' เคส</b> ในออเดอร์ (ชื่อที่ตรงกัน: ' + Object.keys(m.names).map(k=>esc(k) + ' ' + m.names[k]).join(' • ') + ')'; return; }
+  const near = webNearest(v);
+  box.innerHTML = '⚠ ยังไม่พบเคสที่ชื่อคลินิกตรงกับ "' + esc(v) + '"' + (near.length ? ' — ชื่อใกล้เคียงในออเดอร์ (กดเพื่อใช้ชื่อนี้): ' + near.map(n=>`<a href="#" data-wnear="${esc(n)}" style="margin-right:8px">${esc(n)}</a>`).join('') : ' (ถ้าเป็นคลินิกใหม่ที่ยังไม่มีเคสก็สร้างรหัสไว้ก่อนได้)');
+  box.querySelectorAll('[data-wnear]').forEach(a=>a.addEventListener('click', e=>{ e.preventDefault(); document.getElementById('web-clinic').value = a.dataset.wnear; showWebMatch(); }));
+}
 async function renderWebTab(){
   const note = document.getElementById('web-note'), ct = document.getElementById('web-codes'), lt = document.getElementById('web-leads');
   if(!ct) return;
@@ -6280,14 +6304,15 @@ async function renderWebTab(){
   const load = async ()=>{
     const [rc, rl] = await Promise.all([apiPost({action:'listClinicCodes'}), apiPost({action:'listLeads'})]);
     const codes = (rc && rc.codes) || [], leads = (rl && rl.leads) || [];
-    ct.innerHTML = codes.length ? '<tr><th>คลินิก</th><th>รหัส</th><th>สถานะ</th><th></th></tr>' + codes.map(c=>`<tr><td><b>${esc(c.clinic)}</b></td><td><code style="font-size:15px;letter-spacing:1px">${esc(c.code)}</code></td><td>${c.active ? '<span class="badge b-done">ใช้งานอยู่</span>' : '<span class="badge b-hold">ปิดอยู่</span>'}</td><td style="white-space:nowrap"><button class="btn ghost sm" data-wcopy="${esc(c.code)}" data-wcl="${esc(c.clinic)}">📋 คัดลอกข้อความส่งคลินิก</button> <button class="btn ghost sm" data-wtog="${esc(c.code)}" data-won="${c.active ? '1' : ''}">${c.active ? 'ปิดรหัส' : 'เปิดรหัส'}</button></td></tr>`).join('') : '<tr><td class="empty">ยังไม่มีรหัส พิมพ์ชื่อคลินิกด้านบนแล้วกด "สร้างรหัส"</td></tr>';
+    ct.innerHTML = codes.length ? '<tr><th>คลินิก</th><th>เคสที่คลินิกเห็น</th><th>รหัส</th><th>สถานะ</th><th></th></tr>' + codes.map(c=>`<tr><td><b>${esc(c.clinic)}</b></td><td>${(()=>{ const m = webMatches(c.clinic); return m.n ? m.n + ' เคส' : '<span style="color:#b26a00">0 — ตรวจชื่อ</span>'; })()}</td><td><code style="font-size:15px;letter-spacing:1px">${esc(c.code)}</code></td><td>${c.active ? '<span class="badge b-done">ใช้งานอยู่</span>' : '<span class="badge b-hold">ปิดอยู่</span>'}</td><td style="white-space:nowrap"><button class="btn ghost sm" data-wcopy="${esc(c.code)}" data-wcl="${esc(c.clinic)}">📋 คัดลอกข้อความส่งคลินิก</button> <button class="btn ghost sm" data-wtog="${esc(c.code)}" data-won="${c.active ? '1' : ''}">${c.active ? 'ปิดรหัส' : 'เปิดรหัส'}</button></td></tr>`).join('') : '<tr><td class="empty">ยังไม่มีรหัส พิมพ์ชื่อคลินิกด้านบนแล้วกด "สร้างรหัส"</td></tr>';
     document.getElementById('web-lead-n').textContent = leads.filter(l=>l.status === 'ใหม่').length + ' ใหม่';
     lt.innerHTML = leads.length ? '<tr><th>วันที่</th><th>คลินิก</th><th>ผู้ติดต่อ / เบอร์</th><th>เลขภาษี</th><th>ที่อยู่</th><th>สนใจส่งงาน</th><th>แผนที่</th><th>บัญชี</th><th>สถานะ</th><th></th></tr>' + leads.map(l=>`<tr><td>${esc(fmtDate(l.created_at))}</td><td><b>${esc(l.clinic)}</b></td><td>${esc(l.contact_name)}<br>${esc(l.phone)}</td><td>${esc(l.tax_id)}</td><td style="max-width:220px">${esc(l.address)}</td><td>${esc(l.interests)}</td><td>${/^https?:\/\//i.test(l.map_link || '') ? `<a href="${esc(l.map_link)}" target="_blank" rel="noopener">เปิดแผนที่</a>` : esc(l.map_link)}</td><td>${esc(l.accounting_phone)}</td><td><select data-wlead="${esc(l.id)}">${LEAD_STATUSES.map(s=>`<option ${s === l.status ? 'selected' : ''}>${s}</option>`).join('')}</select></td><td><button class="btn ghost sm" data-wmk="${esc(l.clinic)}" title="ใส่ชื่อคลินิกนี้ในช่องสร้างรหัสด้านบน (แก้ให้ตรงกับชื่อที่ใช้ในออเดอร์ได้)">🔑 ทำรหัส</button></td></tr>`).join('') : '<tr><td class="empty">ยังไม่มีคลินิกลงทะเบียน</td></tr>';
     ct.querySelectorAll('[data-wcopy]').forEach(b=>b.addEventListener('click', ()=>copyText('สวัสดีครับ ' + b.dataset.wcl + '\nตรวจสอบสถานะงานที่แล็บได้ที่ ' + url + '\nรหัสของคลินิก: ' + b.dataset.wcopy + '\n(ใช้ดูได้เฉพาะเคสของคลินิกท่านเท่านั้น)', 'คัดลอกข้อความแล้ว ✓ นำไปวางในแชทได้เลย')));
     ct.querySelectorAll('[data-wtog]').forEach(b=>b.addEventListener('click', async ()=>{ await apiPost({action:'saveClinicCode', code:b.dataset.wtog, active:!b.dataset.won}); load(); }));
-    lt.querySelectorAll('[data-wmk]').forEach(b=>b.addEventListener('click', ()=>{ const i = document.getElementById('web-clinic'); i.value = b.dataset.wmk; i.scrollIntoView({block:'center'}); i.focus(); showToast('ตรวจชื่อให้ตรงกับที่ใช้ในออเดอร์ แล้วกด "สร้างรหัส"'); }));
+    lt.querySelectorAll('[data-wmk]').forEach(b=>b.addEventListener('click', ()=>{ const i = document.getElementById('web-clinic'); i.value = b.dataset.wmk; showWebMatch(); i.scrollIntoView({block:'center'}); i.focus(); showToast('ตรวจชื่อให้ตรงกับที่ใช้ในออเดอร์ แล้วกด "สร้างรหัส"'); }));
     lt.querySelectorAll('[data-wlead]').forEach(s=>s.addEventListener('change', async ()=>{ await apiPost({action:'updateLead', id:s.dataset.wlead, status:s.value}); showToast('บันทึกสถานะแล้ว ✓'); load(); }));
   };
+  document.getElementById('web-clinic').oninput = showWebMatch; showWebMatch();
   document.getElementById('web-make').onclick = async ()=>{
     const v = document.getElementById('web-clinic').value.trim();
     if(!v){ showToast('พิมพ์ชื่อคลินิกก่อน'); return; }
