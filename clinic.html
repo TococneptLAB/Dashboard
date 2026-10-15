@@ -82,6 +82,7 @@ function go(){
       '<details><summary>ประวัติการใช้คูปอง ('+cp.usage.length+')</summary>'+(cp.usage.length?cp.usage.map(function(u){ return '<div class="ul'+(u.counted?'':' x')+'"><span>'+fd(u.date)+'</span><b>'+esc(u.case_id)+'</b><span>'+esc(u.patient)+'</span><span>'+esc(u.kind||'ยังไม่ระบุประเภท')+(u.counted?'':' (ยกเลิก/หมดอายุ)')+'</span></div>'; }).join(''):'<div class="meta">ยังไม่มีการใช้</div>')+'</details>'+
       '<details><summary>ประวัติการได้รับคูปอง ('+cp.grants.length+')</summary>'+(cp.grants.length?cp.grants.map(function(g){ return '<div class="ul"><span>'+fd(g.date)+'</span><b>'+(g.qty>0?'+':'')+g.qty+'</b><span>'+esc(g.kind)+'</span><span>'+(g.qty<0?'ปรับยอด':esc(g.doctor||''))+'</span></div>'; }).join(''):'<div class="meta">-</div>')+'</details></div>';
     }
+    else if(cp===null) h+='<div class="cp"><div class="cpt">🎟 คูปองของคลินิก</div><div class="meta">ยังไม่พบคูปองของคลินิกนี้ในระบบ หากมีคูปองอยู่ กรุณาติดต่อแล็บเพื่อตรวจสอบ</div></div>';
     if(!r.cases.length) h+='<div class="empty">ขณะนี้ไม่มีเคสที่อยู่ในแล็บ</div>';
     r.cases.forEach(function(c){
       h+='<div class="case'+(c.delivered?' done':'')+'"><div class="top"><span class="cid">'+esc(c.case_id)+'</span><span class="pill '+(c.delivered?'d':(/พัก/.test(c.status)?'h':''))+'">'+esc(pill(c))+'</span></div>'+
