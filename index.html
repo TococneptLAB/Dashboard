@@ -916,7 +916,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-12 รุ่น 104 (ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
+const APP_VERSION = "2026-10-12 รุ่น 106 (คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -5712,11 +5712,13 @@ function fmtDate(s){
 function couponGroups(q){
   const g = {}, qq = String(q || '').trim().toLowerCase();
   NEW_ORDERS.filter(o=>isCouponCase(o)).forEach(o=>{
-    const clinic = String(o.clinic || '').trim() || '(ไม่ระบุคลินิก)', doc = String(o.doctor || '').trim() || '(ไม่ระบุหมอ)', k = clinic + '\u0001' + doc;
-    (g[k] = g[k] || {clinic, doctor: doc, cases: []}).cases.push(o);
+    const raw = String(o.clinic || '').trim(), clinic = raw ? String(cpClinName(raw) || raw).trim() : '(ไม่ระบุคลินิก)', doc = String(o.doctor || '').trim() || '(ไม่ระบุหมอ)';
+    const core = cpCore(clinic), k = (core.length >= 3 ? core : cpNorm(clinic)) + '\u0001' + cpNorm(doc);      // clinics spelled a little differently (คลินิก/คลีนิก, …หมอ…) share one card
+    const gr = g[k] = g[k] || {clinic, doctor: doc, cases: [], names: {}}; gr.cases.push(o); gr.names[clinic] = (gr.names[clinic] || 0) + 1;
   });
   return Object.values(g).filter(x=>!qq || (x.clinic + ' ' + x.doctor).toLowerCase().includes(qq)).map(x=>{
     const by = {}; x.cases.forEach(o=>{ const s = o.coupon_status || 'ไม่ระบุ'; by[s] = (by[s] || 0) + 1; });
+    x.clinic = Object.keys(x.names).sort((a, b)=>x.names[b] - x.names[a] || a.length - b.length)[0] || x.clinic;
     x.by = by; x.total = x.cases.length; x.live = (by['รออนุมัติ'] || 0) + (by['อนุมัติแล้ว'] || 0);
     x.cases.sort((a, b)=>String(b.date_received || '').localeCompare(String(a.date_received || '')));
     return x;
@@ -5783,6 +5785,20 @@ function couponWallets(upTo){
       if(!w.cases.includes(o)) w.cases.push(o);
       if(counted) kd(w, pt.kind).used += pt.qty;
     });
+  });
+  // safety net: wallets whose clinic names have the SAME core (…จั่นเจา = …หมอจั่นเจา) and the same doctor are one wallet, even if the automatic name match above was ambiguous
+  const fam = {};
+  Object.values(W).forEach(w=>{ const core = cpCore(w.clinic); const k = (core.length >= 3 ? core : cpNorm(w.clinic)) + '\u0001' + cpNorm(w.doctor); (fam[k] = fam[k] || []).push(w); });
+  Object.values(fam).forEach(ws=>{
+    if(ws.length < 2) return;
+    ws.sort((a, b)=>(b.grants.length - a.grants.length) || (Object.keys(b.kinds).length - Object.keys(a.kinds).length));
+    const t = ws[0], nameBy = ws.slice().sort((a, b)=>b.cases.length - a.cases.length || a.clinic.length - b.clinic.length);      // the merged wallet carries the spelling the cases are actually written with
+    ws.slice(1).forEach(o=>{
+      Object.keys(o.kinds).forEach(k=>{ const x = kd(t, k); x.granted += o.kinds[k].granted; x.used += o.kinds[k].used; });
+      t.grants = t.grants.concat(o.grants); o.cases.forEach(c=>{ if(!t.cases.includes(c)) t.cases.push(c); });
+      t.unkinded += o.unkinded; t.hasGrant = t.hasGrant || o.hasGrant; delete W[o.key];
+    });
+    t.clinic = nameBy[0].clinic;
   });
   return Object.values(W).filter(w=>w.hasGrant || w.unkinded > 0 || Object.values(w.kinds).some(k=>k.used > 0))
     .sort((a, b)=>a.clinic.localeCompare(b.clinic, 'th') || a.doctor.localeCompare(b.doctor, 'th'));
@@ -6002,8 +6018,8 @@ function renderCouponByDoctor(){
   box.innerHTML = list.map(x=>{
     const k = x.clinic + '|' + x.doctor;
     const chips = ['รออนุมัติ', 'อนุมัติแล้ว', 'ใช้คูปองแล้ว', 'คูปองหมดอายุ/ยกเลิก', 'ไม่ระบุ'].filter(s=>x.by[s]).map(s=>`<span class="cpd-chip ${s === 'อนุมัติแล้ว' || s === 'รออนุมัติ' ? 'live' : ''}">${esc(s)} ${x.by[s]}</span>`).join('');
-    const rows = x.cases.map(o=>`<tr><td>${esc(fmtDate(o.date_received))}</td><td><a href="#" class="caselink" data-open-case="${esc(o._id)}">${esc(o.case_id || '-')}</a></td><td>${esc(o.patient || '')}</td><td>${esc(o.material || '')}</td><td>${esc(o.coupon_status || '-')}</td><td>${esc(o.status || '')}</td></tr>`).join('');
-    return `<details class="cpd-row" data-k="${esc(k)}" ${open.has(k) ? 'open' : ''}><summary><b>${esc(x.clinic)}</b><span>👨‍⚕️ ${esc(x.doctor)}</span><span class="cpd-n"><span class="cpd-chip live" title="รออนุมัติ + อนุมัติแล้ว (ยังใช้ได้)">ยังใช้ได้ ${x.live}</span>${chips}<span class="cpd-chip">รวม ${x.total}</span></span></summary><div class="cpd-cases"><table><tr><th>วันรับงาน</th><th>เคส</th><th>คนไข้</th><th>วัสดุ</th><th>สถานะคูปอง</th><th>สถานะงาน</th></tr>${rows}</table></div></details>`;
+    const rows = x.cases.map(o=>`<tr><td>${esc(fmtDate(o.date_received))}</td><td><a href="#" class="caselink" data-open-case="${esc(o._id)}">${esc(o.case_id || '-')}</a></td><td>${esc(o.patient || '')}</td><td>${esc(o.material || '')}</td><td>${couponParts(o).map(pt=>esc(pt.kind) + (pt.qty > 1 || couponParts(o).length > 1 ? ' ×' + pt.qty : '')).join(' + ') || '<span style="color:#b00020">⚠ ยังไม่เลือกประเภท</span>'}</td><td>${esc(o.coupon_status || '-')}</td><td>${esc(o.status || '')}</td></tr>`).join('');
+    return `<details class="cpd-row" data-k="${esc(k)}" ${open.has(k) ? 'open' : ''}><summary><b>${esc(x.clinic)}</b><span>👨‍⚕️ ${esc(x.doctor)}</span><span class="cpd-n"><span class="cpd-chip live" title="รออนุมัติ + อนุมัติแล้ว (ยังใช้ได้)">ยังใช้ได้ ${x.live}</span>${chips}<span class="cpd-chip">รวม ${x.total}</span></span></summary><div class="cpd-cases"><table><tr><th>วันรับงาน</th><th>เคส</th><th>คนไข้</th><th>วัสดุ</th><th>ประเภทคูปอง</th><th>สถานะคูปอง</th><th>สถานะงาน</th></tr>${rows}</table></div></details>`;
   }).join('');
 }
 document.getElementById('cpd-q').addEventListener('input', renderCouponByDoctor);
