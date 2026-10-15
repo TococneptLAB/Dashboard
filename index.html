@@ -497,7 +497,7 @@
       <div class="note progress-legend"></div>
       <div class="note" id="dept-count-note"></div>
       <div class="tablewrap"><table id="dept-table"></table></div>
-      <div class="note">กดปุ่มหน้าแถว <b>ครั้งที่ 1 = 📥 รับงาน</b> (ระบบจดเวลารับ) • <b>ครั้งที่ 2 = ✓ เสร็จ</b> (จดเวลาเสร็จและชื่อคนทำ) • กดปุ่มเขียวอีกครั้งเพื่อยกเลิกเสร็จ งานจะย้ายไปมุมมอง "ทำเสร็จแล้ว" • ใช้ dropdown (บนคอม) เมื่ออยากตั้งสถานะอื่น เช่น ระงับ / ยกเลิก</div>
+      <div class="note">แผนกที่มี 👁 = ดูได้อย่างเดียว (ดูว่างานอยู่กับใคร) แก้ไขได้เฉพาะแผนกของตัวเอง • กดปุ่มหน้าแถว <b>ครั้งที่ 1 = 📥 รับงาน</b> (ระบบจดเวลารับ) • <b>ครั้งที่ 2 = ✓ เสร็จ</b> (จดเวลาเสร็จและชื่อคนทำ) • กดปุ่มเขียวอีกครั้งเพื่อยกเลิกเสร็จ งานจะย้ายไปมุมมอง "ทำเสร็จแล้ว" • ใช้ dropdown (บนคอม) เมื่ออยากตั้งสถานะอื่น เช่น ระงับ / ยกเลิก</div>
     </div>
   </section>
 
@@ -508,7 +508,7 @@
       <input type="text" id="cpd-q" placeholder="ค้นหาคลินิก / หมอ..." style="max-width:320px;margin-bottom:8px">
       <div id="cpw-admin"></div>
       <div id="cpw-merge"></div>
-      <div class="cpr-bar" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0"><label style="font-size:12px">สรุปเดือน <input type="month" id="cpr-month" style="width:auto"></label><button type="button" class="btn ghost sm" id="cpr-btn">🖨 PDF สรุปคูปอง</button><span class="note" style="margin:0">เว้นเดือนว่าง = ยอดปัจจุบัน • พิมพ์ชื่อคลินิก/หมอในช่องค้นหาด้านบนเพื่อเลือกเฉพาะราย</span></div>
+      <div class="cpr-bar" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0"><label style="font-size:12px">สรุปเดือน <input type="month" id="cpr-month" style="width:auto"></label><button type="button" class="btn ghost sm" id="cpr-btn">🖨 PDF สรุปคูปอง</button> <button type="button" class="btn ghost sm" id="cpr-xlsx">⬇ Excel สรุปคูปอง</button><span class="note" style="margin:0">เว้นเดือนว่าง = ยอดปัจจุบัน • พิมพ์ชื่อคลินิก/หมอในช่องค้นหาด้านบนเพื่อเลือกเฉพาะราย</span></div>
       <div id="cpw-summary"></div>
       <h3 style="margin:10px 0 4px">🎫 กระเป๋าคูปอง (ให้ไว้ / ใช้ไป / เหลือ แยกตามประเภท)</h3>
       <div id="cpw-list"></div>
@@ -916,7 +916,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-12 รุ่น 108 (คูปอง: แก้จำนวน/หมายเหตุของรายการที่ให้ไว้ได้ • คูปอง: ช่อง ใช้ไปแล้ว (ข้อมูลเก่า) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
+const APP_VERSION = "2026-10-12 รุ่น 110 (สรุปคูปอง: PDF/Excel แยกรายคลินิก มีหมอ/เลขเคส/คนไข้/ประเภทงาน) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -5521,19 +5521,16 @@ document.getElementById('bz-target-save').addEventListener('click', async ()=>{
 document.getElementById('bl-record').addEventListener('click', recordInvoices);
 
 // ---------- Department Status tab ----------
+let LAST_DEPT_PICKED = false;
 let CURRENT_DEPT = (DEPARTMENTS.find(d=>d.key !== 'order_intake') || DEPARTMENTS[0]).key;
 function buildDeptChips(){
   const wrap = document.getElementById('dept-chips');
-  const allowed = allowedDeptKeys().filter(k=>k !== 'order_intake');      // no tab for ORDER INTAKE: it is done automatically when the order is created
-  const list = DEPARTMENTS.filter(d=>allowed.includes(d.key));
-  if(!list.length){
-    wrap.innerHTML = '<span class="note">ยังไม่ได้กำหนดแผนกที่รับผิดชอบ หรือชื่อแผนกในคอลัมน์ depts ไม่ถูกต้อง (ติดต่อแอดมิน)</span>';
-  } else {
-    wrap.innerHTML = list.map(d=>`<button class="dep-chip ${d.key===CURRENT_DEPT?'active':''}" data-dep="${d.key}">${esc(d.label)}</button>`).join('');
-  }
+  const mine = allowedDeptKeys();
+  const list = DEPARTMENTS.filter(d=>d.key !== 'order_intake');      // everyone can look at every department (no tab for ORDER INTAKE: it is done automatically when the order is created); only own departments can be edited
+  wrap.innerHTML = list.map(d=>`<button class="dep-chip ${d.key===CURRENT_DEPT?'active':''}" data-dep="${d.key}" ${mine.includes(d.key) ? '' : 'title="ดูได้อย่างเดียว (ไม่ใช่แผนกของคุณ)" style="opacity:.78"'}>${mine.includes(d.key) ? '' : '👁 '}${esc(d.label)}</button>`).join('');
   wrap.querySelectorAll('.dep-chip').forEach(chip=>{
     chip.addEventListener('click', ()=>{
-      CURRENT_DEPT = chip.dataset.dep;
+      CURRENT_DEPT = chip.dataset.dep; LAST_DEPT_PICKED = true;
       wrap.querySelectorAll('.dep-chip').forEach(c=>c.classList.remove('active'));
       chip.classList.add('active');
       renderDept();
@@ -5576,11 +5573,12 @@ function renderDept(){
   renderLegends();
   const noteEl = document.getElementById('dept-count-note');
   const tbl = document.getElementById('dept-table');
-  if(!CURRENT_DEPT || !allowedDeptKeys().includes(CURRENT_DEPT)){
+  if(!CURRENT_DEPT || !DEPARTMENTS.some(d=>d.key === CURRENT_DEPT)){
     noteEl.textContent = '';
-    tbl.innerHTML = '<tr><td class="empty">คุณยังไม่มีสิทธิ์ในแผนกใด (ติดต่อแอดมินให้กำหนดแผนกในชีท Employees)</td></tr>';
+    tbl.innerHTML = '<tr><td class="empty">เลือกแผนกด้านบน</td></tr>';
     return;
   }
+  const viewOnly = !(isAdminUser(CURRENT_EMPLOYEE) || allowedDeptKeys().includes(CURRENT_DEPT));      // another department: look only (the server still checks permissions)
   const data = allData();
   const q = document.getElementById('dep-f-text').value.trim().toLowerCase();
   const stFilter = document.getElementById('dep-f-status').value;
@@ -5619,10 +5617,10 @@ function renderDept(){
     const overdue = isOverdue(r) && !['เสร็จแล้ว','ยกเลิก'].includes(rec.status);
     const isDone = rec.status === 'เสร็จแล้ว';
     html += `<tr>
-      <td style="text-align:center">${(()=>{ const st = isDone ? 'done' : rec.status === 'กำลังดำเนินการ' ? 'prog' : 'wait', one = CURRENT_DEPT === 'receive';      // goods arrive in one tap: no "accept" stage
+      <td style="text-align:center">${viewOnly ? (isDone ? '<span class="badge b-done">✓ เสร็จแล้ว</span>' : rec.status === 'กำลังดำเนินการ' ? '<span class="badge b-progress">▶ กำลังทำ</span>' : '<span class="badge b-wait">รอรับ</span>') : (()=>{ const st = isDone ? 'done' : rec.status === 'กำลังดำเนินการ' ? 'prog' : 'wait', one = CURRENT_DEPT === 'receive';      // goods arrive in one tap: no "accept" stage
         return `<button type="button" class="dep-tick dt-${st}" data-st="${st}" data-id="${esc(r._id)}" title="${one ? (st === 'done' ? 'กดเพื่อยกเลิก (กลับไปรอของ)' : 'กดเมื่อได้รับของแล้ว') : st === 'wait' ? 'กดเพื่อรับงานเข้าแผนก' : st === 'prog' ? 'กดเมื่อทำเสร็จแล้ว' : 'กดเพื่อยกเลิกเสร็จ (กลับไปรอทำ)'}">${one ? (st === 'done' ? '✓ ได้รับของแล้ว' : '📦 ได้รับของแล้ว') : st === 'wait' ? '📥 รับงาน' : st === 'prog' ? '▶ กำลังทำ<br>กด = เสร็จ' : '✓ เสร็จแล้ว'}</button>`; })()}</td>
       <td>${(()=>{ const who = assignedTo(r, CURRENT_DEPT), me = CURRENT_EMPLOYEE ? CURRENT_EMPLOYEE.name : '';
-        if(!canAssign(CURRENT_DEPT)) return who ? `<span class="badge ${who === me ? 'b-prog' : 'b-wait'}">👤 ${esc(who)}</span>` : '';
+        if(viewOnly || !canAssign(CURRENT_DEPT)) return who ? `<span class="badge ${who === me ? 'b-prog' : 'b-wait'}">👤 ${esc(who)}</span>` : '';
         const names = assignCandidates(CURRENT_DEPT); if(who && !names.includes(who)) names.push(who);
         return `<select class="dep-assign" data-id="${esc(r._id)}" title="ระบุว่าให้ใครทำขั้นตอนนี้ของเคสนี้" style="font-size:12.5px;padding:5px 6px;${who ? 'font-weight:700;' : ''}"><option value="">— ใครก็ได้ —</option>${names.map(n=>`<option ${n === who ? 'selected' : ''} ${n === me ? 'style="font-weight:700"' : ''}>${esc(n)}</option>`).join('')}</select>`; })()}</td>
       <td>${caseLink(r)}${whereNowHtml(r)}</td>
@@ -5635,9 +5633,9 @@ function renderDept(){
       <td>${esc(fmtDate(r.appointment_date))}</td>
       <td>${isActiveAt(r, CURRENT_DEPT) ? daysCell(daysAtDept(r, CURRENT_DEPT)) : '-'}</td>
       <td>${progressStrip(r)}</td>
-      <td><select class="dep-row-select" data-id="${esc(r._id)}">${DEP_STATUSES.map(s=>`<option value="${esc(s)}" ${s===rec.status?'selected':''}>${esc(s)}</option>`).join('')}</select></td>
+      ${viewOnly ? `<td>${esc(rec.status)}</td><td>${esc((rec.start || '').replace('T', ' '))}</td><td>${esc((rec.end || '').replace('T', ' '))}</td>` : `<td><select class="dep-row-select" data-id="${esc(r._id)}">${DEP_STATUSES.map(s=>`<option value="${esc(s)}" ${s===rec.status?'selected':''}>${esc(s)}</option>`).join('')}</select></td>
       <td><input type="datetime-local" class="dep-row-start" data-id="${esc(r._id)}" value="${toDateTimeInputVal(rec.start)}" style="font-size:12px;padding:4px"></td>
-      <td><input type="datetime-local" class="dep-row-end" data-id="${esc(r._id)}" value="${toDateTimeInputVal(rec.end)}" style="font-size:12px;padding:4px"></td>
+      <td><input type="datetime-local" class="dep-row-end" data-id="${esc(r._id)}" value="${toDateTimeInputVal(rec.end)}" style="font-size:12px;padding:4px"></td>`}
       <td>${isDone ? esc(rec.by || '-') : (rec.status === 'กำลังดำเนินการ' && rec.by ? '🔧 กำลังทำโดย ' + esc(rec.by) : '')}</td>
       <td>${overdue?'<span class="badge b-hold">เกินกำหนด</span>':''}</td>
     </tr>`;
@@ -5816,26 +5814,49 @@ function walletChips(w){
 function couponClinicRows(list){
   const by = {};
   list.forEach(w=>{
-    const r = by[w.clinic] || (by[w.clinic] = {clinic:w.clinic, kinds:{}, unkinded:0, docs:0});
-    r.docs++; r.unkinded += w.unkinded || 0;
+    const r = by[w.clinic] || (by[w.clinic] = {clinic:w.clinic, kinds:{}, unkinded:0, docs:0, cases:[]});
+    r.docs++; r.cases = r.cases.concat(w.cases || []); r.unkinded += w.unkinded || 0;
     Object.keys(w.kinds).forEach(k=>{ const x = r.kinds[k] || (r.kinds[k] = {granted:0, used:0}); x.granted += w.kinds[k].granted; x.used += w.kinds[k].used; });
   });
   return Object.values(by).sort((a, b)=>a.clinic.localeCompare(b.clinic, 'th'));
+}
+function couponExportData(list, ym){
+  const crow = couponClinicRows(list), inMonth = o=>!ym || String(o.date_received || '').slice(0, 7) === ym, q = o=>Math.max(0, Number(o.qty)) || 1;
+  const kindLine = r=>Object.keys(r.kinds).map(k=>{ const x = r.kinds[k]; return k + ' เหลือ ' + (x.granted - x.used) + ' (ให้ไว้ ' + x.granted + ' ใช้ ' + x.used + ')'; }).join(' • ');
+  const left = r=>Object.values(r.kinds).reduce((a, x)=>a + x.granted - x.used, 0);
+  const caseRow = (r, o)=>[fmtDate(o.date_received), r.clinic, o.doctor || '', o.case_id || '', o.patient || '', o.material || '', q(o), couponKindText(o) || '— ไม่ระบุ', o.coupon_status || '-'];
+  const CH = ['วันรับงาน', 'คลินิก', 'หมอ', 'เลขเคส', 'ชื่อคนไข้', 'ประเภทงาน', 'ซี่', 'ประเภทคูปอง', 'สถานะคูปอง'];
+  const sumRows = [['คลินิก', 'ประเภทคูปอง', 'ให้ไว้', 'ใช้ไป', 'เหลือ']], caseRows = [CH];
+  crow.forEach(r=>{
+    Object.keys(r.kinds).forEach(k=>sumRows.push([r.clinic, k, r.kinds[k].granted, r.kinds[k].used, r.kinds[k].granted - r.kinds[k].used]));
+    if(r.unkinded) sumRows.push([r.clinic, 'ยังไม่ระบุประเภท (' + r.unkinded + ' เคส)', '', '', '']);
+    r.cases.filter(inMonth).sort((a, b)=>String(a.date_received || '').localeCompare(String(b.date_received || ''))).forEach(o=>caseRows.push(caseRow(r, o)));
+  });
+  return {crow, sumRows, caseRows, CH, kindLine, left, caseRow, inMonth};
 }
 function renderCouponSummary(list){
   const box = document.getElementById('cpw-summary'); if(!box) return;
   const rows = couponClinicRows(list);
   if(!rows.length){ box.innerHTML = ''; return; }
-  const kinds = [...new Set(couponKinds().concat(...rows.map(r=>Object.keys(r.kinds))))].filter(k=>rows.some(r=>r.kinds[k]));
-  const cell = x=>{ if(!x) return '<td class="num" style="color:#aaa">–</td>'; const left = x.granted - x.used; return `<td class="num" style="${left < 0 ? 'color:#b00020;font-weight:700' : left === 0 ? 'color:#b26a00;font-weight:700' : 'font-weight:700'}" title="ให้ไว้ ${x.granted} • ใช้ไป ${x.used}">${left}<span style="font-weight:400;color:#6b7a77;font-size:11px"> / ${x.granted}</span></td>`; };
-  box.innerHTML = `<h3 style="margin:10px 0 2px">📊 สรุปคูปองรายคลินิก (เหลือ / ให้ไว้ ทั้งหมด)</h3><div class="note" style="margin:0 0 6px">รวมทุกหมอของคลินิกนั้น • ตัวเลขแดง = ใช้เกินที่ให้ไว้ • ส้ม = หมดพอดี</div>
-    <div class="tablewrap" style="max-height:340px;overflow:auto"><table id="cpw-sum-table"><tr><th>คลินิก</th>${kinds.map(k=>'<th>' + esc(k) + '</th>').join('')}<th>รวมเหลือ</th><th></th></tr>${rows.map(r=>{
+  const chip = (k, x)=>{ const left = x.granted - x.used; return `<span class="cpd-chip wal ${left < 0 ? 'neg' : left === 0 ? 'zero' : ''}" title="ให้ไว้ ${x.granted} • ใช้ไป ${x.used}">${esc(k)} เหลือ ${left}<span style="font-weight:400"> / ${x.granted}</span></span>`; };
+  box.innerHTML = `<h3 style="margin:10px 0 2px">📊 สรุปคูปองรายคลินิก</h3><div class="note" style="margin:0 0 6px">รวมทุกหมอของคลินิกนั้น • แดง = ใช้เกินที่ให้ไว้ • ส้ม = หมดพอดี • ดูรายชื่อเคส/หมอ/คนไข้ได้ใน PDF และ Excel</div>
+    <div class="tablewrap" style="max-height:340px;overflow:auto"><table id="cpw-sum-table"><tr><th>คลินิก</th><th>คูปองคงเหลือ (เหลือ / ให้ไว้)</th><th>รวมเหลือ</th></tr>${rows.map(r=>{
       const tl = Object.values(r.kinds).reduce((a, x)=>a + x.granted - x.used, 0);
-      return `<tr><td><b>${esc(r.clinic)}</b></td>${kinds.map(k=>cell(r.kinds[k])).join('')}<td class="num"><b>${tl}</b></td><td>${r.unkinded ? '<span class="cpd-chip neg" title="เคสคูปองที่ยังไม่ได้เลือกประเภท">⚠ ยังไม่ระบุประเภท ' + r.unkinded + '</span>' : ''}</td></tr>`;
-    }).join('')}</table></div><div class="actions" style="margin:6px 0"><button type="button" class="btn ghost sm" id="cpw-sum-xlsx">⬇ Excel สรุปรายคลินิก</button></div>`;
-  document.getElementById('cpw-sum-xlsx').addEventListener('click', ()=>{
-    downloadXlsx('สรุปคูปองรายคลินิก ' + todayLocal() + '.xlsx', [{name:'สรุปรายคลินิก', rows:[['คลินิก'].concat(...kinds.map(k=>[k + ' ให้ไว้', k + ' ใช้', k + ' เหลือ']), ['รวมเหลือ', 'เคสยังไม่ระบุประเภท'])].concat(rows.map(r=>[r.clinic].concat(...kinds.map(k=>{ const x = r.kinds[k]; return x ? [x.granted, x.used, x.granted - x.used] : ['', '', '']; }), [Object.values(r.kinds).reduce((a, x)=>a + x.granted - x.used, 0), r.unkinded])))}]);
-  });
+      return `<tr><td><b>${esc(r.clinic)}</b></td><td>${Object.keys(r.kinds).map(k=>chip(k, r.kinds[k])).join(' ')}${r.unkinded ? ' <span class="cpd-chip neg" title="เคสคูปองที่ยังไม่ได้เลือกประเภท">⚠ ยังไม่ระบุประเภท ' + r.unkinded + '</span>' : ''}</td><td class="num"><b>${tl}</b></td></tr>`;
+    }).join('')}</table></div><div class="actions" style="margin:6px 0"><button type="button" class="btn ghost sm" id="cpw-sum-xlsx">⬇ Excel (สรุป + รายการเคส)</button> <button type="button" class="btn ghost sm" id="cpw-sum-pdf">🖨 PDF (แยกรายคลินิก)</button></div>`;
+  document.getElementById('cpw-sum-xlsx').addEventListener('click', couponReportXlsx);
+  document.getElementById('cpw-sum-pdf').addEventListener('click', couponReportPdf);
+}
+function couponReportList(){
+  const ym = String(document.getElementById('cpr-month').value || ''), qq = String(document.getElementById('cpd-q').value || '').trim().toLowerCase();
+  let upTo = '';
+  if(ym){ const [y, m] = ym.split('-').map(Number); upTo = ym + '-' + String(new Date(y, m, 0).getDate()).padStart(2, '0'); }
+  return {ym, qq, list: couponWallets(upTo).filter(w=>!qq || (w.clinic + ' ' + w.doctor).toLowerCase().includes(qq))};
+}
+function couponReportXlsx(){
+  const {ym, list} = couponReportList(); if(!list.length){ showToast('ไม่มีกระเป๋าคูปองให้สรุป'); return; }
+  const d = couponExportData(list, ym);
+  downloadXlsx('สรุปคูปอง ' + (ym || todayLocal()) + '.xlsx', [{name:'สรุปรายคลินิก', rows:d.sumRows}, {name:'รายการเคส', rows:d.caseRows}]);
 }
 function renderCouponWallets(){
   const box = document.getElementById('cpw-list'); if(!box) return;
@@ -5999,32 +6020,20 @@ function setupCouponKindField(){
   ['f_case_type', 'f_coupon_kind', 'f_clinic', 'f_doctor', 'f_qty'].forEach(id=>{ const e = document.getElementById(id); if(e){ e.addEventListener('change', couponHint); e.addEventListener('input', couponHint); } });
 }
 function couponReportPdf(){
-  const ym = String(document.getElementById('cpr-month').value || ''), qq = String(document.getElementById('cpd-q').value || '').trim().toLowerCase();
-  let upTo = '';
-  if(ym){ const [y, m] = ym.split('-').map(Number); upTo = ym + '-' + String(new Date(y, m, 0).getDate()).padStart(2, '0'); }
-  const list = couponWallets(upTo).filter(w=>!qq || (w.clinic + ' ' + w.doctor).toLowerCase().includes(qq));
+  const {ym, qq, list} = couponReportList();
   if(!list.length){ showToast('ไม่มีกระเป๋าคูปองให้สรุป'); return; }
-  const inMonth = o=>!ym || String(o.date_received || '').slice(0, 7) === ym, cnt = o=>o.coupon_status !== 'คูปองหมดอายุ/ยกเลิก';
-  const q = o=>Math.max(0, Number(o.qty)) || 1;
-  const sum = [['คลินิก', 'หมอ', 'ประเภทคูปอง', 'ให้ไว้ (ซี่)', 'ใช้สะสม (ซี่)', ym ? 'ใช้ในเดือนนี้ (ซี่)' : 'ใช้ (ซี่)', 'เหลือ (ซี่)']];
-  const det = [['วันรับงาน', 'คลินิก', 'หมอ', 'เคส', 'คนไข้', 'ประเภทคูปอง', 'ซี่', 'สถานะคูปอง']];
-  let tg = 0, tu = 0;
-  list.forEach(w=>{
-    Object.keys(w.kinds).forEach(k=>{
-      const x = w.kinds[k], mUsed = w.cases.filter(o=>cnt(o) && inMonth(o)).reduce((a, o)=>a + couponParts(o).filter(pt=>pt.kind === k).reduce((b, pt)=>b + pt.qty, 0), 0);
-      sum.push([w.clinic, w.doctor || '(ทั้งคลินิก)', k, x.granted, x.used, mUsed, x.granted - x.used]); tg += x.granted; tu += x.used;
-    });
-    if(w.unkinded) sum.push([w.clinic, w.doctor || '(ทั้งคลินิก)', 'ยังไม่ระบุประเภท (ไม่ถูกหัก)', '-', '-', '-', '-']);
-    w.cases.filter(inMonth).sort((a, b)=>String(a.date_received || '').localeCompare(String(b.date_received || ''))).forEach(o=>det.push([fmtDate(o.date_received), w.clinic, o.doctor || '', o.case_id || '', o.patient || '', couponKindText(o) || '— ไม่ระบุ', q(o), o.coupon_status || '-']));
+  const d = couponExportData(list, ym), when = ym ? 'ยอด ณ สิ้นเดือน ' + ym : 'ยอด ณ วันที่ ' + fmtDate(todayLocal());
+  const tg = d.crow.reduce((a, r)=>a + Object.values(r.kinds).reduce((b, x)=>b + x.granted, 0), 0), tl = d.crow.reduce((a, r)=>a + d.left(r), 0);
+  const sections = [{heading:'สรุปคูปองรายคลินิก — ' + when, kpi:d.crow.length + ' คลินิก • ให้ไว้รวม ' + tg.toLocaleString() + ' • เหลือรวม ' + tl.toLocaleString(), rows:[['คลินิก', 'คูปองคงเหลือ (เหลือ / ให้ไว้ / ใช้ไป)', 'รวมเหลือ']].concat(d.crow.map(r=>[r.clinic, d.kindLine(r) + (r.unkinded ? ' • ยังไม่ระบุประเภท ' + r.unkinded + ' เคส' : ''), d.left(r)]))}];
+  d.crow.forEach(r=>{
+    const cs = r.cases.filter(d.inMonth).sort((a, b)=>String(a.date_received || '').localeCompare(String(b.date_received || '')));
+    sections.push({heading:r.clinic, kpi:d.kindLine(r) + ' • เคสที่ใช้คูปอง' + (ym ? 'ในเดือน ' + ym : 'ทั้งหมด') + ' ' + cs.length + ' เคส', pageBreak:true,
+      rows:[['วันรับงาน', 'หมอ', 'เลขเคส', 'ชื่อคนไข้', 'ประเภทงาน', 'ซี่', 'ประเภทคูปอง', 'สถานะคูปอง']].concat(cs.map(o=>{ const x = d.caseRow(r, o); return [x[0]].concat(x.slice(2)); }))});
   });
-  const when = ym ? 'ยอด ณ สิ้นเดือน ' + ym : 'ยอด ณ วันที่ ' + fmtDate(todayLocal());
-  const crow = couponClinicRows(list), ckinds = [...new Set(couponKinds().concat(...crow.map(r=>Object.keys(r.kinds))))].filter(k=>crow.some(r=>r.kinds[k]));
-  const cmat = [['คลินิก'].concat(ckinds.map(k=>k + ' (เหลือ / ให้ไว้)'), ['รวมเหลือ', 'หมายเหตุ'])].concat(crow.map(r=>[r.clinic].concat(ckinds.map(k=>{ const x = r.kinds[k]; return x ? (x.granted - x.used) + ' / ' + x.granted : '–'; }), [Object.values(r.kinds).reduce((a, x)=>a + x.granted - x.used, 0), r.unkinded ? 'ยังไม่ระบุประเภท ' + r.unkinded + ' เคส' : ''])));
-  const sections = [{heading:'สรุปคูปองรายคลินิก — ' + when, kpi:crow.length + ' คลินิก • ให้ไว้รวม ' + tg.toLocaleString() + ' ซี่ • ใช้สะสม ' + tu.toLocaleString() + ' ซี่ • เหลือ ' + (tg - tu).toLocaleString() + ' ซี่', rows:cmat}, {heading:'รายละเอียดแยกตามหมอ / ประเภท — ' + when,rows:sum}];
-  if(det.length > 1) sections.push({heading:'รายการเคสคูปอง' + (ym ? ' ประจำเดือน ' + ym : ''), rows:det, pageBreak:true});
   printPdf('สรุปคูปอง' + (ym ? '_' + ym : '_' + todayLocal()), 'สรุปคูปอง' + (qq ? ' (ค้นหา: ' + qq + ')' : ''), sections);
 }
 document.getElementById('cpr-btn').addEventListener('click', couponReportPdf);
+document.getElementById('cpr-xlsx').addEventListener('click', couponReportXlsx);
 function renderCouponByDoctor(){
   const card = document.getElementById('coupon-by-doc-card');
   if(card) card.style.display = canSeeCoupons(CURRENT_EMPLOYEE) ? '' : 'none';
@@ -6499,7 +6508,7 @@ function applyRole(){
   const sig = allowed.join(',');
   if(sig !== LAST_DEPT_SIG){
     LAST_DEPT_SIG = sig;
-    if(!allowed.includes(CURRENT_DEPT)) CURRENT_DEPT = allowed.length ? allowed[0] : null;
+    if(!DEPARTMENTS.some(d=>d.key === CURRENT_DEPT && d.key !== 'order_intake') || (allowed.length && !allowed.includes(CURRENT_DEPT) && !LAST_DEPT_PICKED)) CURRENT_DEPT = allowed.length ? allowed[0] : (DEPARTMENTS.find(d=>d.key !== 'order_intake') || DEPARTMENTS[0]).key;
     buildDeptChips();
   }
 }
