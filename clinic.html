@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>ตรวจสอบสถานะงาน — TO CONCEPT LAB</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500&family=Noto+Sans+Thai:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#000;--ink:#f4f4f2;--mute:#9a9a96;--line:#2a2a2c;--accent:#5fd1c4;--warn:#e8b25a}
+*{box-sizing:border-box;margin:0}body{background:var(--bg);color:var(--ink);font-family:'Noto Sans Thai',system-ui,sans-serif;font-weight:300;line-height:1.6;min-height:100vh}
+.wrap{max-width:860px;margin:0 auto;padding:28px 20px 60px}
+.brand{font-family:'Montserrat',system-ui,sans-serif;letter-spacing:.28em;font-size:13px;font-weight:500}
+a{color:var(--accent)}
+h1{font-size:26px;font-weight:400;margin:34px 0 6px}.sub{color:var(--mute);font-size:14.5px}
+.box{margin-top:22px;display:flex;gap:10px;flex-wrap:wrap}
+input{flex:1;min-width:200px;background:#0b0b0c;border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:13px 14px;font:inherit;font-size:17px;letter-spacing:2px;text-transform:uppercase}
+button{background:var(--ink);color:#000;border:0;border-radius:10px;padding:13px 26px;font:inherit;font-weight:500;cursor:pointer}
+.err{color:#ff8a80;margin-top:12px;min-height:24px;font-size:14.5px}
+.hd{margin-top:30px;display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px}
+.hd b{font-size:18px;font-weight:500}.hd span{color:var(--mute);font-size:13px}
+.case{border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:14px;background:#08080a}
+.case.done{opacity:.72}
+.top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.cid{font-family:'Montserrat',system-ui,sans-serif;font-weight:500;letter-spacing:.06em;font-size:16px}
+.pill{font-size:12.5px;padding:3px 12px;border-radius:99px;border:1px solid var(--accent);color:var(--accent);white-space:nowrap}
+.pill.d{border-color:#6b8f6b;color:#9fd29f}.pill.h{border-color:var(--warn);color:var(--warn)}
+.meta{color:var(--mute);font-size:13.5px;margin-top:6px}
+.meta b{color:var(--ink);font-weight:400}
+.steps{display:flex;gap:4px;margin-top:14px;flex-wrap:wrap}
+.st{flex:1;min-width:84px;font-size:11.5px;color:var(--mute);border-top:3px solid var(--line);padding-top:5px}
+.st.done{border-color:#6b8f6b;color:#9fd29f}.st.doing{border-color:var(--accent);color:var(--accent);font-weight:500}.st.next{border-color:var(--accent);color:var(--ink)}
+.empty{color:var(--mute);margin-top:30px}
+footer{margin-top:50px;color:var(--mute);font-size:12.5px}
+</style></head>
+<body><div class="wrap">
+<a class="brand" href="./" style="text-decoration:none;color:inherit">TOTU CONCEPT LAB</a>
+<h1>ตรวจสอบสถานะงาน</h1>
+<p class="sub">สำหรับคลินิกที่ใช้บริการ ใส่รหัสที่แล็บส่งให้ จะเห็นเฉพาะงานของคลินิกท่านเท่านั้น</p>
+<form class="box" id="f"><input id="code" placeholder="รหัสคลินิก เช่น ABCDE-FGHJK" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="14"><button>ดูสถานะงาน</button></form>
+<div class="err" id="err"></div>
+<div id="out"></div>
+<footer>ข้อมูลอัปเดตตามที่แล็บบันทึกในระบบ หากมีข้อสงสัยกรุณาติดต่อแล็บทาง LINE @toconcept</footer>
+</div>
+<script>
+var API = '';
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m];}); }
+function fd(s){ if(!s) return '-'; var m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s); return m? m[3]+'/'+m[2]+'/'+(+m[1]+543) : s; }
+fetch('config.json').then(function(r){return r.json();}).then(function(c){ API=c.api_url; var q=new URLSearchParams(location.search).get('c'); if(q){ document.getElementById('code').value=q.toUpperCase(); go(); } }).catch(function(){});
+document.getElementById('f').addEventListener('submit', function(e){ e.preventDefault(); go(); });
+function go(){
+  var code=document.getElementById('code').value.trim(), err=document.getElementById('err'), out=document.getElementById('out');
+  err.textContent=''; if(!code){ err.textContent='กรุณาใส่รหัสคลินิก'; return; }
+  if(!API){ err.textContent='ระบบยังไม่พร้อม ลองใหม่อีกครั้ง'; return; }
+  out.innerHTML='<div class="empty">กำลังโหลด…</div>';
+  fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'clinicStatus',code:code})}).then(function(r){return r.json();}).then(function(r){
+    if(!r||!r.ok){ out.innerHTML=''; err.textContent = r&&r.error==='locked' ? 'มีการลองรหัสผิดหลายครั้ง กรุณารอสักครู่แล้วลองใหม่' : 'รหัสไม่ถูกต้อง หรือถูกปิดใช้งาน กรุณาตรวจสอบกับแล็บ'; return; }
+    try{ history.replaceState(null,'',location.pathname); }catch(e){}
+    var h='<div class="hd"><b>'+esc(r.clinic)+'</b><span>'+r.cases.length+' เคส</span></div>';
+    if(!r.cases.length) h+='<div class="empty">ขณะนี้ไม่มีเคสที่อยู่ในแล็บ</div>';
+    r.cases.forEach(function(c){
+      h+='<div class="case'+(c.delivered?' done':'')+'"><div class="top"><span class="cid">'+esc(c.case_id)+'</span><span class="pill '+(c.delivered?'d':(/พัก/.test(c.status)?'h':''))+'">'+esc(c.status)+'</span></div>'+
+      '<div class="meta"><b>'+esc(c.patient||'-')+'</b>'+(c.doctor?' · '+esc(c.doctor):'')+' · '+esc(c.material||'')+(c.qty?' × '+esc(c.qty):'')+'</div>'+
+      '<div class="meta">รับงาน '+fd(c.date_received)+(c.ship_date?' · กำหนดส่งออก '+fd(c.ship_date):'')+(c.appointment_date?' · นัดคนไข้ '+fd(c.appointment_date):'')+(c.tracking_no?' · เลขพัสดุ <b>'+esc(c.tracking_no)+'</b>':'')+'</div>'+
+      '<div class="steps">'+c.stages.map(function(s){ return '<div class="st '+(s.state==='todo'?'':s.state)+'">'+esc(s.label)+'</div>'; }).join('')+'</div></div>';
+    });
+    out.innerHTML=h;
+  }).catch(function(){ out.innerHTML=''; err.textContent='เชื่อมต่อไม่ได้ ลองใหม่อีกครั้ง'; });
+}
+</script></body></html>

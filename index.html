@@ -77,10 +77,18 @@ footer a:hover{color:var(--ink)}
 .rv{opacity:0;transform:translateY(18px);transition:opacity .8s,transform .8s}
 .rv.on{opacity:1;transform:none}
 @media(prefers-reduced-motion:reduce){.rv{opacity:1;transform:none;transition:none}html{scroll-behavior:auto}}
+form label{display:block;font-size:13.5px;color:var(--mute);margin-bottom:14px}
+form input:not([type=checkbox]),form textarea{display:block;width:100%;margin-top:5px;background:#0b0b0c;border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:11px 13px;font:inherit;font-size:15.5px}
+form input:focus,form textarea:focus{outline:1px solid var(--accent);border-color:var(--accent)}
+fieldset{border:1px solid var(--line);border-radius:10px;padding:12px 14px 4px;margin-bottom:14px}legend{font-size:13.5px;color:var(--mute);padding:0 6px}
+.ck{display:inline-flex!important;align-items:center;gap:8px;margin:0 18px 10px 0!important;color:var(--ink)!important;font-size:14.5px!important}.ck input{width:auto!important;margin:0!important}
+.fine{font-size:12px;color:var(--mute);margin:4px 0 16px}
+#rmsg{margin-top:14px;font-size:14.5px}#rmsg.ok{color:#9fd29f}#rmsg.bad{color:#ff8a80}
+button.btn{cursor:pointer;font-family:inherit}
 </style>
 </head>
 <body>
-<header><div class="wrap"><a class="brand" href="#top">TOTU CONCEPT LAB</a><nav><a href="#services">งานของเรา</a><a href="#process">ขั้นตอน</a><a href="#why">ทำไมเรา</a><a class="cta" href="#contact">ติดต่อ</a></nav></div></header>
+<header><div class="wrap"><a class="brand" href="#top">TOTU CONCEPT LAB</a><nav><a href="#services">งานของเรา</a><a href="#process">ขั้นตอน</a><a href="#why">ทำไมเรา</a><a href="#register">ลงทะเบียน</a><a class="cta" href="#contact">ติดต่อ</a></nav></div></header>
 
 <main id="top">
 <div class="hero"><div class="wrap">
@@ -131,6 +139,32 @@ footer a:hover{color:var(--ink)}
   </ul>
 </div></section>
 
+<section id="register"><div class="wrap two">
+  <div><div class="eyebrow rv">New Clinic</div><h2 class="rv">ลงทะเบียนคลินิกใหม่<br>เริ่มส่งงานกับเรา</h2><p class="sub rv">กรอกข้อมูลเบื้องต้น ทีมงานจะติดต่อกลับเพื่อเปิดบัญชีและแนะนำขั้นตอนการส่งงาน</p>
+  <p class="sub rv" style="margin-top:26px">เป็นลูกค้าอยู่แล้ว? <a href="clinic.html" style="color:var(--accent)">ตรวจสอบสถานะงานของคลินิก →</a></p></div>
+  <form id="rf" class="rv" autocomplete="on" novalidate>
+    <label>ชื่อผู้ติดต่อ *<input name="contact_name" required maxlength="100" autocomplete="name"></label>
+    <label>เบอร์ติดต่อ / เบอร์คลินิก *<input name="phone" required maxlength="30" inputmode="tel" autocomplete="tel"></label>
+    <label>ชื่อคลินิก *<input name="clinic" required maxlength="150" autocomplete="organization"></label>
+    <label>เลขประจำตัวผู้เสียภาษี (13 หลัก)<input name="tax_id" maxlength="20" inputmode="numeric"></label>
+    <label>ที่อยู่<textarea name="address" rows="3" maxlength="400" autocomplete="street-address"></textarea></label>
+    <fieldset><legend>สนใจส่งงานประเภท</legend>
+      <label class="ck"><input type="checkbox" name="i" value="Crown &amp; Bridge"> Crown &amp; Bridge</label>
+      <label class="ck"><input type="checkbox" name="i" value="Veneer / Inlay / Onlay"> Veneer / Inlay / Onlay</label>
+      <label class="ck"><input type="checkbox" name="i" value="Implant / Custom Abutment"> Implant / Custom Abutment</label>
+      <label class="ck"><input type="checkbox" name="i" value="All-on-X / Full Arch"> All-on-X / Full Arch</label>
+      <label class="ck"><input type="checkbox" name="i" value="3D Model / Surgical Guide"> 3D Model / Surgical Guide</label>
+      <label class="ck"><input type="checkbox" name="i" value="อื่นๆ"> อื่นๆ</label>
+    </fieldset>
+    <label>ลิงก์แผนที่คลินิก (Google Maps)<input name="map_link" maxlength="500" inputmode="url" placeholder="วางลิงก์จาก Google Maps"></label>
+    <label>เบอร์ติดต่อฝ่ายบัญชี<input name="accounting_phone" maxlength="30" inputmode="tel"></label>
+    <input name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;opacity:0;height:0">
+    <p class="fine">การกดส่งถือว่ายินยอมให้ TOTUCONCEPT CO.,LTD ใช้ข้อมูลนี้เพื่อติดต่อกลับและเปิดบัญชีลูกค้าเท่านั้น</p>
+    <button class="btn solid" type="submit" id="rb">ส่งข้อมูล</button>
+    <div id="rmsg" role="status"></div>
+  </form>
+</div></section>
+
 <section id="contact"><div class="wrap">
   <div class="eyebrow rv">Contact</div>
   <h2 class="rv">สนใจส่งงานกับเรา?</h2>
@@ -140,7 +174,7 @@ footer a:hover{color:var(--ink)}
 </div></section>
 </main>
 
-<footer><div class="wrap"><span>© <span id="yr"></span> TOTUCONCEPT CO.,LTD · TO CONCEPT LAB</span><a href="app.html" rel="nofollow">สำหรับทีมงาน · เข้าสู่ระบบ</a></div></footer>
+<footer><div class="wrap"><span>© 2023 TOTUCONCEPT CO.,LTD · TO CONCEPT LAB</span><span></span></div></footer>
 
 <script>
 // ===== ข้อมูลติดต่อ: แก้ที่นี่ที่เดียว ใส่ได้เฉพาะที่มี ช่องว่างจะไม่แสดง =====
@@ -167,13 +201,34 @@ var CONTACT = {
   if(c.hours) t += '<div>🕘 '+esc(c.hours)+'</div>';
   b.innerHTML = h; i.innerHTML = t;
   if(!h && !t) document.getElementById('contact').style.display = 'none', document.querySelector('nav .cta').style.display = 'none', document.querySelector('.hero .btn:not(.solid)').style.display = 'none';
-  document.getElementById('yr').textContent = new Date().getFullYear();
   // old links (QR codes on printed tickets, setup links) still open the work app
   if(/^#(case|api)=/.test(location.hash) || /[?&]app\b/.test(location.search)){ location.replace('app.html' + location.search + location.hash); return; }
   var els = document.querySelectorAll('.rv');
   if(!('IntersectionObserver' in window)){ els.forEach(function(e){ e.classList.add('on'); }); return; }
   var io = new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('on'); io.unobserve(e.target); } }); }, {threshold:.12});
   els.forEach(function(e){ io.observe(e); });
+})();
+</script>
+<script>
+// ===== ฟอร์มลงทะเบียนคลินิกใหม่ → ส่งเข้า Google Sheet ชีท NewClinics ผ่าน Apps Script =====
+(function(){
+  var f = document.getElementById('rf'); if(!f) return;
+  var API = ''; fetch('config.json').then(function(r){ return r.json(); }).then(function(c){ API = c.api_url; }).catch(function(){});
+  var ERR = {missing:'กรุณากรอกชื่อผู้ติดต่อ เบอร์ติดต่อ และชื่อคลินิก', bad_phone:'เบอร์โทรไม่ถูกต้อง', bad_tax:'เลขประจำตัวผู้เสียภาษีต้องเป็นตัวเลข 13 หลัก', busy:'ระบบกำลังมีผู้ใช้งานจำนวนมาก กรุณาลองใหม่ภายหลัง'};
+  f.addEventListener('submit', function(e){
+    e.preventDefault();
+    var m = document.getElementById('rmsg'), b = document.getElementById('rb'), fd = new FormData(f), body = {action:'registerClinic'};
+    ['contact_name','phone','clinic','tax_id','address','map_link','accounting_phone','website'].forEach(function(k){ body[k] = String(fd.get(k) || '').trim(); });
+    body.interests = fd.getAll('i');
+    m.className = ''; 
+    if(!body.contact_name || !body.phone || !body.clinic){ m.className = 'bad'; m.textContent = ERR.missing; return; }
+    if(!API){ m.className = 'bad'; m.textContent = 'ระบบยังไม่พร้อม ลองใหม่อีกครั้ง'; return; }
+    b.disabled = true; m.textContent = 'กำลังส่ง…';
+    fetch(API, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(body)}).then(function(r){ return r.json(); }).then(function(r){
+      if(r && r.ok){ f.reset(); m.className = 'ok'; m.textContent = 'ส่งข้อมูลเรียบร้อย ขอบคุณครับ ทีมงานจะติดต่อกลับโดยเร็ว'; }
+      else { m.className = 'bad'; m.textContent = ERR[r && r.error] || 'ส่งไม่สำเร็จ กรุณาลองใหม่ หรือติดต่อทาง LINE'; }
+    }).catch(function(){ m.className = 'bad'; m.textContent = 'เชื่อมต่อไม่ได้ กรุณาลองใหม่ หรือติดต่อทาง LINE'; }).then(function(){ b.disabled = false; });
+  });
 })();
 </script>
 </body>
