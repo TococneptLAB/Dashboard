@@ -916,7 +916,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-12 รุ่น 106 (คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
+const APP_VERSION = "2026-10-12 รุ่น 107 (คูปอง: ช่อง ใช้ไปแล้ว (ข้อมูลเก่า) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -5917,11 +5917,12 @@ function renderCouponAdmin(force){
   if(!force && CPW_FORM_OPEN && document.getElementById('cpw-clinic')) return;      // do not wipe what is being typed when the page refreshes
   if(!CPW_FORM_OPEN){ box.innerHTML = '<button type="button" class="btn primary sm" id="cpw-open">＋ เพิ่มคูปองให้หมอ/คลินิก</button>'; document.getElementById('cpw-open').addEventListener('click', ()=>{ CPW_FORM_OPEN = true; renderCouponAdmin(true); }); return; }
   const kinds = couponKinds(), keep = id=>{ const e = document.getElementById(id); return e ? e.value : ''; };
-  const v = {clinic: keep('cpw-clinic'), doctor: keep('cpw-doctor'), kind: keep('cpw-kind'), qty: keep('cpw-qty') || '1', note: keep('cpw-note')};
+  const v = {clinic: keep('cpw-clinic'), doctor: keep('cpw-doctor'), kind: keep('cpw-kind'), qty: keep('cpw-qty') || '1', note: keep('cpw-note'), old: keep('cpw-old')};
   box.innerHTML = `<div class="cpw-form"><div><label>คลินิก (เว้นว่าง = หมอทำหลายคลินิก)</label><input id="cpw-clinic" list="dl-clinic-form" autocomplete="off" value="${esc(v.clinic)}" placeholder="ชื่อคลินิก"></div>
     <div><label>หมอ (เว้นว่าง = ทั้งคลินิก)</label><input id="cpw-doctor" list="dl-doctors" autocomplete="off" value="${esc(v.doctor)}" placeholder="ชื่อหมอ"></div>
     <div><label>ประเภทคูปอง</label><select id="cpw-kind">${kinds.map(k=>`<option value="${esc(k)}" ${k === v.kind ? 'selected' : ''}>${esc(k)}</option>`).join('')}<option value="__new__">＋ เพิ่มประเภทใหม่…</option></select></div>
     <div><label>จำนวนซี่ (ใส่ - เพื่อหักออก)</label><input id="cpw-qty" type="number" step="1" value="${esc(v.qty)}" style="width:90px"></div>
+    <div><label title="จำนวนที่ใช้ไปแล้วจากข้อมูลเก่า ก่อนมาใช้เว็บนี้ — ระบบหักออกให้ ไม่ไปนับซ้ำกับเคสใหม่">ใช้ไปแล้ว (ข้อมูลเก่า)</label><input id="cpw-old" type="number" step="1" min="0" value="${esc(v.old)}" placeholder="เช่น 21" style="width:110px"></div>
     <div style="flex:1;min-width:140px"><label>หมายเหตุ</label><input id="cpw-note" value="${esc(v.note)}" placeholder="เช่น ซื้อ 10 แถม 1 / โปรเดือนนี้" style="width:100%"></div>
     <div><button type="button" class="btn primary" id="cpw-add">เพิ่มคูปอง</button> <button type="button" class="btn ghost" id="cpw-cancel">ปิด</button></div></div>`;
   document.getElementById('cpw-cancel').addEventListener('click', ()=>{ CPW_FORM_OPEN = false; renderCouponAdmin(true); });
@@ -5933,16 +5934,21 @@ function renderCouponAdmin(force){
   });
   document.getElementById('cpw-add').addEventListener('click', async ()=>{
     const clinic = document.getElementById('cpw-clinic').value.trim(), doctor = document.getElementById('cpw-doctor').value.trim(), kind = document.getElementById('cpw-kind').value;
-    const qty = parseInt(document.getElementById('cpw-qty').value, 10), note = document.getElementById('cpw-note').value.trim().slice(0, 120);
+    const qty0 = parseInt(document.getElementById('cpw-qty').value, 10), note = document.getElementById('cpw-note').value.trim().slice(0, 120);
+    const oldUsed = Math.max(0, parseInt(document.getElementById('cpw-old').value, 10) || 0), qty = isFinite(qty0) ? qty0 : 0;
     if(!clinic && !doctor){ showToast('ใส่ชื่อคลินิก หรือชื่อหมอ (หมอที่ทำหลายคลินิก เว้นคลินิกว่างได้)'); return; }
     if(!kind || kind === '__new__'){ showToast('เลือกประเภทคูปอง'); return; }
-    if(!isFinite(qty) || qty === 0){ showToast('จำนวนต้องเป็นตัวเลข (ไม่ใช่ 0)'); return; }
-    const probe = readPrices(); probe.coupon_grants = probe.coupon_grants.concat({id:'x', clinic, doctor, kind, qty, note, date:'2000-01-01', by:''});
+    if(qty === 0 && !oldUsed){ showToast('จำนวนต้องเป็นตัวเลข (ไม่ใช่ 0)'); return; }
+    const probe = readPrices(); probe.coupon_grants = probe.coupon_grants.concat({id:'x', clinic, doctor, kind, qty, note, date:'2000-01-01', by:''}, {id:'y', clinic, doctor, kind, qty:-oldUsed, note:'ใช้ไปแล้วก่อนเข้าระบบ (ข้อมูลเก่า)', date:'2000-01-01', by:''});
     if(JSON.stringify(probe).length > 42000){ showToast('พื้นที่เก็บคูปองเต็ม — ลบรายการเก่าที่ไม่ใช้แล้วก่อน'); return; }
     const canon = clinic ? (canonName('clinics', clinic) || clinic) : '';
-    await saveSettingsPatch(cur=>{ cur.coupon_grants.push({id:'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), clinic: canon, doctor, kind, qty, note, date: todayLocal(), by: CURRENT_EMPLOYEE.name}); });
-    showToast('✓ เพิ่มคูปอง ' + kind + ' ' + qty + ' ใบ ให้ ' + canon + (clinic ? (doctor ? ' / ' + doctor : ' (ทั้งคลินิก)') : ' (หมอ ทุกคลินิก)'));
-    document.getElementById('cpw-qty').value = '1'; document.getElementById('cpw-note').value = '';
+    const gid = ()=>'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+    await saveSettingsPatch(cur=>{
+      if(qty) cur.coupon_grants.push({id:gid(), clinic: canon, doctor, kind, qty, note, date: todayLocal(), by: CURRENT_EMPLOYEE.name});
+      if(oldUsed) cur.coupon_grants.push({id:gid(), clinic: canon, doctor, kind, qty: -oldUsed, note: 'ใช้ไปแล้วก่อนเข้าระบบ (ข้อมูลเก่า)', date: todayLocal(), by: CURRENT_EMPLOYEE.name});
+    });
+    showToast('✓ เพิ่มคูปอง ' + kind + ' ' + (qty ? qty + ' ใบ' : '') + (oldUsed ? ' • หักที่ใช้ไปแล้ว ' + oldUsed + ' ใบ' : '') + ' ให้ ' + canon + (clinic ? (doctor ? ' / ' + doctor : ' (ทั้งคลินิก)') : ' (หมอ ทุกคลินิก)'));
+    document.getElementById('cpw-qty').value = '1'; document.getElementById('cpw-note').value = ''; document.getElementById('cpw-old').value = '';
     renderCouponByDoctor();
   });
 }
