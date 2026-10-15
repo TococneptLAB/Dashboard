@@ -32,6 +32,10 @@ button{background:var(--ink);color:#000;border:0;border-radius:10px;padding:13px
 .st{flex:1;min-width:84px;font-size:11.5px;color:var(--mute);border-top:3px solid var(--line);padding-top:5px}
 .st.done{border-color:#6b8f6b;color:#9fd29f}.st.doing{border-color:var(--accent);color:var(--accent);font-weight:500}.st.next{border-color:var(--accent);color:var(--ink)}
 .ab{margin-top:10px;font-size:13.5px;color:var(--warn);border-left:2px solid var(--warn);padding:2px 0 2px 10px}.ab.got{color:#9fd29f;border-color:#6b8f6b}.ab b{font-weight:500}.ab .sp{color:var(--mute);font-size:12.5px;margin:2px 0}.ab span{color:var(--mute)}
+.cp{border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:14px;background:#08080a}.cpt{font-weight:500;margin-bottom:10px}
+.cpg{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}.cpk{border:1px solid var(--line);border-radius:12px;padding:12px 14px}.cpk.zero .kl{color:var(--warn)}.cpk.neg .kl{color:#ff8a80}
+.kn{font-size:13.5px;color:var(--mute)}.kl{font-family:'Montserrat',system-ui,sans-serif;font-size:34px;font-weight:500;line-height:1.2;color:var(--accent)}.ks{font-size:12px;color:var(--mute)}
+details{margin-top:10px;font-size:13.5px}summary{cursor:pointer;color:var(--mute)}.ul{display:flex;gap:14px;flex-wrap:wrap;padding:6px 0;border-bottom:1px solid var(--line);color:var(--mute)}.ul b{color:var(--ink);font-weight:400;min-width:5.5em}.ul.x{opacity:.55;text-decoration:line-through}
 .empty{color:var(--mute);margin-top:30px}
 .back{font-size:14px;color:var(--ink);text-decoration:none;border:1px solid var(--line);border-radius:99px;padding:7px 16px}.back:hover{border-color:var(--accent);color:var(--accent)}
 footer{margin-top:50px;color:var(--mute);font-size:12.5px}
@@ -71,6 +75,13 @@ function go(){
     if(!r||!r.ok){ out.innerHTML=''; err.textContent = r&&r.error==='locked' ? 'มีการลองรหัสผิดหลายครั้ง กรุณารอสักครู่แล้วลองใหม่' : 'รหัสไม่ถูกต้อง หรือถูกปิดใช้งาน กรุณาตรวจสอบกับแล็บ'; return; }
     try{ history.replaceState(null,'',location.pathname); }catch(e){}
     var h='<div class="hd"><b>'+esc(r.clinic)+'</b><span>'+r.cases.length+' เคส</span></div>';
+    var cp=r.coupons;
+    if(cp&&cp.kinds){
+      h+='<div class="cp"><div class="cpt">🎟 คูปองของคลินิก</div><div class="cpg">'+cp.kinds.map(function(k){ return '<div class="cpk'+(k.left<0?' neg':(k.left===0?' zero':''))+'"><div class="kn">'+esc(k.kind)+'</div><div class="kl">'+k.left+'</div><div class="ks">คงเหลือ · ให้ไว้ '+k.granted+' · ใช้ไป '+k.used+(k.left<0?' (ใช้เกินสิทธิ์)':'')+'</div></div>'; }).join('')+'</div>'+
+      (cp.unkinded?'<div class="meta" style="color:var(--warn)">มี '+cp.unkinded+' เคสที่ยังไม่ได้ระบุประเภทคูปอง จึงยังไม่ถูกหักจากยอด</div>':'')+
+      '<details><summary>ประวัติการใช้คูปอง ('+cp.usage.length+')</summary>'+(cp.usage.length?cp.usage.map(function(u){ return '<div class="ul'+(u.counted?'':' x')+'"><span>'+fd(u.date)+'</span><b>'+esc(u.case_id)+'</b><span>'+esc(u.patient)+'</span><span>'+esc(u.kind||'ยังไม่ระบุประเภท')+(u.counted?'':' (ยกเลิก/หมดอายุ)')+'</span></div>'; }).join(''):'<div class="meta">ยังไม่มีการใช้</div>')+'</details>'+
+      '<details><summary>ประวัติการได้รับคูปอง ('+cp.grants.length+')</summary>'+(cp.grants.length?cp.grants.map(function(g){ return '<div class="ul"><span>'+fd(g.date)+'</span><b>'+(g.qty>0?'+':'')+g.qty+'</b><span>'+esc(g.kind)+'</span><span>'+(g.qty<0?'ปรับยอด':esc(g.doctor||''))+'</span></div>'; }).join(''):'<div class="meta">-</div>')+'</details></div>';
+    }
     if(!r.cases.length) h+='<div class="empty">ขณะนี้ไม่มีเคสที่อยู่ในแล็บ</div>';
     r.cases.forEach(function(c){
       h+='<div class="case'+(c.delivered?' done':'')+'"><div class="top"><span class="cid">'+esc(c.case_id)+'</span><span class="pill '+(c.delivered?'d':(/พัก/.test(c.status)?'h':''))+'">'+esc(pill(c))+'</span></div>'+
