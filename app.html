@@ -392,6 +392,7 @@
       <button data-tab="dept">สถานะแผนก</button>
       <button data-tab="dash">แดชบอร์ด</button>
       <button data-tab="coupon">🎟 คูปอง</button>
+      <button data-tab="finance" style="display:none">💰 รายรับ-รายจ่าย</button>
       <button data-tab="overview">ภาพรวมรายได้</button>
       <button data-tab="report">สรุปหมอ / คลินิก</button>
       <button data-tab="perf">ผลงานรายคน</button>
@@ -828,6 +829,19 @@
   </section>
 
   <!-- OUTSIDE LAB TAB -->
+  <section id="view-finance" class="view">
+    <div class="card">
+      <h2>💰 รายรับ / รายจ่าย <span class="tag">CEO เท่านั้น</span></h2>
+      <div class="note" id="fin-note">หน้านี้เห็นและแก้ไขได้เฉพาะ CEO — แอดมินและพนักงานคนอื่นไม่เห็น</div>
+      <div class="filters" style="margin:10px 0"><input type="month" id="fin-month"><select id="fin-type"><option value="">รับ + จ่าย</option><option value="income">เฉพาะรายรับ</option><option value="expense">เฉพาะรายจ่าย</option></select><input id="fin-q" placeholder="ค้นหา: ชื่อคน / หมวด / หมายเหตุ" style="min-width:220px"><button class="btn primary" id="fin-add">+ เพิ่มรายการ</button><button class="btn ghost" id="fin-csv">⬇ CSV</button></div>
+      <div id="fin-form" style="display:none" class="cm-note"></div>
+      <div class="kpis" id="fin-kpis"></div>
+      <h3 style="margin:14px 0 6px">สรุปตามหมวด</h3>
+      <div class="tablewrap" style="max-height:240px"><table id="fin-cats"></table></div>
+      <h3 style="margin:14px 0 6px">รายการ</h3>
+      <div class="tablewrap" style="max-height:480px"><table id="fin-rows"></table></div>
+    </div>
+  </section>
   <section id="view-supply" class="view">
     <div class="card">
       <h2>📦 คลัง / สั่งของ <span class="tag">SUPPLY</span></h2>
@@ -835,10 +849,17 @@
       <div class="filters" style="margin:10px 0">
         <button class="btn primary" id="sup-new-zir">🦷 สั่ง Zirconia Block 98</button>
         <button class="btn ghost" id="sup-new-other">+ สั่งของอื่น / ขนาด Custom</button>
+        <button class="btn ghost" id="sup-ov-btn">📊 ภาพรวมคงเหลือ</button>
         <button class="btn ghost" id="sup-stockin" style="display:none">📥 รับเข้า / ปรับยอดคลัง</button>
         <button class="btn ghost" id="sup-import" style="display:none" title="โหลดรายการของที่มีอยู่แล้วจากไฟล์ Material Update 2026 เข้าคลัง (รายการที่มีแล้วจะไม่ถูกนับซ้ำ)">📋 นำเข้ารายการคลังเดิม</button>
       </div>
       <div id="sup-form" style="display:none"></div>
+      <div id="sup-ov" style="display:none" class="cm-note">
+        <div class="kpis" id="sup-ov-kpis"></div>
+        <div class="filters" style="margin:8px 0"><label><input type="checkbox" id="sup-ov-only" checked> แสดงเฉพาะที่มีของ</label><input id="sup-ov-q" placeholder="ค้นหา: ชื่อ / โค้ด / สี" style="min-width:200px"><button class="btn ghost" id="sup-ov-csv">⬇ CSV</button><button class="btn ghost" id="sup-ov-print">🖨 พิมพ์</button></div>
+        <div class="tablewrap" style="max-height:200px"><table id="sup-ov-cats"></table></div>
+        <div id="sup-ov-list" style="margin-top:10px"></div>
+      </div>
       <div class="kpis" id="sup-kpis"></div>
       <h3 style="margin:16px 0 6px">รายการที่สั่ง</h3>
       <div class="filters"><select id="sup-filter"><option value="open">ยังไม่ได้รับของ</option><option value="all">ทั้งหมด</option></select></div>
@@ -953,7 +974,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-12 รุ่น 123 (สิทธิ์ แผนกสต็อก: เพิ่ม/ลดของได้ ไม่เห็นราคา · ประวัติเพิ่ม/ลดจำนวนคลัง ใครทำ เมื่อไหร่ เหตุผล · เลือกใช้ของแล็บในฟอร์ม Abutment ดึงโค้ด+ชื่อ และตัดคลัง · ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
+const APP_VERSION = "2026-10-12 รุ่น 125 (💰 รายรับ-รายจ่าย เฉพาะ CEO · ปุ่ม 📊 ภาพรวมคงเหลือในคลัง · สิทธิ์ แผนกสต็อก: เพิ่ม/ลดของได้ ไม่เห็นราคา · ประวัติเพิ่ม/ลดจำนวนคลัง ใครทำ เมื่อไหร่ เหตุผล · เลือกใช้ของแล็บในฟอร์ม Abutment ดึงโค้ด+ชื่อ และตัดคลัง · ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -6338,6 +6359,52 @@ const SUP_SEED = [["Premill+Stock","Neodent (Original)","GM","135.226",9],["Prem
 const SUP_NEEDED = 31, SUP_LOG_MIN = 33, ABUT_STOCK_MIN = 32, STOCK_TOKENS = ['stock', 'คลัง', 'จัดซื้อ', 'ราคาของ', 'storekeeper', 'สต็อก', 'สต๊อก', 'คนคุมคลัง'];
 let SUP = {items:[], orders:[], can_manage:false, catalog:[], shades:[]}, SUP_MODE = '';
 const SUP_ST = {requested:'ขอซื้อ (รอแอดมินสั่ง)', ordered:'สั่งแล้ว รอของมา', received:'รับของแล้ว', cancelled:'ยกเลิก'};
+// ---------------------------------------------------------------- 💰 รายรับ / รายจ่าย (CEO only)
+const FIN_NEEDED = 35, FIN_EXP = ['เงินเดือน', 'อินเซนทีฟ', 'ค่าเช่า', 'โอนให้บุคคล', 'ค่าวัสดุ / ของ', 'ค่าน้ำ-ไฟ-เน็ต', 'ค่าขนส่ง', 'ภาษี / ประกัน', 'อื่น ๆ'], FIN_INC = ['ค่างานจากคลินิก', 'เงินโอนเข้า', 'อื่น ๆ'];
+let FIN = [], FIN_EDIT = null;
+function finMoney(n){ return Number(n || 0).toLocaleString('th-TH', {minimumFractionDigits:0, maximumFractionDigits:2}); }
+async function renderFinanceTab(){
+  const note = document.getElementById('fin-note'), mo = document.getElementById('fin-month');
+  if(!isCeoUser(CURRENT_EMPLOYEE) && !tokensOf(CURRENT_EMPLOYEE && CURRENT_EMPLOYEE.depts).includes('ceo')){ note.textContent = 'หน้านี้สำหรับ CEO เท่านั้น'; return; }
+  if(SERVER_VER < FIN_NEEDED){ note.textContent = 'ระบบหลังบ้าน (Apps Script) ยังเป็นเวอร์ชัน ' + SERVER_VER + ' — ต้องอัปเดตเป็นเวอร์ชัน ' + FIN_NEEDED + ' ก่อนจึงจะใช้หน้านี้ได้'; return; }
+  if(!mo.value) mo.value = new Date().toISOString().slice(0, 7);
+  const r = await apiPost({action:'listFinance'});
+  if(!r || !r.ok){ note.textContent = 'โหลดข้อมูลไม่สำเร็จ' + (r && r.error === 'forbidden' ? ' (ไม่มีสิทธิ์ CEO — ใส่ role/department = CEO หรือคำว่า CEO ในช่อง depts)' : ''); return; }
+  FIN = r.rows; drawFinance();
+}
+function finRows(){ const m = document.getElementById('fin-month').value, t = document.getElementById('fin-type').value, q = cpNorm(document.getElementById('fin-q').value); return FIN.filter(x=>(!m || x.date.slice(0, 7) === m) && (!t || x.type === t) && (!q || cpNorm([x.category, x.party, x.note, x.method].join(' ')).includes(q))); }
+function drawFinance(){
+  const rows = finRows(), inc = rows.filter(x=>x.type === 'income').reduce((a, x)=>a + Number(x.amount), 0), exp = rows.filter(x=>x.type === 'expense').reduce((a, x)=>a + Number(x.amount), 0);
+  document.getElementById('fin-kpis').innerHTML = `<div class="kpi"><span>รายรับ</span><b style="color:#0a7a3a">${finMoney(inc)}</b></div><div class="kpi"><span>รายจ่าย</span><b style="color:#c0392b">${finMoney(exp)}</b></div><div class="kpi"><span>คงเหลือ (รับ − จ่าย)</span><b>${finMoney(inc - exp)}</b></div><div class="kpi"><span>จำนวนรายการ</span><b>${rows.length}</b></div>`;
+  const cat = {}; rows.forEach(x=>{ const k = (x.type === 'income' ? '＋ ' : '－ ') + (x.category || 'ไม่ระบุ'); cat[k] = (cat[k] || 0) + Number(x.amount); });
+  document.getElementById('fin-cats').innerHTML = '<tr><th>หมวด</th><th>ยอดรวม</th></tr>' + (Object.keys(cat).length ? Object.keys(cat).sort().map(k=>`<tr><td>${esc(k)}</td><td><b>${finMoney(cat[k])}</b></td></tr>`).join('') : '<tr><td colspan="2" class="empty">ไม่มีรายการ</td></tr>');
+  document.getElementById('fin-rows').innerHTML = '<tr><th>วันที่</th><th>ประเภท</th><th>หมวด</th><th>ให้ใคร / จากใคร</th><th>จำนวนเงิน</th><th>วิธี</th><th>หมายเหตุ</th><th></th></tr>' + (rows.length ? rows.map(x=>`<tr><td>${esc(x.date)}</td><td>${x.type === 'income' ? '<span style="color:#0a7a3a">รับ</span>' : '<span style="color:#c0392b">จ่าย</span>'}</td><td>${esc(x.category)}</td><td>${esc(x.party)}</td><td><b>${finMoney(x.amount)}</b></td><td>${esc(x.method)}</td><td>${esc(x.note)}</td><td style="white-space:nowrap"><button class="btn ghost sm" data-fin-edit="${esc(x.id)}">✏️</button> <button class="btn ghost sm" data-fin-del="${esc(x.id)}" style="color:#b3261e">ลบ</button></td></tr>`).join('') : '<tr><td colspan="8" class="empty">ยังไม่มีรายการในเดือนนี้</td></tr>');
+  const ct = document.getElementById('view-finance');
+  ct.querySelectorAll('[data-fin-edit]').forEach(b=>b.addEventListener('click', ()=>finOpenForm(FIN.find(x=>x.id === b.dataset.finEdit))));
+  ct.querySelectorAll('[data-fin-del]').forEach(b=>b.addEventListener('click', async ()=>{ if(!window.confirm('ลบรายการนี้?')) return; const r = await apiPost({action:'deleteFinance', id:b.dataset.finDel}); showToast(r && r.ok ? 'ลบแล้ว ✓' : 'ลบไม่สำเร็จ'); renderFinanceTab(); }));
+}
+function finOpenForm(x){
+  FIN_EDIT = x || null; const f = document.getElementById('fin-form'), v = x || {type:'expense', date:new Date().toISOString().slice(0, 10), category:'', party:'', amount:'', method:'โอน', note:''};
+  f.style.display = '';
+  f.innerHTML = `<div class="grid form"><label>วันที่<input type="date" id="ff-date" value="${esc(v.date)}"></label><label>ประเภท<select id="ff-type"><option value="expense" ${v.type === 'expense' ? 'selected' : ''}>รายจ่าย</option><option value="income" ${v.type === 'income' ? 'selected' : ''}>รายรับ</option></select></label><label>หมวด<input id="ff-cat" list="ff-cats" value="${esc(v.category)}" placeholder="เช่น เงินเดือน / อินเซนทีฟ / ค่าเช่า"><datalist id="ff-cats"></datalist></label><label>ให้ใคร / จากใคร<input id="ff-party" value="${esc(v.party)}" placeholder="ชื่อคนหรือที่รับโอน"></label><label>จำนวนเงิน (บาท)<input type="number" min="0" step="0.01" id="ff-amt" value="${esc(v.amount)}"></label><label>วิธี<input id="ff-method" value="${esc(v.method)}" placeholder="โอน / เงินสด"></label><label style="grid-column:1/-1">หมายเหตุ<input id="ff-note" value="${esc(v.note)}"></label></div><div style="margin-top:8px"><button class="btn primary" id="ff-save">บันทึก</button> <button class="btn ghost" id="ff-cancel">ยกเลิก</button></div>`;
+  const fillCats = ()=>{ document.getElementById('ff-cats').innerHTML = (document.getElementById('ff-type').value === 'income' ? FIN_INC : FIN_EXP).map(c=>`<option value="${esc(c)}">`).join(''); };
+  fillCats(); document.getElementById('ff-type').addEventListener('change', fillCats);
+  document.getElementById('ff-cancel').addEventListener('click', ()=>{ f.style.display = 'none'; });
+  document.getElementById('ff-save').addEventListener('click', async ()=>{
+    const g = id=>document.getElementById(id).value, amt = Number(g('ff-amt'));
+    if(!(amt > 0)){ showToast('ใส่จำนวนเงิน'); return; }
+    const r = await apiPost({action:'saveFinance', id:FIN_EDIT ? FIN_EDIT.id : '', date:g('ff-date'), type:g('ff-type'), category:g('ff-cat'), party:g('ff-party'), amount:amt, method:g('ff-method'), note:g('ff-note')});
+    if(r && r.ok){ showToast('บันทึกแล้ว ✓'); f.style.display = 'none'; renderFinanceTab(); } else showToast('บันทึกไม่สำเร็จ');
+  });
+}
+function finCsv(){
+  const q = v=>'"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+  const csv = '\ufeff' + ['วันที่,ประเภท,หมวด,ให้ใคร/จากใคร,จำนวนเงิน,วิธี,หมายเหตุ,บันทึกโดย'].concat(finRows().map(x=>[x.date, x.type === 'income' ? 'รับ' : 'จ่าย', x.category, x.party, x.amount, x.method, x.note, x.by].map(q).join(','))).join('\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'})); a.download = 'finance_' + (document.getElementById('fin-month').value || 'all') + '.csv'; a.click();
+}
+(function(){ const g = id=>document.getElementById(id); if(!g('fin-add')) return;
+  g('fin-add').addEventListener('click', ()=>{ if(SERVER_VER >= FIN_NEEDED) finOpenForm(null); });
+  ['fin-month', 'fin-type'].forEach(id=>g(id).addEventListener('change', drawFinance)); g('fin-q').addEventListener('input', drawFinance); g('fin-csv').addEventListener('click', finCsv); })();
 function supMoney(n){ return n === '' || n === undefined || n === null || !isFinite(Number(n)) ? '-' : Number(n).toLocaleString('th-TH'); }
 async function renderSupplyTab(){
   const note = document.getElementById('sup-note'); if(!note) return;
@@ -6350,7 +6417,24 @@ async function renderSupplyTab(){
   document.getElementById('sup-import').style.display = r.can_manage ? '' : 'none';
   const cs = document.getElementById('sup-cat'), cv = cs.value; cs.innerHTML = '<option value="">ทุกหมวด</option>' + (r.categories || []).map(c=>`<option>${esc(c)}</option>`).join(''); cs.value = (r.categories || []).includes(cv) ? cv : '';
   drawSupply();
+  if(document.getElementById('sup-ov').style.display !== 'none') drawSupOverview();
   loadSupLog();
+}
+function supOvItems(){ const only = document.getElementById('sup-ov-only').checked, q = cpNorm(document.getElementById('sup-ov-q').value); return SUP.items.filter(i=>(!only || Number(i.qty) > 0) && (!q || cpNorm((i.code || '') + ' ' + i.name + ' ' + i.spec + ' ' + (i.category || '')).includes(q))); }
+function drawSupOverview(){
+  const all = SUP.items, qn = i=>Number(i.qty) || 0, low = i=>Number(i.min_qty) > 0 && qn(i) <= Number(i.min_qty);
+  const have = all.filter(i=>qn(i) > 0), total = have.reduce((a, i)=>a + qn(i), 0);
+  document.getElementById('sup-ov-kpis').innerHTML = `<div class="kpi"><span>รายการทั้งหมด</span><b>${all.length}</b></div><div class="kpi"><span>มีของ</span><b>${have.length}</b></div><div class="kpi"><span>ชิ้นรวม</span><b>${total}</b></div><div class="kpi"><span>ใกล้หมด</span><b>${all.filter(i=>low(i) && qn(i) > 0).length}</b></div><div class="kpi"><span>หมด (0)</span><b>${all.filter(i=>qn(i) === 0).length}</b></div>`;
+  const items = supOvItems(), cats = {}; all.forEach(i=>{ const c = i.category || 'ไม่ระบุหมวด'; (cats[c] = cats[c] || {n:0, have:0, pcs:0, low:0, out:0}); const o = cats[c]; o.n++; if(qn(i) > 0){ o.have++; o.pcs += qn(i); if(low(i)) o.low++; } else o.out++; });
+  document.getElementById('sup-ov-cats').innerHTML = '<tr><th>หมวด</th><th>รายการ</th><th>มีของ</th><th>ชิ้นรวม</th><th>ใกล้หมด</th><th>หมด</th></tr>' + Object.keys(cats).sort((a, b)=>a.localeCompare(b, 'th')).map(c=>{ const o = cats[c]; return `<tr><td><b>${esc(c)}</b></td><td>${o.n}</td><td>${o.have}</td><td><b>${o.pcs}</b></td><td>${o.low ? '<span style="color:#C0453A">' + o.low + '</span>' : 0}</td><td>${o.out}</td></tr>`; }).join('');
+  const by = {}; items.forEach(i=>{ const c = i.category || 'ไม่ระบุหมวด'; (by[c] = by[c] || []).push(i); });
+  const names = Object.keys(by).sort((a, b)=>a.localeCompare(b, 'th'));
+  document.getElementById('sup-ov-list').innerHTML = names.length ? names.map(c=>`<details ${names.length <= 2 || document.getElementById('sup-ov-q').value ? 'open' : ''}><summary><b>${esc(c)}</b> — ${by[c].length} รายการ • ${by[c].reduce((a, i)=>a + qn(i), 0)} ชิ้น</summary><div class="tablewrap"><table><tr><th>โค้ด</th><th>รายการ</th><th>สี / รายละเอียด</th><th>คงเหลือ</th></tr>` + by[c].sort((a, b)=>a.name.localeCompare(b.name, 'th') || a.spec.localeCompare(b.spec, 'th', {numeric:true})).map(i=>`<tr><td>${esc(i.code || '-')}</td><td>${esc(i.name)}</td><td>${esc(i.spec)}</td><td><b style="${low(i) ? 'color:#C0453A' : ''}">${qn(i)}</b> ${esc(i.unit || '')}${low(i) ? ' ⚠' : ''}</td></tr>`).join('') + '</table></div></details>').join('') : '<div class="note">ไม่พบรายการ</div>';
+}
+function supOvCsv(){
+  const q = v=>'"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+  const csv = '\ufeff' + ['หมวด,โค้ด,รายการ,รายละเอียด,คงเหลือ,หน่วย,จุดสั่งซื้อ'].concat(supOvItems().map(i=>[i.category, i.code, i.name, i.spec, i.qty, i.unit, i.min_qty].map(q).join(','))).join('\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'})); a.download = 'stock_overview.csv'; a.click();
 }
 let SUP_LOG = [];
 async function loadSupLog(){
@@ -6456,6 +6540,9 @@ function supOpenForm(mode){
 }
 (function(){
   const g = id=>document.getElementById(id); if(!g('sup-new-zir')) return;
+  g('sup-ov-btn').addEventListener('click', ()=>{ const b = g('sup-ov'), show = b.style.display === 'none'; b.style.display = show ? '' : 'none'; g('sup-ov-btn').textContent = show ? '✕ ปิดภาพรวม' : '📊 ภาพรวมคงเหลือ'; if(show) drawSupOverview(); });
+  ['sup-ov-only', 'sup-ov-q'].forEach(id=>g(id).addEventListener(id === 'sup-ov-q' ? 'input' : 'change', drawSupOverview)); g('sup-ov-csv').addEventListener('click', supOvCsv);
+  g('sup-ov-print').addEventListener('click', ()=>{ const w = window.open('', '_blank'); if(!w) return; w.document.write('<html><head><meta charset="utf-8"><title>ภาพรวมคลัง</title><style>body{font-family:sans-serif;font-size:12px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #bbb;padding:3px 6px;text-align:left}details>summary{font-size:14px;margin-top:10px}</style></head><body><h2>ภาพรวมคงเหลือในคลัง — ' + new Date().toLocaleDateString("th-TH") + '</h2>' + g('sup-ov-kpis').outerHTML + g('sup-ov-cats').outerHTML + g('sup-ov-list').innerHTML.replace(/<details/g, '<details open') + '</body></html>'); w.document.close(); w.print(); });
   g('sup-logq').addEventListener('input', drawSupLog); g('sup-logt').addEventListener('change', drawSupLog); g('sup-logx').addEventListener('click', supLogCsv);
   g('sup-new-zir').addEventListener('click', ()=>{ if(SERVER_VER >= SUP_NEEDED) supOpenForm('zir'); });
   g('sup-new-other').addEventListener('click', ()=>{ if(SERVER_VER >= SUP_NEEDED) supOpenForm('other'); });
@@ -6472,7 +6559,7 @@ function supOpenForm(mode){
 const TAB_RENDERERS = {
   order: ()=>{ refreshClinicSelect(); renderRecentOrders(); }, pending: ()=>renderPending(), delivery: ()=>renderDelivery(), dept: ()=>renderDept(), dash: ()=>renderDash(), coupon: ()=>renderCouponByDoctor(),
   web: ()=>renderWebTab(), overview: ()=>renderOverview(), report: ()=>renderReport(), billing: ()=>renderBilling(false), contacts: ()=>renderContacts(), perm: ()=>renderPerm(),
-  search: ()=>renderSearch(), shipped: ()=>renderShipped(), rework: ()=>renderRework(), abutment: ()=>renderAbutTab(), outsource: ()=>renderOutsourceTab(), supply: ()=>renderSupplyTab(), perf: ()=>renderPerf()
+  search: ()=>renderSearch(), shipped: ()=>renderShipped(), rework: ()=>renderRework(), abutment: ()=>renderAbutTab(), outsource: ()=>renderOutsourceTab(), supply: ()=>renderSupplyTab(), finance: ()=>renderFinanceTab(), perf: ()=>renderPerf()
 };
 // ---------- 🌐 เว็บลูกค้า: รหัสให้คลินิกดูสถานะงานเอง + รายชื่อคลินิกที่สมัครผ่านหน้าเว็บ (backend v21) ----------
 const WEB_NEEDED = 21, LEAD_STATUSES = ['ใหม่', 'ติดต่อแล้ว', 'เปิดบัญชีแล้ว', 'ไม่สนใจ'];
@@ -6757,7 +6844,9 @@ function applyDeptRelevance(){
 }
 
 let LAST_DEPT_SIG = null;
+function isCeoFin(emp){ return !!emp && (isCeoUser(emp) || tokensOf(emp.depts).includes('ceo')); }
 function tabAllowed(tab){
+  if(tab === 'finance') return isCeoFin(CURRENT_EMPLOYEE);      // CEO only — admin alone does NOT see it
   if(isAdminUser(CURRENT_EMPLOYEE) || NORMAL_TABS.includes(tab)) return true;
   if(tab === 'coupon') return canSeeCoupons(CURRENT_EMPLOYEE);
   if(tab === 'abutment') return canManageAbutment();
