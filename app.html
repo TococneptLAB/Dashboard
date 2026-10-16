@@ -974,7 +974,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-12 รุ่น 130 (MegaGen AnyRidge Standard + Ti blank · MegaGen BlueDiamond NC/RC ครบตามแคตตาล็อก (Octa/Bridge, Ti blank, AXA, EZ Post) · รหัสเว็บลูกค้าเฉพาะหมอ (หมอทำหลายคลินิก) · แคตตาล็อก Abutment: Camlog CONELOG Ti-base CAD/CAM · แก้ปุ่ม เปิดใช้ขั้นตอนนี้ ของ MILLING lane ให้เคสเข้าคิวจริง · 💰 รายรับ-รายจ่าย เฉพาะ CEO · ปุ่ม 📊 ภาพรวมคงเหลือในคลัง · สิทธิ์ แผนกสต็อก: เพิ่ม/ลดของได้ ไม่เห็นราคา · ประวัติเพิ่ม/ลดจำนวนคลัง ใครทำ เมื่อไหร่ เหตุผล · เลือกใช้ของแล็บในฟอร์ม Abutment ดึงโค้ด+ชื่อ และตัดคลัง · ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
+const APP_VERSION = "2026-10-12 รุ่น 132 (Premill เสร็จ → เคสวนกลับไปสแกน/ออกแบบรอบ 2 ก่อนกลึงครอบ · ใช้ของแล็บหมวด Premill → ส่งเคสเข้า MILLING Premill อัตโนมัติ · MegaGen AnyRidge Standard + Ti blank · MegaGen BlueDiamond NC/RC ครบตามแคตตาล็อก (Octa/Bridge, Ti blank, AXA, EZ Post) · รหัสเว็บลูกค้าเฉพาะหมอ (หมอทำหลายคลินิก) · แคตตาล็อก Abutment: Camlog CONELOG Ti-base CAD/CAM · แก้ปุ่ม เปิดใช้ขั้นตอนนี้ ของ MILLING lane ให้เคสเข้าคิวจริง · 💰 รายรับ-รายจ่าย เฉพาะ CEO · ปุ่ม 📊 ภาพรวมคงเหลือในคลัง · สิทธิ์ แผนกสต็อก: เพิ่ม/ลดของได้ ไม่เห็นราคา · ประวัติเพิ่ม/ลดจำนวนคลัง ใครทำ เมื่อไหร่ เหตุผล · เลือกใช้ของแล็บในฟอร์ม Abutment ดึงโค้ด+ชื่อ และตัดคลัง · ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -1796,6 +1796,7 @@ async function setStep(id, deptKey, action){
   else if(action === 'undo') await setDeptRecord(id, deptKey, {status:'รอดำเนินการ', end:''});
   else if(action === 'enable') await setDeptRecord(id, deptKey, {status:'รอดำเนินการ'});
   else if(action === 'skip') await setDeptRecord(id, deptKey, {status:'ไม่เกี่ยวข้อง'});
+  if(deptKey === 'milling_premill' && action === 'done' && SERVER_VER >= PREMILL_LOOP_MIN){ if(await loadNewOrders()) rebuildOrders(); const o2 = orderById(id); if(o2 && o2.loop_premill && depValue(o2, 'scan') === 'รอดำเนินการ') showToast('🔁 Premill เสร็จแล้ว — เคสกลับไปรอสแกน/ออกแบบ (รอบที่ 2) ก่อนกลึงครอบฟัน'); }
 }
 function safeUrl(u){ return /^https?:\/\//i.test(String(u || '')) ? String(u) : ''; }
 function urgencyOf(o){ const p = String((o && o.priority) || ''); return p === 'ด่วนมาก' ? 2 : p === 'ด่วน' ? 1 : 0; }
@@ -1831,6 +1832,7 @@ function timelineOf(o){
     else if(r.status === 'ระงับชั่วคราว') ev.push({t:r.end || r.start || '', text:'⏸ ' + d.label + ' ระงับชั่วคราว' + (r.by ? ' — โดย ' + r.by : '')});
     else if(r.status === 'ยกเลิก') ev.push({t:r.end || r.start || '', text:'✕ ' + d.label + ' ยกเลิก' + (r.by ? ' — โดย ' + r.by : '')});
   });
+  if(o.loop_premill) ev.push({t:o.loop_premill, text:'🔁 Premill เสร็จ → กลับไปสแกน / ออกแบบ (รอบที่ 2) ก่อนกลึงครอบฟัน'});
   notesOf(o._id).forEach(n=>ev.push({t:n.t, text:'💬 ' + (n.by || '-') + ': ' + n.text}));
   return ev.sort((a,b)=>{ if(!a.t) return 1; if(!b.t) return -1; return String(a.t).localeCompare(String(b.t)); });
 }
@@ -3507,7 +3509,8 @@ async function abutCall(body, okMsg){
   AB_LAB.loaded = false;
   if(await loadNewOrders()){ rebuildOrders(); renderAll(); }
   if(CASE_OPEN_ID) renderCase();
-  if(r.stock_short > 0) showToast('⚠ ในคลังไม่พอ ขาดอีก ' + r.stock_short + ' ชิ้น (ตัดเท่าที่มีจนเหลือ 0) — ตรวจจำนวนในคลังด้วย');
+  if(r.premill_opened) showToast('⚙️ ส่งต่อให้ MILLING Premill แล้ว (ใช้ของแล็บหมวด Premill) — ฝ่าย Milling จะเห็นเคสนี้ในคิว');
+  else if(r.stock_short > 0) showToast('⚠ ในคลังไม่พอ ขาดอีก ' + r.stock_short + ' ชิ้น (ตัดเท่าที่มีจนเหลือ 0) — ตรวจจำนวนในคลังด้วย');
   else if(okMsg) showToast(okMsg);
   return true;
 }
@@ -6386,7 +6389,7 @@ const SUP_NEEDED = 31, SUP_LOG_MIN = 33, ABUT_STOCK_MIN = 32, STOCK_TOKENS = ['s
 let SUP = {items:[], orders:[], can_manage:false, catalog:[], shades:[]}, SUP_MODE = '';
 const SUP_ST = {requested:'ขอซื้อ (รอแอดมินสั่ง)', ordered:'สั่งแล้ว รอของมา', received:'รับของแล้ว', cancelled:'ยกเลิก'};
 // ---------------------------------------------------------------- 💰 รายรับ / รายจ่าย (CEO only)
-const DOC_CODE_MIN = 36, FIN_NEEDED = 35, FIN_EXP = ['เงินเดือน', 'อินเซนทีฟ', 'ค่าเช่า', 'โอนให้บุคคล', 'ค่าวัสดุ / ของ', 'ค่าน้ำ-ไฟ-เน็ต', 'ค่าขนส่ง', 'ภาษี / ประกัน', 'อื่น ๆ'], FIN_INC = ['ค่างานจากคลินิก', 'เงินโอนเข้า', 'อื่น ๆ'];
+const PREMILL_LOOP_MIN = 38, DOC_CODE_MIN = 36, FIN_NEEDED = 35, FIN_EXP = ['เงินเดือน', 'อินเซนทีฟ', 'ค่าเช่า', 'โอนให้บุคคล', 'ค่าวัสดุ / ของ', 'ค่าน้ำ-ไฟ-เน็ต', 'ค่าขนส่ง', 'ภาษี / ประกัน', 'อื่น ๆ'], FIN_INC = ['ค่างานจากคลินิก', 'เงินโอนเข้า', 'อื่น ๆ'];
 let FIN = [], FIN_EDIT = null;
 function finMoney(n){ return Number(n || 0).toLocaleString('th-TH', {minimumFractionDigits:0, maximumFractionDigits:2}); }
 async function renderFinanceTab(){
