@@ -598,7 +598,7 @@
   <section id="view-web" class="view">
     <div class="card"><h2>🔑 รหัสให้คลินิกตรวจสอบงาน <span class="tag">CLINIC PORTAL</span></h2>
       <div class="note" id="web-note"></div>
-      <div class="filters"><input id="web-clinic" list="web-clinic-dl" placeholder="ชื่อคลินิก (ตามที่ใช้ในออเดอร์)" style="min-width:280px"><datalist id="web-clinic-dl"></datalist><button class="btn primary" id="web-make">➕ สร้างรหัสให้คลินิกนี้</button></div>
+      <div class="filters"><input id="web-clinic" list="web-clinic-dl" placeholder="ชื่อคลินิก (ตามที่ใช้ในออเดอร์)" style="min-width:280px"><datalist id="web-clinic-dl"></datalist><input id="web-doctor" list="web-doctor-dl" placeholder="(ไม่บังคับ) ชื่อหมอ — ถ้าทำหลายคลินิก เว้นชื่อคลินิกว่างไว้" style="min-width:300px"><datalist id="web-doctor-dl"></datalist><button class="btn primary" id="web-make">➕ สร้างรหัสให้คลินิกนี้</button></div>
       <div class="note" id="web-match" style="margin:4px 0 8px"></div>
       <div class="tablewrap"><table id="web-codes"></table></div></div>
     <div class="card"><h2>📝 คลินิกลงทะเบียนใหม่ (จากหน้าเว็บ) <span class="tag" id="web-lead-n">0</span></h2>
@@ -974,7 +974,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-12 รุ่น 127 (แคตตาล็อก Abutment: Camlog CONELOG Ti-base CAD/CAM · แก้ปุ่ม เปิดใช้ขั้นตอนนี้ ของ MILLING lane ให้เคสเข้าคิวจริง · 💰 รายรับ-รายจ่าย เฉพาะ CEO · ปุ่ม 📊 ภาพรวมคงเหลือในคลัง · สิทธิ์ แผนกสต็อก: เพิ่ม/ลดของได้ ไม่เห็นราคา · ประวัติเพิ่ม/ลดจำนวนคลัง ใครทำ เมื่อไหร่ เหตุผล · เลือกใช้ของแล็บในฟอร์ม Abutment ดึงโค้ด+ชื่อ และตัดคลัง · ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
+const APP_VERSION = "2026-10-12 รุ่น 128 (รหัสเว็บลูกค้าเฉพาะหมอ (หมอทำหลายคลินิก) · แคตตาล็อก Abutment: Camlog CONELOG Ti-base CAD/CAM · แก้ปุ่ม เปิดใช้ขั้นตอนนี้ ของ MILLING lane ให้เคสเข้าคิวจริง · 💰 รายรับ-รายจ่าย เฉพาะ CEO · ปุ่ม 📊 ภาพรวมคงเหลือในคลัง · สิทธิ์ แผนกสต็อก: เพิ่ม/ลดของได้ ไม่เห็นราคา · ประวัติเพิ่ม/ลดจำนวนคลัง ใครทำ เมื่อไหร่ เหตุผล · เลือกใช้ของแล็บในฟอร์ม Abutment ดึงโค้ด+ชื่อ และตัดคลัง · ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -6364,7 +6364,7 @@ const SUP_NEEDED = 31, SUP_LOG_MIN = 33, ABUT_STOCK_MIN = 32, STOCK_TOKENS = ['s
 let SUP = {items:[], orders:[], can_manage:false, catalog:[], shades:[]}, SUP_MODE = '';
 const SUP_ST = {requested:'ขอซื้อ (รอแอดมินสั่ง)', ordered:'สั่งแล้ว รอของมา', received:'รับของแล้ว', cancelled:'ยกเลิก'};
 // ---------------------------------------------------------------- 💰 รายรับ / รายจ่าย (CEO only)
-const FIN_NEEDED = 35, FIN_EXP = ['เงินเดือน', 'อินเซนทีฟ', 'ค่าเช่า', 'โอนให้บุคคล', 'ค่าวัสดุ / ของ', 'ค่าน้ำ-ไฟ-เน็ต', 'ค่าขนส่ง', 'ภาษี / ประกัน', 'อื่น ๆ'], FIN_INC = ['ค่างานจากคลินิก', 'เงินโอนเข้า', 'อื่น ๆ'];
+const DOC_CODE_MIN = 36, FIN_NEEDED = 35, FIN_EXP = ['เงินเดือน', 'อินเซนทีฟ', 'ค่าเช่า', 'โอนให้บุคคล', 'ค่าวัสดุ / ของ', 'ค่าน้ำ-ไฟ-เน็ต', 'ค่าขนส่ง', 'ภาษี / ประกัน', 'อื่น ๆ'], FIN_INC = ['ค่างานจากคลินิก', 'เงินโอนเข้า', 'อื่น ๆ'];
 let FIN = [], FIN_EDIT = null;
 function finMoney(n){ return Number(n || 0).toLocaleString('th-TH', {minimumFractionDigits:0, maximumFractionDigits:2}); }
 async function renderFinanceTab(){
@@ -6575,6 +6575,7 @@ function webMatches(name){
   NEW_ORDERS.forEach(o=>{ if(o.status !== 'ยกเลิกเคส' && o.clinic && webCore(o.clinic) === core){ res.n++; res.names[o.clinic] = (res.names[o.clinic] || 0) + 1; } });
   return res;
 }
+function webDocMatches(doc){ const c = webCore(doc); if(c.length < 3) return 0; return NEW_ORDERS.filter(o=>o.status !== 'ยกเลิกเคส' && o.doctor && (()=>{ const d = webCore(o.doctor); return d.length >= 3 && (d === c || (d.length >= 4 && c.length >= 4 && (d.includes(c) || c.includes(d)))); })()).length; }
 function webNearest(name){
   const core = webCore(name), seen = {}, out = [];
   if(core.length < 2) return out;
@@ -6594,13 +6595,14 @@ async function renderWebTab(){
   const note = document.getElementById('web-note'), ct = document.getElementById('web-codes'), lt = document.getElementById('web-leads');
   if(!ct) return;
   const url = location.origin + location.pathname.replace(/[^\/]*$/, '') + 'clinic.html';
+  document.getElementById('web-doctor-dl').innerHTML = Array.from(new Set(NEW_ORDERS.map(o=>o.doctor).filter(Boolean))).slice(0, 3000).map(c=>`<option value="${esc(c)}"></option>`).join('');
   document.getElementById('web-clinic-dl').innerHTML = Array.from(new Set((REFS.clinics || []).concat(NEW_ORDERS.map(o=>o.clinic).filter(Boolean)))).slice(0, 3000).map(c=>`<option value="${esc(c)}"></option>`).join('');
   if(SERVER_VER < WEB_NEEDED){ note.textContent = 'ระบบหลังบ้าน (Apps Script) ยังเป็นเวอร์ชัน ' + SERVER_VER + ' — ต้องอัปเดตเป็นเวอร์ชัน ' + WEB_NEEDED + ' ก่อน'; ct.innerHTML = ''; lt.innerHTML = ''; return; }
   note.innerHTML = 'คลินิกเข้าที่ <b>' + esc(url) + '</b> แล้วใส่รหัสของตัวเอง จะเห็นเฉพาะเคสของคลินิกนั้น (ไม่เห็นราคา/ชื่อพนักงาน) • ส่งรหัสให้ผ่าน LINE ได้เลย';
   const load = async ()=>{
     const [rc, rl] = await Promise.all([apiPost({action:'listClinicCodes'}), apiPost({action:'listLeads'})]);
     const codes = (rc && rc.codes) || [], leads = (rl && rl.leads) || [];
-    ct.innerHTML = codes.length ? '<tr><th>คลินิก</th><th>เคสที่คลินิกเห็น</th><th>รหัส</th><th>สถานะ</th><th></th></tr>' + codes.map(c=>`<tr><td><b>${esc(c.clinic)}</b></td><td>${(()=>{ const m = webMatches(c.clinic); return m.n ? m.n + ' เคส' : '<span style="color:#b26a00">0 — ตรวจชื่อ</span>'; })()}</td><td><code style="font-size:15px;letter-spacing:1px">${esc(c.code)}</code></td><td>${c.active ? '<span class="badge b-done">ใช้งานอยู่</span>' : '<span class="badge b-hold">ปิดอยู่</span>'}</td><td style="white-space:nowrap"><button class="btn ghost sm" data-wcopy="${esc(c.code)}" data-wcl="${esc(c.clinic)}">📋 คัดลอกข้อความส่งคลินิก</button> <button class="btn ghost sm" data-wtog="${esc(c.code)}" data-won="${c.active ? '1' : ''}">${c.active ? 'ปิดรหัส' : 'เปิดรหัส'}</button>${SERVER_VER >= 27 ? ' <button class="btn ghost sm" data-wdel="' + esc(c.code) + '" data-wdn="' + esc(c.clinic) + '" style="color:#b3261e">ลบ</button>' : ''}</td></tr>`).join('') : '<tr><td class="empty">ยังไม่มีรหัส พิมพ์ชื่อคลินิกด้านบนแล้วกด "สร้างรหัส"</td></tr>';
+    ct.innerHTML = codes.length ? '<tr><th>คลินิก / หมอ</th><th>เคสที่เห็น</th><th>รหัส</th><th>สถานะ</th><th></th></tr>' + codes.map(c=>`<tr><td><b>${esc(c.clinic || '(ทุกคลินิก)')}</b>${c.doctor ? '<br><small>👨‍⚕️ หมอ ' + esc(c.doctor) + (c.clinic ? '' : ' — เห็นเคสของหมอท่านนี้ทุกคลินิก') + '</small>' : ''}</td><td>${(()=>{ const n = c.clinic ? webMatches(c.clinic).n : webDocMatches(c.doctor); return n ? n + ' เคส' + (c.doctor && c.clinic ? '*' : '') : '<span style="color:#b26a00">0 — ตรวจชื่อ</span>'; })()}</td><td><code style="font-size:15px;letter-spacing:1px">${esc(c.code)}</code></td><td>${c.active ? '<span class="badge b-done">ใช้งานอยู่</span>' : '<span class="badge b-hold">ปิดอยู่</span>'}</td><td style="white-space:nowrap"><button class="btn ghost sm" data-wcopy="${esc(c.code)}" data-wcl="${esc(c.clinic || ('ทพ. ' + c.doctor))}">📋 คัดลอกข้อความส่งคลินิก</button> <button class="btn ghost sm" data-wtog="${esc(c.code)}" data-won="${c.active ? '1' : ''}">${c.active ? 'ปิดรหัส' : 'เปิดรหัส'}</button>${SERVER_VER >= 27 ? ' <button class="btn ghost sm" data-wdel="' + esc(c.code) + '" data-wdn="' + esc(c.clinic || c.doctor) + '" style="color:#b3261e">ลบ</button>' : ''}</td></tr>`).join('') : '<tr><td class="empty">ยังไม่มีรหัส พิมพ์ชื่อคลินิกด้านบนแล้วกด "สร้างรหัส"</td></tr>';
     document.getElementById('web-lead-n').textContent = leads.filter(l=>l.status === 'ใหม่').length + ' ใหม่';
     lt.innerHTML = leads.length ? '<tr><th>วันที่</th><th>คลินิก</th><th>ผู้ติดต่อ / เบอร์</th><th>เลขภาษี</th><th>ที่อยู่</th><th>สนใจส่งงาน</th><th>แผนที่</th><th>บัญชี</th><th>สถานะ</th><th></th></tr>' + leads.map(l=>`<tr><td>${esc(fmtDate(l.created_at))}</td><td><b>${esc(l.clinic)}</b></td><td>${esc(l.contact_name)}<br>${esc(l.phone)}</td><td>${esc(l.tax_id)}</td><td style="max-width:220px">${esc(l.address)}</td><td>${esc(l.interests)}</td><td>${/^https?:\/\//i.test(l.map_link || '') ? `<a href="${esc(l.map_link)}" target="_blank" rel="noopener">เปิดแผนที่</a>` : esc(l.map_link)}</td><td>${esc(l.accounting_phone)}</td><td><select data-wlead="${esc(l.id)}">${LEAD_STATUSES.map(s=>`<option ${s === l.status ? 'selected' : ''}>${s}</option>`).join('')}</select></td><td><button class="btn ghost sm" data-wmk="${esc(l.clinic)}" title="ใส่ชื่อคลินิกนี้ในช่องสร้างรหัสด้านบน (แก้ให้ตรงกับชื่อที่ใช้ในออเดอร์ได้)">🔑 ทำรหัส</button>${SERVER_VER >= 28 ? ' <button class="btn ghost sm" data-wldel="' + esc(l.id) + '" data-wln="' + esc(l.clinic) + '" style="color:#b3261e">ลบ</button>' : ''}</td></tr>`).join('') : '<tr><td class="empty">ยังไม่มีคลินิกลงทะเบียน</td></tr>';
     ct.querySelectorAll('[data-wcopy]').forEach(b=>b.addEventListener('click', ()=>copyText('สวัสดีครับ ' + b.dataset.wcl + '\nตรวจสอบสถานะงานที่แล็บได้ที่ ' + url + '\nรหัสของคลินิก: ' + b.dataset.wcopy + '\n(ใช้ดูได้เฉพาะเคสของคลินิกท่านเท่านั้น)', 'คัดลอกข้อความแล้ว ✓ นำไปวางในแชทได้เลย')));
@@ -6620,11 +6622,12 @@ async function renderWebTab(){
   };
   document.getElementById('web-clinic').oninput = showWebMatch; showWebMatch();
   document.getElementById('web-make').onclick = async ()=>{
-    const v = document.getElementById('web-clinic').value.trim();
-    if(!v){ showToast('พิมพ์ชื่อคลินิกก่อน'); return; }
-    const r = await apiPost({action:'saveClinicCode', clinic:v});
-    if(r && r.ok){ document.getElementById('web-clinic').value = ''; showToast('สร้างรหัส ' + r.code + ' แล้ว ✓'); load(); }
-    else showToast(r && r.error === 'bad_clinic' ? 'ชื่อคลินิกสั้นเกินไป' : 'สร้างรหัสไม่สำเร็จ ลองใหม่');
+    const v = document.getElementById('web-clinic').value.trim(), dc = document.getElementById('web-doctor').value.trim();
+    if(!v && !dc){ showToast('พิมพ์ชื่อคลินิก หรือชื่อหมอก่อน'); return; }
+    if(dc && SERVER_VER < DOC_CODE_MIN){ showToast('รหัสเฉพาะหมอต้องอัปเดต Apps Script เป็นเวอร์ชัน ' + DOC_CODE_MIN + ' ก่อน'); return; }
+    const r = await apiPost({action:'saveClinicCode', clinic:v, doctor:dc});
+    if(r && r.ok){ document.getElementById('web-clinic').value = ''; document.getElementById('web-doctor').value = ''; showToast('สร้างรหัส ' + r.code + ' แล้ว ✓'); load(); }
+    else showToast(r && r.error === 'bad_doctor' ? 'ชื่อหมอสั้นเกินไป' : r && r.error === 'bad_clinic' ? 'ชื่อคลินิกสั้นเกินไป' : 'สร้างรหัสไม่สำเร็จ ลองใหม่');
   };
   ct.innerHTML = lt.innerHTML = '<tr><td class="empty">กำลังโหลด…</td></tr>';
   try{ await load(); }catch(e){ ct.innerHTML = '<tr><td class="empty">โหลดไม่สำเร็จ ลองใหม่</td></tr>'; }
