@@ -38,6 +38,17 @@ button{background:var(--ink);color:#000;border:0;border-radius:10px;padding:13px
 details{margin-top:10px;font-size:13.5px}summary{cursor:pointer;color:var(--mute)}.ul{display:flex;gap:14px;flex-wrap:wrap;padding:6px 0;border-bottom:1px solid var(--line);color:var(--mute)}.ul b{color:var(--ink);font-weight:400;min-width:5.5em}.ul.x{opacity:.55;text-decoration:line-through}
 .empty{color:var(--mute);margin-top:30px}
 .back{font-size:14px;color:var(--ink);text-decoration:none;border:1px solid var(--line);border-radius:99px;padding:7px 16px}.back:hover{border-color:var(--accent);color:var(--accent)}
+.send{border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:14px;background:#08080a}.send h2{font-size:17px;font-weight:500;margin-bottom:4px}
+.send .go{margin-top:10px}.fm{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:14px}.fm .w{grid-column:1/-1}
+.fm label{display:block;font-size:12.5px;color:var(--mute);margin-bottom:4px}.fm input,.fm select,.fm textarea{width:100%;min-width:0;letter-spacing:0;text-transform:none;font-size:15px;padding:10px 12px;background:#0b0b0c;border:1px solid var(--line);color:var(--ink);border-radius:10px;font-family:inherit}
+.fm textarea{min-height:70px;resize:vertical}
+.drop{border:1.5px dashed #444;border-radius:12px;padding:16px;text-align:center;color:var(--mute);font-size:14px;cursor:pointer}.drop.on{border-color:var(--accent);color:var(--accent)}
+.fl{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);font-size:13.5px}.fl .nm{word-break:break-all}.fl .st{color:var(--mute);white-space:nowrap}.fl .st.ok{color:#9fd29f}.fl .st.bad{color:#ff8a80}
+.fl button{padding:2px 10px;font-size:12px;background:transparent;border:1px solid var(--line);color:var(--mute)}
+.bar{height:4px;background:var(--line);border-radius:4px;margin-top:4px;overflow:hidden}.bar i{display:block;height:100%;width:0;background:var(--accent)}
+.rq{display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:13.5px}.rq .m{color:var(--mute)}
+.msg{margin-top:10px;font-size:14px}.msg.bad{color:#ff8a80}.msg.ok{color:#9fd29f}
+@media(max-width:560px){.fm{grid-template-columns:1fr}}
 footer{margin-top:50px;color:var(--mute);font-size:12.5px}
 </style></head>
 <body><div class="wrap">
@@ -67,15 +78,112 @@ function pill(c){
 function fd(s){ if(!s) return '-'; var m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s); return m? m[3]+'/'+m[2]+'/'+(+m[1]+543) : s; }
 fetch('config.json').then(function(r){return r.json();}).then(function(c){ API=c.api_url; var q=new URLSearchParams(location.search).get('c'); if(q){ document.getElementById('code').value=q.toUpperCase(); go(); } }).catch(function(){});
 document.getElementById('f').addEventListener('submit', function(e){ e.preventDefault(); go(); });
+
+// ---------- ส่งงานออนไลน์ (v39) ----------
+var CODE='', FILES=[], REQ_ID='', SENDING=false, EXT=/\.(stl|ply|obj|zip|rar|7z|pdf|jpg|jpeg|png|heic|webp|dcm|xml)$/i, MAXB=100*1024*1024, CH=8*262144;
+function rid(){ var a=new Uint8Array(12); (window.crypto||window.msCrypto).getRandomValues(a); return 'r'+Array.prototype.map.call(a,function(x){return ('0'+x.toString(16)).slice(-2);}).join(''); }
+function api(o){ return fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(o)}).then(function(r){return r.json();}); }
+function sz(n){ return n>=1048576? (n/1048576).toFixed(1)+' MB' : Math.max(1,Math.round(n/1024))+' KB'; }
+var ST={new:'รอแล็บตรวจสอบ',accepted:'แล็บรับเคสแล้ว',rejected:'แล็บขอให้แก้ไข'};
+function initSend(r){
+  var box=document.getElementById('send'); if(!box) return;
+  api({action:'clientRequests',code:CODE}).then(function(q){
+    if(!q||!q.ok) return;                         // old backend (before v39) or code problem: just do not show the form
+    var h='<div class="send"><h2>📤 ส่งงานออนไลน์</h2><div class="meta">ส่งไฟล์สแกนและรายละเอียดมาที่แล็บได้เลย แล็บจะตรวจแล้วรับเข้าระบบ คุณจะเห็นสถานะที่หน้านี้</div>'+
+    '<button class="go" id="sopen" type="button">＋ ส่งงานใหม่</button><div id="sform" style="display:none"></div>'+
+    '<div id="slist">'+reqList(q.requests)+'</div></div>';
+    box.innerHTML=h;
+    document.getElementById('sopen').onclick=function(){ var f=document.getElementById('sform'); if(f.style.display==='none'){ f.style.display='block'; if(!f.innerHTML) buildForm(r); } else f.style.display='none'; };
+  }).catch(function(){});
+}
+function reqList(a){
+  if(!a||!a.length) return '';
+  return '<details open style="margin-top:14px"><summary>คำขอที่ส่งไปแล้ว ('+a.length+')</summary>'+a.map(function(x){
+    var t=ST[x.status]||x.status; if(x.status==='accepted'&&x.case_id) t+=' · เลขเคส '+x.case_id; if(x.status==='rejected'&&x.reason) t+=' · '+x.reason;
+    return '<div class="rq"><span><b>'+esc(x.patient||'-')+'</b> <span class="m">'+esc(x.material||'')+(x.files?' · '+x.files+' ไฟล์':'')+' · '+fd(String(x.created_at).slice(0,10))+'</span></span><span class="pill '+(x.status==='accepted'?'d':(x.status==='rejected'?'h':''))+'">'+esc(t)+'</span></div>';
+  }).join('')+'</details>';
+}
+function buildForm(r){
+  REQ_ID=rid(); FILES=[];
+  var mats=['Zirconia','Zirconia + Temp','E.max','Premill (Abutment)','PMMA / Temporary','Model / Splint','อื่นๆ (ระบุในหมายเหตุ)'];
+  document.getElementById('sform').innerHTML='<div class="fm">'+
+  '<div><label>ชื่อคนไข้ หรือรหัสคนไข้ *</label><input id="s_patient" maxlength="80" placeholder="ใช้ชื่อย่อหรือรหัสได้"></div>'+
+  '<div><label>แพทย์</label><input id="s_doctor" maxlength="80" value="'+esc(r.doctor||'')+'"></div>'+
+  '<div><label>วัสดุ / ประเภทงาน</label><select id="s_material"><option value="">-- เลือก --</option>'+mats.map(function(m){return '<option>'+esc(m)+'</option>';}).join('')+'</select></div>'+
+  '<div><label>ตำแหน่งฟัน (ซี่) </label><input id="s_teeth" maxlength="60" placeholder="เช่น 11, 21"></div>'+
+  '<div><label>สี (Shade)</label><input id="s_shade" maxlength="30" placeholder="เช่น A2"></div>'+
+  '<div><label>จำนวน (ซี่)</label><input id="s_qty" type="number" min="1" max="99"></div>'+
+  '<div><label>ระบบรากฟันเทียม (ถ้ามี)</label><input id="s_sys" maxlength="80" placeholder="เช่น Dentium Superline"></div>'+
+  '<div><label>ต้องการงานภายในวันที่</label><input id="s_due" type="date"></div>'+
+  '<div class="w"><label>ติดต่อกลับ (LINE / เบอร์โทร)</label><input id="s_contact" maxlength="80"></div>'+
+  '<div class="w"><label>หมายเหตุถึงแล็บ</label><textarea id="s_note" maxlength="600"></textarea></div>'+
+  '<div class="w"><label>ไฟล์สแกน / รูป (STL, PLY, OBJ, ZIP, PDF, JPG ฯลฯ — ไฟล์ละไม่เกิน 100 MB, สูงสุด 10 ไฟล์)</label><div class="drop" id="s_drop">ลากไฟล์มาวางที่นี่ หรือกดเลือกไฟล์</div><input id="s_file" type="file" multiple style="display:none"><div id="s_files"></div></div>'+
+  '<div class="w"><label>หรือแนบลิงก์ไฟล์ (Google Drive / ระบบสแกนของคลินิก)</label><input id="s_links" maxlength="600" placeholder="https://..."></div>'+
+  '<div class="w"><label style="display:flex;gap:8px;align-items:flex-start;color:var(--ink)"><input id="s_ok" type="checkbox" style="width:auto;margin-top:4px"> <span>ยืนยันว่าได้รับความยินยอมจากผู้ป่วยในการส่งข้อมูลนี้ให้แล็บ และไม่ใส่ข้อมูลที่ระบุตัวตนเกินความจำเป็น</span></label></div>'+
+  '<div class="w"><button id="s_go" type="button">ส่งงานให้แล็บ</button><div class="msg" id="s_msg"></div></div></div>';
+  var drop=document.getElementById('s_drop'), inp=document.getElementById('s_file');
+  drop.onclick=function(){ inp.click(); }; inp.onchange=function(){ addFiles(inp.files); inp.value=''; };
+  ['dragenter','dragover'].forEach(function(e){ drop.addEventListener(e,function(ev){ ev.preventDefault(); drop.classList.add('on'); }); });
+  ['dragleave','drop'].forEach(function(e){ drop.addEventListener(e,function(ev){ ev.preventDefault(); drop.classList.remove('on'); }); });
+  drop.addEventListener('drop',function(ev){ addFiles(ev.dataTransfer.files); });
+  document.getElementById('s_go').onclick=send;
+}
+function addFiles(list){
+  var msg=document.getElementById('s_msg'); msg.textContent=''; msg.className='msg';
+  Array.prototype.forEach.call(list,function(f){
+    if(FILES.length>=10){ msg.textContent='แนบได้สูงสุด 10 ไฟล์'; msg.className='msg bad'; return; }
+    if(!EXT.test(f.name)){ msg.textContent='ไม่รับไฟล์ชนิดนี้: '+f.name; msg.className='msg bad'; return; }
+    if(f.size>MAXB){ msg.textContent=f.name+' ใหญ่เกิน 100 MB — ส่งเป็นลิงก์แทนได้'; msg.className='msg bad'; return; }
+    if(f.size<1) return;
+    FILES.push({file:f,state:'wait',pct:0,id:'',uid:rid()});
+  });
+  drawFiles();
+}
+function drawFiles(){
+  var el=document.getElementById('s_files'); if(!el) return;
+  el.innerHTML=FILES.map(function(x,i){ var t=x.state==='ok'?'✓ อัปโหลดแล้ว':(x.state==='up'?x.pct+'%':(x.state==='bad'?'ไม่สำเร็จ':'รอส่ง'));
+    return '<div class="fl"><span class="nm">'+esc(x.file.name)+' <span class="st">('+sz(x.file.size)+')</span><div class="bar"><i style="width:'+x.pct+'%"></i></div></span><span><span class="st '+(x.state==='ok'?'ok':(x.state==='bad'?'bad':''))+'">'+t+'</span> '+(SENDING?'':'<button type="button" data-rm="'+i+'">✕</button>')+'</span></div>'; }).join('');
+  Array.prototype.forEach.call(el.querySelectorAll('[data-rm]'),function(b){ b.onclick=function(){ FILES.splice(+b.getAttribute('data-rm'),1); drawFiles(); }; });
+}
+function b64(buf){ var s='',a=new Uint8Array(buf),n=0x8000; for(var i=0;i<a.length;i+=n) s+=String.fromCharCode.apply(null,a.subarray(i,i+n)); return btoa(s); }
+async function upOne(x){
+  x.state='up'; x.pct=0; drawFiles();
+  var total=x.file.size, off=0, tries=0;
+  while(off<total){
+    var end=Math.min(total,off+CH), buf=await x.file.slice(off,end).arrayBuffer(), r;
+    try{ r=await api({action:'clientUpload',code:CODE,upload_id:x.uid,request_id:REQ_ID,name:x.file.name,mime:x.file.type||'application/octet-stream',total_size:total,offset:off,data:b64(buf)}); }catch(e){ r=null; }
+    if(!r||!r.ok){ if(tries++<2){ await new Promise(function(ok){setTimeout(ok,1200);}); continue; } x.state='bad'; drawFiles(); return (r&&r.error)||'network'; }
+    tries=0; off=end; x.pct=Math.round(off/total*100); drawFiles();
+    if(r.done){ x.id=r.file.id; }
+  }
+  if(!x.id){ x.state='bad'; drawFiles(); return 'drive_error'; }
+  x.state='ok'; x.pct=100; drawFiles(); return '';
+}
+var SERR={invalid_code:'รหัสไม่ถูกต้อง',locked:'ลองผิดหลายครั้ง กรุณารอสักครู่',bad_type:'ไฟล์ชนิดนี้ไม่รองรับ',limit:'วันนี้ส่งครบจำนวนที่กำหนดแล้ว กรุณาติดต่อแล็บ',too_many:'ไฟล์เยอะเกินกำหนด',no_drive_api:'ระบบอัปโหลดของแล็บยังไม่พร้อม ลองส่งเป็นลิงก์แทน หรือติดต่อแล็บ',need_patient:'กรุณากรอกชื่อ/รหัสคนไข้',need_file:'กรุณาแนบไฟล์ หรือใส่ลิงก์ไฟล์',busy:'ระบบกำลังยุ่ง ลองใหม่อีกครั้ง',network:'เชื่อมต่อไม่ได้ ลองใหม่อีกครั้ง'};
+async function send(){
+  if(SENDING) return; var msg=document.getElementById('s_msg'), g=function(i){ return document.getElementById(i).value.trim(); };
+  msg.className='msg'; msg.textContent='';
+  if(!g('s_patient')){ msg.textContent=SERR.need_patient; msg.className='msg bad'; return; }
+  if(!FILES.length && !g('s_links')){ msg.textContent=SERR.need_file; msg.className='msg bad'; return; }
+  if(!document.getElementById('s_ok').checked){ msg.textContent='กรุณาติ๊กยืนยันความยินยอมของผู้ป่วย'; msg.className='msg bad'; return; }
+  SENDING=true; var btn=document.getElementById('s_go'); btn.disabled=true; btn.textContent='กำลังส่ง…'; drawFiles();
+  for(var i=0;i<FILES.length;i++){ if(FILES[i].state==='ok') continue; var e=await upOne(FILES[i]); if(e){ msg.textContent=(SERR[e]||'อัปโหลด '+FILES[i].file.name+' ไม่สำเร็จ')+' — กดส่งอีกครั้งเพื่อลองใหม่ (ไฟล์ที่สำเร็จแล้วไม่ต้องส่งซ้ำ)'; msg.className='msg bad'; SENDING=false; btn.disabled=false; btn.textContent='ส่งงานให้แล็บ'; drawFiles(); return; } }
+  var r; try{ r=await api({action:'clientSubmit',code:CODE,request_id:REQ_ID,patient:g('s_patient'),doctor:g('s_doctor'),material:g('s_material'),teeth:g('s_teeth'),shade:g('s_shade'),qty:g('s_qty'),implant_system:g('s_sys'),due_date:g('s_due'),contact:g('s_contact'),note:g('s_note'),links:g('s_links'),files:FILES.map(function(x){return {id:x.id};})}); }catch(e){ r=null; }
+  SENDING=false; btn.disabled=false; btn.textContent='ส่งงานให้แล็บ';
+  if(!r||!r.ok){ msg.textContent=SERR[(r&&r.error)||'network']||'ส่งไม่สำเร็จ ลองใหม่อีกครั้ง'; msg.className='msg bad'; drawFiles(); return; }
+  document.getElementById('sform').innerHTML='<div class="msg ok">✓ ส่งงานให้แล็บแล้ว แล็บจะตรวจสอบและรับเข้าระบบ คุณดูสถานะได้ในรายการด้านล่าง</div>'; FILES=[];
+  api({action:'clientRequests',code:CODE}).then(function(q){ if(q&&q.ok) document.getElementById('slist').innerHTML=reqList(q.requests); });
+}
 function go(){
   var code=document.getElementById('code').value.trim(), err=document.getElementById('err'), out=document.getElementById('out');
-  err.textContent=''; if(!code){ err.textContent='กรุณาใส่รหัสคลินิก'; return; }
+  CODE=code; err.textContent=''; if(!code){ err.textContent='กรุณาใส่รหัสคลินิก'; return; }
   if(!API){ err.textContent='ระบบยังไม่พร้อม ลองใหม่อีกครั้ง'; return; }
   out.innerHTML='<div class="empty">กำลังโหลด…</div>';
   fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'clinicStatus',code:code})}).then(function(r){return r.json();}).then(function(r){
     if(!r||!r.ok){ out.innerHTML=''; err.textContent = r&&r.error==='locked' ? 'มีการลองรหัสผิดหลายครั้ง กรุณารอสักครู่แล้วลองใหม่' : 'รหัสไม่ถูกต้อง หรือถูกปิดใช้งาน กรุณาตรวจสอบกับแล็บ'; return; }
     try{ history.replaceState(null,'',location.pathname); }catch(e){}
     var h='<div class="hd"><b>'+esc(r.clinic)+'</b><span>'+r.cases.length+' เคส</span></div>';
+    h+='<div id="send"></div>';
     var cp=r.coupons;
     if(cp&&cp.kinds){
       h+='<div class="cp"><div class="cpt">🎟 คูปองของคลินิก</div><div class="cpg">'+cp.kinds.map(function(k){ return '<div class="cpk'+(k.left<0?' neg':(k.left===0?' zero':''))+'"><div class="kn">'+esc(k.kind)+'</div><div class="kl">'+k.left+'</div><div class="ks">คงเหลือ · ให้ไว้ '+k.granted+' · ใช้ไป '+k.used+(k.left<0?' (ใช้เกินสิทธิ์)':'')+'</div></div>'; }).join('')+'</div>'+
@@ -94,7 +202,7 @@ function go(){
       (c.abutments&&c.abutments.length?c.abutments.map(function(a){ var ST={received:'ได้รับ Abutment แล้ว',ordered:'สั่งแล้ว รอของมาถึง',requested:'กำลังดำเนินการสั่ง'}; return '<div class="ab'+(a.state==='received'?' got':'')+'">🔩 <b>'+(a.state==='received'?'':'รอ ')+'Abutment: '+esc(a.brand)+'</b>'+(a.spec?'<div class="sp">'+esc(a.spec).split(' + ').join('<br>')+'</div>':'')+'<span> — '+ST[a.state]+(a.qty>1&&!a.spec?' × '+a.qty:'')+'</span></div>'; }).join(''):'')+
       '<div class="steps">'+c.stages.map(function(s){ return '<div class="st '+(s.state==='todo'?'':s.state)+'">'+esc(lab(s.label))+'</div>'; }).join('')+'</div></div>';
     });
-    out.innerHTML=h;
+    out.innerHTML=h; initSend(r);
   }).catch(function(){ out.innerHTML=''; err.textContent='เชื่อมต่อไม่ได้ ลองใหม่อีกครั้ง'; });
 }
 </script></body></html>

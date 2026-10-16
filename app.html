@@ -447,6 +447,8 @@
   .login-box .logo{width:100%;height:auto;padding:14px 18px;margin:0 0 18px;box-sizing:border-box;}
   @media (min-width:1100px){.brand .logo{width:244px;height:auto;padding:12px 16px;box-sizing:border-box;box-shadow:0 18px 40px -22px rgba(0,0,0,.8);}}
   @media (max-width:1099px){.brand .logo{height:40px;width:auto;padding:5px 12px;box-sizing:border-box;border-radius:10px;}}
+.btn.sm{white-space:nowrap}
+  .nbadge{display:inline-block;min-width:18px;height:18px;line-height:18px;margin-left:8px;padding:0 6px;border-radius:999px;background:#D33;color:#fff;font-size:11px;font-weight:700;text-align:center}
 </style>
 </head>
 <body>
@@ -515,6 +517,7 @@
       <button data-tab="order" class="active">สร้างออเดอร์</button>
       <button data-tab="pending">งานค้าง</button>
       <button data-tab="dept">สถานะแผนก</button>
+      <button data-tab="requests" style="display:none">📥 คำขอลูกค้า<span class="nbadge" id="req-badge" style="display:none"></span></button>
       <button data-tab="delivery">ใบนำส่ง</button>
       <button data-tab="abutment">รอ Abutment</button>
       <button data-tab="outsource">🏭 แล็บนอก</button>
@@ -539,6 +542,7 @@
   <section id="view-order" class="view active">
     <div class="card">
       <h2>สร้างใบออเดอร์งานใหม่ <span class="tag">NEW ORDER</span></h2>
+      <div id="req-banner" style="display:none;background:#E8F1FF;border:1px solid #9DB9E8;color:#17407d;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:13.5px;font-weight:600"></div>
       <div id="edit-banner" style="display:none;background:#FCEFDD;border:1px solid #E9C48A;color:#7a4a00;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:13.5px;font-weight:600"></div>
       <div id="order-files-block" class="dropzone">
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
@@ -957,6 +961,16 @@
     </div>
   </section>
 
+  <!-- CLIENT REQUESTS TAB -->
+  <section id="view-requests" class="view">
+    <div class="card">
+      <h2>📥 คำขอส่งงานจากลูกค้า <span class="tag">ONLINE</span></h2>
+      <div class="note" id="req-note">คลินิกส่งงานผ่านหน้าเว็บ (หน้า "ตรวจสอบสถานะงาน" ด้วยรหัสคลินิก) — ตรวจแล้วกด "รับเข้าระบบ" ฟอร์มสร้างออเดอร์จะถูกกรอกให้ และไฟล์จะย้ายเข้าเคสอัตโนมัติเมื่อกดบันทึก</div>
+      <div class="filters" style="margin:10px 0"><select id="req-filter"><option value="new">รอตรวจสอบ</option><option value="all">ทั้งหมด</option><option value="accepted">รับแล้ว</option><option value="rejected">ปฏิเสธแล้ว</option></select><button class="btn ghost sm" id="req-reload">รีเฟรช</button></div>
+      <div id="req-list"></div>
+    </div>
+  </section>
+
   <!-- OUTSIDE LAB TAB -->
   <section id="view-finance" class="view">
     <div class="card">
@@ -1103,7 +1117,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-12 รุ่น 133 (ปรับหน้าตาใหม่ ขาว-ดำ + โลโก้บริษัท · Premill เสร็จ → เคสวนกลับไปสแกน/ออกแบบรอบ 2 ก่อนกลึงครอบ · ใช้ของแล็บหมวด Premill → ส่งเคสเข้า MILLING Premill อัตโนมัติ · MegaGen AnyRidge Standard + Ti blank · MegaGen BlueDiamond NC/RC ครบตามแคตตาล็อก (Octa/Bridge, Ti blank, AXA, EZ Post) · รหัสเว็บลูกค้าเฉพาะหมอ (หมอทำหลายคลินิก) · แคตตาล็อก Abutment: Camlog CONELOG Ti-base CAD/CAM · แก้ปุ่ม เปิดใช้ขั้นตอนนี้ ของ MILLING lane ให้เคสเข้าคิวจริง · 💰 รายรับ-รายจ่าย เฉพาะ CEO · ปุ่ม 📊 ภาพรวมคงเหลือในคลัง · สิทธิ์ แผนกสต็อก: เพิ่ม/ลดของได้ ไม่เห็นราคา · ประวัติเพิ่ม/ลดจำนวนคลัง ใครทำ เมื่อไหร่ เหตุผล · เลือกใช้ของแล็บในฟอร์ม Abutment ดึงโค้ด+ชื่อ และตัดคลัง · ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
+const APP_VERSION = "2026-10-12 รุ่น 134 (ลูกค้าส่งงานออนไลน์ · ปรับหน้าตาใหม่ ขาว-ดำ + โลโก้บริษัท · Premill เสร็จ → เคสวนกลับไปสแกน/ออกแบบรอบ 2 ก่อนกลึงครอบ · ใช้ของแล็บหมวด Premill → ส่งเคสเข้า MILLING Premill อัตโนมัติ · MegaGen AnyRidge Standard + Ti blank · MegaGen BlueDiamond NC/RC ครบตามแคตตาล็อก (Octa/Bridge, Ti blank, AXA, EZ Post) · รหัสเว็บลูกค้าเฉพาะหมอ (หมอทำหลายคลินิก) · แคตตาล็อก Abutment: Camlog CONELOG Ti-base CAD/CAM · แก้ปุ่ม เปิดใช้ขั้นตอนนี้ ของ MILLING lane ให้เคสเข้าคิวจริง · 💰 รายรับ-รายจ่าย เฉพาะ CEO · ปุ่ม 📊 ภาพรวมคงเหลือในคลัง · สิทธิ์ แผนกสต็อก: เพิ่ม/ลดของได้ ไม่เห็นราคา · ประวัติเพิ่ม/ลดจำนวนคลัง ใครทำ เมื่อไหร่ เหตุผล · เลือกใช้ของแล็บในฟอร์ม Abutment ดึงโค้ด+ชื่อ และตัดคลัง · ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -1524,6 +1538,7 @@ document.querySelectorAll('nav.tabs button').forEach(btn=>{
 });
 
 // ---------- Order Form ----------
+let REQ_FROM = null;
 const FORM_FIELDS = [
   {key:'date_received', label:'วันรับงาน', type:'date'},
   {key:'case_id', label:'เลขเคส (CASE)', type:'text'},
@@ -1588,7 +1603,7 @@ function refreshAutoCaseId(){
 }
 
 function buildOrderForm(){
-  EDIT_ID = null;
+  EDIT_ID = null; REQ_FROM = null; { const rb = document.getElementById('req-banner'); if(rb) rb.style.display = 'none'; }
   if(document.getElementById('edit-banner')) setEditUi(false);
   const wrap = document.getElementById('order-form');
   wrap.innerHTML = '';
@@ -1751,6 +1766,12 @@ async function doSaveOrder(){
     const files = PENDING_FILES.slice();
     await uploadCaseFiles(order._id, files, 'order_intake', 'แนบตอนสร้างออเดอร์', 'order-upload-progress');
     PENDING_FILES = []; renderPendingFiles();
+  }
+  if(REQ_FROM){
+    const rf = REQ_FROM; REQ_FROM = null; document.getElementById('req-banner').style.display = 'none';
+    const r2 = await apiPost({action:'acceptClientRequest', id:rf.id, order_id:order._id, case_id:order.case_id});
+    showToast(r2 && r2.ok ? '📥 รับคำขอจากลูกค้าแล้ว ย้ายไฟล์ ' + r2.files + ' ไฟล์เข้าเคส ' + order.case_id : 'บันทึกออเดอร์แล้ว แต่ปิดคำขอลูกค้าไม่สำเร็จ — เปิดแท็บ 📥 คำขอลูกค้า แล้วลองใหม่');
+    loadReqs();
   }
 }
 document.getElementById('save-order').addEventListener('click', async ()=>{
@@ -6717,7 +6738,7 @@ function supOpenForm(mode){
 const TAB_RENDERERS = {
   order: ()=>{ refreshClinicSelect(); renderRecentOrders(); }, pending: ()=>renderPending(), delivery: ()=>renderDelivery(), dept: ()=>renderDept(), dash: ()=>renderDash(), coupon: ()=>renderCouponByDoctor(),
   web: ()=>renderWebTab(), overview: ()=>renderOverview(), report: ()=>renderReport(), billing: ()=>renderBilling(false), contacts: ()=>renderContacts(), perm: ()=>renderPerm(),
-  search: ()=>renderSearch(), shipped: ()=>renderShipped(), rework: ()=>renderRework(), abutment: ()=>renderAbutTab(), outsource: ()=>renderOutsourceTab(), supply: ()=>renderSupplyTab(), finance: ()=>renderFinanceTab(), perf: ()=>renderPerf()
+  search: ()=>renderSearch(), shipped: ()=>renderShipped(), rework: ()=>renderRework(), abutment: ()=>renderAbutTab(), outsource: ()=>renderOutsourceTab(), supply: ()=>renderSupplyTab(), requests: ()=>renderRequestsTab(), finance: ()=>renderFinanceTab(), perf: ()=>renderPerf()
 };
 // ---------- 🌐 เว็บลูกค้า: รหัสให้คลินิกดูสถานะงานเอง + รายชื่อคลินิกที่สมัครผ่านหน้าเว็บ (backend v21) ----------
 const WEB_NEEDED = 21, LEAD_STATUSES = ['ใหม่', 'ติดต่อแล้ว', 'เปิดบัญชีแล้ว', 'ไม่สนใจ'];
@@ -6853,6 +6874,7 @@ document.getElementById('pin-btn').addEventListener('click', ()=>openPinDialog('
 
 // Roles: admin = all tabs | everyone else = only "search" (ตรวจสอบงาน) + "dept" (สถานะแผนก)
 // A person counts as admin if role = admin, or (role blank and department = Admin)
+const REQ_NEEDED = 39, REQ_TOKENS = ['requests', 'request', 'คำขอ', 'รับงาน', 'reception', 'front'];
 const NORMAL_TABS = ['pending', 'search', 'dept', 'shipped', 'supply'];
 function isCeoUser(emp){
   if(!emp) return false;
@@ -7004,9 +7026,70 @@ function applyDeptRelevance(){
   });
 }
 
+
+// ---------- 📥 คำขอส่งงานจากลูกค้า (v39) ----------
+let REQS = [];
+function canReqTab(){ return !!CURRENT_EMPLOYEE && SERVER_VER >= REQ_NEEDED && (isAdminUser(CURRENT_EMPLOYEE) || tokensOf(CURRENT_EMPLOYEE.depts).some(t=>REQ_TOKENS.includes(t))); }
+async function loadReqs(){
+  if(!canReqTab()) return null;
+  let r = null;
+  try{ r = await apiPost({action:'listClientRequests'}); }catch(e){ return null; }
+  if(r && r.ok){ REQS = r.requests || []; const n = REQS.filter(x=>x.status === 'new').length, b = document.getElementById('req-badge'); if(b){ b.textContent = n; b.style.display = n ? '' : 'none'; } }
+  return r;
+}
+async function renderRequestsTab(){
+  const box = document.getElementById('req-list'), note = document.getElementById('req-note');
+  if(SERVER_VER < REQ_NEEDED){ note.textContent = 'ระบบหลังบ้าน (Apps Script) ยังเป็นเวอร์ชัน ' + SERVER_VER + ' — ต้องอัปเดตเป็นเวอร์ชัน ' + REQ_NEEDED + ' ก่อนจึงจะใช้หน้านี้ได้'; box.innerHTML = ''; return; }
+  box.innerHTML = '<div class="note">กำลังโหลด…</div>';
+  const r = await loadReqs();
+  if(!r || !r.ok){ box.innerHTML = '<div class="note">โหลดข้อมูลไม่สำเร็จ' + (r && r.error === 'forbidden' ? ' (ไม่มีสิทธิ์ — ให้แอดมินใส่ "รับงาน" ในช่องแผนกของคุณ)' : '') + '</div>'; return; }
+  drawRequests();
+}
+function reqFmtDate(iso){ const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleString('th-TH', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'}); }
+function drawRequests(){
+  const f = document.getElementById('req-filter').value, box = document.getElementById('req-list');
+  const rows = REQS.filter(x=>f === 'all' || x.status === f);
+  const ST = {new:'รอตรวจสอบ', accepted:'รับแล้ว', rejected:'ปฏิเสธแล้ว'};
+  box.innerHTML = rows.length ? rows.map(x=>{
+    const fl = (x.files || []).map(y=>`<a href="https://drive.google.com/file/d/${esc(y.id)}/view" target="_blank" rel="noopener">${esc(y.name)}</a> <small>(${esc(fmtSize(Number(y.size) || 0))})</small>`).join('<br>');
+    const meta = [x.material, x.teeth && ('ซี่ ' + x.teeth), x.shade && ('สี ' + x.shade), x.qty && (x.qty + ' ซี่'), x.implant_system, x.due_date && ('ต้องการ ' + x.due_date)].filter(Boolean).map(esc).join(' • ');
+    return `<div class="cm-note" style="padding:12px 14px;margin-bottom:10px"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><b>${esc(x.clinic || '-')}${x.doctor ? ' • ' + esc(x.doctor) : ''}</b><span>${esc(ST[x.status] || x.status)} <small>${esc(reqFmtDate(x.created_at))}</small></span></div>
+      <div>คนไข้: <b>${esc(x.patient)}</b>${meta ? ' — ' + meta : ''}</div>
+      ${x.contact ? `<div><small>ติดต่อ: ${esc(x.contact)}</small></div>` : ''}${x.note ? `<div><small>หมายเหตุ: ${esc(x.note)}</small></div>` : ''}${x.links ? `<div><small>ลิงก์: ${esc(x.links)}</small></div>` : ''}
+      ${fl ? `<div style="margin-top:4px">${fl}</div>` : ''}
+      ${x.status === 'new' ? `<div style="margin-top:8px;display:flex;gap:8px"><button class="btn primary sm" data-req-ok="${esc(x.id)}">รับเข้าระบบ</button><button class="btn ghost sm" data-req-no="${esc(x.id)}">ปฏิเสธ…</button></div>` : ''}
+      ${x.status === 'accepted' ? `<div><small>เคส ${esc(x.case_id)} • โดย ${esc(x.handled_by)}</small></div>` : ''}${x.status === 'rejected' ? `<div><small>เหตุผล: ${esc(x.reason)} • โดย ${esc(x.handled_by)}</small></div>` : ''}</div>`;
+  }).join('') : '<div class="note">ไม่มีรายการ</div>';
+  box.querySelectorAll('[data-req-ok]').forEach(b=>b.addEventListener('click', ()=>reqAccept(b.dataset.reqOk)));
+  box.querySelectorAll('[data-req-no]').forEach(b=>b.addEventListener('click', async ()=>{
+    const reason = (window.prompt('เหตุผลที่ปฏิเสธ (ลูกค้าจะเห็นข้อความนี้):', 'ไฟล์ไม่ครบ / ส่งใหม่อีกครั้ง') || '').trim();
+    if(!reason) return;
+    const r = await apiPost({action:'rejectClientRequest', id:b.dataset.reqNo, reason});
+    showToast(r && r.ok ? 'ปฏิเสธคำขอแล้ว' : apiErrorText(r)); await loadReqs(); drawRequests();
+  }));
+}
+function reqAccept(id){
+  const x = REQS.find(y=>y.id === id); if(!x) return;
+  document.querySelector('nav.tabs button[data-tab="order"]').click();
+  buildOrderForm();
+  const set = (k, v)=>{ const el = document.getElementById('f_' + k); if(el && v !== undefined && v !== '') el.value = v; };
+  const setOpt = (k, v)=>{ const el = document.getElementById('f_' + k); if(el && v && Array.from(el.options || []).some(o=>o.value === v)) el.value = v; };
+  set('clinic', x.clinic); set('doctor', x.doctor); set('patient', x.patient); set('position', x.teeth); set('color', x.shade); set('qty', x.qty); set('file_link', x.links);
+  setOpt('material', x.material); setOpt('implant_system', x.implant_system);
+  set('detail', ['ลูกค้าส่งออนไลน์', x.material && !Array.from((document.getElementById('f_material') || {}).options || []).some(o=>o.value === x.material) ? 'วัสดุ: ' + x.material : '', x.implant_system ? 'ระบบรากเทียม: ' + x.implant_system : '', x.due_date ? 'ต้องการงานภายใน ' + x.due_date : '', x.contact ? 'ติดต่อ: ' + x.contact : '', x.note].filter(Boolean).join(' • '));
+  if((x.files || []).length){ const hs = document.getElementById('f_has_scan'); if(hs){ hs.value = 'มี'; hs.dataset.manual = '1'; } }
+  try{ applyDeptRelevance(); }catch(e){ /* ignore */ }
+  REQ_FROM = {id:x.id};
+  const rb = document.getElementById('req-banner'); rb.style.display = ''; rb.textContent = '📥 กำลังรับคำขอจากลูกค้า (' + (x.clinic || x.doctor || '') + ' • ' + x.patient + ') — ตรวจข้อมูลแล้วกด "บันทึกออเดอร์" ไฟล์ ' + (x.files || []).length + ' ไฟล์จะย้ายเข้าเคสให้เอง';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+document.getElementById('req-filter').addEventListener('change', drawRequests);
+document.getElementById('req-reload').addEventListener('click', renderRequestsTab);
+
 let LAST_DEPT_SIG = null;
 function isCeoFin(emp){ return !!emp && (isCeoUser(emp) || tokensOf(emp.depts).includes('ceo')); }
 function tabAllowed(tab){
+  if(tab === 'requests') return canReqTab();
   if(tab === 'finance') return isCeoFin(CURRENT_EMPLOYEE);      // CEO only — admin alone does NOT see it
   if(isAdminUser(CURRENT_EMPLOYEE) || NORMAL_TABS.includes(tab)) return true;
   if(tab === 'coupon') return canSeeCoupons(CURRENT_EMPLOYEE);
@@ -7053,6 +7136,7 @@ function showApp(){
   const scopeSel = document.getElementById('pd-scope');
   if(scopeSel) scopeSel.value = (!isAdminUser(CURRENT_EMPLOYEE) && explicitDeptKeys(CURRENT_EMPLOYEE) !== null) ? 'mine' : 'all';
   renderAll();
+  loadReqs();
   openCaseFromHash();
 }
 
