@@ -514,27 +514,27 @@
   <div id="remind-panel" style="display:none"></div>
   <div id="chat-panel" style="display:none"></div>
   <nav class="tabs">
-      <button data-tab="order" class="active">สร้างออเดอร์</button>
-      <button data-tab="pending">งานค้าง</button>
-      <button data-tab="dept">สถานะแผนก</button>
+      <button data-tab="order" class="active">📝 สร้างออเดอร์</button>
+      <button data-tab="pending">⏳ งานค้าง</button>
+      <button data-tab="dept">🧭 สถานะแผนก</button>
       <button data-tab="requests" style="display:none">📥 คำขอลูกค้า<span class="nbadge" id="req-badge" style="display:none"></span></button>
-      <button data-tab="delivery">ใบนำส่ง</button>
-      <button data-tab="abutment">รอ Abutment</button>
+      <button data-tab="delivery">🚚 ใบนำส่ง</button>
+      <button data-tab="abutment">🔩 รอ Abutment</button>
       <button data-tab="outsource">🏭 แล็บนอก</button>
-      <button data-tab="rework">งานแก้</button>
-      <button data-tab="shipped">ส่งออกแล้ว</button>
-      <button data-tab="search">ค้นหา / ตรวจสอบงาน</button>
+      <button data-tab="rework">🔁 งานแก้</button>
+      <button data-tab="shipped">✅ ส่งออกแล้ว</button>
+      <button data-tab="search">🔍 ค้นหา / ตรวจสอบงาน</button>
       <button data-tab="supply">📦 คลัง / สั่งของ</button>
-      <button data-tab="dash">แดชบอร์ด</button>
-      <button data-tab="coupon">🎟 คูปอง</button>
+      <button data-tab="dash">📊 แดชบอร์ด</button>
+      <button data-tab="coupon">🎫 คูปอง</button>
       <button data-tab="finance" style="display:none">💰 รายรับ-รายจ่าย</button>
-      <button data-tab="overview">ภาพรวมรายได้</button>
-      <button data-tab="report">สรุปหมอ / คลินิก</button>
-      <button data-tab="perf">ผลงานรายคน</button>
-      <button data-tab="billing">ราคา / บิล</button>
-      <button data-tab="contacts">ผู้ติดต่อ</button>
+      <button data-tab="overview">📈 ภาพรวมรายได้</button>
+      <button data-tab="report">🦷 สรุปหมอ / คลินิก</button>
+      <button data-tab="perf">🏆 ผลงานรายคน</button>
+      <button data-tab="billing">🧾 ราคา / บิล</button>
+      <button data-tab="contacts">📇 ผู้ติดต่อ</button>
       <button data-tab="web">🌐 เว็บลูกค้า</button>
-      <button data-tab="perm">สิทธิ์พนักงาน</button>
+      <button data-tab="perm">🔑 สิทธิ์พนักงาน</button>
     </nav>
   </header>
 
@@ -1126,7 +1126,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-12 รุ่น 137 (สรุปประจำวัน+ส่ง LINE · ลูกค้าส่งงานออนไลน์ · ปรับหน้าตาใหม่ ขาว-ดำ + โลโก้บริษัท · Premill เสร็จ → เคสวนกลับไปสแกน/ออกแบบรอบ 2 ก่อนกลึงครอบ · ใช้ของแล็บหมวด Premill → ส่งเคสเข้า MILLING Premill อัตโนมัติ · MegaGen AnyRidge Standard + Ti blank · MegaGen BlueDiamond NC/RC ครบตามแคตตาล็อก (Octa/Bridge, Ti blank, AXA, EZ Post) · รหัสเว็บลูกค้าเฉพาะหมอ (หมอทำหลายคลินิก) · แคตตาล็อก Abutment: Camlog CONELOG Ti-base CAD/CAM · แก้ปุ่ม เปิดใช้ขั้นตอนนี้ ของ MILLING lane ให้เคสเข้าคิวจริง · 💰 รายรับ-รายจ่าย เฉพาะ CEO · ปุ่ม 📊 ภาพรวมคงเหลือในคลัง · สิทธิ์ แผนกสต็อก: เพิ่ม/ลดของได้ ไม่เห็นราคา · ประวัติเพิ่ม/ลดจำนวนคลัง ใครทำ เมื่อไหร่ เหตุผล · เลือกใช้ของแล็บในฟอร์ม Abutment ดึงโค้ด+ชื่อ และตัดคลัง · ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
+const APP_VERSION = "2026-10-12 รุ่น 138 (สรุปประจำวัน+ส่ง LINE · ลูกค้าส่งงานออนไลน์ · ปรับหน้าตาใหม่ ขาว-ดำ + โลโก้บริษัท · Premill เสร็จ → เคสวนกลับไปสแกน/ออกแบบรอบ 2 ก่อนกลึงครอบ · ใช้ของแล็บหมวด Premill → ส่งเคสเข้า MILLING Premill อัตโนมัติ · MegaGen AnyRidge Standard + Ti blank · MegaGen BlueDiamond NC/RC ครบตามแคตตาล็อก (Octa/Bridge, Ti blank, AXA, EZ Post) · รหัสเว็บลูกค้าเฉพาะหมอ (หมอทำหลายคลินิก) · แคตตาล็อก Abutment: Camlog CONELOG Ti-base CAD/CAM · แก้ปุ่ม เปิดใช้ขั้นตอนนี้ ของ MILLING lane ให้เคสเข้าคิวจริง · 💰 รายรับ-รายจ่าย เฉพาะ CEO · ปุ่ม 📊 ภาพรวมคงเหลือในคลัง · สิทธิ์ แผนกสต็อก: เพิ่ม/ลดของได้ ไม่เห็นราคา · ประวัติเพิ่ม/ลดจำนวนคลัง ใครทำ เมื่อไหร่ เหตุผล · เลือกใช้ของแล็บในฟอร์ม Abutment ดึงโค้ด+ชื่อ และตัดคลัง · ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -3995,7 +3995,7 @@ function renderAbutTab(){
   if(!t) return;
   const btn = document.querySelector('nav.tabs button[data-tab="abutment"]');
   const open = ABUTMENTS.filter(a=>a.status === 'requested' || a.status === 'ordered');
-  if(btn) btn.textContent = 'รอ Abutment' + (open.length ? ' (' + open.length + ')' : '');
+  if(btn) btn.textContent = '🔩 รอ Abutment' + (open.length ? ' (' + open.length + ')' : '');
   if(!canManageAbutment()) return;
   const k = (n, l, c)=>`<div class="kpi ${c || ''}"><div class="num">${n}</div><div class="lbl">${l}</div></div>`;
   const thisM = currentMonthKey();
