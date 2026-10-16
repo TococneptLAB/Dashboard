@@ -3759,7 +3759,8 @@ const ABUT_CATALOG = (()=>{
     {key:'bt2', name:'Biotem AR', lines:biotem},
     {key:'st', name:'Straumann Variobase', lines:straumann},
     {key:'ds', name:'Dentis', lines:dentis},
-    {key:'mg', name:'MegaGen', lines:bdLines.concat(megagen)},
+    // the old BlueDiamond ZrGEN/EZPost short names (from exocad) are not orderable codes: replaced by the real Ref.C lines in bdLines
+    {key:'mg', name:'MegaGen', lines:bdLines.concat(megagen.filter(l=>!['27c1', 'a527', '47fa'].includes(l.key)))},
     {key:'wg', name:'WEGO', lines:wego},
     {key:'cl', name:'Camlog (CONELOG)', lines:camlogLines}
   ].concat(moreBrands).map(br=>{
