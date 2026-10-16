@@ -656,6 +656,15 @@
 
   <!-- DASHBOARD TAB -->
   <section id="view-dash" class="view">
+    <div class="card" id="daily-card">
+      <h2>📋 สรุปงานประจำวัน <span class="tag">DAILY</span></h2>
+      <div class="note">วันนี้ส่งอะไรเท่าไหร่ รับเข้าเท่าไหร่ ใครทำอะไร และงานค้างอยู่ที่แผนกไหน — กด "ส่งเข้า LINE" เพื่อเลือกกลุ่มของทีมแล้วส่งได้เลย (ข้อความไม่มีชื่อคนไข้)</div>
+      <div class="filters" style="margin:10px 0"><input type="date" id="dl-date"><button class="btn primary sm" id="dl-show">ดูสรุป</button><button class="btn ghost sm" id="dl-today">วันนี้</button></div>
+      <div id="dl-out" style="display:none">
+        <pre id="dl-text" style="white-space:pre-wrap;background:#F6F6F6;border-radius:10px;padding:14px;font:inherit;font-size:13.5px;line-height:1.6;margin:0 0 10px"></pre>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn primary" id="dl-line" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;padding:10px 18px;color:#fff;border-radius:10px;font-weight:600;font-size:14px">💬 ส่งเข้า LINE</a><button class="btn ghost" id="dl-copy">คัดลอกข้อความ</button><button class="btn ghost" id="dl-xlsx">ดาวน์โหลด Excel</button></div>
+      </div>
+    </div>
     <div class="kpis" id="kpi-row"></div>
     <div class="card">
       <h2>งานค้างแยกตามแผนก (Department Backlog)</h2>
@@ -1117,7 +1126,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-12 รุ่น 134 (ลูกค้าส่งงานออนไลน์ · ปรับหน้าตาใหม่ ขาว-ดำ + โลโก้บริษัท · Premill เสร็จ → เคสวนกลับไปสแกน/ออกแบบรอบ 2 ก่อนกลึงครอบ · ใช้ของแล็บหมวด Premill → ส่งเคสเข้า MILLING Premill อัตโนมัติ · MegaGen AnyRidge Standard + Ti blank · MegaGen BlueDiamond NC/RC ครบตามแคตตาล็อก (Octa/Bridge, Ti blank, AXA, EZ Post) · รหัสเว็บลูกค้าเฉพาะหมอ (หมอทำหลายคลินิก) · แคตตาล็อก Abutment: Camlog CONELOG Ti-base CAD/CAM · แก้ปุ่ม เปิดใช้ขั้นตอนนี้ ของ MILLING lane ให้เคสเข้าคิวจริง · 💰 รายรับ-รายจ่าย เฉพาะ CEO · ปุ่ม 📊 ภาพรวมคงเหลือในคลัง · สิทธิ์ แผนกสต็อก: เพิ่ม/ลดของได้ ไม่เห็นราคา · ประวัติเพิ่ม/ลดจำนวนคลัง ใครทำ เมื่อไหร่ เหตุผล · เลือกใช้ของแล็บในฟอร์ม Abutment ดึงโค้ด+ชื่อ และตัดคลัง · ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
+const APP_VERSION = "2026-10-12 รุ่น 135 (สรุปประจำวัน+ส่ง LINE · ลูกค้าส่งงานออนไลน์ · ปรับหน้าตาใหม่ ขาว-ดำ + โลโก้บริษัท · Premill เสร็จ → เคสวนกลับไปสแกน/ออกแบบรอบ 2 ก่อนกลึงครอบ · ใช้ของแล็บหมวด Premill → ส่งเคสเข้า MILLING Premill อัตโนมัติ · MegaGen AnyRidge Standard + Ti blank · MegaGen BlueDiamond NC/RC ครบตามแคตตาล็อก (Octa/Bridge, Ti blank, AXA, EZ Post) · รหัสเว็บลูกค้าเฉพาะหมอ (หมอทำหลายคลินิก) · แคตตาล็อก Abutment: Camlog CONELOG Ti-base CAD/CAM · แก้ปุ่ม เปิดใช้ขั้นตอนนี้ ของ MILLING lane ให้เคสเข้าคิวจริง · 💰 รายรับ-รายจ่าย เฉพาะ CEO · ปุ่ม 📊 ภาพรวมคงเหลือในคลัง · สิทธิ์ แผนกสต็อก: เพิ่ม/ลดของได้ ไม่เห็นราคา · ประวัติเพิ่ม/ลดจำนวนคลัง ใครทำ เมื่อไหร่ เหตุผล · เลือกใช้ของแล็บในฟอร์ม Abutment ดึงโค้ด+ชื่อ และตัดคลัง · ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -6331,6 +6340,64 @@ function renderCouponByDoctor(){
   }).join('');
 }
 document.getElementById('cpd-q').addEventListener('input', renderCouponByDoctor);
+
+// ---------- 📋 สรุปงานประจำวัน (ส่งเข้า LINE ได้) ----------
+const TH_MON = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+function thDay(ymd){ const d = parseYmd(ymd); return d ? d.getDate() + ' ' + TH_MON[d.getMonth()] + ' ' + (d.getFullYear() + 543) : ymd; }
+function dailyData(ymd){
+  const d0 = parseYmd(ymd) || new Date(); d0.setHours(0, 0, 0, 0);
+  const from = d0, to = new Date(d0); to.setHours(23, 59, 59, 999);
+  const all = NEW_ORDERS.concat(HISTORICAL).map(withEffectiveStatus).filter(o=>o.status !== 'ยกเลิกเคส');
+  const q = o=>Number(o.qty) || 0, sameDay = v=>{ const t = stampToDate(v); return !!t && t >= from && t <= to; };
+  const shipped = all.filter(o=>o.status === 'ส่งแล้ว' && sameDay(depRecord(o, 'delivery').end));
+  const received = all.filter(o=>{ const t = parseYmd(o.date_received); return !!t && ymdLocal(t) === ymdLocal(from); });
+  const byClinic = {}; shipped.forEach(o=>{ const c = rpName(o, 'clinic'); (byClinic[c] = byClinic[c] || {clinic:c, cases:0, units:0}); byClinic[c].cases++; byClinic[c].units += q(o); });
+  const people = perfCompute({from, to}, '').filter(p=>p.total > 0).sort((a, b)=>(b.total - a.total) || a.name.localeCompare(b.name, 'th'));
+  const wip = {}; let open = 0;
+  all.forEach(o=>{ const act = activeDeptsOf(o); if(act.length) open++; act.forEach(d=>{ wip[d.label] = (wip[d.label] || 0) + 1; }); });
+  const overdue = all.filter(isOverdue).length, urgent = all.filter(o=>o.status !== 'ส่งแล้ว' && urgencyOf(o)).length;
+  return {ymd:ymdLocal(from), shipped, shippedUnits:shipped.reduce((a, o)=>a + q(o), 0), clinics:Object.values(byClinic).sort((a, b)=>(b.units - a.units) || a.clinic.localeCompare(b.clinic, 'th')),
+    received, receivedUnits:received.reduce((a, o)=>a + q(o), 0), people, wip:DEPARTMENTS.filter(d=>wip[d.label]).map(d=>({label:d.label, n:wip[d.label]})), open, overdue, urgent};
+}
+function dailyText(x){
+  const L = [];
+  L.push('📋 สรุปงานประจำวัน TOTU Concept', 'วันที่ ' + thDay(x.ymd), '━━━━━━━━━━');
+  L.push('📦 ส่งออกแล้ว: ' + x.shipped.length + ' เคส / ' + x.shippedUnits + ' ซี่');
+  x.clinics.slice(0, 15).forEach(c=>L.push(' • ' + c.clinic + ' — ' + c.cases + ' เคส ' + c.units + ' ซี่'));
+  if(x.clinics.length > 15) L.push(' • …และอีก ' + (x.clinics.length - 15) + ' คลินิก');
+  L.push('', '📥 รับเข้าใหม่: ' + x.received.length + ' เคส / ' + x.receivedUnits + ' ซี่', '', '👷 ใครทำอะไร (ขั้นตอนที่เสร็จ)');
+  if(!x.people.length) L.push(' • ยังไม่มีขั้นตอนที่เสร็จ');
+  x.people.slice(0, 30).forEach(p=>{
+    const steps = DEPARTMENTS.filter(d=>p.byStep[d.key]).map(d=>String(d.label).replace(/ \(.*/, '') + ' ' + p.byStep[d.key]).join(', ');
+    L.push(' • ' + p.name + ': ' + steps + ' (รวม ' + p.total + ')');
+  });
+  L.push('', '⏳ งานค้างตอนนี้: ' + x.open + ' เคส' + (x.overdue ? ' (เกินกำหนด ' + x.overdue + ')' : '') + (x.urgent ? ' • ด่วน ' + x.urgent : ''));
+  x.wip.forEach(w=>L.push(' • ' + String(w.label).replace(/ \(.*/, '') + ': ' + w.n));
+  return L.join('\n');
+}
+function dailyShow(){
+  const ymd = document.getElementById('dl-date').value || todayLocal();
+  const x = dailyData(ymd), text = dailyText(x);
+  document.getElementById('dl-text').textContent = text;
+  document.getElementById('dl-out').style.display = '';
+  document.getElementById('dl-line').href = 'https://line.me/R/msg/text/?' + encodeURIComponent(text.slice(0, 4800));
+  return x;
+}
+function dailyXlsx(){
+  const x = dailyData(document.getElementById('dl-date').value || todayLocal());
+  downloadXlsx('สรุปประจำวัน_' + x.ymd + '.xlsx', [
+    {name:'ส่งออก', rows:[['คลินิก', 'เคส', 'ซี่']].concat(x.clinics.map(c=>[c.clinic, c.cases, c.units]), [['รวม', x.shipped.length, x.shippedUnits]])},
+    {name:'ใครทำอะไร', rows:[['ชื่อ', 'ขั้นตอน', 'จำนวน']].concat(...x.people.map(p=>DEPARTMENTS.filter(d=>p.byStep[d.key]).map(d=>[p.name, d.label, p.byStep[d.key]])))},
+    {name:'งานค้าง', rows:[['แผนก', 'เคส']].concat(x.wip.map(w=>[w.label, w.n]))}]);
+}
+{ const dd = document.getElementById('dl-date'); if(dd){
+  dd.value = todayLocal();
+  document.getElementById('dl-show').addEventListener('click', dailyShow);
+  document.getElementById('dl-today').addEventListener('click', ()=>{ dd.value = todayLocal(); dailyShow(); });
+  document.getElementById('dl-copy').addEventListener('click', ()=>copyText(document.getElementById('dl-text').textContent, 'คัดลอกแล้ว — เปิด LINE แล้ววางได้เลย'));
+  document.getElementById('dl-xlsx').addEventListener('click', dailyXlsx);
+} }
+
 function renderDash(){
   const data = allData();
   const total = data.length;
