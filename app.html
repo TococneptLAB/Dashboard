@@ -974,7 +974,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-12 รุ่น 128 (รหัสเว็บลูกค้าเฉพาะหมอ (หมอทำหลายคลินิก) · แคตตาล็อก Abutment: Camlog CONELOG Ti-base CAD/CAM · แก้ปุ่ม เปิดใช้ขั้นตอนนี้ ของ MILLING lane ให้เคสเข้าคิวจริง · 💰 รายรับ-รายจ่าย เฉพาะ CEO · ปุ่ม 📊 ภาพรวมคงเหลือในคลัง · สิทธิ์ แผนกสต็อก: เพิ่ม/ลดของได้ ไม่เห็นราคา · ประวัติเพิ่ม/ลดจำนวนคลัง ใครทำ เมื่อไหร่ เหตุผล · เลือกใช้ของแล็บในฟอร์ม Abutment ดึงโค้ด+ชื่อ และตัดคลัง · ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
+const APP_VERSION = "2026-10-12 รุ่น 130 (MegaGen AnyRidge Standard + Ti blank · MegaGen BlueDiamond NC/RC ครบตามแคตตาล็อก (Octa/Bridge, Ti blank, AXA, EZ Post) · รหัสเว็บลูกค้าเฉพาะหมอ (หมอทำหลายคลินิก) · แคตตาล็อก Abutment: Camlog CONELOG Ti-base CAD/CAM · แก้ปุ่ม เปิดใช้ขั้นตอนนี้ ของ MILLING lane ให้เคสเข้าคิวจริง · 💰 รายรับ-รายจ่าย เฉพาะ CEO · ปุ่ม 📊 ภาพรวมคงเหลือในคลัง · สิทธิ์ แผนกสต็อก: เพิ่ม/ลดของได้ ไม่เห็นราคา · ประวัติเพิ่ม/ลดจำนวนคลัง ใครทำ เมื่อไหร่ เหตุผล · เลือกใช้ของแล็บในฟอร์ม Abutment ดึงโค้ด+ชื่อ และตัดคลัง · ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -3724,6 +3724,27 @@ const ABUT_CATALOG = (()=>{
   // WEGO Biomaterials (intraoral two-piece): ไฟล์ exocad มีแค่แพลตฟอร์ม NC/RC และแบบ direct GH0.4 / GH0.8 / hybrid ไม่มีเลขรหัสสินค้า
   const wego = [{key:'two', name:'Intraoral two-piece', dia:['NC', 'RC'].map(pl=>[pl, [['Direct GH 0.4', 0.4], ['Direct GH 0.8', 0.8], ['Hybrid', 0]].map(([n, g])=>Object.assign({ref:'WEGO ' + pl + ' ' + n, type:'⚠ ยังไม่มีเลขรหัสสั่งซื้อ (จากไฟล์ exocad)'}, g ? {gh:g} : {}))])}];
   // WARANTEC / SIC / Point / Neodent Zi / DIO: ชื่อรุ่นอ่านจากไฟล์ exocad config (ยังไม่ได้เทียบแคตตาล็อกสั่งซื้อ)
+  // MEGAGEN BlueDiamond (NC / RC) — จากแคตตาล็อกจริง: Octa/Bridge (cuff 0.6–4.0 × post 4.5/6.0/8.0), Ti blank Ø10/Ø12 L20, AXA Straight/12°/20°/30°, EZ Post
+  const bdOcta = (pl, c, d)=>{ const cuffs = [['0.6', 1], ['1.5', 2], ['3.0', 3], ['4.0', 4]], posts = [['4.5', 5], ['6.0', 6], ['8.0', 8]]; return ['Octa', 'Bridge'].map(t=>['Ø' + (d === '40' ? '4.0' : '4.5') + ' ' + pl + ' · ' + t, [].concat(...posts.map(([ph, pc])=>cuffs.map(([ch, cc])=>({ref:(t === 'Octa' ? 'AROZG' + c : 'BDZG' + c + 'B') + d + cc + pc + '.MTN', gh:Number(ch), h:ph, type:t}))))]); };
+  const bdBlank = [['NC', 'N', 'ทอง', [['10', '1020'], ['12', '1220']]], ['RC', 'R', 'เงิน', [['10', '1020'], ['12', '1220']]]].map(([pl, c, col, ds])=>['Ti blank ' + pl + ' (' + col + ') L20', [].concat(...ds.map(([d, cd])=>[{ref:'ARO' + 'TG' + c + cd + '.MTN', type:'Octa · Ø' + d + ' · L20'}, {ref:'BDTG' + c + 'B' + cd + '.MTN', type:'Bridge · Ø' + d + ' · L20'}]))]);
+  const bdAxa = (title, key, rows)=>({key:key, name:title, dia:rows});
+  const axaCuff = (pl, c)=>[2, 3, 4, 5].map(g=>({ref:'AXBD' + c + 'S5' + g + '400C', gh:g, type:'Straight Ø5.0'}));
+  const axaAng = (pl, c, deg, code, mids, nS)=>[3, 4, 5].map((g, i)=>({ref:'AXBD' + c + (nS ? 'S' : '') + '5' + g + code + 'TC', gh:g, type:'Octa · ' + deg + '° · Middle C.H ' + mids[i]}));
+  const bdEz = (pl, c, d)=>[[ 'Ø' + d + ' ' + pl, [].concat(...[['4.0', 4], ['5.5', 5], ['7.0', 7]].map(([ph, pc])=>[1, 2, 3, 4, 5].map(cf=>({ref:'AROEP' + c + d.replace('.', '') + cf + pc + 'T', gh:cf, h:ph, type:'EZ Post'}))))]];
+  // MEGAGEN AnyRidge (Standard): AANIPR + Ø(40/45) + cuff(1=0.6,2=1.5,3=3.0,4=4.0) + post(5=4.5,6=6,8=8) [+N = Non-Hex] .MTN ; Ti blank ARTR + Ø10/12 + 20 [+N]
+  const arStd = ['Hex', 'Non-Hex'].map(t=>[['4.0', '40'], ['4.5', '45']].map(([d, dc])=>['Ø' + d + ' · ' + t, [].concat(...[['0.6', 1], ['1.5', 2], ['3.0', 3], ['4.0', 4]].map(([ch, cc])=>[['4.5', 5], ['6', 6], ['8', 8]].map(([ph, pc])=>({ref:'AANIPR' + dc + cc + pc + (t === 'Non-Hex' ? 'N' : '') + '.MTN', gh:Number(ch), h:ph, type:t}))))])).reduce((a, b)=>a.concat(b), []);
+  const arBlank = [['10', '1020'], ['12', '1220']].map(([d, c])=>['Ø' + d + ' (ทอง) L20', ['Hex', 'Non-Hex'].map(t=>({ref:'ARTR' + c + (t === 'Non-Hex' ? 'N' : '') + '.MTN', type:t + ' · Ti blank Ø' + d}))]);
+  const bdLines = [
+    {key:'arstd', name:'AnyRidge — Standard Abutment (Hex / Non-Hex)', dia:arStd},
+    {key:'arblank', name:'AnyRidge — Ti blank Ø10 / Ø12 (ทอง)', dia:arBlank},
+    {key:'bdoctab', name:'BlueDiamond — Octa / Bridge (Post 4.5 / 6.0 / 8.0)', dia:bdOcta('NC', 'N', '40').concat(bdOcta('RC', 'R', '45'))},
+    {key:'bdblank', name:'BlueDiamond — Ti blank Ø10 / Ø12 (L20)', dia:bdBlank},
+    {key:'axas', name:'BlueDiamond AXA Abutment (Straight)', dia:[['NC Ø5.0', axaCuff('NC', 'N')], ['RC Ø5.0', axaCuff('RC', 'R')]]},
+    {key:'axa12', name:'BlueDiamond AXA Abutment 12°', dia:[['NC', axaAng('NC', 'N', 12, '410', ['2.5', '3.5', '4.5'], true)], ['RC', axaAng('RC', 'R', 12, '410', ['2.5', '3.5', '4.5'], true)]]},
+    {key:'axa20', name:'BlueDiamond AXA Abutment 20°', dia:[['NC', axaAng('NC', 'N', 20, '420', ['2.5', '3.5', '4.5'], true)], ['RC', axaAng('RC', 'R', 20, '420', ['2.5', '3.5', '4.5'], true)]]},
+    {key:'axa30', name:'BlueDiamond AXA Abutment 30°', dia:[['NC', axaAng('NC', 'N', 30, '430', ['2', '3', '4'], false)], ['RC', axaAng('RC', 'R', 30, '430', ['2', '3', '4'], false)]]},
+    {key:'bdez', name:'BlueDiamond EZ Post Abutment (cement-retained)', dia:bdEz('NC', 'N', '4.0').concat(bdEz('NC', 'N', '5.0'), bdEz('RC', 'R', '5.0'), bdEz('RC', 'R', '6.0'), bdEz('RC', 'R', '7.0'))}
+  ];
   // CAMLOG / CONELOG Titanium base CAD/CAM (Product Catalog p.70–71): crown C2242.xxyy (H 4.7), bridge C2342.xxyy (H 4); xx = Ø 33/38/43/50, yy = G/H 08/20/30/40
   const camlog = (name, pre, h, ghs, note33)=>({key:pre === 'C2242' ? 'cc' : 'cb', name:name, dia:[['3.3', '33'], ['3.8', '38'], ['4.3', '43'], ['5.0', '50']].map(([d, dc])=>['Ø' + d + ' mm', ghs.map(([g, gc, isNew])=>({ref:pre + '.' + dc + gc + (dc === '33' && note33 ? '*' : ''), gh:g, h:h, type:[dc === '33' && note33 ? '* เฉพาะงาน crown ฟันหน้า (lateral บน / lateral+central ล่าง)' : '', isNew ? 'ใหม่' : ''].filter(Boolean).join(' · ')}))])});
   const camlogLines = [camlog('CONELOG Titanium base CAD/CAM — Crown', 'C2242', '4.7', [[0.8, '08'], [2, '20'], [3, '30', 1], [4, '40', 1]], true), camlog('CONELOG Titanium base CAD/CAM — Bridge', 'C2342', '4', [[0.8, '08'], [2, '20']], false)];
@@ -3738,7 +3759,7 @@ const ABUT_CATALOG = (()=>{
     {key:'bt2', name:'Biotem AR', lines:biotem},
     {key:'st', name:'Straumann Variobase', lines:straumann},
     {key:'ds', name:'Dentis', lines:dentis},
-    {key:'mg', name:'MegaGen', lines:megagen},
+    {key:'mg', name:'MegaGen', lines:bdLines.concat(megagen)},
     {key:'wg', name:'WEGO', lines:wego},
     {key:'cl', name:'Camlog (CONELOG)', lines:camlogLines}
   ].concat(moreBrands).map(br=>{
