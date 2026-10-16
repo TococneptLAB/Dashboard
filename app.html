@@ -388,6 +388,7 @@
       <button data-tab="delivery">ใบนำส่ง</button>
       <button data-tab="abutment">รอ Abutment</button>
       <button data-tab="outsource">🏭 แล็บนอก</button>
+      <button data-tab="supply">📦 คลัง / สั่งของ</button>
       <button data-tab="dept">สถานะแผนก</button>
       <button data-tab="dash">แดชบอร์ด</button>
       <button data-tab="coupon">🎟 คูปอง</button>
@@ -827,6 +828,25 @@
   </section>
 
   <!-- OUTSIDE LAB TAB -->
+  <section id="view-supply" class="view">
+    <div class="card">
+      <h2>📦 คลัง / สั่งของ <span class="tag">SUPPLY</span></h2>
+      <div class="note" id="sup-note"></div>
+      <div class="filters" style="margin:10px 0">
+        <button class="btn primary" id="sup-new-zir">🦷 สั่ง Zirconia Block 98</button>
+        <button class="btn ghost" id="sup-new-other">+ สั่งของอื่น / ขนาด Custom</button>
+        <button class="btn ghost" id="sup-stockin" style="display:none">📥 รับเข้า / ปรับยอดคลัง</button>
+      </div>
+      <div id="sup-form" style="display:none"></div>
+      <div class="kpis" id="sup-kpis"></div>
+      <h3 style="margin:16px 0 6px">รายการที่สั่ง</h3>
+      <div class="filters"><select id="sup-filter"><option value="open">ยังไม่ได้รับของ</option><option value="all">ทั้งหมด</option></select></div>
+      <div class="tablewrap" style="max-height:380px"><table id="sup-orders"></table></div>
+      <h3 style="margin:16px 0 6px">คลัง (จำนวนคงเหลือ)</h3>
+      <div class="filters"><input id="sup-q" placeholder="ค้นหาในคลัง: ชื่อ / สี" style="min-width:220px"></div>
+      <div class="tablewrap" style="max-height:480px"><table id="sup-items"></table></div>
+    </div>
+  </section>
   <section id="view-outsource" class="view">
     <div class="card">
       <h2>ส่งแล็บนอก <span class="tag">MILLING / ABUTMENT</span></h2>
@@ -927,7 +947,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-12 รุ่น 115 (ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
+const APP_VERSION = "2026-10-12 รุ่น 117 (Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -3657,7 +3677,16 @@ const ABUT_CATALOG = (()=>{
     {key:'ds', name:'Dentis', lines:dentis},
     {key:'mg', name:'MegaGen', lines:megagen},
     {key:'wg', name:'WEGO', lines:wego}
-  ].concat(moreBrands);
+  ].concat(moreBrands).map(br=>{
+    if(br.key !== 'pt') return br;
+    // Point Implant — Cemented Abutment (จากแคตตาล็อกจริง: รหัส OSCA / OSCAM + ความสูงขอบเหงือก G/H 1.0–5.0, Hex = HP, Non-hex = NP)
+    const pts = (pre, dCode, lCode, h)=>[['Hex', 'HP'], ['Non-hex', 'NP']].map(([t, sf])=>[1, 2, 3, 4, 5].map(g=>({ref:pre + dCode + lCode + g + sf, gh:g, h, type:t})));
+    const cem = (name, pre, rows)=>({key:name === 'Mini' ? 'cemm' : 'cemr', name:'Cemented Abutment — ' + name, dia:rows.map(([d, dc, ls])=>['Ø' + d, [].concat(...ls.map(([lc, h])=>[].concat(...pts(pre, dc, lc, h))))])});
+    return Object.assign({}, br, {lines:[
+      cem('Mini', 'OSCAM', [['4.5', '45', [['5', '5.5']]]]),
+      cem('Regular', 'OSCA', [['4.5', '45', [['5', '5.5']]], ['5.0', '50', [['4', '4.0'], ['5', '5.5'], ['7', '7.0']]], ['6.0', '60', [['4', '4.0'], ['5', '5.5'], ['7', '7.0']]], ['7.0', '70', [['5', '5.5']]]])
+    ].concat(br.lines)});
+  });
 })();
 function abutPickerHtml(){
   return '<div class="field" style="grid-column:1/-1"><label>🧩 เลือกจากแคตตาล็อก (เลือกแล้วระบบกรอกยี่ห้อ/รุ่นให้)</label><div style="display:flex;gap:6px;flex-wrap:wrap">'
@@ -4263,7 +4292,7 @@ function renderPerm(){
   const gapEl = document.getElementById('perm-gaps');
   if(gapEl){
     const gaps = DEPARTMENTS.filter(d=>d.key !== 'order_intake' && !EMPLOYEE_LIST.some(e=>!isAdminUser(e) && allowedDeptKeys(e).includes(d.key)));
-    gapEl.innerHTML = '<div class="note" style="margin:0 0 10px">💡 ให้ใครอัปโหลดรูป/ไฟล์ได้<b>ทุกขั้นตอน</b>: ใส่คำว่า <code>Files</code> ต่อท้ายในช่อง depts ของคนนั้น เช่น <code>CADCAM, Files</code> (ไม่ได้สิทธิ์ติ๊กขั้นตอนของแผนกอื่นเพิ่ม)</div>' + (gaps.length ? '<div class="note" style="color:var(--rose);font-weight:600;margin:0 0 10px">⚠ แผนกที่ยังไม่มีพนักงานทั่วไปรับผิดชอบ (มีแต่แอดมินที่กดได้): ' + gaps.map(d=>esc(d.label)).join(', ') + ' — เพิ่มชื่อพนักงานในชีท Employees แล้วใส่แผนกในช่อง depts (เช่น <code>Delivery</code> สำหรับคนส่งของ)</div>' : '');
+    gapEl.innerHTML = '<div class="note" style="margin:0 0 10px">💡 ให้ใครอัปโหลดรูป/ไฟล์ได้<b>ทุกขั้นตอน</b>: ใส่คำว่า <code>Files</code> ต่อท้ายในช่อง depts ของคนนั้น เช่น <code>CADCAM, Files</code> (ไม่ได้สิทธิ์ติ๊กขั้นตอนของแผนกอื่นเพิ่ม) • ให้ใคร<b>เห็นราคา + จัดการคลัง/สั่งของ</b>: ใส่คำว่า <code>Stock</code> เช่น <code>CADCAM, Stock</code></div>' + (gaps.length ? '<div class="note" style="color:var(--rose);font-weight:600;margin:0 0 10px">⚠ แผนกที่ยังไม่มีพนักงานทั่วไปรับผิดชอบ (มีแต่แอดมินที่กดได้): ' + gaps.map(d=>esc(d.label)).join(', ') + ' — เพิ่มชื่อพนักงานในชีท Employees แล้วใส่แผนกในช่อง depts (เช่น <code>Delivery</code> สำหรับคนส่งของ)</div>' : '');
   }
   const head = ['พนักงาน','ทีม (department)','ระดับ','เมนูที่เห็น','สร้างออเดอร์','แก้ไข / ลบออเดอร์','สรุปหมอ / คลินิก / แดชบอร์ด','แก้สถานะแผนก (เฉพาะแผนกนี้)','อัปโหลดไฟล์','PIN'];
   const rows = EMPLOYEE_LIST.map(e=>{
@@ -4272,7 +4301,7 @@ function renderPerm(){
     let depTxt;
     if(admin) depTxt = 'ทุกแผนก (แอดมิน)';
     else if(ex === null) depTxt = 'ทุกแผนก <span style="color:#D98A2B">(ยังไม่ได้กำหนด depts)</span>';
-    else if(ex.length === 0 && tokensOf(e.depts).every(t=>FILE_ANY_TOKENS.includes(t) || REPORT_TOKENS.includes(t))) depTxt = '<span style="color:#888">ไม่มีสิทธิ์ติ๊กขั้นตอน (' + (tokensOf(e.depts).some(t=>REPORT_TOKENS.includes(t)) ? 'ดูผลงานรายคนอย่างเดียว' : 'อัปโหลดไฟล์อย่างเดียว') + ')</span>';
+    else if(ex.length === 0 && tokensOf(e.depts).every(t=>FILE_ANY_TOKENS.includes(t) || REPORT_TOKENS.includes(t) || STOCK_TOKENS.includes(t))) depTxt = '<span style="color:#888">ไม่มีสิทธิ์ติ๊กขั้นตอน (' + (tokensOf(e.depts).some(t=>STOCK_TOKENS.includes(t)) ? 'จัดการคลัง/สั่งของ + เห็นราคาของ' : tokensOf(e.depts).some(t=>REPORT_TOKENS.includes(t)) ? 'ดูผลงานรายคนอย่างเดียว' : 'อัปโหลดไฟล์อย่างเดียว') + ')</span>';
     else if(ex.length === 0) depTxt = '<span style="color:#C0453A;font-weight:700">⚠ ชื่อในช่อง depts ไม่ตรงกับแผนกใด: "' + esc(e.depts) + '"</span>';
     else depTxt = esc(allowedDeptKeys(e).map(labelOf).join(', '));
     const menus = admin ? 'ทั้งหมด (สร้างออเดอร์, งานค้าง, สถานะแผนก, แดชบอร์ด, สรุปหมอ/คลินิก, สิทธิ์, ค้นหา, งานแก้)' : 'งานค้าง, สถานะแผนก, ค้นหา / ตรวจสอบงาน';
@@ -6264,10 +6293,119 @@ function renderServerBanner(){
   const rs = document.getElementById('api-reset');
   if(rs) rs.addEventListener('click', e=>{ e.preventDefault(); try{ localStorage.removeItem('totu_api_url'); }catch(x){} location.reload(); });
 }
+
+// ---------- v29: คลัง / สั่งของ (ราคาเห็นเฉพาะแอดมิน / คนที่ได้สิทธิ์ stock — เซิร์ฟเวอร์ไม่ส่งราคามาให้คนอื่นเลย) ----------
+const SUP_NEEDED = 29, STOCK_TOKENS = ['stock', 'คลัง', 'จัดซื้อ', 'ราคาของ'];
+let SUP = {items:[], orders:[], can_manage:false, catalog:[], shades:[]}, SUP_MODE = '';
+const SUP_ST = {requested:'ขอซื้อ (รอแอดมินสั่ง)', ordered:'สั่งแล้ว รอของมา', received:'รับของแล้ว', cancelled:'ยกเลิก'};
+function supMoney(n){ return n === '' || n === undefined || n === null || !isFinite(Number(n)) ? '-' : Number(n).toLocaleString('th-TH'); }
+async function renderSupplyTab(){
+  const note = document.getElementById('sup-note'); if(!note) return;
+  if(SERVER_VER < SUP_NEEDED){ note.textContent = 'ระบบหลังบ้าน (Apps Script) ยังเป็นเวอร์ชัน ' + SERVER_VER + ' — ต้องอัปเดตเป็นเวอร์ชัน ' + SUP_NEEDED + ' ก่อนจึงจะใช้คลัง/สั่งของได้'; return; }
+  const r = await apiPost({action:'listSupplies'});
+  if(!r || !r.ok){ note.textContent = 'โหลดข้อมูลคลังไม่สำเร็จ'; return; }
+  SUP = r;
+  note.innerHTML = r.can_manage ? 'คุณเห็น<b>ราคา</b>ได้ และสั่ง/รับของ/ปรับคลังได้ • พนักงานคนอื่นกดขอซื้อได้ แต่ไม่เห็นราคา' : 'กดปุ่ม "สั่ง" เพื่อขอซื้อ แอดมินจะเป็นคนสั่งต่อ • รายการนี้ไม่แสดงราคา';
+  document.getElementById('sup-stockin').style.display = r.can_manage ? '' : 'none';
+  drawSupply();
+}
+function supItemsFiltered(){ const q = cpNorm(document.getElementById('sup-q').value); return SUP.items.filter(i=>!q || cpNorm(i.name + ' ' + i.spec).includes(q)).sort((a, b)=>a.name.localeCompare(b.name, 'th') || a.spec.localeCompare(b.spec, 'th', {numeric:true})); }
+function drawSupply(){
+  const m = SUP.can_manage, F = document.getElementById('sup-filter').value;
+  const open = SUP.orders.filter(o=>o.status === 'requested' || o.status === 'ordered');
+  const low = SUP.items.filter(i=>Number(i.min_qty) > 0 && Number(i.qty) <= Number(i.min_qty));
+  const value = m ? SUP.items.reduce((a, i)=>a + (Number(i.price) || 0) * (Number(i.qty) || 0), 0) : 0;
+  document.getElementById('sup-kpis').innerHTML = `<div class="kpi"><span>รอแอดมินสั่ง</span><b>${SUP.orders.filter(o=>o.status === 'requested').length}</b></div><div class="kpi"><span>สั่งแล้ว รอของมา</span><b>${SUP.orders.filter(o=>o.status === 'ordered').length}</b></div><div class="kpi"><span>ใกล้หมด / หมด</span><b>${low.length}</b></div>` + (m ? `<div class="kpi"><span>มูลค่าของในคลัง</span><b>${supMoney(value)}</b></div>` : '');
+  const ol = SUP.orders.filter(o=>F === 'all' || o.status === 'requested' || o.status === 'ordered');
+  document.getElementById('sup-orders').innerHTML = ol.length ? '<tr><th>วันที่ขอ</th><th>รายการ</th><th>สี / รายละเอียด</th><th>จำนวน</th>' + (m ? '<th>ราคา/ชิ้น</th><th>รวม</th>' : '') + '<th>ผู้ขอ</th><th>สถานะ</th>' + (m ? '<th></th>' : '') + '</tr>' + ol.map(o=>{
+    const done = o.status === 'received' || o.status === 'cancelled';
+    return `<tr><td>${esc(fmtDate(o.requested_at))}</td><td><b>${esc(o.item_name)}</b>${o.note ? `<br><small style="color:var(--muted)">${esc(o.note)}</small>` : ''}</td><td>${esc(o.spec)}</td><td>${esc(o.qty)}</td>` +
+      (m ? `<td>${done ? supMoney(o.unit_price) : `<input type="number" min="0" style="width:90px" value="${esc(o.unit_price)}" data-sup-price="${esc(o.id)}">`}</td><td>${supMoney((Number(o.unit_price) || 0) * Number(o.qty))}</td>` : '') +
+      `<td>${esc(o.requested_by)}</td><td><span class="badge ${o.status === 'received' ? 'b-done' : o.status === 'cancelled' ? 'b-hold' : 'b-wait'}">${SUP_ST[o.status] || esc(o.status)}</span></td>` +
+      (m ? `<td style="white-space:nowrap">${o.status === 'requested' ? `<button class="btn ghost sm" data-sup-st="ordered" data-sup-id="${esc(o.id)}">สั่งแล้ว</button> ` : ''}${!done ? `<button class="btn primary sm" data-sup-st="received" data-sup-id="${esc(o.id)}">รับของแล้ว</button> <button class="btn ghost sm" data-sup-st="cancelled" data-sup-id="${esc(o.id)}">ยกเลิก</button> <button class="btn ghost sm" data-sup-delo="${esc(o.id)}" style="color:#b3261e">ลบ</button>` : ''}</td>` : '') + '</tr>';
+  }).join('') : '<tr><td class="empty">ยังไม่มีรายการ</td></tr>';
+  const il = supItemsFiltered();
+  document.getElementById('sup-items').innerHTML = il.length ? '<tr><th>รายการ</th><th>สี / รายละเอียด</th><th>คงเหลือ</th><th>จุดสั่งซื้อ (ขั้นต่ำ)</th>' + (m ? '<th>ราคา/ชิ้น</th><th>มูลค่า</th><th></th>' : '') + '</tr>' + il.map(i=>{
+    const q = Number(i.qty) || 0, mn = Number(i.min_qty) || 0, lowQ = mn > 0 && q <= mn;
+    return `<tr><td><b>${esc(i.name)}</b></td><td>${esc(i.spec)}</td><td style="white-space:nowrap">${m ? `<button class="btn ghost sm" data-sup-adj="-1" data-sup-id="${esc(i.id)}">−</button> ` : ''}<b style="${lowQ ? 'color:#C0453A' : ''}">${q}</b> ${esc(i.unit || '')}${m ? ` <button class="btn ghost sm" data-sup-adj="1" data-sup-id="${esc(i.id)}">+</button>` : ''}${lowQ ? ' ⚠ ใกล้หมด' : ''}</td><td>${m ? `<input type="number" min="0" style="width:70px" value="${mn}" data-sup-min="${esc(i.id)}">` : mn || '-'}</td>` +
+      (m ? `<td><input type="number" min="0" style="width:90px" value="${esc(i.price)}" data-sup-iprice="${esc(i.id)}"></td><td>${supMoney((Number(i.price) || 0) * q)}</td><td><button class="btn ghost sm" data-sup-deli="${esc(i.id)}" style="color:#b3261e">ลบ</button></td>` : '') + '</tr>';
+  }).join('') : '<tr><td class="empty">ยังไม่มีของในคลัง — เมื่อกด "รับของแล้ว" ระบบจะเพิ่มเข้าคลังให้เอง</td></tr>';
+  const ct = document.getElementById('view-supply'), reload = ()=>renderSupplyTab();
+  ct.querySelectorAll('[data-sup-st]').forEach(b=>b.addEventListener('click', async ()=>{
+    const st = b.dataset.supSt;
+    if(st === 'cancelled' && !window.confirm('ยกเลิกรายการนี้?')) return;
+    const r = await apiPost({action:'updateSupplyOrder', id:b.dataset.supId, status:st});
+    showToast(r && r.ok ? (st === 'received' ? 'รับของแล้ว เพิ่มเข้าคลังเรียบร้อย ✓' : 'บันทึกแล้ว ✓') : 'ไม่สำเร็จ'); reload();
+  }));
+  ct.querySelectorAll('[data-sup-delo]').forEach(b=>b.addEventListener('click', async ()=>{ if(!window.confirm('ลบรายการสั่งนี้?')) return; const r = await apiPost({action:'deleteSupplyOrder', id:b.dataset.supDelo}); showToast(r && r.ok ? 'ลบแล้ว ✓' : 'ลบไม่สำเร็จ'); reload(); }));
+  ct.querySelectorAll('[data-sup-price]').forEach(i=>i.addEventListener('change', async ()=>{ await apiPost({action:'updateSupplyOrder', id:i.dataset.supPrice, unit_price:i.value}); showToast('บันทึกราคาแล้ว ✓'); reload(); }));
+  ct.querySelectorAll('[data-sup-adj]').forEach(b=>b.addEventListener('click', async ()=>{ await apiPost({action:'adjustSupply', id:b.dataset.supId, delta:Number(b.dataset.supAdj)}); reload(); }));
+  ct.querySelectorAll('[data-sup-min]').forEach(i=>i.addEventListener('change', async ()=>{ await apiPost({action:'saveSupplyItem', id:i.dataset.supMin, min_qty:i.value}); showToast('บันทึกแล้ว ✓'); reload(); }));
+  ct.querySelectorAll('[data-sup-iprice]').forEach(i=>i.addEventListener('change', async ()=>{
+    const it = SUP.items.find(x=>x.id === i.dataset.supIprice); if(!it) return;
+    const same = SUP.items.filter(x=>x.name === it.name).length;
+    if(same > 1 && window.confirm('ใช้ราคานี้กับทุกสีของ "' + it.name + '" (' + same + ' รายการ) เลยไหม?\nกด ตกลง = ทุกสี • ยกเลิก = เฉพาะรายการนี้')) await apiPost({action:'setSupplyPrice', name:it.name, price:i.value});
+    else await apiPost({action:'saveSupplyItem', id:it.id, price:i.value});
+    showToast('บันทึกราคาแล้ว ✓'); reload();
+  }));
+  ct.querySelectorAll('[data-sup-deli]').forEach(b=>b.addEventListener('click', async ()=>{ const it = SUP.items.find(x=>x.id === b.dataset.supDeli); if(!it || !window.confirm('ลบ "' + it.name + ' ' + it.spec + '" ออกจากคลัง?')) return; await apiPost({action:'deleteSupplyItem', id:it.id}); reload(); }));
+}
+function supOpenForm(mode){
+  SUP_MODE = mode; const box = document.getElementById('sup-form'), m = SUP.can_manage;
+  const zir = mode === 'zir' || mode === 'zirin';
+  const title = mode === 'zir' ? '🦷 สั่ง Zirconia Block 98 (ใส่จำนวนในสีที่ต้องการ)' : mode === 'zirin' ? '📥 รับเข้า / ปรับยอดคลัง — Zirconia (ใส่จำนวนที่ + เข้า หรือ − ออก)' : '+ สั่งของอื่น / ขนาด Custom';
+  const prods = SUP.catalog || [];
+  let h = `<div class="card" style="background:var(--bg2,#f6f8f7);margin:8px 0"><b>${title}</b>`;
+  if(zir){
+    h += `<div class="filters" style="margin-top:8px"><select id="sup-prod">${prods.map(c=>`<option>${esc(c.product)}</option>`).join('')}</select><select id="sup-mm"></select></div>
+      <div id="sup-shades" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-top:8px">${(SUP.shades || []).map(sh=>`<label style="display:flex;align-items:center;gap:6px;border:1px solid var(--line,#ddd);border-radius:10px;padding:6px 8px"><b style="min-width:34px">${esc(sh)}</b><input type="number" ${mode === 'zir' ? 'min="0"' : ''} value="" placeholder="0" style="width:60px" data-sup-shade="${esc(sh)}"></label>`).join('')}</div>
+      <div class="note" style="margin-top:8px">ขนาด Custom / สีอื่นที่ไม่อยู่ในรายการ: กดปุ่ม "+ สั่งของอื่น / ขนาด Custom"</div>`;
+  } else {
+    h += `<div class="filters" style="margin-top:8px"><input id="sup-cname" placeholder="ชื่อสินค้า เช่น Zirconia block Custom 95x12" style="min-width:300px"><input id="sup-cspec" placeholder="สี / ขนาด / รายละเอียด" style="min-width:200px"><input id="sup-cqty" type="number" min="1" value="1" style="width:80px"></div>`;
+  }
+  if(mode !== 'zirin') h += `<div class="filters" style="margin-top:8px"><input id="sup-snote" placeholder="หมายเหตุ (ถ้ามี)" style="min-width:320px"></div>`;
+  h += `<div id="sup-sum" style="margin-top:6px;color:var(--muted)"></div><div class="filters" style="margin-top:8px"><button class="btn primary" id="sup-send">${mode === 'zirin' ? 'บันทึกเข้าคลัง' : 'ส่งคำขอสั่ง'}</button><button class="btn ghost" id="sup-cancel">ปิด</button></div></div>`;
+  box.innerHTML = h; box.style.display = '';
+  const upd = ()=>{
+    const c = prods.find(x=>x.product === (document.getElementById('sup-prod') || {}).value), mmEl = document.getElementById('sup-mm');
+    if(mmEl && c && document.activeElement !== mmEl && mmEl.dataset.p !== c.product){ mmEl.innerHTML = c.mm.map(x=>`<option value="${x}">${x} mm${m && c.prices ? ' — ' + supMoney(c.prices[x]) + ' บาท' : ''}</option>`).join(''); mmEl.dataset.p = c.product; }
+    let n = 0; box.querySelectorAll('[data-sup-shade]').forEach(i=>{ n += Number(i.value) || 0; });
+    const sum = document.getElementById('sup-sum'); if(sum && zir){ const price = c && c.prices && mmEl ? c.prices[mmEl.value] : null; sum.textContent = n ? 'รวม ' + n + ' แผ่น' + (m && price && mode === 'zir' ? ' • ประมาณ ' + supMoney(n * price) + ' บาท' : '') : ''; }
+  };
+  box.addEventListener('input', upd); box.addEventListener('change', upd); upd();
+  document.getElementById('sup-cancel').addEventListener('click', ()=>{ box.style.display = 'none'; box.innerHTML = ''; });
+  document.getElementById('sup-send').addEventListener('click', async ()=>{
+    const btn = document.getElementById('sup-send'); if(btn.disabled) return;
+    let lines = [];
+    if(zir){
+      const prod = document.getElementById('sup-prod').value, mm = Number(document.getElementById('sup-mm').value);
+      box.querySelectorAll('[data-sup-shade]').forEach(i=>{ const q = Math.round(Number(i.value)); if(q && (mode === 'zirin' || q > 0)) lines.push({product:prod, thickness:mm, spec:i.dataset.supShade, qty:q, delta:q}); });
+    } else {
+      const name = document.getElementById('sup-cname').value.trim(), q = Math.round(Number(document.getElementById('sup-cqty').value));
+      if(name && q > 0) lines.push({name, spec:document.getElementById('sup-cspec').value.trim(), qty:q});
+    }
+    if(!lines.length){ showToast(zir ? 'ใส่จำนวนอย่างน้อย 1 สี' : 'ใส่ชื่อสินค้าและจำนวน'); return; }
+    btn.disabled = true;
+    let ok = true;
+    if(mode === 'zirin'){ for(const l of lines){ const r = await apiPost({action:'adjustSupply', product:l.product, thickness:l.thickness, spec:l.spec, delta:l.delta}); if(!r || !r.ok) ok = false; } }
+    else { const r = await apiPost({action:'requestSupply', lines, note:(document.getElementById('sup-snote') || {}).value || ''}); ok = !!(r && r.ok); }
+    btn.disabled = false;
+    showToast(ok ? (mode === 'zirin' ? 'บันทึกเข้าคลังแล้ว ✓' : 'ส่งคำขอสั่งแล้ว ✓ แอดมินจะเห็นในรายการ') : 'ไม่สำเร็จ ลองอีกครั้ง');
+    if(ok){ box.style.display = 'none'; box.innerHTML = ''; renderSupplyTab(); }
+  });
+}
+(function(){
+  const g = id=>document.getElementById(id); if(!g('sup-new-zir')) return;
+  g('sup-new-zir').addEventListener('click', ()=>{ if(SERVER_VER >= SUP_NEEDED) supOpenForm('zir'); });
+  g('sup-new-other').addEventListener('click', ()=>{ if(SERVER_VER >= SUP_NEEDED) supOpenForm('other'); });
+  g('sup-stockin').addEventListener('click', ()=>{ if(SERVER_VER >= SUP_NEEDED) supOpenForm('zirin'); });
+  g('sup-filter').addEventListener('change', drawSupply); g('sup-q').addEventListener('input', drawSupply);
+})();
+
 const TAB_RENDERERS = {
   order: ()=>{ refreshClinicSelect(); renderRecentOrders(); }, pending: ()=>renderPending(), delivery: ()=>renderDelivery(), dept: ()=>renderDept(), dash: ()=>renderDash(), coupon: ()=>renderCouponByDoctor(),
   web: ()=>renderWebTab(), overview: ()=>renderOverview(), report: ()=>renderReport(), billing: ()=>renderBilling(false), contacts: ()=>renderContacts(), perm: ()=>renderPerm(),
-  search: ()=>renderSearch(), shipped: ()=>renderShipped(), rework: ()=>renderRework(), abutment: ()=>renderAbutTab(), outsource: ()=>renderOutsourceTab(), perf: ()=>renderPerf()
+  search: ()=>renderSearch(), shipped: ()=>renderShipped(), rework: ()=>renderRework(), abutment: ()=>renderAbutTab(), outsource: ()=>renderOutsourceTab(), supply: ()=>renderSupplyTab(), perf: ()=>renderPerf()
 };
 // ---------- 🌐 เว็บลูกค้า: รหัสให้คลินิกดูสถานะงานเอง + รายชื่อคลินิกที่สมัครผ่านหน้าเว็บ (backend v21) ----------
 const WEB_NEEDED = 21, LEAD_STATUSES = ['ใหม่', 'ติดต่อแล้ว', 'เปิดบัญชีแล้ว', 'ไม่สนใจ'];
@@ -6400,7 +6538,7 @@ document.getElementById('pin-btn').addEventListener('click', ()=>openPinDialog('
 
 // Roles: admin = all tabs | everyone else = only "search" (ตรวจสอบงาน) + "dept" (สถานะแผนก)
 // A person counts as admin if role = admin, or (role blank and department = Admin)
-const NORMAL_TABS = ['pending', 'search', 'dept', 'shipped'];
+const NORMAL_TABS = ['pending', 'search', 'dept', 'shipped', 'supply'];
 function isCeoUser(emp){
   if(!emp) return false;
   return String(emp.role || '').trim().toLowerCase() === 'ceo' || String(emp.department || '').trim().toLowerCase() === 'ceo';
