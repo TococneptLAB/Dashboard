@@ -846,6 +846,11 @@
       <h3 style="margin:16px 0 6px">คลัง (จำนวนคงเหลือ)</h3>
       <div class="filters"><select id="sup-cat"><option value="">ทุกหมวด</option></select><input id="sup-q" placeholder="ค้นหาในคลัง: ชื่อ / สี" style="min-width:220px"></div>
       <div class="tablewrap" style="max-height:480px"><table id="sup-items"></table></div>
+      <div id="sup-logbox" style="display:none">
+        <h3 style="margin:16px 0 6px">🧾 ประวัติเพิ่ม / ลดจำนวนในคลัง</h3>
+        <div class="filters"><input id="sup-logq" placeholder="ค้นหา: ชื่อของ / โค้ด / คนที่ทำ / เคส" style="min-width:240px"><select id="sup-logt"><option value="">ทุกประเภท</option><option value="+">เพิ่มเข้า</option><option value="-">ตัดออก</option></select><button class="btn ghost" id="sup-logx">⬇ ดาวน์โหลด CSV</button></div>
+        <div class="tablewrap" style="max-height:420px"><table id="sup-log"></table></div>
+      </div>
     </div>
   </section>
   <section id="view-outsource" class="view">
@@ -948,7 +953,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-12 รุ่น 120 (ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
+const APP_VERSION = "2026-10-12 รุ่น 122 (ประวัติเพิ่ม/ลดจำนวนคลัง ใครทำ เมื่อไหร่ เหตุผล · เลือกใช้ของแล็บในฟอร์ม Abutment ดึงโค้ด+ชื่อ และตัดคลัง · ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -3416,7 +3421,7 @@ function abutSectionHtml(o){
     inner += `<div class="ab-card"><div><span class="badge ${AB_BADGE[a.status] || ''}">${esc(AB_STATUS[a.status] || a.status)}</span>
       ${od ? `<span class="badge b-hold" style="margin-left:6px">เกินกำหนด ${od} วัน</span>` : ''}
       <span style="color:var(--muted);font-size:12px;margin-left:8px">ขอโดย ${esc(a.requested_by || '-')} • ${esc(fmtStamp(a.requested_at))}${days !== null && a.status !== 'received' ? ' • ค้าง ' + days + ' วัน' : ''}</span></div>
-      <div class="ab-grid"><div><b>ยี่ห้อ</b> ${esc(a.brand || '-')}</div><div><b>รุ่น / ขนาด</b> ${abutSpecHtml(a.spec)}</div><div><b>จำนวน</b> ${esc(a.qty || '-')}</div><div><b>ร้านที่สั่ง</b> ${esc(a.supplier || '-')}</div>
+      <div class="ab-grid"><div><b>ยี่ห้อ</b> ${esc(a.brand || '-')}</div><div><b>รุ่น / ขนาด</b> ${abutSpecHtml(a.spec)}</div><div><b>จำนวน</b> ${esc(a.qty || '-')}</div><div><b>ร้านที่สั่ง</b> ${esc(a.supplier || '-')}</div>${a.source === 'lab_stock' ? `<div><b>🏷 ของแล็บ</b> โค้ด ${esc(a.stock_code || '-')}${a.stock_qty ? ' • ตัดคลัง ' + esc(a.stock_qty) + ' ชิ้น' : ''}</div>` : ''}
       <div><b>สั่งเมื่อ</b> ${esc(a.ordered_at ? fmtStamp(a.ordered_at) : '-')}</div><div><b>คาดว่าจะมา</b> ${esc(a.eta ? fmtDate(a.eta) : '-')}</div><div><b>เลขพัสดุ</b> ${esc(a.tracking_no || '-')}</div><div><b>ได้รับเมื่อ</b> ${esc(a.received_at ? fmtStamp(a.received_at) : '-')}</div></div>
       ${a.note ? `<div style="font-size:12.5px"><b>โน้ต:</b> ${esc(a.note)}</div>` : ''}</div>`;
     if(!manage && (a.status === 'requested' || a.status === 'ordered')){
@@ -3428,7 +3433,7 @@ function abutSectionHtml(o){
     }
   }
   if(manage && (a || stepsOn)){
-    inner += `<div id="ab-form" class="cm-note" style="display:none"><div class="grid form">${abutPickerHtml()}
+    inner += `<div id="ab-form" class="cm-note" style="display:none"><div class="grid form">${SERVER_VER >= ABUT_STOCK_MIN ? abutStockHtml() : ''}${abutPickerHtml()}
       <div class="field"><label>สถานะ</label><select id="ab_status"><option value="requested">รอสั่ง</option><option value="ordered">สั่งแล้ว รอของ</option><option value="received">ได้รับของแล้ว</option><option value="cancelled">ยกเลิก</option></select></div>
       <div class="field"><label>ยี่ห้อ / ระบบ</label><input id="ab_brand" list="dl-systems"></div>
       <div class="field"><label>รุ่น / ขนาด</label><input id="ab_spec" placeholder="เช่น Ti-base Ø4.5 GH2"></div>
@@ -3444,12 +3449,45 @@ function abutSectionHtml(o){
   }
   return `<div class="cm-sec"><h3>🔩 สั่ง Abutment</h3>${inner}</div>`;
 }
+function abutStockHtml(){
+  return '<div class="field" style="grid-column:1/-1;border:1px dashed var(--line,#cfd8d5);border-radius:10px;padding:8px"><label style="display:flex;gap:8px;align-items:center;font-weight:700"><input type="checkbox" id="ab_uselab"> 🏷 ใช้ของแล็บ (ตัดจากคลัง — ดึงชื่อและโค้ดสินค้าให้อัตโนมัติ)</label>'
+    + '<div id="ab_lab_box" style="display:none;margin-top:8px"><div class="filters"><select id="ab_lab_cat"><option value="">ทุกหมวด</option></select><input id="ab_lab_q" placeholder="ค้นหา: โค้ด / ชื่อ / รุ่น" style="min-width:200px"></div>'
+    + '<select id="ab_lab_item" style="width:100%;margin-top:6px"></select><div class="note" id="ab_lab_note" style="margin-top:6px"></div></div></div>';
+}
+let AB_LAB = {items:[], categories:[], loaded:false};
+function abutLabOptions(g, selId){
+  const cat = g('ab_lab_cat').value, q = cpNorm(g('ab_lab_q').value);
+  const list = AB_LAB.items.filter(i=>(!cat || (i.category || '') === cat) && (!q || cpNorm((i.code || '') + ' ' + i.name + ' ' + i.spec).includes(q)) || i.id === selId)
+    .sort((a, b)=>(a.category || '').localeCompare(b.category || '', 'th') || a.name.localeCompare(b.name, 'th')).slice(0, 300);
+  g('ab_lab_item').innerHTML = '<option value="">— เลือกของจากคลัง —</option>' + list.map(i=>`<option value="${esc(i.id)}"${i.id === selId ? ' selected' : ''}>${esc((i.code ? '[' + i.code + '] ' : '') + i.name + (i.spec ? ' · ' + i.spec : '') + ' — เหลือ ' + (Number(i.qty) || 0))}</option>`).join('');
+}
+async function bindAbutStock(g, a){
+  if(!g('ab_uselab')) return;
+  const box = g('ab_lab_box'), setNote = ()=>{
+    const it = AB_LAB.items.find(i=>i.id === g('ab_lab_item').value), n = Math.max(1, Number(g('ab_qty').value) || 1);
+    g('ab_lab_note').textContent = it ? (Number(it.qty) >= n ? 'เมื่อบันทึก ระบบตัด ' + n + ' ชิ้น จากคลัง (เหลือ ' + (Number(it.qty) - n) + ')' : '⚠ ในคลังเหลือ ' + (Number(it.qty) || 0) + ' ชิ้น ไม่พอ ' + n + ' — ระบบจะตัดเท่าที่มีและแจ้งเตือน') : 'เลือกของที่ใช้จากรายการ';
+  };
+  if(!AB_LAB.loaded){ const r = await apiPost({action:'listSupplies'}); if(r && r.ok){ AB_LAB = {items:r.items, categories:r.categories || [], loaded:true}; } }
+  g('ab_lab_cat').innerHTML = '<option value="">ทุกหมวด</option>' + AB_LAB.categories.filter(c=>c !== 'Zirconia block').map(c=>`<option>${esc(c)}</option>`).join('');
+  const cur = a && a.source === 'lab_stock' ? a.stock_id : '';
+  g('ab_uselab').checked = !!cur; box.style.display = cur ? '' : 'none'; abutLabOptions(g, cur); setNote();
+  g('ab_uselab').addEventListener('change', ()=>{ box.style.display = g('ab_uselab').checked ? '' : 'none'; if(g('ab_uselab').checked){ abutLabOptions(g, ''); setNote(); } });
+  [g('ab_lab_cat'), g('ab_lab_q')].forEach(e=>e.addEventListener('input', ()=>{ abutLabOptions(g, g('ab_lab_item').value); setNote(); }));
+  g('ab_qty').addEventListener('input', setNote);
+  g('ab_lab_item').addEventListener('change', ()=>{
+    const it = AB_LAB.items.find(i=>i.id === g('ab_lab_item').value); setNote(); if(!it) return;
+    g('ab_brand').value = it.name; g('ab_spec').value = [it.spec, it.code ? '(โค้ด ' + it.code + ')' : ''].filter(Boolean).join(' '); if(!g('ab_qty').value.trim()) g('ab_qty').value = '1';
+    g('ab_supplier').value = 'ของแล็บ'; g('ab_status').value = 'received'; setNote();
+  });
+}
 async function abutCall(body, okMsg){
   const r = await apiPost(body);
-  if(!(r && r.ok)){ showToast(apiErrorText(r)); return false; }
+  if(!(r && r.ok)){ showToast(r && r.error === 'stock_item_missing' ? 'ของชิ้นนี้ถูกลบออกจากคลังแล้ว เลือกใหม่อีกครั้ง' : apiErrorText(r)); return false; }
+  AB_LAB.loaded = false;
   if(await loadNewOrders()){ rebuildOrders(); renderAll(); }
   if(CASE_OPEN_ID) renderCase();
-  if(okMsg) showToast(okMsg);
+  if(r.stock_short > 0) showToast('⚠ ในคลังไม่พอ ขาดอีก ' + r.stock_short + ' ชิ้น (ตัดเท่าที่มีจนเหลือ 0) — ตรวจจำนวนในคลังด้วย');
+  else if(okMsg) showToast(okMsg);
   return true;
 }
 function bindAbutSection(o){
@@ -3466,11 +3504,11 @@ function bindAbutSection(o){
     const v = (k, val)=>{ g(k).value = val || ''; };
     v('ab_status', a ? a.status : 'requested'); v('ab_brand', a && a.brand); v('ab_spec', a && a.spec); v('ab_qty', a && a.qty); v('ab_supplier', a && a.supplier);
     v('ab_ordered', a && toDateTimeInputVal(a.ordered_at)); v('ab_eta', a && toDateInputVal(a.eta)); v('ab_track', a && a.tracking_no); v('ab_received', a && toDateTimeInputVal(a.received_at)); v('ab_note', a && a.note);
-    form.style.display = '';
+    form.style.display = ''; if(SERVER_VER >= ABUT_STOCK_MIN) bindAbutStock(g, a);
   };
   if(g('ab-open-form')) g('ab-open-form').addEventListener('click', open);
   if(g('ab-close')) g('ab-close').addEventListener('click', ()=>{ form.style.display = 'none'; });
-  const fields = ()=>({status:g('ab_status').value, brand:g('ab_brand').value.trim(), spec:g('ab_spec').value.trim(), qty:g('ab_qty').value.trim(), supplier:g('ab_supplier').value.trim(),
+  const fields = ()=>Object.assign(g('ab_uselab') ? {stock_id: g('ab_uselab').checked ? g('ab_lab_item').value : ''} : {}, {status:g('ab_status').value, brand:g('ab_brand').value.trim(), spec:g('ab_spec').value.trim(), qty:g('ab_qty').value.trim(), supplier:g('ab_supplier').value.trim(),
     ordered_at:g('ab_ordered').value, eta:g('ab_eta').value, tracking_no:g('ab_track').value.trim(), received_at:g('ab_received').value, note:g('ab_note').value.trim()});
   if(g('ab-save')) g('ab-save').addEventListener('click', ()=>abutCall({action:'saveAbutment', order_id:id, case_id:caseId, fields:fields()}, 'บันทึกรายละเอียดการสั่งแล้ว ✓'));
   if(g('ab-cancel-order')) g('ab-cancel-order').addEventListener('click', async ()=>{
@@ -6297,7 +6335,7 @@ function renderServerBanner(){
 
 // ---------- v29: คลัง / สั่งของ (ราคาเห็นเฉพาะแอดมิน / คนที่ได้สิทธิ์ stock — เซิร์ฟเวอร์ไม่ส่งราคามาให้คนอื่นเลย) ----------
 const SUP_SEED = [["Premill+Stock","Neodent (Original)","GM","135.226",9],["Premill+Stock","Neodent (Original Screew)","GM","116.286",4],["Premill+Stock","Neodent (Original Screew)","GM","116.285",5],["Premill+Stock","Neodent (3dparty)","Neodent GM (LD) + Screew","LD-1A34-1-1",20],["Premill+Stock","Dentsply","Astra Teach","EV 3.6",5],["Premill+Stock","Dentsply","Astra Teach","EV 4.2",5],["Premill+Stock","Dentsply","Astra Teach","EV 4.8",5],["Premill+Stock","Dentsply","Astra Teach","Lilac 4.5/5.0",3],["Premill+Stock","Dentsply","Ankylos - R","N/A",16],["Premill+Stock","Dentsply","Xive","3.8",9],["Premill+Stock","Dentsply","Xive","4.5",2],["Premill+Stock","Dentsply","Xive","5.5",6],["Premill+Stock","Noble Biocare","Relace","4.3 RP",10],["Premill+Stock","Mis","C1","NP",5],["Premill+Stock","Mis","C1","SP",4],["Premill+Stock","Mis","C1","WP",4],["Premill+Stock","Straumann","Bone Level (BL)","3.3 NC",3],["Premill+Stock","Straumann (3dparty)","Bone Level (BL)","4.1 RC",2],["Premill+Stock","Straumann (Original) + Screew","Bone Level (BL)","4.1 RC",2],["Premill+Stock","Straumann (3dparty)","Tissue Level (WN)","6.5 WN",4],["Premill+Stock","Dentium","Superline (R)","",4],["Premill+Stock","Dentium","NR Line","",5],["Premill+Stock","Dentium","Bright","",10],["Premill+Stock","Neoss (3dparty)","TI SSC","4.0",3],["Premill+Stock","Neoss Original","TI SSC","4.0",3],["Premill+Stock","Octagon","Bone Level (BL)","4.1 RC",4],["Premill+Stock","Osstem (Original)","Regular","R",8],["Premill+Stock","Osstem (Original) ซองเปล่า","Regular","R",8],["Premill+Stock","Osstem (Original)","Mini","Mini",6],["Premill+Stock","Camlog","Trile","3.3",10],["Premill+Stock","Point implant (Original)","Mini","",1],["Premill+Stock","Dentsply","Astra Aqua","3.5/4.0",4],["Premill+Stock","Megagen (3dparty)","AnyRidge","R",10],["Premill+Stock","Megagen (3dparty)","Blue Diamond","RC",9],["Premill+Stock","Megagen (Original)","Blue Diamond","NC",2],["Premill+Stock","Neobiotech (Original)","","",0],["Premill+Stock","Megagen (Original)","Stock abutment","AROZGR4526",1],["Premill+Stock","Megagen (Original)","Stock abutment","AROZGR4525",1],["Premill+Stock","Straumann","Rc vario base 4.5 H3.5","Hex",1],["Premill+Stock","SIC","PINK","Hex",1],["Analog","Osstem (Original)","Muti Abutment","TSMDLA",4],["Analog","Osstem (Original)","Mini","",8],["Analog","Osstem (Original)","Regular","",4],["Analog","Osstem (Original)","Wide","",2],["Analog","Dentium","Bright","BDAN",5],["Analog","Dentium","Superline","",1],["Analog","Neodent","SMALL","",3],["Analog","Neodent","Ø4.0/4.3","101.103/101.104",4],["Analog","Neodent","Ø5.0/6.0","101.09",2],["Analog","Neobiotech","R","",11],["Analog","Neobiotech (Lodden)","R","",11],["Analog","Straumann","Bone Level (BL)","3.3 NC",1],["Analog","Straumann","Bone Level (BL)","4.1 RC",2],["Analog","Straumann","Tissue Level (WN)","6.5 WN",1],["Analog","Straumann","Tissue Level (WN)","RN",1],["Analog","Straumann","RB","RB",2],["Analog","Camlog","Conelog","4.3",10],["Analog","Dentsply","Xive","3.8",0],["Analog","Dentsply","Xive","4.5",0],["Analog","Dentsply","Xive","3.4",0],["Analog","Megagen","Blue Diamond","RC",12],["Analog","Megagen","Blue Diamond","NC",1],["Analog","Zimmer","","ไม่ทราบรุ่น",1],["Analog","Cowell","INNO","R",3],["Analog","Biotem","3D-ASR","",1],["Screw","Osstem (Original)","Regular","R",37],["Screw","Megagen (Original)","Blue Diamond","NC",2],["Screw","Megagen (3dparty)","AnyRidge","R",1],["Screw","Dentium","Superline (R)","",6],["Screw","Dentium","NRrline (NR)","",1],["Screw","Straumann Screew","Bone Level (BL)","4.1 RC",3],["Screw","Neodent (Original Screew)","GM","116.286",5],["Screw","Neodent (Original Screew)","GM","116.285",6],["Screw","Rosen 1.4","Neodent Osstem","",5],["Screw","Rosen 1.8","Dentium","",10],["Screw","Osstem (Original)","Wide","SS",1],["Screw","Neobiotech","R","",11],["Screw","Noble Biocare","Relace","4.3 RP",1],["Screw","Neodent (Original Screew)","GM","116.27",1],["Scanbody","Neobiotech","R D5","",1],["Scanbody","Neodent GM","GM","",1],["Scanbody","Neodent Lodden","GM","",1],["Scanbody","Dio","Mini","",1],["Scanbody","Dio","Regular","",1],["Scanbody","Straumann","Bone Level (BL)","3.3 NC",1],["Scanbody","Straumann","Bone Level (BL)","4.1 RC",1],["Scanbody","Straumann","ARUM","3.3 NC",1],["Scanbody","Straumann","ARUM","4.1 RC",1],["Scanbody","Straumann","Tissue Level (WN)","6.5 WN",1],["Scanbody","Straumann","Tissue Level (WN)","RN",1],["Scanbody","Straumann","Tissue Level (WN)","SC",1],["Scanbody","Osstem (Original)","Mini","Mini",1],["Scanbody","Osstem (Original)","Regular","Rc",1],["Scanbody","Biomate","SD","",1],["Scanbody","Dentsply","Xive","3.8",1],["Scanbody","Dentsply","Xive","4.5",1],["Scanbody","Dentsply","Xive","5.5",1],["Scanbody","Dentsply","Astra Teach","EV 3.6",1],["Scanbody","Dentsply","Astra Teach","EV 4.2",1],["Scanbody","Dentsply","Astra Teach","EV 4.8",1],["Scanbody","Dentsply","Astra Teach","EV 5.4",1],["Scanbody","Dentsply","Astra Aqua","3.5/4.0",1],["Scanbody","Dentsply","Astra Aqua","4.5/5.0",1],["Scanbody","Dentsply","Anklos","",1],["Scanbody","Cowell","R","",1],["Scanbody","Megagen","Blue Diamond","RC",1],["Scanbody","Megagen","Blue Diamond","NC",1],["Scanbody","Megagen","Anyridge","R",1],["Scanbody","Noble Biocare","Relace","4.3 RP",1],["Scanbody","Noble Biocare","mickmouse","",1],["Scanbody","Dentium","Superline","SCJ4565",1],["Scanbody","Biotem","Original","R",5],["Scanbody","Biotem","Suro","R",6],["Scanbody","Bego","PSCADP","58253.0",1],["Scanbody","Zimmer","TSV-45","3.5mm",1],["Scanbody","Zimmer","TSV-45","4.5mm",1],["Scanbody","Zimmer","ZB-TA-45","",1],["Scanbody","Appha Dent","Narrow 9mm","Abutment Tranning",1],["Scanbody","Appha Dent","For Mu","",1],["Scanbody","Camlog","Conelog","3.8/4.3",1],["Scanbody","Camlog","Conelog","3.3",1],["Scanbody","Camlog","Conelog","5.0",1],["ของยืม","Neoss","impression coping","8 m",0],["ของยืม","Sic","Scan Adapter","",1]];      // รายการคลังเริ่มต้นจากไฟล์ Meterial_Toconcept_Update_2026 (ไม่มีราคา)
-const SUP_NEEDED = 31, STOCK_TOKENS = ['stock', 'คลัง', 'จัดซื้อ', 'ราคาของ'];
+const SUP_NEEDED = 31, SUP_LOG_MIN = 33, ABUT_STOCK_MIN = 32, STOCK_TOKENS = ['stock', 'คลัง', 'จัดซื้อ', 'ราคาของ'];
 let SUP = {items:[], orders:[], can_manage:false, catalog:[], shades:[]}, SUP_MODE = '';
 const SUP_ST = {requested:'ขอซื้อ (รอแอดมินสั่ง)', ordered:'สั่งแล้ว รอของมา', received:'รับของแล้ว', cancelled:'ยกเลิก'};
 function supMoney(n){ return n === '' || n === undefined || n === null || !isFinite(Number(n)) ? '-' : Number(n).toLocaleString('th-TH'); }
@@ -6312,6 +6350,23 @@ async function renderSupplyTab(){
   document.getElementById('sup-import').style.display = r.can_manage ? '' : 'none';
   const cs = document.getElementById('sup-cat'), cv = cs.value; cs.innerHTML = '<option value="">ทุกหมวด</option>' + (r.categories || []).map(c=>`<option>${esc(c)}</option>`).join(''); cs.value = (r.categories || []).includes(cv) ? cv : '';
   drawSupply();
+  loadSupLog();
+}
+let SUP_LOG = [];
+async function loadSupLog(){
+  const box = document.getElementById('sup-logbox'); if(!box) return;
+  if(!SUP.can_manage || SERVER_VER < SUP_LOG_MIN){ box.style.display = 'none'; return; }
+  const r = await apiPost({action:'listStockLog'}); SUP_LOG = r && r.ok ? r.log : []; box.style.display = ''; drawSupLog();
+}
+function supLogRows(){ const q = cpNorm(document.getElementById('sup-logq').value), t = document.getElementById('sup-logt').value; return SUP_LOG.filter(l=>(!t || (t === '+' ? Number(l.delta) > 0 : Number(l.delta) < 0)) && (!q || cpNorm([l.name, l.spec, l.code, l.by, l.ref, l.reason, l.note].join(' ')).includes(q))); }
+function drawSupLog(){
+  const rows = supLogRows();
+  document.getElementById('sup-log').innerHTML = '<tr><th>วันเวลา</th><th>โค้ด</th><th>รายการ</th><th>เปลี่ยน</th><th>คงเหลือ</th><th>เหตุผล</th><th>อ้างอิง</th><th>โดย</th></tr>' + (rows.length ? rows.map(l=>{ const d = Number(l.delta); return `<tr><td>${esc(new Date(l.at).toLocaleString('th-TH', {dateStyle:'short', timeStyle:'short'}))}</td><td>${esc(l.code || '')}</td><td>${esc(l.name)} ${esc(l.spec)}</td><td><b style="color:${d > 0 ? '#0a7a3a' : '#c0392b'}">${d > 0 ? '+' : ''}${d}</b></td><td>${esc(l.qty_after)}</td><td>${esc(l.reason)}${l.note ? ' <span class="muted">(' + esc(l.note) + ')</span>' : ''}</td><td>${esc(l.ref || '')}</td><td>${esc(l.by)}</td></tr>`; }).join('') : '<tr><td colspan="8" class="muted">ยังไม่มีประวัติ</td></tr>');
+}
+function supLogCsv(){
+  const q = v=>'"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+  const csv = '\ufeff' + ['วันเวลา,โค้ด,รายการ,เปลี่ยน,คงเหลือ,เหตุผล,อ้างอิง,หมายเหตุ,โดย'].concat(supLogRows().map(l=>[l.at, l.code, l.name + ' ' + l.spec, l.delta, l.qty_after, l.reason, l.ref, l.note, l.by].map(q).join(','))).join('\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'})); a.download = 'stock_log.csv'; a.click();
 }
 function supItemsFiltered(){ const q = cpNorm(document.getElementById('sup-q').value), cat = document.getElementById('sup-cat').value; return SUP.items.filter(i=>(!cat || (i.category || '') === cat) && (!q || cpNorm((i.code || '') + ' ' + i.name + ' ' + i.spec).includes(q))).sort((a, b)=>(a.category || '').localeCompare(b.category || '', 'th') || a.name.localeCompare(b.name, 'th') || a.spec.localeCompare(b.spec, 'th', {numeric:true})); }
 function drawSupply(){
@@ -6401,6 +6456,7 @@ function supOpenForm(mode){
 }
 (function(){
   const g = id=>document.getElementById(id); if(!g('sup-new-zir')) return;
+  g('sup-logq').addEventListener('input', drawSupLog); g('sup-logt').addEventListener('change', drawSupLog); g('sup-logx').addEventListener('click', supLogCsv);
   g('sup-new-zir').addEventListener('click', ()=>{ if(SERVER_VER >= SUP_NEEDED) supOpenForm('zir'); });
   g('sup-new-other').addEventListener('click', ()=>{ if(SERVER_VER >= SUP_NEEDED) supOpenForm('other'); });
   g('sup-stockin').addEventListener('click', ()=>{ if(SERVER_VER >= SUP_NEEDED) supOpenForm('zirin'); });
