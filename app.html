@@ -319,6 +319,127 @@
   .tg{display:inline-block;margin-right:5px;padding:1px 8px;border-radius:999px;font-size:11.5px;font-weight:800;white-space:nowrap;vertical-align:middle;border:1px solid transparent;}
   .tg-abut{background:#E9E4F7;color:#4B3A8C;border-color:#CFC4EE;} .tg-zir{background:#E1F0F0;color:#0E6E6E;border-color:#B6DADA;} .cpd-row{border:1px solid var(--line);border-radius:10px;margin:6px 0;background:#fff;} .cpd-row>summary{cursor:pointer;padding:8px 12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;} .cpd-row .cpd-n{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;} .cpd-chip{font-size:12px;padding:1px 8px;border-radius:10px;background:#EEF3F2;} .cpd-chip.live{background:#FFF1B8;font-weight:700;} .cpd-cases{padding:2px 12px 10px;font-size:13.5px;} .cpd-cases table{width:100%;}
   .pf-mill-tot td{font-weight:800;background:#F1F6F5;} .ship-chip{display:inline-block;margin-left:4px;padding:0 7px;border-radius:9px;font-size:11.5px;font-weight:700;} .ship-today{background:#D64535;color:#fff;} .ship-late{background:#8E1F14;color:#fff;} .ship-soon{background:#FFE2A8;color:#7A4B00;} .cpd-chip.wal{background:#DDEFEA;font-weight:700;} .cpd-chip.zero{background:#FFE2A8;color:#7A4B00;} .cpd-chip.neg{background:#D64535;color:#fff;} .cpw-form{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;border:1px dashed var(--line);border-radius:10px;padding:10px;margin:6px 0 10px;background:#F8FBFA;} .cpw-form label{display:block;font-size:12px;color:var(--muted);} .cpw-form input,.cpw-form select{min-width:120px;} #cp-hint.warn{color:#B3261E;font-weight:700;} .tg-model{background:#FCE8EF;color:#A12A55;border-color:#F1C2D3;} .tg-pre{background:#E3EDF9;color:#1F5E9E;border-color:#BAD0EC;} .tg-emax{background:#FBEBD9;color:#A35A0A;border-color:#EFCDA3;}
+
+  /* ============================================================
+     DESIGN LAYER (รุ่น 133) — look & feel only, no behaviour.
+     Desktop: dark-teal sidebar + roomy content. Mobile: sticky top bar + swipeable tab strip.
+     ============================================================ */
+  :root{
+    --canvas:#EEF2F1; --surface:#FFFFFF; --ink-soft:#2C4A55; --teal-tint:#E3F1F0; --teal-ring:rgba(14,110,110,.22);
+    --side:#0B2B36; --side-ink:#C9DADD; --side-hover:rgba(255,255,255,.07);
+    --r-card:16px; --r-ctl:10px;
+    --sh-card:0 1px 2px rgba(11,43,54,.05),0 10px 28px -14px rgba(11,43,54,.16);
+    --sh-pop:0 12px 40px -12px rgba(11,43,54,.35);
+  }
+  html{-webkit-text-size-adjust:100%;}
+  body{background:var(--canvas);font-size:14.5px;line-height:1.55;-webkit-font-smoothing:antialiased;font-feature-settings:"tnum" 1;}
+  .app{max-width:1560px;padding:18px 24px 72px;}
+  /* top bar items */
+  header.top{border-bottom:0;margin-bottom:6px;padding:0 0 10px;}
+  .brand .mark{border-radius:12px;background:linear-gradient(145deg,#12807F,#0A4F4F);box-shadow:0 6px 14px -6px rgba(10,79,79,.7);}
+  .brand h1{font-size:18px;font-weight:700;letter-spacing:.1px;}
+  .brand small{display:block;line-height:1.3;}
+  .month-pick select{border-radius:999px;background:var(--surface);border-color:var(--line);box-shadow:var(--sh-card);}
+  .user-chip{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 8px 5px 14px;box-shadow:var(--sh-card);}
+  .user-chip .btn.sm{border-radius:999px;}
+  /* tabs (shared look; layout differs below) */
+  nav.tabs button{border:1px solid transparent;background:transparent;color:var(--ink-soft);border-radius:var(--r-ctl);font-weight:600;transition:background .15s,color .15s,border-color .15s;}
+  nav.tabs button:hover{background:var(--teal-tint);border-color:transparent;color:var(--teal-dark);}
+  nav.tabs button.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+  /* surfaces */
+  .card{border:1px solid rgba(11,43,54,.07);border-radius:var(--r-card);box-shadow:var(--sh-card);padding:22px;}
+  .card h2{font-size:17px;font-weight:700;letter-spacing:.1px;margin-bottom:16px;}
+  .card h2 .tag{font-family:inherit;font-weight:600;font-size:11px;letter-spacing:.2px;background:var(--teal-tint);color:var(--teal-dark);padding:3px 9px;border-radius:999px;}
+  .card h3{font-size:15px;}
+  .kpi{border:1px solid rgba(11,43,54,.07);border-radius:14px;box-shadow:var(--sh-card);padding:14px 16px;}
+  .kpi .num,.kpi b{font-variant-numeric:tabular-nums;}
+  /* controls */
+  input,select,textarea{border:1px solid #D3DDDB;border-radius:var(--r-ctl);padding:10px 12px;background:#FBFCFC;transition:border-color .15s,box-shadow .15s,background .15s;}
+  input:hover,select:hover,textarea:hover{border-color:#B7C6C3;}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal);background:#fff;box-shadow:0 0 0 4px var(--teal-ring);}
+  label{font-size:12.5px;color:var(--ink-soft);}
+  button.btn{border-radius:var(--r-ctl);padding:10px 18px;transition:background .15s,border-color .15s,box-shadow .15s,transform .08s;}
+  button.btn:active{transform:translateY(1px) scale(.99);}
+  .btn.primary{background:var(--teal);box-shadow:0 6px 14px -8px rgba(10,79,79,.8);}
+  .btn.primary:hover{background:var(--teal-dark);box-shadow:0 8px 18px -8px rgba(10,79,79,.9);}
+  .btn.ghost{background:var(--surface);border:1px solid #D3DDDB;}
+  .btn.ghost:hover{border-color:var(--teal);background:var(--teal-tint);}
+  .btn.sm{border-radius:8px;}
+  :focus-visible{outline:3px solid var(--teal-ring);outline-offset:2px;}
+  /* tables */
+  .tablewrap{border:1px solid rgba(11,43,54,.08);border-radius:12px;background:var(--surface);}
+  th{background:#F2F6F5;color:var(--ink-soft);font-weight:700;border-bottom:1px solid #DCE5E3;padding:9px 12px;}
+  td{padding:9px 12px;border-bottom:1px solid #ECF1F0;}
+  tr:hover td{background:#F5FAF9;}
+  /* chips, view switches, badges */
+  .badge{padding:3px 10px;letter-spacing:.1px;}
+  .dep-chip{border:1px solid #D3DDDB;background:var(--surface);transition:background .15s,border-color .15s,color .15s;}
+  .dep-chip:hover{border-color:var(--teal);background:var(--teal-tint);}
+  .dep-chip.active{background:var(--ink);border-color:var(--ink);}
+  .dep-views button{border:1px solid #D3DDDB;border-radius:14px;box-shadow:var(--sh-card);transition:background .15s,border-color .15s;}
+  .dep-views button:hover{border-color:var(--teal);}
+  .dep-views button.on{background:var(--teal);border-color:var(--teal);}
+  .view.active{animation:fade .2s ease;}
+  .toast{border-radius:12px;box-shadow:var(--sh-pop);}
+  #server-banner{border-radius:12px;}
+  .empty{color:var(--muted);}
+  /* version stamp: small pill instead of a wall of text */
+  #app-version{left:auto !important;right:12px;bottom:10px !important;opacity:1 !important;background:rgba(11,43,54,.88);color:#fff;border-radius:999px;padding:3px 10px;font-size:11px !important;font-weight:600;cursor:help;box-shadow:var(--sh-card);}
+  /* login */
+  #login-screen{background:radial-gradient(1200px 600px at 20% -10%,#14808060 0,transparent 60%),linear-gradient(160deg,#0B2B36,#0A4F4F);}
+  .login-box,.setup-box{border:0;border-radius:20px;box-shadow:var(--sh-pop);}
+  .login-box{padding:34px 30px;}
+  .login-box h1{font-size:22px;}
+  .login-box .btn.primary{width:100%;padding:12px;}
+  /* ---------- DESKTOP: sidebar layout ---------- */
+  @media (min-width:1100px){
+    .app{display:grid;grid-template-columns:244px minmax(0,1fr);column-gap:26px;align-items:start;}
+    header.top{display:contents;}
+    .brand{grid-column:1;grid-row:1;padding:6px 6px 14px;}
+    .month-pick{grid-column:2;grid-row:1;justify-self:start;align-self:center;}
+    .user-chip{grid-column:2;grid-row:1;justify-self:end;align-self:center;}
+    #server-banner,#alert-panel,#remind-panel{grid-column:2;}
+    nav.tabs{grid-column:1;grid-row:2 / span 60;position:sticky;top:16px;align-self:start;display:flex;flex-direction:column;flex-wrap:nowrap;gap:2px;
+      background:var(--side);border-radius:18px;padding:12px 10px;max-height:calc(100vh - 120px);overflow-y:auto;box-shadow:0 18px 40px -22px rgba(11,43,54,.8);scrollbar-width:thin;scrollbar-color:#2c5260 transparent;}
+    nav.tabs button{width:100%;text-align:left;color:var(--side-ink);padding:10px 14px;font-size:14px;border-radius:10px;}
+    nav.tabs button:hover{background:var(--side-hover);color:#fff;}
+    nav.tabs button.active{background:var(--teal);color:#fff;box-shadow:inset 3px 0 0 #7FE0D6;}
+    nav.tabs button[data-tab="supply"],nav.tabs button[data-tab="dash"],nav.tabs button[data-tab="contacts"]{margin-top:10px;position:relative;}
+    nav.tabs button[data-tab="supply"]::before,nav.tabs button[data-tab="dash"]::before,nav.tabs button[data-tab="contacts"]::before{content:"";position:absolute;left:14px;right:14px;top:-6px;height:1px;background:rgba(255,255,255,.1);}
+    .view{grid-column:2;min-width:0;}
+    .brand .mark{width:44px;height:44px;}
+    .brand small{color:#5B6E6C;max-width:170px;}
+    .user-chip{order:2;}
+  }
+  /* ---------- MOBILE / TABLET: compact bar + swipeable tab strip ---------- */
+  @media (max-width:1099px){
+    .app{padding:0 0 84px;}
+    header.top{position:relative;padding:12px 14px 6px;margin:0;gap:10px;background:var(--surface);border-bottom:1px solid rgba(11,43,54,.08);}
+    .brand small{display:none;}
+    .brand .mark{width:36px;height:36px;font-size:16px;}
+    .brand h1{font-size:17px;}
+    .month-pick{margin-left:auto;}
+    .month-pick label{display:none;}
+    .month-pick select{padding:7px 12px;min-width:0;font-size:13px;}
+    .user-chip{width:100%;justify-content:space-between;border-radius:12px;box-shadow:none;background:#F4F8F7;padding:6px 10px;flex-wrap:wrap;gap:6px 8px;}
+    #server-banner,#alert-panel,#remind-panel{margin-left:14px;margin-right:14px;}
+    nav.tabs{position:sticky;top:0;z-index:30;flex-wrap:nowrap;overflow-x:auto;gap:6px;padding:8px 14px 10px;margin:0 -14px;width:calc(100% + 28px);box-sizing:border-box;scroll-padding-left:14px;
+      background:rgba(255,255,255,.92);backdrop-filter:saturate(1.4) blur(10px);-webkit-backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid rgba(11,43,54,.08);
+      scroll-snap-type:x proximity;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+    nav.tabs::-webkit-scrollbar{display:none;}
+    nav.tabs button{flex:0 0 auto;scroll-snap-align:start;white-space:nowrap;background:#F0F4F3;border-color:transparent;padding:9px 15px;border-radius:999px;font-size:14px;}
+    nav.tabs button.active{background:var(--ink);color:#fff;}
+    .view{padding:12px 12px 0;}
+    .card{padding:16px;border-radius:14px;margin-bottom:12px;}
+    .kpis{gap:8px;}
+    .toast{left:12px;right:12px;bottom:14px;text-align:center;}
+    #app-version{display:none;}
+    .filters input,.filters select{min-width:0;flex:1 1 140px;}
+    button.btn{min-height:44px;}
+    .btn.sm{min-height:38px;}
+    .tablewrap{border-radius:10px;}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important;}}
 </style>
 </head>
 <body>
@@ -385,11 +506,14 @@
   <nav class="tabs">
       <button data-tab="order" class="active">สร้างออเดอร์</button>
       <button data-tab="pending">งานค้าง</button>
+      <button data-tab="dept">สถานะแผนก</button>
       <button data-tab="delivery">ใบนำส่ง</button>
       <button data-tab="abutment">รอ Abutment</button>
       <button data-tab="outsource">🏭 แล็บนอก</button>
+      <button data-tab="rework">งานแก้</button>
+      <button data-tab="shipped">ส่งออกแล้ว</button>
+      <button data-tab="search">ค้นหา / ตรวจสอบงาน</button>
       <button data-tab="supply">📦 คลัง / สั่งของ</button>
-      <button data-tab="dept">สถานะแผนก</button>
       <button data-tab="dash">แดชบอร์ด</button>
       <button data-tab="coupon">🎟 คูปอง</button>
       <button data-tab="finance" style="display:none">💰 รายรับ-รายจ่าย</button>
@@ -400,9 +524,6 @@
       <button data-tab="contacts">ผู้ติดต่อ</button>
       <button data-tab="web">🌐 เว็บลูกค้า</button>
       <button data-tab="perm">สิทธิ์พนักงาน</button>
-      <button data-tab="shipped">ส่งออกแล้ว</button>
-      <button data-tab="search">ค้นหา / ตรวจสอบงาน</button>
-      <button data-tab="rework">งานแก้</button>
     </nav>
   </header>
 
@@ -974,7 +1095,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-12 รุ่น 132 (Premill เสร็จ → เคสวนกลับไปสแกน/ออกแบบรอบ 2 ก่อนกลึงครอบ · ใช้ของแล็บหมวด Premill → ส่งเคสเข้า MILLING Premill อัตโนมัติ · MegaGen AnyRidge Standard + Ti blank · MegaGen BlueDiamond NC/RC ครบตามแคตตาล็อก (Octa/Bridge, Ti blank, AXA, EZ Post) · รหัสเว็บลูกค้าเฉพาะหมอ (หมอทำหลายคลินิก) · แคตตาล็อก Abutment: Camlog CONELOG Ti-base CAD/CAM · แก้ปุ่ม เปิดใช้ขั้นตอนนี้ ของ MILLING lane ให้เคสเข้าคิวจริง · 💰 รายรับ-รายจ่าย เฉพาะ CEO · ปุ่ม 📊 ภาพรวมคงเหลือในคลัง · สิทธิ์ แผนกสต็อก: เพิ่ม/ลดของได้ ไม่เห็นราคา · ประวัติเพิ่ม/ลดจำนวนคลัง ใครทำ เมื่อไหร่ เหตุผล · เลือกใช้ของแล็บในฟอร์ม Abutment ดึงโค้ด+ชื่อ และตัดคลัง · ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
+const APP_VERSION = "2026-10-12 รุ่น 133 (ปรับหน้าตาใหม่ทั้งคอม/มือถือ · Premill เสร็จ → เคสวนกลับไปสแกน/ออกแบบรอบ 2 ก่อนกลึงครอบ · ใช้ของแล็บหมวด Premill → ส่งเคสเข้า MILLING Premill อัตโนมัติ · MegaGen AnyRidge Standard + Ti blank · MegaGen BlueDiamond NC/RC ครบตามแคตตาล็อก (Octa/Bridge, Ti blank, AXA, EZ Post) · รหัสเว็บลูกค้าเฉพาะหมอ (หมอทำหลายคลินิก) · แคตตาล็อก Abutment: Camlog CONELOG Ti-base CAD/CAM · แก้ปุ่ม เปิดใช้ขั้นตอนนี้ ของ MILLING lane ให้เคสเข้าคิวจริง · 💰 รายรับ-รายจ่าย เฉพาะ CEO · ปุ่ม 📊 ภาพรวมคงเหลือในคลัง · สิทธิ์ แผนกสต็อก: เพิ่ม/ลดของได้ ไม่เห็นราคา · ประวัติเพิ่ม/ลดจำนวนคลัง ใครทำ เมื่อไหร่ เหตุผล · เลือกใช้ของแล็บในฟอร์ม Abutment ดึงโค้ด+ชื่อ และตัดคลัง · ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -6928,7 +7049,7 @@ function showApp(){
 }
 
 async function init(){
-  document.getElementById('app-version').textContent = 'เวอร์ชัน ' + APP_VERSION;
+  { const av = document.getElementById('app-version'), vm = String(APP_VERSION).match(/รุ่น \d+/); av.textContent = vm ? vm[0] : 'เวอร์ชัน ' + APP_VERSION; av.title = 'เวอร์ชัน ' + APP_VERSION; }
   buildOrderForm();
   buildDeptChips();
   populateFilterOptions();
