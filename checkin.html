@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>ลงเวลาเข้า-ออกงาน — TOTU Concept Lab</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600&family=Noto+Sans+Thai:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0c10;--ink:#f4f4f2;--mute:#9b9ca3;--line:#2a2c35;--ok:#5fd1a0;--bad:#ff8a80;--gold:#f2c14e}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:'Noto Sans Thai',system-ui,sans-serif;min-height:100vh;line-height:1.55}
+.w{max-width:440px;margin:0 auto;padding:22px 18px 60px}
+.brand{font-family:'Montserrat',system-ui,sans-serif;letter-spacing:.26em;font-size:12px;font-weight:600;color:var(--mute)}
+h1{font-size:24px;font-weight:500;margin:6px 0 2px}
+.who{color:var(--mute);font-size:14px}
+.clock{font-family:'Montserrat',system-ui,sans-serif;font-size:46px;font-weight:600;margin:22px 0 2px;letter-spacing:.02em}
+.day{color:var(--mute);font-size:14px}
+.card{margin-top:20px;background:#14161d;border:1px solid var(--line);border-radius:18px;padding:16px 18px}
+.row{display:flex;justify-content:space-between;padding:6px 0;font-size:15px}.row b{font-weight:500}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}
+.btns button{border:0;border-radius:16px;padding:22px 8px;font:inherit;font-size:18px;font-weight:600;cursor:pointer}
+#bin{background:var(--ok);color:#06251a}#bout{background:#f4f4f2;color:#000}
+.btns button:disabled{opacity:.35;cursor:not-allowed}
+.msg{margin-top:16px;min-height:48px;font-size:15px;border-radius:12px;padding:10px 12px;display:none}
+.msg.ok{display:block;background:#12301f;border:1px solid #2c6b49;color:#b9f0d3}
+.msg.bad{display:block;background:#33181a;border:1px solid #7a2f33;color:#ffc9c4}
+.note{color:var(--mute);font-size:12.5px;margin-top:18px}
+a{color:var(--ink)}
+.login input{width:100%;margin-top:10px;background:#0b0c10;border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:13px;font:inherit}
+.login button{margin-top:14px;width:100%;background:var(--ink);color:#000;border:0;border-radius:10px;padding:13px;font:inherit;font-weight:600;cursor:pointer}
+</style>
+</head>
+<body><div class="w">
+<div class="brand">TOTU CONCEPT LAB</div>
+<h1>🕘 ลงเวลาเข้า-ออกงาน</h1>
+
+<div id="loginView" class="login card" style="display:none">
+  <div class="who">เข้าสู่ระบบด้วยชื่อและ PIN</div>
+  <input id="ln" placeholder="ชื่อพนักงาน" autocomplete="username">
+  <input id="lp" placeholder="PIN" type="password" inputmode="numeric" autocomplete="current-password">
+  <div class="msg bad" id="lerr"></div>
+  <button id="lgo" type="button">เข้าสู่ระบบ</button>
+</div>
+
+<div id="mainView" style="display:none">
+  <div class="who" id="who"></div>
+  <div class="clock" id="clk">--:--</div>
+  <div class="day" id="day"></div>
+  <div class="card">
+    <div class="row"><span>เข้างานวันนี้</span><b id="tin">-</b></div>
+    <div class="row"><span>ออกงานวันนี้</span><b id="tout">-</b></div>
+  </div>
+  <div class="btns"><button id="bin" type="button">☀️ เช็กอิน</button><button id="bout" type="button">🌙 เช็กเอาต์</button></div>
+  <div class="msg" id="msg"></div>
+  <div class="note">ระบบจะอ่านตำแหน่งจากมือถือและลงเวลาให้เฉพาะตอนที่คุณอยู่ในรัศมีของแล็บเท่านั้น ต้องกด "อนุญาต" การเข้าถึงตำแหน่งเมื่อเบราว์เซอร์ถาม และควรเปิด GPS ไว้ ลืมกดเช็กอิน/เอาต์ให้แจ้งแอดมิน <a href="app.html">← กลับไปหน้าแอป</a></div>
+</div>
+</div>
+<script>
+var API='', EMP=null, SRV=null;
+function $(i){ return document.getElementById(i); }
+function post(b){ return fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({},b,EMP&&EMP.token?{token:EMP.token}:{}))}).then(function(r){return r.json();}); }
+function hm(iso){ if(!iso) return '-'; var d=new Date(iso); return isNaN(d)?'-':d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})+' น.'; }
+function say(t,ok){ var m=$('msg'); m.className='msg '+(ok?'ok':'bad'); m.textContent=t; }
+function tick(){ var d=new Date(); $('clk').textContent=d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}); $('day').textContent=d.toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); }
+function paint(){
+  var r=SRV&&SRV.row; $('tin').textContent=hm(r&&r.in_at); $('tout').textContent=hm(r&&r.out_at);
+  $('bin').disabled=!!(r&&r.in_at); $('bout').disabled=!(r&&r.in_at);
+}
+function load(){
+  return post({action:'attendToday'}).then(function(r){
+    if(r&&r.ok){ SRV=r; paint(); if(!r.geo_set) say('แอดมินยังไม่ได้ตั้งตำแหน่งแล็บ ยังลงเวลาไม่ได้ (ตั้งได้ที่เมนู 📒 เวลาทำงานพนักงาน ในหน้าแอป)',false); return; }
+    if(r&&r.error==='auth'){ showLogin('หมดเวลาเข้าสู่ระบบ กรุณาเข้าสู่ระบบใหม่'); return; }
+    say('ระบบหลังบ้าน (Apps Script) ยังไม่รองรับการลงเวลา ให้แอดมินวางโค้ดเวอร์ชันล่าสุด (v45 ขึ้นไป)',false);
+  }).catch(function(){ say('เชื่อมต่อไม่ได้ ลองใหม่อีกครั้ง',false); });
+}
+function clock(kind){
+  if(!navigator.geolocation){ say('เบราว์เซอร์นี้ไม่รองรับการอ่านตำแหน่ง',false); return; }
+  say('กำลังอ่านตำแหน่ง… (ถ้ามีหน้าต่างถาม ให้กด "อนุญาต")',true); $('bin').disabled=$('bout').disabled=true;
+  navigator.geolocation.getCurrentPosition(function(p){
+    post({action:'attendClock',kind:kind,lat:p.coords.latitude,lng:p.coords.longitude,acc:p.coords.accuracy}).then(function(r){
+      if(r&&r.ok){ SRV=Object.assign({},SRV,{row:r.row}); say(kind==='in'?(r.already?'วันนี้เช็กอินไว้แล้ว เวลา '+hm(r.row.in_at):'✅ เช็กอินแล้ว '+hm(r.row.in_at)+' (ห่างแล็บ '+r.dist+' ม.)'):'✅ เช็กเอาต์แล้ว '+hm(r.row.out_at)+' (ห่างแล็บ '+r.dist+' ม.)',true); }
+      else say(msgOf(r),false);
+      paint();
+    }).catch(function(){ say('เชื่อมต่อไม่ได้ ลองใหม่อีกครั้ง',false); paint(); });
+  },function(e){
+    say(e&&e.code===1?'ไม่ได้รับอนุญาตให้อ่านตำแหน่ง — เปิดการอนุญาตตำแหน่งของเบราว์เซอร์สำหรับเว็บนี้ แล้วลองใหม่':'อ่านตำแหน่งไม่สำเร็จ ลองเปิด GPS แล้วกดใหม่',false); paint();
+  },{enableHighAccuracy:true,timeout:20000,maximumAge:0});
+}
+function msgOf(r){
+  var e=r&&r.error;
+  if(e==='too_far') return 'คุณอยู่ห่างจากแล็บประมาณ '+r.dist+' เมตร (ต้องอยู่ในรัศมี '+r.radius+' เมตร) จึงลงเวลาไม่ได้';
+  if(e==='weak_gps') return 'สัญญาณตำแหน่งไม่แม่นพอ (คลาดเคลื่อน ~'+r.acc+' ม.) ลองเปิด GPS หรือออกมาที่โล่งแล้วกดใหม่';
+  if(e==='geo_not_set') return 'แอดมินยังไม่ได้ตั้งตำแหน่งแล็บ';
+  if(e==='no_checkin') return 'วันนี้ยังไม่ได้เช็กอิน จึงเช็กเอาต์ไม่ได้';
+  if(e==='auth'){ showLogin('หมดเวลาเข้าสู่ระบบ กรุณาเข้าสู่ระบบใหม่'); return 'หมดเวลาเข้าสู่ระบบ'; }
+  return 'ลงเวลาไม่สำเร็จ ('+(e||'ไม่ทราบสาเหตุ')+')';
+}
+function showMain(){ $('loginView').style.display='none'; $('mainView').style.display='block'; $('who').textContent='สวัสดี '+(EMP&&EMP.name||''); tick(); setInterval(tick,15000); load(); }
+function showLogin(m){ $('mainView').style.display='none'; $('loginView').style.display='block'; var e=$('lerr'); e.textContent=m||''; e.className='msg'+(m?' bad':''); }
+$('bin').onclick=function(){ clock('in'); }; $('bout').onclick=function(){ clock('out'); };
+$('lgo').onclick=function(){
+  var n=$('ln').value.trim(), p=$('lp').value.trim(); if(!n||!p){ showLogin('กรุณากรอกชื่อและ PIN'); return; }
+  post({action:'login',name:n,pin:p}).then(function(r){
+    if(r&&r.ok){ EMP=Object.assign({},r.employee,{token:r.token}); try{ localStorage.setItem('totu_employee',JSON.stringify(EMP)); }catch(e){} showMain(); }
+    else showLogin(r&&r.error==='locked'?'ใส่ PIN ผิดหลายครั้ง ถูกล็อกชั่วคราว 15 นาที':'ชื่อหรือ PIN ไม่ถูกต้อง');
+  }).catch(function(){ showLogin('เชื่อมต่อไม่ได้'); });
+};
+window.CHK={msgOf:msgOf};
+(function(){
+  try{ EMP=JSON.parse(localStorage.getItem('totu_employee')||'null'); }catch(e){}
+  var u=''; try{ u=localStorage.getItem('totu_api_url')||''; }catch(e){}
+  function go(){ if(EMP&&EMP.token) showMain(); else showLogin(''); }
+  if(/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(u)){ API=u; go(); }
+  else fetch('config.json').then(function(r){return r.json();}).then(function(c){ API=c.api_url; go(); }).catch(function(){ showLogin('โหลดการตั้งค่าไม่สำเร็จ'); });
+})();
+</script>
+</body>
+</html>

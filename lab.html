@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>แผนผังแล็บ — TOTU Concept Lab</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600&family=Noto+Sans+Thai:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0c10;--ink:#f4f4f2;--mute:#9b9ca3;--line:#2a2c35;--gold:#f2c14e;--ok:#5fd1a0}
+*{box-sizing:border-box;margin:0}
+body{background:radial-gradient(1200px 600px at 50% -200px,#1b2030,#0b0c10);color:var(--ink);font-family:'Noto Sans Thai',system-ui,sans-serif;min-height:100vh;line-height:1.5}
+.top{max-width:1180px;margin:0 auto;padding:22px 18px 8px;display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap}
+.brand{font-family:'Montserrat',system-ui,sans-serif;letter-spacing:.26em;font-size:12px;font-weight:600;color:var(--mute)}
+h1{font-size:26px;font-weight:500;margin-top:4px}
+.stats{display:flex;gap:10px;flex-wrap:wrap}
+.stat{background:#14161d;border:1px solid var(--line);border-radius:14px;padding:8px 14px;min-width:92px}
+.stat b{display:block;font-size:22px;font-weight:600;line-height:1.1}.stat span{font-size:12px;color:var(--mute)}
+.bar{max-width:1180px;margin:0 auto;padding:6px 18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;color:var(--mute);font-size:13px}
+.bar a,.bar button{color:var(--ink);background:#14161d;border:1px solid var(--line);border-radius:99px;padding:6px 14px;font:inherit;font-size:13px;cursor:pointer;text-decoration:none}
+.map{max-width:1180px;margin:10px auto 60px;padding:0 18px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:900px){.map{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.map{grid-template-columns:1fr}}
+.room{position:relative;border-radius:22px;border:3px solid var(--rc);background:
+  conic-gradient(var(--rt) 25%,var(--rt2) 0 50%,var(--rt) 0 75%,var(--rt2) 0) 0 0/36px 36px;
+  padding:0 0 14px;min-height:210px;box-shadow:0 10px 30px #0008, inset 0 0 0 4px #0003;overflow:hidden}
+.room.wide{grid-column:span 2}
+@media(max-width:560px){.room.wide{grid-column:auto}}
+.rh{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;background:var(--rc);color:#10131a;font-weight:600;font-size:14px}
+.rh .ic{font-size:18px;margin-right:6px}.rh .rn{background:#10131a;color:#fff;border-radius:99px;font-size:12px;padding:2px 10px;white-space:nowrap}
+.rh .rn.hot{background:#fff;color:#b85a00}
+.furn{display:flex;gap:10px;padding:10px 14px 0;font-size:22px;opacity:.9;filter:drop-shadow(0 2px 0 #0003)}
+.crew{display:flex;flex-wrap:wrap;gap:6px 14px;padding:8px 12px 0;justify-content:flex-start;align-items:flex-end}
+.empty{padding:26px 14px;color:#10131a99;font-size:13px;text-align:center;width:100%}
+.av{position:relative;width:84px;text-align:center;cursor:pointer;padding-top:30px;background:none;border:0;color:inherit;font:inherit}
+.av .bub{position:absolute;top:0;left:50%;transform:translateX(-50%);background:var(--gold);color:#2b1d00;border:2px solid #2b1d00;border-radius:12px;font-size:12px;font-weight:600;padding:1px 8px;white-space:nowrap}
+.av .bub::after{content:"";position:absolute;left:50%;bottom:-7px;margin-left:-5px;border:5px solid transparent;border-top-color:#2b1d00;border-bottom:0}
+.av.idle .bub{background:#e6e6ea;color:#444;border-color:#555}.av.idle .bub::after{border-top-color:#555}
+.desk{position:relative;height:22px;margin:0 6px;background:#b8793e;border:2px solid #5a3515;border-radius:8px 8px 4px 4px}
+.desk::before{content:"";position:absolute;left:50%;top:-14px;width:26px;height:16px;margin-left:-13px;background:#2f3a4a;border:2px solid #10151d;border-radius:3px}
+.av.work .desk::before{background:#7fe3ff;box-shadow:0 0 10px #7fe3ff}
+.guy{position:relative;height:40px;margin-top:-30px;z-index:2;pointer-events:none}
+.head{position:absolute;left:50%;top:0;width:26px;height:26px;margin-left:-13px;border-radius:50%;background:var(--skin);border:2px solid #2a1a12}
+.head::before{content:"";position:absolute;left:-2px;top:-3px;width:26px;height:13px;border-radius:13px 13px 3px 3px;background:var(--hair);border:2px solid #2a1a12;border-bottom:0}
+.head::after{content:"";position:absolute;left:5px;top:11px;width:12px;height:4px;border-top:2px solid #2a1a12;border-radius:0 0 8px 8px;border-top:0;border-bottom:2px solid #2a1a12}
+.body{position:absolute;left:50%;top:24px;width:34px;height:16px;margin-left:-17px;border-radius:12px 12px 2px 2px;background:var(--shirt);border:2px solid #2a1a12}
+.av.work .guy{animation:type .5s infinite alternate}
+@keyframes type{from{transform:translateY(0)}to{transform:translateY(-2px)}}
+.av.idle .guy{opacity:.55;filter:grayscale(.6)}
+.av.idle .head::after{border-bottom:0;border-top:2px solid #2a1a12;top:14px}
+.zz{position:absolute;right:6px;top:8px;font-size:12px;color:#fff;animation:zz 2s infinite;opacity:0}
+.av.idle .zz{opacity:1}
+@keyframes zz{0%{transform:translateY(6px);opacity:0}40%{opacity:1}100%{transform:translateY(-8px);opacity:0}}
+.nm{font-size:12.5px;font-weight:500;margin-top:3px;color:#10131a;word-break:break-word}
+.sm{font-size:11px;color:#10131acc}
+.star{display:inline-block;background:#10131a;color:var(--gold);border-radius:99px;font-size:10.5px;padding:0 6px;margin-top:2px}
+.legend{max-width:1180px;margin:0 auto;padding:0 18px 8px;color:var(--mute);font-size:12.5px;display:flex;gap:16px;flex-wrap:wrap}
+.login{max-width:360px;margin:12vh auto;padding:24px;background:#14161d;border:1px solid var(--line);border-radius:18px}
+.login input{width:100%;margin-top:10px;background:#0b0c10;border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:12px;font:inherit}
+.login button{margin-top:14px;width:100%;background:var(--ink);color:#000;border:0;border-radius:10px;padding:12px;font:inherit;font-weight:600;cursor:pointer}
+.err{color:#ff8a80;font-size:13.5px;min-height:20px;margin-top:8px}
+.sheet{position:fixed;inset:0;background:#000a;display:none;align-items:center;justify-content:center;z-index:20;padding:16px}
+.sheet.on{display:flex}
+.card{background:#14161d;border:1px solid var(--line);border-radius:18px;max-width:420px;width:100%;max-height:80vh;overflow:auto;padding:18px}
+.card h3{font-weight:500;font-size:18px}.card .s{color:var(--mute);font-size:13px;margin:2px 0 10px}
+.card li{list-style:none;border-top:1px solid var(--line);padding:8px 0;font-size:14px;display:flex;justify-content:space-between;gap:10px}
+.card li small{color:var(--mute)}
+.card button{margin-top:12px;background:#222530;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px 16px;font:inherit;cursor:pointer}
+@media(prefers-reduced-motion:reduce){.av.work .guy,.zz{animation:none}}
+</style>
+</head>
+<body>
+<div id="loginView" class="login" style="display:none">
+  <div class="brand">TOTU CONCEPT LAB</div>
+  <h1 style="font-size:20px;margin-top:6px">เข้าสู่ระบบเพื่อดูแผนผังแล็บ</h1>
+  <input id="ln" placeholder="ชื่อพนักงาน" autocomplete="username">
+  <input id="lp" placeholder="PIN" type="password" inputmode="numeric" autocomplete="current-password">
+  <div class="err" id="lerr"></div>
+  <button id="lgo" type="button">เข้าสู่ระบบ</button>
+</div>
+
+<div id="mapView" style="display:none">
+  <div class="top">
+    <div><div class="brand">TOTU CONCEPT LAB</div><h1>🗺️ แผนผังแล็บ</h1></div>
+    <div class="stats" id="stats"></div>
+  </div>
+  <div class="bar"><span id="upd">กำลังโหลด…</span><button id="rf" type="button">⟳ รีเฟรช</button><a href="app.html">← กลับไปหน้าแอป</a></div>
+  <div class="legend"><span>🟡 ฟองสีเหลือง = กำลังทำงานอยู่ (จำนวนเคส)</span><span>💤 เทา = ยังไม่เช็กอิน/ยังไม่เริ่มงานวันนี้</span><span>🕘 เวลาเข้างานมาจากการเช็กอินในรัศมีแล็บ</span><span>⭐ = ขั้นตอนที่ทำเสร็จวันนี้</span><span>กดที่ตัวละครเพื่อดูว่าทำเคสไหนอยู่</span></div>
+  <div class="map" id="map"></div>
+</div>
+
+<div class="sheet" id="sheet"><div class="card" id="card"></div></div>
+
+<script>
+var API='', EMP=null, DATA=null, BOARD=null, TIMER=null;
+var ROOMS=[
+ {id:'office',ic:'🏢',name:'สำนักงาน / รับออเดอร์',keys:['order_intake','billing'],rc:'#8fb4ff',rt:'#26304a',rt2:'#2b3654',furn:'🖥️ 🗂️ ☕',wide:false},
+ {id:'scan',ic:'📷',name:'SCAN',keys:['scan'],rc:'#7fe0c8',rt:'#1f3a38',rt2:'#244341',furn:'📷 🦷'},
+ {id:'design',ic:'🖥️',name:'DESIGN',keys:['design'],rc:'#c4a6ff',rt:'#2e2650',rt2:'#352c5c',furn:'🖥️ 🖱️ 🎨'},
+ {id:'print',ic:'🖨️',name:'MODEL PRINTING',keys:['model_printing'],rc:'#ffb38a',rt:'#46301f',rt2:'#4f3723',furn:'🖨️ 🧪'},
+ {id:'abut',ic:'🔩',name:'Abutment (สั่ง / รับของ)',keys:['abutment','receive'],rc:'#ffd76a',rt:'#443a1b',rt2:'#4d4220',furn:'📦 🔩'},
+ {id:'mill',ic:'⚙️',name:'MILLING / PRESS',keys:['milling','milling_zir','milling_emax','milling_premill'],rc:'#9ad1ff',rt:'#1d3446',rt2:'#223c50',furn:'⚙️ 🔧 🔥',wide:true},
+ {id:'ceramic',ic:'🎨',name:'พอชเลน / ALL CERAMIC',keys:['all_ceramic'],rc:'#ff9ec7',rt:'#46233a',rt2:'#4f283f',furn:'🎨 🖌️ ✨'},
+ {id:'qc',ic:'✅',name:'QC',keys:['qc'],rc:'#8be28b',rt:'#1f3b24',rt2:'#244429',furn:'🔍 ✅'},
+ {id:'deliv',ic:'🚚',name:'DELIVERY',keys:['delivery'],rc:'#f5a3a3',rt:'#452626',rt2:'#4e2b2b',furn:'🚚 📬'}
+];
+var LABEL={order_intake:'รับออเดอร์',scan:'SCAN',design:'DESIGN',model_printing:'MODEL PRINTING',abutment:'สั่ง Abutment',receive:'รับของ',milling:'MILLING',milling_zir:'MILLING Zirconia',milling_emax:'PRESS Emax',milling_premill:'MILLING Premill',all_ceramic:'พอชเลน',qc:'QC',billing:'ออกบิล',delivery:'DELIVERY'};
+var ALLKEYS=Object.keys(LABEL);
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+function tokensOf(str){ return String(str||'').split(/[,;\/\n|]+/).map(function(t){return t.trim().toLowerCase();}).filter(Boolean); }
+function keysForToken(tok){
+  var k=[]; ALLKEYS.forEach(function(x){ if(tok===x.toLowerCase()||tok===LABEL[x].toLowerCase()||tok===x.replace('_',' ')) k.push(x); });
+  if(tok==='cadcam'||tok==='cad'||tok==='cam') k.push('scan','design','model_printing','milling','milling_zir','milling_emax','milling_premill');
+  if(tok==='milling'||tok==='กลึง') k.push('milling','milling_zir','milling_emax','milling_premill');
+  if(tok==='milling zirconia'||tok==='milling zir'||tok==='zirconia'||tok==='กลึง zirconia') k.push('milling_zir');
+  if(tok==='milling emax'||tok==='emax'||tok==='กลึง emax'||tok==='press emax'||tok==='press'||tok==='เพรส') k.push('milling_emax');
+  if(tok==='milling premill'||tok==='premill'||tok==='กลึง premill') k.push('milling_premill');
+  if(tok==='model'||tok==='print'||tok==='printing'||tok==='พิมพ์โมเดล') k.push('model_printing');
+  if(tok==='all ceramic'||tok==='allceramic'||tok==='porcelain'||tok==='พอชเลน') k.push('all_ceramic');
+  if(tok==='admin') k.push('order_intake','abutment','receive','billing','delivery');
+  if(tok==='สแกน') k.push('scan'); if(tok==='รับออเดอร์') k.push('order_intake'); if(tok==='รับของ') k.push('receive'); if(tok==='ออกบิล') k.push('billing');
+  return k;
+}
+function deptKeysOf(e){ var t=tokensOf(e.depts); if(!t.length) return null; var s={}; t.forEach(function(x){ keysForToken(x).forEach(function(k){ s[k]=1; }); }); return Object.keys(s); }
+function isAdmin(e){ var r=String(e.role||'').trim().toLowerCase(), d=String(e.department||'').trim().toLowerCase(); return r==='admin'||r==='ceo'||(r===''&&d==='admin')||d==='ceo'; }
+function ymd(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function dayOf(v){ if(!v) return ''; var s=String(v); if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return s; var d=new Date(s); return isNaN(d)?'':ymd(d); }
+function roomOfKey(k){ for(var i=0;i<ROOMS.length;i++) if(ROOMS[i].keys.indexOf(k)>=0) return ROOMS[i].id; return 'office'; }
+
+// pure: boot (bootstrap result) + today (yyyy-mm-dd) -> {people:[{name,room,wip:[{case_id,dept}],done:n,assigned:n,present}], inLab, wipTotal, workingPeople}
+function compute(boot, today, board){
+  var OV={}; (boot.overrides||[]).forEach(function(r){ var k=String(r.dept_key||''); if(!k||k.charAt(0)==='_') return; (OV[r.id]=OV[r.id]||{})[k]=r; });
+  var per={}, inLab=0;
+  (boot.employees||[]).forEach(function(e){ per[e.name]={name:e.name,emp:e,wip:[],done:0,assigned:0,touched:false}; });
+  function P(n){ n=String(n||'').trim(); return per[n]||null; }
+  (boot.orders||[]).forEach(function(o){
+    if(o.status==='ยกเลิกเคส') return;
+    var live=o.status!=='ส่งแล้ว'; if(live) inLab++;
+    var asg={}; try{ asg=JSON.parse(o.assign||'{}')||{}; }catch(e){}
+    ALLKEYS.forEach(function(k){
+      var ov=(OV[o._id]||{})[k]||{}, st=ov.status||o['dep_'+k]||'ไม่เกี่ยวข้อง', by=ov.updated_by||'';
+      var start=ov.start||o['dep_'+k+'_start']||'', end=ov.end||o['dep_'+k+'_end']||'', p=P(by);
+      if(live&&st==='กำลังดำเนินการ'&&p){ p.wip.push({case_id:o.case_id,dept:k}); p.touched=true; }
+      if(st==='เสร็จแล้ว'&&p&&dayOf(end)===today){ p.done++; p.touched=true; }
+      else if(p&&dayOf(start)===today&&st!=='ไม่เกี่ยวข้อง'){ p.touched=true; }
+      if(live&&asg[k]&&P(asg[k])&&st!=='เสร็จแล้ว'&&st!=='ไม่เกี่ยวข้อง'&&st!=='ยกเลิก') P(asg[k]).assigned++;
+    });
+  });
+  var people=Object.keys(per).map(function(n){
+    var p=per[n], e=p.emp, room='office';
+    if(p.wip.length){ var c={}; p.wip.forEach(function(w){ var r=roomOfKey(w.dept); c[r]=(c[r]||0)+1; }); room=Object.keys(c).sort(function(a,b){return c[b]-c[a];})[0]; }
+    else if(!isAdmin(e)){ var ks=deptKeysOf(e); if(ks&&ks.length) room=roomOfKey(ks[0]); }
+    var b=board&&board[n]; var present=board?!!(b&&b.in_at):p.touched;      // with attendance data, "present" = checked in today
+    return {name:n,room:room,wip:p.wip,done:p.done,assigned:p.assigned,present:present||p.wip.length>0,inAt:b&&b.in_at||'',outAt:b&&b.out_at||''};
+  });
+  return {people:people,inLab:inLab,wipTotal:people.reduce(function(a,p){return a+p.wip.length;},0),working:people.filter(function(p){return p.wip.length;}).length,present:people.filter(function(p){return p.present;}).length};
+}
+function hash(s){ var h=0; for(var i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))>>>0; return h; }
+var SKIN=['#f2c9a0','#e0a878','#c68642','#8d5524','#f6d7b8'], HAIR=['#2a1a12','#5a3a1e','#1c1c1c','#8a5a2b','#c9a24a','#7a2d2d','#3b3b6b'], SHIRT=['#e45858','#4a90e2','#50b86c','#e8a33d','#9b6ad8','#e86fa4','#3bb8b0','#f0f0f0'];
+function hmm(iso){ var d=new Date(iso); return isNaN(d)?'':d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}); }
+function avatar(p){
+  var h=hash(p.name), cls=p.wip.length?'work':(p.present?'':'idle');
+  var bub=p.wip.length?('🔧 '+p.wip.length+' เคส'):(p.outAt?'🏠 กลับแล้ว':(p.inAt?'เข้า '+hmm(p.inAt):(p.present?'พักอยู่':'💤')));
+  var st='--skin:'+SKIN[h%SKIN.length]+';--hair:'+HAIR[(h>>3)%HAIR.length]+';--shirt:'+SHIRT[(h>>6)%SHIRT.length];
+  return '<button type="button" class="av '+(p.wip.length?'work':(p.present?'':'idle'))+'" data-n="'+esc(p.name)+'" style="'+st+'"><div class="bub">'+esc(bub)+'</div><div class="desk"></div><div class="guy"><div class="head"></div><div class="body"></div></div><span class="zz">z</span><div class="nm">'+esc(p.name)+'</div>'+(p.done?'<span class="star">⭐ '+p.done+'</span>':'')+(p.assigned&&!p.wip.length?'<div class="sm">รอทำ '+p.assigned+'</div>':'')+'</button>';
+}
+function draw(){
+  var today=ymd(new Date()), r=compute(DATA,today,BOARD); window.LAB.last=r;
+  document.getElementById('stats').innerHTML=[[r.inLab,'เคสในแล็บ'],[r.wipTotal,'ขั้นที่กำลังทำ'],[r.working+'/'+r.people.length,'กำลังทำงานอยู่'],[r.present+'/'+r.people.length,'เริ่มงานวันนี้']].map(function(x){return '<div class="stat"><b>'+x[0]+'</b><span>'+x[1]+'</span></div>';}).join('');
+  var byRoom={}; r.people.forEach(function(p){ (byRoom[p.room]=byRoom[p.room]||[]).push(p); });
+  document.getElementById('map').innerHTML=ROOMS.map(function(rm){
+    var ps=(byRoom[rm.id]||[]).sort(function(a,b){return (b.wip.length-a.wip.length)||(b.present-a.present)||a.name.localeCompare(b.name,'th');});
+    var w=ps.reduce(function(a,p){return a+p.wip.length;},0);
+    return '<div class="room'+(rm.wide?' wide':'')+'" style="--rc:'+rm.rc+';--rt:'+rm.rt+';--rt2:'+rm.rt2+'"><div class="rh"><span><span class="ic">'+rm.ic+'</span>'+esc(rm.name)+'</span><span class="rn'+(w?' hot':'')+'">'+(w?'กำลังทำ '+w:'ว่าง')+'</span></div><div class="furn">'+rm.furn+'</div><div class="crew">'+(ps.length?ps.map(avatar).join(''):'<div class="empty">ยังไม่มีใครประจำห้องนี้</div>')+'</div></div>';
+  }).join('');
+  [].forEach.call(document.querySelectorAll('.av'),function(b){ b.onclick=function(){ openSheet(b.getAttribute('data-n')); }; });
+  document.getElementById('upd').textContent='อัปเดตล่าสุด '+new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})+' (รีเฟรชเองทุก 30 วินาที)';
+}
+function openSheet(name){
+  var p=(window.LAB.last.people||[]).filter(function(x){return x.name===name;})[0]; if(!p) return;
+  var li=p.wip.length?p.wip.map(function(w){return '<li><b>'+esc(w.case_id)+'</b><small>'+esc(LABEL[w.dept]||w.dept)+'</small></li>';}).join(''):'<li><small>ตอนนี้ไม่มีงานที่กำลังทำ</small></li>';
+  document.getElementById('card').innerHTML='<h3>'+esc(p.name)+'</h3><div class="s">กำลังทำ '+p.wip.length+' ขั้น · เสร็จวันนี้ '+p.done+' ขั้น'+(p.assigned?' · รอทำ (ได้รับมอบ) '+p.assigned:'')+'</div><ul>'+li+'</ul><button type="button" id="cl">ปิด</button>';
+  document.getElementById('sheet').classList.add('on'); document.getElementById('cl').onclick=function(){ document.getElementById('sheet').classList.remove('on'); };
+}
+document.getElementById('sheet').addEventListener('click',function(e){ if(e.target===this) this.classList.remove('on'); });
+function post(body){ return fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({},body,EMP&&EMP.token?{token:EMP.token}:{}))}).then(function(r){return r.json();}); }
+function load(){
+  return post({action:'bootstrap'}).then(function(r){
+    if(!r||!r.ok){ if(r&&(r.error==='unauthorized'||r.error==='forbidden'||r.error==='bad_token')){ showLogin('หมดเวลาเข้าสู่ระบบ กรุณาเข้าสู่ระบบใหม่'); } else { document.getElementById('upd').textContent='ดึงข้อมูลไม่สำเร็จ ลองรีเฟรชอีกครั้ง'; } return; }
+    DATA=r;
+    return post({action:'attendBoard'}).then(function(b){ BOARD=null; if(b&&b.ok){ BOARD={}; (b.rows||[]).forEach(function(x){ BOARD[x.name]=x; }); } }).catch(function(){ BOARD=null; }).then(draw);
+  }).catch(function(){ document.getElementById('upd').textContent='เชื่อมต่อไม่ได้ ลองรีเฟรชอีกครั้ง'; });
+}
+function showMap(){ document.getElementById('loginView').style.display='none'; document.getElementById('mapView').style.display='block'; load(); clearInterval(TIMER); TIMER=setInterval(load,30000); }
+function showLogin(msg){ clearInterval(TIMER); document.getElementById('mapView').style.display='none'; document.getElementById('loginView').style.display='block'; document.getElementById('lerr').textContent=msg||''; }
+document.getElementById('rf').onclick=load;
+document.getElementById('lgo').onclick=function(){
+  var n=document.getElementById('ln').value.trim(), p=document.getElementById('lp').value.trim(); if(!n||!p){ document.getElementById('lerr').textContent='กรุณากรอกชื่อและ PIN'; return; }
+  post({action:'login',name:n,pin:p}).then(function(r){
+    if(r&&r.ok){ EMP=Object.assign({},r.employee,{token:r.token}); try{ localStorage.setItem('totu_employee',JSON.stringify(EMP)); }catch(e){} showMap(); }
+    else document.getElementById('lerr').textContent=(r&&r.error==='locked')?'ใส่ PIN ผิดหลายครั้ง ถูกล็อกชั่วคราว 15 นาที':'ชื่อหรือ PIN ไม่ถูกต้อง';
+  }).catch(function(){ document.getElementById('lerr').textContent='เชื่อมต่อไม่ได้'; });
+};
+window.LAB={compute:compute,ROOMS:ROOMS,last:null};
+(function init(){
+  try{ EMP=JSON.parse(localStorage.getItem('totu_employee')||'null'); }catch(e){}
+  var u=''; try{ u=localStorage.getItem('totu_api_url')||''; }catch(e){}
+  function go(){ if(EMP&&EMP.token) showMap(); else showLogin(''); }
+  if(/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(u)){ API=u; go(); }
+  else fetch('config.json').then(function(r){return r.json();}).then(function(c){ API=c.api_url; go(); }).catch(function(){ showLogin('โหลดการตั้งค่าไม่สำเร็จ'); });
+})();
+</script>
+</body>
+</html>
