@@ -1081,6 +1081,8 @@
         <select id="f-status"><option value="">สถานะรวมทั้งหมด</option></select>
         <select id="f-material"><option value="">วัสดุทั้งหมด</option></select>
         <select id="f-rework"><option value="">ทุกประเภทงาน</option><option value="true">งานแก้เท่านั้น</option><option value="false">งานปกติเท่านั้น</option></select>
+        <select id="f-datekind" title="เลือกว่าจะกรองตามวันไหน"><option value="ship">📅 วันส่งออก (กำหนด)</option><option value="done">📅 วันส่งจริง (ส่งแล้ว)</option><option value="appt">📅 วันนัดคนไข้</option><option value="recv">📅 วันรับงาน</option></select>
+        <input type="date" id="f-from" title="ตั้งแต่วันที่"><span style="align-self:center">ถึง</span><input type="date" id="f-to" title="ถึงวันที่">
         <button class="btn ghost" id="f-reset">ล้างตัวกรอง</button>
       </div>
       <div class="note progress-legend"></div>
@@ -1126,7 +1128,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-12 รุ่น 138 (สรุปประจำวัน+ส่ง LINE · ลูกค้าส่งงานออนไลน์ · ปรับหน้าตาใหม่ ขาว-ดำ + โลโก้บริษัท · Premill เสร็จ → เคสวนกลับไปสแกน/ออกแบบรอบ 2 ก่อนกลึงครอบ · ใช้ของแล็บหมวด Premill → ส่งเคสเข้า MILLING Premill อัตโนมัติ · MegaGen AnyRidge Standard + Ti blank · MegaGen BlueDiamond NC/RC ครบตามแคตตาล็อก (Octa/Bridge, Ti blank, AXA, EZ Post) · รหัสเว็บลูกค้าเฉพาะหมอ (หมอทำหลายคลินิก) · แคตตาล็อก Abutment: Camlog CONELOG Ti-base CAD/CAM · แก้ปุ่ม เปิดใช้ขั้นตอนนี้ ของ MILLING lane ให้เคสเข้าคิวจริง · 💰 รายรับ-รายจ่าย เฉพาะ CEO · ปุ่ม 📊 ภาพรวมคงเหลือในคลัง · สิทธิ์ แผนกสต็อก: เพิ่ม/ลดของได้ ไม่เห็นราคา · ประวัติเพิ่ม/ลดจำนวนคลัง ใครทำ เมื่อไหร่ เหตุผล · เลือกใช้ของแล็บในฟอร์ม Abutment ดึงโค้ด+ชื่อ และตัดคลัง · ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
+const APP_VERSION = "2026-10-12 รุ่น 139 (สรุปประจำวัน+ส่ง LINE · ลูกค้าส่งงานออนไลน์ · ปรับหน้าตาใหม่ ขาว-ดำ + โลโก้บริษัท · Premill เสร็จ → เคสวนกลับไปสแกน/ออกแบบรอบ 2 ก่อนกลึงครอบ · ใช้ของแล็บหมวด Premill → ส่งเคสเข้า MILLING Premill อัตโนมัติ · MegaGen AnyRidge Standard + Ti blank · MegaGen BlueDiamond NC/RC ครบตามแคตตาล็อก (Octa/Bridge, Ti blank, AXA, EZ Post) · รหัสเว็บลูกค้าเฉพาะหมอ (หมอทำหลายคลินิก) · แคตตาล็อก Abutment: Camlog CONELOG Ti-base CAD/CAM · แก้ปุ่ม เปิดใช้ขั้นตอนนี้ ของ MILLING lane ให้เคสเข้าคิวจริง · 💰 รายรับ-รายจ่าย เฉพาะ CEO · ปุ่ม 📊 ภาพรวมคงเหลือในคลัง · สิทธิ์ แผนกสต็อก: เพิ่ม/ลดของได้ ไม่เห็นราคา · ประวัติเพิ่ม/ลดจำนวนคลัง ใครทำ เมื่อไหร่ เหตุผล · เลือกใช้ของแล็บในฟอร์ม Abutment ดึงโค้ด+ชื่อ และตัดคลัง · ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -6512,21 +6514,26 @@ function renderSearch(){
   const st = document.getElementById('f-status').value;
   const mt = document.getElementById('f-material').value;
   const rw = document.getElementById('f-rework').value;
-  let data = allData();
+  const dFrom = document.getElementById('f-from').value, dTo = document.getElementById('f-to').value, dKind = document.getElementById('f-datekind').value, byDate = !!(dFrom || dTo);
+  let data = byDate ? NEW_ORDERS.concat(HISTORICAL).map(withEffectiveStatus) : allData();      // a date range looks at every month, not only the month chosen at the top
+  if(byDate){
+    const key = r=>{ const v = dKind === 'done' ? stampToDate(deliveredDate(r)) : parseYmd(dKind === 'appt' ? r.appointment_date : dKind === 'recv' ? r.date_received : r.ship_date); return v ? ymdLocal(v) : ''; };
+    data = data.filter(r=>{ const k = key(r); return k && (!dFrom || k >= dFrom) && (!dTo || k <= dTo); });
+  }
   if(q) data = data.filter(r=>[r.case_id,r.patient,r.doctor,r.clinic].some(v=>v && String(v).toLowerCase().includes(q)));
   if(st) data = data.filter(r=>r.status===st);
   if(mt) data = data.filter(r=>r.material===mt);
   if(rw) data = data.filter(r=>String(!!r.is_rework)===rw);
-  document.getElementById('search-count').textContent = `พบ ${data.length.toLocaleString()} รายการ (แสดงสูงสุด 300 แถวแรก)`;
-  const cols=['case_id','clinic','doctor','patient','material','qty','status','date_received','appointment_date','date_delivered','progress','cur_dept','cur_days','cur_people','copy'];
-  const labels=['เลขเคส','คลินิก','แพทย์','คนไข้','วัสดุ','จำนวน','สถานะรวม','วันรับงาน','วันนัด','วันส่งงานจริง','ความคืบหน้า','ตอนนี้อยู่ที่แผนก','ค้างในแผนก','ผู้รับผิดชอบแผนกนั้น','คัดลอก'];
+  document.getElementById('search-count').textContent = `พบ ${data.length.toLocaleString()} รายการ (แสดงสูงสุด 300 แถวแรก)` + (byDate ? ' • กรองตามวันที่: ดูทุกเดือน ไม่ผูกกับเดือนที่เลือกด้านบน' : '');
+  const cols=['case_id','clinic','doctor','patient','material','qty','status','date_received','appointment_date','ship_date','date_delivered','progress','cur_dept','cur_days','cur_people','copy'];
+  const labels=['เลขเคส','คลินิก','แพทย์','คนไข้','วัสดุ','จำนวน','สถานะรวม','วันรับงาน','วันนัด','วันส่งออก (กำหนด)','วันส่งงานจริง','ความคืบหน้า','ตอนนี้อยู่ที่แผนก','ค้างในแผนก','ผู้รับผิดชอบแผนกนั้น','คัดลอก'];
   LAST_SEARCH_LIST = data;
   const t = document.getElementById('search-table');
   if(!data.length){ t.innerHTML='<tr><td class="empty">ไม่พบข้อมูลตามเงื่อนไข</td></tr>'; return; }
   t.innerHTML = '<tr>'+labels.map(l=>`<th>${l}</th>`).join('')+'</tr>' +
     data.slice(0,300).map(r0=>{ const r = Object.assign({}, r0, {cur_dept: currentDeptLabel(r0), cur_people: currentPeople(r0), cur_days: currentDays(r0), date_delivered: deliveredDate(r0)}); return '<tr>'+cols.map(c=>{
       if(c==='status') return `<td>${statusBadge(r)}</td>`;
-      if(c==='date_received') return `<td>${esc(fmtDate(r[c]))}</td>`;
+      if(c==='date_received' || c==='ship_date') return `<td>${esc(fmtDate(r[c]))}</td>`;
       if(c==='date_delivered') return `<td>${esc(r[c] ? fmtStamp(r[c]) : '-')}</td>`;
       if(c==='progress') return `<td>${progressStrip(r)}</td>`;
       if(c==='case_id') return `<td>${caseLink(r)}</td>`;
@@ -6536,7 +6543,7 @@ function renderSearch(){
     }).join('')+'</tr>'; }).join('');
   bindCopyButtons(t);
 }
-['f-text','f-status','f-material','f-rework'].forEach(id=>{
+['f-text','f-status','f-material','f-rework','f-datekind','f-from','f-to'].forEach(id=>{
   document.getElementById(id).addEventListener('input', renderSearch);
   document.getElementById(id).addEventListener('change', renderSearch);
 });
@@ -6545,6 +6552,7 @@ document.getElementById('f-reset').addEventListener('click', ()=>{
   document.getElementById('f-status').value='';
   document.getElementById('f-material').value='';
   document.getElementById('f-rework').value='';
+  document.getElementById('f-from').value=''; document.getElementById('f-to').value=''; document.getElementById('f-datekind').value='ship';
   renderSearch();
 });
 
