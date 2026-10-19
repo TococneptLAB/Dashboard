@@ -21,7 +21,9 @@ button{background:var(--ink);color:#000;border:0;border-radius:10px;padding:13px
 .hd{margin-top:30px;display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px}
 .hd b{font-size:18px;font-weight:500}.hd span{color:var(--mute);font-size:13px}
 .case{border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:14px;background:#08080a}
-.case.done{opacity:.72}
+.case.done{opacity:.85}
+.msel{margin-top:16px}.msel select{background:#08080a;color:#f4f4f0;border:1px solid var(--line);border-radius:10px;padding:9px 12px;font:inherit;font-size:14px}.mh{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;margin-top:26px;padding-top:12px;border-top:1px solid var(--line)}.mh b{font-size:16px;font-weight:500}.mh span{color:var(--mute);font-size:13px}
+.seg{display:flex;gap:8px;margin-top:22px;flex-wrap:wrap}.seg button{background:transparent;border:1px solid var(--line);color:var(--mute);border-radius:99px;padding:9px 18px;font:inherit;font-size:14px;cursor:pointer}.seg button.on{background:#f4f4f0;color:#000;border-color:#f4f4f0}
 .top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .cid{font-family:'Montserrat',system-ui,sans-serif;font-weight:500;letter-spacing:.06em;font-size:16px}
 .pill{font-size:12.5px;padding:3px 12px;border-radius:99px;border:1px solid var(--accent);color:var(--accent);white-space:nowrap}
@@ -193,16 +195,40 @@ function go(){
     }
     else if(cp===null && r.doctor) h+='<div class="cp"><div class="cpt">🎟 คูปอง</div><div class="meta">รหัสนี้เป็นรหัสเฉพาะหมอ จึงไม่แสดงคูปอง (คูปองดูได้ที่รหัสของคลินิก) หากต้องการทราบยอดคูปอง กรุณาติดต่อแล็บ</div></div>';
     else if(cp===null) h+='<div class="cp"><div class="cpt">🎟 คูปองของคลินิก</div><div class="meta">ยังไม่พบคูปองของคลินิกนี้ในระบบ หากมีคูปองอยู่ กรุณาติดต่อแล็บเพื่อตรวจสอบ</div></div>';
-    if(!r.cases.length) h+='<div class="empty">ขณะนี้ไม่มีเคสที่อยู่ในแล็บ</div>';
-    r.cases.forEach(function(c){
-      h+='<div class="case'+(c.delivered?' done':'')+'"><div class="top"><span class="cid">'+esc(c.case_id)+'</span><span class="pill '+(c.delivered?'d':(/พัก/.test(c.status)?'h':''))+'">'+esc(pill(c))+'</span></div>'+
+    var inLab=r.cases.filter(function(c){return !c.delivered;}), sent=r.cases.filter(function(c){return c.delivered;}).sort(function(a,b){return String(b.shipped_at||'').localeCompare(String(a.shipped_at||''));});
+    h+='<div class="seg" id="seg"><button data-v="lab" class="on">🏭 อยู่ในแล็บ ('+inLab.length+')</button><button data-v="sent">✅ ส่งออกแล้ว ('+sent.length+')</button></div><div id="cases"></div>';
+    function caseHtml(c){
+      return '<div class="case'+(c.delivered?' done':'')+'"><div class="top"><span class="cid">'+esc(c.case_id)+'</span><span class="pill '+(c.delivered?'d':(/พัก/.test(c.status)?'h':''))+'">'+esc(pill(c))+'</span></div>'+
       '<div class="meta"><b>'+esc(c.patient||'-')+'</b>'+(c.doctor?' · '+esc(c.doctor):'')+' · '+esc(c.material||'')+(c.qty?' × '+esc(c.qty):'')+'</div>'+
       ((c.teeth||c.shade||c.implant_system)?'<div class="meta dt">'+(c.teeth?'🦷 ซี่ <b>'+esc(c.teeth)+'</b>':'')+(c.shade?' · สี <b>'+esc(c.shade)+'</b>':'')+(c.implant_system?' · รากเทียม <b>'+esc(c.implant_system)+'</b>':'')+'</div>':'')+
-      '<div class="meta">รับงาน '+fd(c.date_received)+(c.ship_date?' · กำหนดส่งออก '+fd(c.ship_date):'')+(c.appointment_date?' · นัดคนไข้ '+fd(c.appointment_date):'')+(c.tracking_no?' · เลขพัสดุ <b>'+esc(c.tracking_no)+'</b>':'')+'</div>'+
-      (c.abutments&&c.abutments.length?c.abutments.map(function(a){ var ST={received:'ได้รับ Abutment แล้ว',ordered:'สั่งแล้ว รอของมาถึง',requested:'กำลังดำเนินการสั่ง'}; return '<div class="ab'+(a.state==='received'?' got':'')+'">🔩 <b>'+(a.state==='received'?'':'รอ ')+'Abutment: '+esc(a.brand)+'</b>'+(a.spec?'<div class="sp">'+esc(a.spec).split(' + ').join('<br>')+'</div>':'')+'<span> — '+ST[a.state]+(a.qty>1&&!a.spec?' × '+a.qty:'')+'</span></div>'; }).join(''):'')+
+      '<div class="meta">รับงาน '+fd(c.date_received)+(c.ship_date?' · กำหนดส่งออก '+fd(c.ship_date):'')+(c.appointment_date?' · นัดคนไข้ '+fd(c.appointment_date):'')+(c.delivered&&c.shipped_at?' · <b>ส่งออกเมื่อ '+fd(c.shipped_at)+'</b>':'')+(c.tracking_no?' · เลขพัสดุ <b>'+esc(c.tracking_no)+'</b>':'')+'</div>'+
+      (c.abutments&&c.abutments.length?c.abutments.map(function(a){ var ST={received:'ได้รับ Abutment แล้ว',ordered:'สั่งแล้ว รอของมาถึง',requested:'กำลังดำเนินการสั่ง'}; return '<div class="ab'+(a.state==='received'?' got':'')+'">🔩 <b>'+(a.state==='received'?'':'รอ ')+'Abutment: '+esc(a.brand)+'</b>'+(a.spec?'<div class="sp">'+esc(a.spec).split(' + ').join('<br>')+'</div>':'')+(a.note?'<div class="sp">'+esc(a.note).split(' / ').join('<br>')+'</div>':'')+'<span> — '+ST[a.state]+(a.qty>1&&!a.spec?' × '+a.qty:'')+'</span></div>'; }).join(''):'')+
       '<div class="steps">'+c.stages.map(function(s){ return '<div class="st '+(s.state==='todo'?'':s.state)+'">'+esc(lab(s.label))+'</div>'; }).join('')+'</div></div>';
-    });
+    }
+    var TM=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'], curM='all';
+    function mkey(c){ return String(c.shipped_at||c.date_received||'').slice(0,7)||'-'; }
+    function mlab(k){ var p=k.split('-'); return p.length===2&&p[0]?TM[Number(p[1])-1]+' '+(Number(p[0])+543):'ไม่ทราบเดือน'; }
+    function sumq(a){ return a.reduce(function(t,c){ return t+(Number(c.qty)||0); },0); }
+    function drawCases(v){
+      var h2='';
+      if(v==='sent'){
+        var by={}, order=[]; sent.forEach(function(c){ var k=mkey(c); if(!by[k]){ by[k]=[]; order.push(k); } by[k].push(c); });
+        if(curM!=='all'&&!by[curM]) curM='all';
+        if(!sent.length) h2='<div class="empty">ยังไม่มีเคสที่ส่งออกแล้ว</div>';
+        else{
+          h2='<div class="msel"><select id="mSel"><option value="all">ทุกเดือน ('+sent.length+' เคส)</option>'+order.map(function(k){ return '<option value="'+k+'"'+(k===curM?' selected':'')+'>'+mlab(k)+' ('+by[k].length+' เคส)</option>'; }).join('')+'</select></div>';
+          (curM==='all'?order:[curM]).forEach(function(k){ h2+='<div class="mh"><b>'+mlab(k)+'</b><span>ส่งออก '+by[k].length+' เคส · '+sumq(by[k])+' ซี่</span></div>'+by[k].map(caseHtml).join(''); });
+        }
+      }else{
+        h2=inLab.length?inLab.map(caseHtml).join(''):'<div class="empty">ขณะนี้ไม่มีเคสที่อยู่ในแล็บ</div>';
+      }
+      document.getElementById('cases').innerHTML=h2;
+      var ms=document.getElementById('mSel'); if(ms) ms.onchange=function(){ curM=ms.value; drawCases('sent'); };
+      [].forEach.call(document.querySelectorAll('#seg button'),function(b){ b.className=b.getAttribute('data-v')===v?'on':''; });
+    }
     out.innerHTML=h; initSend(r);
+    [].forEach.call(document.querySelectorAll('#seg button'),function(b){ b.onclick=function(){ drawCases(b.getAttribute('data-v')); }; });
+    drawCases('lab');
   }).catch(function(){ out.innerHTML=''; err.textContent='เชื่อมต่อไม่ได้ ลองใหม่อีกครั้ง'; });
 }
 </script></body></html>
