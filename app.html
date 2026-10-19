@@ -1151,7 +1151,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-12 รุ่น 145 (แผนผังแล็บ + ลงเวลาเข้า-ออกงานตามรัศมีแล็บ · หน้าลูกค้า: เคสที่ส่งออกแล้วแยกเป็นรายเดือน เลือกเดือน/ปีได้ · หน้าลูกค้า: ปุ่มดูเคสที่ส่งออกแล้ว · โน้ต Abutment (ไซด์ที่สั่ง) แสดงในหน้าลูกค้า · หมายเหตุการให้คูปองแสดงในหน้าลูกค้า · อัปเดตระบบ: ดูเวอร์ชันล่าสุด+รายละเอียด · คูปองของหมอในหน้าลูกค้า · สรุปประจำวัน+ส่ง LINE · ลูกค้าส่งงานออนไลน์ · ปรับหน้าตาใหม่ ขาว-ดำ + โลโก้บริษัท · Premill เสร็จ → เคสวนกลับไปสแกน/ออกแบบรอบ 2 ก่อนกลึงครอบ · ใช้ของแล็บหมวด Premill → ส่งเคสเข้า MILLING Premill อัตโนมัติ · MegaGen AnyRidge Standard + Ti blank · MegaGen BlueDiamond NC/RC ครบตามแคตตาล็อก (Octa/Bridge, Ti blank, AXA, EZ Post) · รหัสเว็บลูกค้าเฉพาะหมอ (หมอทำหลายคลินิก) · แคตตาล็อก Abutment: Camlog CONELOG Ti-base CAD/CAM · แก้ปุ่ม เปิดใช้ขั้นตอนนี้ ของ MILLING lane ให้เคสเข้าคิวจริง · 💰 รายรับ-รายจ่าย เฉพาะ CEO · ปุ่ม 📊 ภาพรวมคงเหลือในคลัง · สิทธิ์ แผนกสต็อก: เพิ่ม/ลดของได้ ไม่เห็นราคา · ประวัติเพิ่ม/ลดจำนวนคลัง ใครทำ เมื่อไหร่ เหตุผล · เลือกใช้ของแล็บในฟอร์ม Abutment ดึงโค้ด+ชื่อ และตัดคลัง · ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
+const APP_VERSION = "2026-10-12 รุ่น 146 (ตั้งตำแหน่งแล็บจากพิกัดที่วางได้ · แผนผังแล็บ + ลงเวลาเข้า-ออกงานตามรัศมีแล็บ · หน้าลูกค้า: เคสที่ส่งออกแล้วแยกเป็นรายเดือน เลือกเดือน/ปีได้ · หน้าลูกค้า: ปุ่มดูเคสที่ส่งออกแล้ว · โน้ต Abutment (ไซด์ที่สั่ง) แสดงในหน้าลูกค้า · หมายเหตุการให้คูปองแสดงในหน้าลูกค้า · อัปเดตระบบ: ดูเวอร์ชันล่าสุด+รายละเอียด · คูปองของหมอในหน้าลูกค้า · สรุปประจำวัน+ส่ง LINE · ลูกค้าส่งงานออนไลน์ · ปรับหน้าตาใหม่ ขาว-ดำ + โลโก้บริษัท · Premill เสร็จ → เคสวนกลับไปสแกน/ออกแบบรอบ 2 ก่อนกลึงครอบ · ใช้ของแล็บหมวด Premill → ส่งเคสเข้า MILLING Premill อัตโนมัติ · MegaGen AnyRidge Standard + Ti blank · MegaGen BlueDiamond NC/RC ครบตามแคตตาล็อก (Octa/Bridge, Ti blank, AXA, EZ Post) · รหัสเว็บลูกค้าเฉพาะหมอ (หมอทำหลายคลินิก) · แคตตาล็อก Abutment: Camlog CONELOG Ti-base CAD/CAM · แก้ปุ่ม เปิดใช้ขั้นตอนนี้ ของ MILLING lane ให้เคสเข้าคิวจริง · 💰 รายรับ-รายจ่าย เฉพาะ CEO · ปุ่ม 📊 ภาพรวมคงเหลือในคลัง · สิทธิ์ แผนกสต็อก: เพิ่ม/ลดของได้ ไม่เห็นราคา · ประวัติเพิ่ม/ลดจำนวนคลัง ใครทำ เมื่อไหร่ เหตุผล · เลือกใช้ของแล็บในฟอร์ม Abutment ดึงโค้ด+ชื่อ และตัดคลัง · ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -7291,6 +7291,8 @@ init();
 
 // ---------- 🆕 อัปเดตระบบ (admin / CEO): เวอร์ชันล่าสุด + รายละเอียดที่เพิ่ม (ใหม่สุดอยู่บน) ----------
 const CHANGELOG = [
+  { rev: 146, server: 45, title: 'ตั้งตำแหน่งแล็บจากพิกัด', items: [
+    'เมนู 📒 เวลาทำงานพนักงาน: ตั้งตำแหน่งแล็บโดยวางพิกัดจาก Google Maps ได้ ไม่ต้องไปยืนที่แล็บ (ใช้ Apps Script v45 เดิม)' ] },
   { rev: 145, server: 45, title: 'แผนผังแล็บ + ลงเวลาเข้า-ออกงาน', items: [
     'เมนู 🗺️ แผนผังแล็บ (หน้าแยก lab.html): ห้องต่างๆ ของแล็บ แสดงว่าใครกำลังทำเคสไหน ใครเริ่มงานวันนี้แล้ว กดที่ตัวละครดูรายละเอียด รีเฟรชเองทุก 30 วินาที',
     'เมนู 🕘 ลงเวลาเข้า-ออกงาน (หน้าแยก checkin.html): พนักงานกดเช็กอิน/เช็กเอาต์ในมือถือ ระบบรับเฉพาะตอนที่อยู่ในรัศมีของแล็บ',
@@ -7344,6 +7346,7 @@ function renderUpdates(){
 
 // ---------- 📒 เวลาทำงานพนักงาน (admin / CEO): เช็กอิน-เอาต์ตามรัศมีแล็บ + ตั้งตำแหน่งแล็บ ----------
 const ATT_NEEDED = 45;
+function attParseLL(str){ const m = /(-?\d{1,2}(?:\.\d+)?)\s*[,;\s]\s*(-?\d{1,3}(?:\.\d+)?)/.exec(String(str || '')); if(!m) return null; const lat = Number(m[1]), lng = Number(m[2]); return Math.abs(lat) <= 90 && Math.abs(lng) <= 180 && !(lat === 0 && lng === 0) ? {lat, lng} : null; }
 let ATT_ROWS = [];
 function attHm(iso){ if(!iso) return ''; const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'}); }
 function attHhmm(iso){ const d = new Date(iso); return isNaN(d) ? '' : String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); }
@@ -7358,7 +7361,9 @@ async function renderAttend(){
   geo.innerHTML = isAdminUser(CURRENT_EMPLOYEE)
     ? `<div class="note" style="border-left:3px solid ${set ? '#2e7d32' : '#c0392b'}">${set ? '📍 ตั้งตำแหน่งแล็บแล้ว — รัศมี ' + set.radius + ' เมตร' : '⚠ ยังไม่ได้ตั้งตำแหน่งแล็บ พนักงานจะลงเวลาไม่ได้'}</div>
        <div class="filters" style="margin-top:8px">รัศมี (เมตร) <input type="number" id="att-rad" min="30" max="2000" value="${set ? set.radius : 100}" style="width:90px"> <button class="btn sm" id="att-setgeo">📍 ตั้งตำแหน่งแล็บ = ตำแหน่งที่ฉันอยู่ตอนนี้</button></div>
-       <div class="note">กดปุ่มนี้ตอนที่คุณอยู่ในแล็บ (ใช้มือถือหรือคอมที่เปิดตำแหน่ง) แล้วอนุญาตการเข้าถึงตำแหน่ง</div>` : '';
+       <div class="note">กดปุ่มนี้ตอนที่คุณอยู่ในแล็บ (ใช้มือถือหรือคอมที่เปิดตำแหน่ง) แล้วอนุญาตการเข้าถึงตำแหน่ง</div>
+       <div class="filters" style="margin-top:10px"><input id="att-ll" placeholder="หรือวางพิกัด เช่น 13.7563, 100.5018" style="min-width:230px"> <button class="btn ghost sm" id="att-setll">💾 ตั้งจากพิกัดที่วาง</button></div>
+       <div class="note">ไม่ได้อยู่ที่แล็บ? เปิด Google Maps → กดค้างที่ตำแหน่งแล็บ → แตะตัวเลขพิกัดด้านบนเพื่อคัดลอก → วางในช่องนี้</div>` : '';
   const sg = document.getElementById('att-setgeo');
   if(sg) sg.onclick = ()=>{
     if(!navigator.geolocation){ showToast('เบราว์เซอร์นี้อ่านตำแหน่งไม่ได้'); return; }
@@ -7369,6 +7374,13 @@ async function renderAttend(){
       if(r && r.ok){ showToast('ตั้งตำแหน่งแล็บแล้ว (คลาดเคลื่อนของ GPS ตอนนี้ ~' + Math.round(p.coords.accuracy) + ' ม.)'); renderAttend(); }
       else showToast(r && r.error === 'bad_geo' ? 'ตำแหน่งหรือรัศมีไม่ถูกต้อง (รัศมี 30–2000 เมตร)' : 'บันทึกไม่สำเร็จ');
     }, ()=>{ sg.disabled = false; showToast('อ่านตำแหน่งไม่สำเร็จ — ตรวจว่าอนุญาตตำแหน่งให้เว็บนี้แล้ว'); }, {enableHighAccuracy:true, timeout:20000, maximumAge:0});
+  };
+  const sl = document.getElementById('att-setll');
+  if(sl) sl.onclick = async ()=>{
+    const ll = attParseLL(document.getElementById('att-ll').value);
+    if(!ll){ showToast('พิกัดไม่ถูกต้อง — ใส่เป็น ละติจูด, ลองจิจูด เช่น 13.7563, 100.5018'); return; }
+    const r = await apiPost({action:'setLabGeo', lat:ll.lat, lng:ll.lng, radius:Number(document.getElementById('att-rad').value)});
+    if(r && r.ok){ showToast('ตั้งตำแหน่งแล็บจากพิกัดแล้ว'); renderAttend(); } else showToast(r && r.error === 'bad_geo' ? 'ตำแหน่งหรือรัศมีไม่ถูกต้อง (รัศมี 30–2000 เมตร)' : 'บันทึกไม่สำเร็จ');
   };
   tbl.innerHTML = '<tr><td class="empty">กำลังโหลด…</td></tr>';
   const r = await apiPost({action:'attendList', from:f.value, to:t.value});
