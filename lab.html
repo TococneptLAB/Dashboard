@@ -29,6 +29,7 @@ h1{font-size:26px;font-weight:500;margin-top:4px}
 @media(max-width:560px){.room.wide{grid-column:auto}}
 .rh{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;background:var(--rc);color:#10131a;font-weight:600;font-size:14px}
 .rh .ic{font-size:18px;margin-right:6px}.rh .rn{background:#10131a;color:#fff;border-radius:99px;font-size:12px;padding:2px 10px;white-space:nowrap}
+.tod{font-size:12px;color:#fff;opacity:.85;margin:2px 0 4px}.tod b{font-size:14px}
 .rh .rn.hot{background:#fff;color:#b85a00}
 .furn{display:flex;gap:10px;padding:10px 14px 0;font-size:22px;opacity:.9;filter:drop-shadow(0 2px 0 #0003)}
 .crew{display:flex;flex-wrap:wrap;gap:6px 14px;padding:8px 12px 0;justify-content:flex-start;align-items:flex-end}
@@ -36,6 +37,10 @@ h1{font-size:26px;font-weight:500;margin-top:4px}
 .av{position:relative;width:84px;text-align:center;cursor:pointer;padding-top:30px;background:none;border:0;color:inherit;font:inherit}
 .av .bub{position:absolute;top:0;left:50%;transform:translateX(-50%);background:var(--gold);color:#2b1d00;border:2px solid #2b1d00;border-radius:12px;font-size:12px;font-weight:600;padding:1px 8px;white-space:nowrap}
 .av .bub::after{content:"";position:absolute;left:50%;bottom:-7px;margin-left:-5px;border:5px solid transparent;border-top-color:#2b1d00;border-bottom:0}
+.av.on .nm{background:#1f8f4a;color:#fff;border-radius:99px;padding:1px 8px;display:inline-block}
+.av.on .guy{filter:drop-shadow(0 0 7px #3ddc84)}
+.av.on::after{content:"";position:absolute;top:34px;right:8px;width:12px;height:12px;border-radius:50%;background:#3ddc84;border:2px solid #0b0d12;box-shadow:0 0 8px #3ddc84}
+.av.on:not(.work) .bub{background:#c9f7d8;color:#0d4a24;border-color:#1f8f4a}.av.on:not(.work) .bub::after{border-top-color:#1f8f4a}
 .av.idle .bub{background:#e6e6ea;color:#444;border-color:#555}.av.idle .bub::after{border-top-color:#555}
 .desk{position:relative;height:22px;margin:0 6px;background:#b8793e;border:2px solid #5a3515;border-radius:8px 8px 4px 4px}
 .desk::before{content:"";position:absolute;left:50%;top:-14px;width:26px;height:16px;margin-left:-13px;background:#2f3a4a;border:2px solid #10151d;border-radius:3px}
@@ -85,7 +90,7 @@ h1{font-size:26px;font-weight:500;margin-top:4px}
     <div><div class="brand">TOTU CONCEPT LAB</div><h1>🗺️ แผนผังแล็บ</h1></div>
     <div class="stats" id="stats"></div>
   </div>
-  <div class="bar"><span id="upd">กำลังโหลด…</span><button id="rf" type="button">⟳ รีเฟรช</button><a href="app.html">← กลับไปหน้าแอป</a></div>
+  <div class="bar"><span id="upd">กำลังโหลด…</span><button id="rf" type="button">⟳ รีเฟรช</button><button id="ed" type="button" style="display:none">✏ จัดห้องพนักงาน</button><a href="app.html">← กลับไปหน้าแอป</a></div>
   <div class="legend"><span>🟡 ฟองสีเหลือง = กำลังทำงานอยู่ (จำนวนเคส)</span><span>💤 เทา = ยังไม่เช็กอิน/ยังไม่เริ่มงานวันนี้</span><span>🕘 เวลาเข้างานมาจากการเช็กอินในรัศมีแล็บ</span><span>⭐ = ขั้นตอนที่ทำเสร็จวันนี้</span><span>กดที่ตัวละครเพื่อดูว่าทำเคสไหนอยู่</span></div>
   <div class="map" id="map"></div>
 </div>
@@ -129,9 +134,9 @@ function dayOf(v){ if(!v) return ''; var s=String(v); if(/^\d{4}-\d{2}-\d{2}$/.t
 function roomOfKey(k){ for(var i=0;i<ROOMS.length;i++) if(ROOMS[i].keys.indexOf(k)>=0) return ROOMS[i].id; return 'office'; }
 
 // pure: boot (bootstrap result) + today (yyyy-mm-dd) -> {people:[{name,room,wip:[{case_id,dept}],done:n,assigned:n,present}], inLab, wipTotal, workingPeople}
-function compute(boot, today, board){
+function compute(boot, today, board, rooms){
   var OV={}; (boot.overrides||[]).forEach(function(r){ var k=String(r.dept_key||''); if(!k||k.charAt(0)==='_') return; (OV[r.id]=OV[r.id]||{})[k]=r; });
-  var per={}, inLab=0;
+  var per={}, inLab=0, RS={};
   (boot.employees||[]).forEach(function(e){ per[e.name]={name:e.name,emp:e,wip:[],done:0,assigned:0,touched:false}; });
   function P(n){ n=String(n||'').trim(); return per[n]||null; }
   (boot.orders||[]).forEach(function(o){
@@ -142,6 +147,7 @@ function compute(boot, today, board){
       var ov=(OV[o._id]||{})[k]||{}, st=ov.status||o['dep_'+k]||'ไม่เกี่ยวข้อง', by=ov.updated_by||'';
       var start=ov.start||o['dep_'+k+'_start']||'', end=ov.end||o['dep_'+k+'_end']||'', p=P(by);
       if(live&&st==='กำลังดำเนินการ'&&p){ p.wip.push({case_id:o.case_id,dept:k}); p.touched=true; }
+      if(st==='เสร็จแล้ว'&&dayOf(end)===today){ var rid=roomOfKey(k); RS[rid]=RS[rid]||{steps:0,teeth:0}; RS[rid].steps++; RS[rid].teeth+=Number(o.qty)||0; }
       if(st==='เสร็จแล้ว'&&p&&dayOf(end)===today){ p.done++; p.touched=true; }
       else if(p&&dayOf(start)===today&&st!=='ไม่เกี่ยวข้อง'){ p.touched=true; }
       if(live&&asg[k]&&P(asg[k])&&st!=='เสร็จแล้ว'&&st!=='ไม่เกี่ยวข้อง'&&st!=='ยกเลิก') P(asg[k]).assigned++;
@@ -151,31 +157,33 @@ function compute(boot, today, board){
     var p=per[n], e=p.emp, room='office';
     if(p.wip.length){ var c={}; p.wip.forEach(function(w){ var r=roomOfKey(w.dept); c[r]=(c[r]||0)+1; }); room=Object.keys(c).sort(function(a,b){return c[b]-c[a];})[0]; }
     else if(!isAdmin(e)){ var ks=deptKeysOf(e); if(ks&&ks.length) room=roomOfKey(ks[0]); }
+    var rl=(rooms&&rooms[n]||[]).filter(function(id){ return ROOMS.some(function(r){return r.id===id;}); }), rs=[room];
+    if(rl.length){ rs=rl.slice(); p.wip.forEach(function(w){ var r=roomOfKey(w.dept); if(rs.indexOf(r)<0) rs.push(r); }); room=rs[0]; }
     var b=board&&board[n]; var present=board?!!(b&&b.in_at):p.touched;      // with attendance data, "present" = checked in today
-    return {name:n,room:room,wip:p.wip,done:p.done,assigned:p.assigned,present:present||p.wip.length>0,inAt:b&&b.in_at||'',outAt:b&&b.out_at||''};
+    return {name:n,room:room,rooms:rs,custom:rl.length>0,wip:p.wip,done:p.done,assigned:p.assigned,present:present||p.wip.length>0,inAt:b&&b.in_at||'',outAt:b&&b.out_at||'',late:b&&b.st&&b.st.kind==='late'?b.st.late:0};
   });
-  return {people:people,inLab:inLab,wipTotal:people.reduce(function(a,p){return a+p.wip.length;},0),working:people.filter(function(p){return p.wip.length;}).length,present:people.filter(function(p){return p.present;}).length};
+  return {roomStats:RS,people:people,inLab:inLab,wipTotal:people.reduce(function(a,p){return a+p.wip.length;},0),working:people.filter(function(p){return p.wip.length;}).length,present:people.filter(function(p){return p.present;}).length};
 }
 function hash(s){ var h=0; for(var i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))>>>0; return h; }
 var SKIN=['#f2c9a0','#e0a878','#c68642','#8d5524','#f6d7b8'], HAIR=['#2a1a12','#5a3a1e','#1c1c1c','#8a5a2b','#c9a24a','#7a2d2d','#3b3b6b'], SHIRT=['#e45858','#4a90e2','#50b86c','#e8a33d','#9b6ad8','#e86fa4','#3bb8b0','#f0f0f0'];
 function hmm(iso){ var d=new Date(iso); return isNaN(d)?'':d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}); }
 function avatar(p){
   var h=hash(p.name), cls=p.wip.length?'work':(p.present?'':'idle');
-  var bub=p.wip.length?('🔧 '+p.wip.length+' เคส'):(p.outAt?'🏠 กลับแล้ว':(p.inAt?'เข้า '+hmm(p.inAt):(p.present?'พักอยู่':'💤')));
+  var bub=p.wip.length?('🔧 '+p.wip.length+' เคส'):(p.outAt?'🏠 กลับแล้ว':(p.inAt?('เข้า '+hmm(p.inAt)+(p.late?' ⚠สาย':'')):(p.present?'พักอยู่':'💤')));
   var st='--skin:'+SKIN[h%SKIN.length]+';--hair:'+HAIR[(h>>3)%HAIR.length]+';--shirt:'+SHIRT[(h>>6)%SHIRT.length];
-  return '<button type="button" class="av '+(p.wip.length?'work':(p.present?'':'idle'))+'" data-n="'+esc(p.name)+'" style="'+st+'"><div class="bub">'+esc(bub)+'</div><div class="desk"></div><div class="guy"><div class="head"></div><div class="body"></div></div><span class="zz">z</span><div class="nm">'+esc(p.name)+'</div>'+(p.done?'<span class="star">⭐ '+p.done+'</span>':'')+(p.assigned&&!p.wip.length?'<div class="sm">รอทำ '+p.assigned+'</div>':'')+'</button>';
+  return '<button type="button" class="av '+(p.wip.length?'work':(p.present?'':'idle'))+(p.present&&!p.outAt?' on':'')+'" data-n="'+esc(p.name)+'" style="'+st+'"><div class="bub">'+esc(bub)+'</div><div class="desk"></div><div class="guy"><div class="head"></div><div class="body"></div></div><span class="zz">z</span><div class="nm">'+esc(p.name)+'</div>'+(p.done?'<span class="star">⭐ '+p.done+'</span>':'')+(p.assigned&&!p.wip.length?'<div class="sm">รอทำ '+p.assigned+'</div>':'')+'</button>';
 }
 function draw(){
-  var today=ymd(new Date()), r=compute(DATA,today,BOARD); window.LAB.last=r;
+  var today=ymd(new Date()), r=compute(DATA,today,BOARD,ROOMMAP); window.LAB.last=r;
   document.getElementById('stats').innerHTML=[[r.inLab,'เคสในแล็บ'],[r.wipTotal,'ขั้นที่กำลังทำ'],[r.working+'/'+r.people.length,'กำลังทำงานอยู่'],[r.present+'/'+r.people.length,'เริ่มงานวันนี้']].map(function(x){return '<div class="stat"><b>'+x[0]+'</b><span>'+x[1]+'</span></div>';}).join('');
-  var byRoom={}; r.people.forEach(function(p){ (byRoom[p.room]=byRoom[p.room]||[]).push(p); });
+  var byRoom={}; r.people.forEach(function(p){ p.rooms.forEach(function(id){ var q=p; if(p.rooms.length>1) q=Object.assign({},p,{wip:p.wip.filter(function(w){return roomOfKey(w.dept)===id;})}); (byRoom[id]=byRoom[id]||[]).push(q); }); });
   document.getElementById('map').innerHTML=ROOMS.map(function(rm){
     var ps=(byRoom[rm.id]||[]).sort(function(a,b){return (b.wip.length-a.wip.length)||(b.present-a.present)||a.name.localeCompare(b.name,'th');});
-    var w=ps.reduce(function(a,p){return a+p.wip.length;},0);
-    return '<div class="room'+(rm.wide?' wide':'')+'" style="--rc:'+rm.rc+';--rt:'+rm.rt+';--rt2:'+rm.rt2+'"><div class="rh"><span><span class="ic">'+rm.ic+'</span>'+esc(rm.name)+'</span><span class="rn'+(w?' hot':'')+'">'+(w?'กำลังทำ '+w:'ว่าง')+'</span></div><div class="furn">'+rm.furn+'</div><div class="crew">'+(ps.length?ps.map(avatar).join(''):'<div class="empty">ยังไม่มีใครประจำห้องนี้</div>')+'</div></div>';
+    var rs=r.roomStats[rm.id]; var w=ps.reduce(function(a,p){return a+p.wip.length;},0);
+    return '<div class="room'+(rm.wide?' wide':'')+'" style="--rc:'+rm.rc+';--rt:'+rm.rt+';--rt2:'+rm.rt2+'"><div class="rh"><span><span class="ic">'+rm.ic+'</span>'+esc(rm.name)+'</span><span class="rn'+(w?' hot':'')+'">'+(w?'กำลังทำ '+w:'ว่าง')+'</span></div><div class="furn">'+rm.furn+'</div><div class="tod">'+(rs?'✔ วันนี้เสร็จ <b>'+rs.teeth+' ซี่</b> ('+rs.steps+' เคส)':'วันนี้ยังไม่มีงานเสร็จ')+'</div><div class="crew">'+(ps.length?ps.map(avatar).join(''):'<div class="empty">ยังไม่มีใครประจำห้องนี้</div>')+'</div></div>';
   }).join('');
   [].forEach.call(document.querySelectorAll('.av'),function(b){ b.onclick=function(){ openSheet(b.getAttribute('data-n')); }; });
-  document.getElementById('upd').textContent='อัปเดตล่าสุด '+new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})+' (รีเฟรชเองทุก 30 วินาที)';
+  document.getElementById('upd').textContent=r.people.filter(function(p){return p.present&&!p.outAt;}).length+' คนเช็กอิน/ออนไลน์ (สีเขียว) • อัปเดตล่าสุด '+new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})+' (รีเฟรชเองทุก 30 วินาที)';
 }
 function openSheet(name){
   var p=(window.LAB.last.people||[]).filter(function(x){return x.name===name;})[0]; if(!p) return;
@@ -189,12 +197,28 @@ function load(){
   return post({action:'bootstrap'}).then(function(r){
     if(!r||!r.ok){ if(r&&(r.error==='unauthorized'||r.error==='forbidden'||r.error==='bad_token')){ showLogin('หมดเวลาเข้าสู่ระบบ กรุณาเข้าสู่ระบบใหม่'); } else { document.getElementById('upd').textContent='ดึงข้อมูลไม่สำเร็จ ลองรีเฟรชอีกครั้ง'; } return; }
     DATA=r;
-    return post({action:'attendBoard'}).then(function(b){ BOARD=null; if(b&&b.ok){ BOARD={}; (b.rows||[]).forEach(function(x){ BOARD[x.name]=x; }); } }).catch(function(){ BOARD=null; }).then(draw);
+    return post({action:'attendBoard'}).then(function(b){ BOARD=null; ROOMMAP=(b&&b.rooms)||{}; if(b&&b.ok){ BOARD={}; (b.rows||[]).forEach(function(x){ BOARD[x.name]=x; }); } }).catch(function(){ BOARD=null; }).then(draw);
   }).catch(function(){ document.getElementById('upd').textContent='เชื่อมต่อไม่ได้ ลองรีเฟรชอีกครั้ง'; });
 }
-function showMap(){ document.getElementById('loginView').style.display='none'; document.getElementById('mapView').style.display='block'; load(); clearInterval(TIMER); TIMER=setInterval(load,30000); }
+function showMap(){ document.getElementById('ed').style.display=EMP&&isAdmin(EMP)?'':'none'; document.getElementById('loginView').style.display='none'; document.getElementById('mapView').style.display='block'; load(); clearInterval(TIMER); TIMER=setInterval(load,30000); }
 function showLogin(msg){ clearInterval(TIMER); document.getElementById('mapView').style.display='none'; document.getElementById('loginView').style.display='block'; document.getElementById('lerr').textContent=msg||''; }
+var ROOMMAP={};
 document.getElementById('rf').onclick=load;
+function editRooms(){
+  var people=(window.LAB.last&&window.LAB.last.people)||[]; if(!people.length) return;
+  var h='<h3>จัดห้องพนักงาน</h3><div class="s">ติ๊กห้องที่คนนี้ประจำ (เลือกได้หลายห้อง) • ไม่ติ๊กเลย = ให้ระบบจัดเองตามแผนกที่ตั้งไว้</div><div style="overflow:auto">';
+  people.slice().sort(function(a,b){return a.name.localeCompare(b.name,'th');}).forEach(function(p){
+    h+='<div style="border-top:1px solid var(--line);padding:8px 0"><b>'+esc(p.name)+'</b><div style="display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:4px">'+ROOMS.map(function(r){ return '<label style="font-size:13px"><input type="checkbox" class="er" data-n="'+esc(p.name)+'" value="'+r.id+'"'+((ROOMMAP[p.name]||[]).indexOf(r.id)>=0?' checked':'')+'> '+r.ic+' '+esc(r.name.split(' ')[0])+'</label>'; }).join('')+'</div></div>';
+  });
+  h+='</div><button type="button" id="esv">💾 บันทึก</button> <button type="button" id="ecl">ปิด</button>';
+  document.getElementById('card').innerHTML=h; document.getElementById('sheet').classList.add('on');
+  document.getElementById('ecl').onclick=function(){ document.getElementById('sheet').classList.remove('on'); };
+  document.getElementById('esv').onclick=function(){
+    var m={}; [].forEach.call(document.querySelectorAll('.er:checked'),function(c){ (m[c.getAttribute('data-n')]=m[c.getAttribute('data-n')]||[]).push(c.value); });
+    post({action:'setLabRooms',map:m}).then(function(r){ if(r&&r.ok){ ROOMMAP=r.rooms; document.getElementById('sheet').classList.remove('on'); draw(); } else alert(r&&r.error==='forbidden'?'เฉพาะแอดมิน':'บันทึกไม่สำเร็จ (ต้องใช้หลังบ้าน v46 ขึ้นไป)'); }).catch(function(){ alert('เชื่อมต่อไม่ได้'); });
+  };
+}
+document.getElementById('ed').onclick=editRooms;
 document.getElementById('lgo').onclick=function(){
   var n=document.getElementById('ln').value.trim(), p=document.getElementById('lp').value.trim(); if(!n||!p){ document.getElementById('lerr').textContent='กรุณากรอกชื่อและ PIN'; return; }
   post({action:'login',name:n,pin:p}).then(function(r){
