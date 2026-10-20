@@ -72,6 +72,9 @@ h1{font-size:26px;font-weight:500;margin-top:4px}
 .card li{list-style:none;border-top:1px solid var(--line);padding:8px 0;font-size:14px;display:flex;justify-content:space-between;gap:10px}
 .wl{border-top:1px solid var(--line);margin-top:12px;padding-top:8px}.wl h4{font-weight:500;font-size:15px;margin-bottom:4px}
 .wi{border-left:3px solid #e45858;padding:4px 8px;margin:6px 0;font-size:13px}.wi.void{opacity:.5;text-decoration:line-through}.wi small{display:block;color:var(--mute)}.wi a{color:#7fb4ff;font-size:12px}
+.wi.old{opacity:.7}.chip{display:inline-block;background:#2a2d3a;border-radius:99px;padding:1px 8px;margin:2px 4px 2px 0;font-size:12px}.chip.hot,.wg label.hot{color:#ff8a8a}
+.wg{margin:8px 0;font-size:13px}.wg label{display:block;padding:2px 0}.wg b{display:block;color:var(--mute);font-weight:500;margin-top:4px}.wsr{display:none;background:#3a1f1f;border:1px solid #e45858;border-radius:8px;padding:6px 8px;font-size:12px;margin:6px 0}
+.wf label{display:block;font-size:12px;color:var(--mute)}.wf label.wr{color:var(--ink);font-size:13px}.wf label.wr input{display:inline;width:auto}.wf button{margin-top:8px}.wf .s{color:var(--mute);font-size:12px}
 .wf summary{cursor:pointer;margin:8px 0;color:#7fb4ff}.wf select,.wf input,.wf textarea{display:block;width:100%;margin:6px 0;background:#0e1016;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font:inherit}
 .card li small{color:var(--mute)}
 .card button{margin-top:12px;background:#222530;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px 16px;font:inherit;cursor:pointer}
@@ -197,17 +200,64 @@ function openSheet(name){
 }
 // warning letters: only admin / CEO get the section (the server refuses everyone else)
 function fdate(d){ var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(d)); return m?(+m[3])+'/'+(+m[2])+'/'+(+m[1]+543):String(d||''); }
+function warnItemsClean(t){ return String(t||'').replace(/^!/,''); }
+function printWarn(w,items){
+  var mine=[]; try{ mine=JSON.parse(w.items||'[]'); }catch(e){}
+  var groups={}, order=[]; (items||[]).forEach(function(i){ if(!groups[i.g]){ groups[i.g]=[]; order.push(i.g); } groups[i.g].push(i.t); });
+  var on={}; mine.forEach(function(t){ on[t]=1; });
+  Object.keys(on).forEach(function(t){ if(!(items||[]).some(function(i){return i.t===t;})){ (groups['อื่นๆ']=groups['อื่นๆ']||[]).push(t); if(order.indexOf('อื่นๆ')<0) order.push('อื่นๆ'); } });
+  var ck=order.map(function(g){ return '<div class="g"><b>'+esc(g)+'</b><div class="c">'+groups[g].map(function(t){ return '<span>'+(on[t]?'☑':'☐')+' '+esc(warnItemsClean(t))+'</span>'; }).join('')+'</div></div>'; }).join('');
+  var row=function(k,v){ return '<tr><td class="k">'+k+'</td><td>'+(v?esc(v):'&nbsp;')+'</td></tr>'; };
+  var h='<!doctype html><html lang="th"><head><meta charset="utf-8"><title>หนังสือเตือน '+esc(w.name)+'</title><style>@page{size:A4;margin:16mm}body{font:14px/1.5 "Sarabun","Noto Sans Thai",sans-serif;color:#000}h1{text-align:center;font-size:20px;margin:0}h2{text-align:center;font-size:14px;font-weight:400;margin:2px 0 12px}table{width:100%;border-collapse:collapse;margin:6px 0}td{border:1px solid #444;padding:5px 8px;vertical-align:top}td.k{width:30%;background:#f1f1f1}.g{margin:6px 0}.c{display:flex;flex-wrap:wrap;gap:2px 16px}.c span{white-space:nowrap}.sig{display:flex;gap:12px;margin-top:34px}.sig div{flex:1;text-align:center}.sig i{display:block;border-bottom:1px solid #000;height:38px;margin-bottom:4px}.n{font-size:12px;margin-top:10px}</style></head><body>'
+   +'<h1>หนังสือเตือนพนักงาน</h1><h2>TOTU Concept Lab — '+esc(w.level)+'</h2><table>'
+   +row('วันที่ออกหนังสือ',fdate(w.date))+row('ชื่อ-นามสกุล',w.name)+row('ตำแหน่ง / แผนก',w.position)+row('วัน-เวลาที่เกิดเหตุ',String(w.occurred||'').replace('T',' '))+row('เลขเคสที่เกี่ยวข้อง',w.case_no)+'</table>'
+   +'<b>ลักษณะการกระทำผิด (ติ๊กเลือก)</b>'+ck+'<table>'+row('รายละเอียดข้อเท็จจริง',w.facts||w.reason)+row('ข้อบังคับ / ระเบียบที่เกี่ยวข้อง',w.rule_ref)+row('คำชี้แจงของพนักงาน',w.reply)+row('ความเสียหาย (บาท)',w.damage)+row('แนวทางแก้ไข',w.fix_plan)+row('วันติดตามผล',w.follow_up?fdate(w.follow_up):'')+row('หมายเหตุ',w.note)+'</table>'
+   +'<p>หนังสือฉบับนี้มีผลบังคับ 1 ปี นับจากวันที่ออก (ถึง '+esc(fdate(w.expires))+') หากพนักงานกระทำผิดซ้ำในเรื่องเดียวกันภายในกำหนด บริษัทอาจพิจารณาเลิกจ้างโดยไม่จ่ายค่าชดเชยตามมาตรา 119 แห่ง พ.ร.บ.คุ้มครองแรงงาน พ.ศ. 2541</p>'
+   +'<div class="sig"><div><i></i>ผู้ออกหนังสือเตือน<br>('+esc(w.by)+')</div><div><i></i>พนักงานรับทราบ<br>('+esc(w.name)+')'+(w.refused_sign?'<br>☑ พนักงานปฏิเสธลงชื่อ':'')+'</div><div><i></i>พยาน'+(w.witness?'<br>('+esc(w.witness)+')':'')+'</div></div>'
+   +'<div class="n">เอกสารนี้ออกจากระบบ TOTU Concept Lab — ควรให้ผู้เชี่ยวชาญด้านกฎหมายแรงงานตรวจแบบฟอร์มก่อนใช้จริง</div></body></html>';
+  var win=window.open('','_blank'); if(!win){ alert('เบราว์เซอร์บล็อกหน้าต่างพิมพ์ — อนุญาต pop-up ให้เว็บนี้แล้วลองใหม่'); return; }
+  win.document.open(); win.document.write(h); win.document.close(); setTimeout(function(){ try{ win.focus(); win.print(); }catch(e){} },400);
+}
 function loadWarn(name){
   post({action:'warnList',name:name}).then(function(r){
     var box=document.getElementById('wl'); if(!box) return;
-    if(!r||!r.ok){ box.innerHTML='<small>'+(r&&r.error==='forbidden'?'ไม่มีสิทธิ์ดูใบเตือน':'ต้องใช้หลังบ้าน v50 ขึ้นไป')+'</small>'; return; }
-    var act=r.warnings.filter(function(w){return !w.void_at;}), lv=r.levels||[];
-    box.innerHTML='<h4>📄 ใบเตือน ('+act.length+')</h4>'+(r.warnings.length?r.warnings.map(function(w){ return '<div class="wi'+(w.void_at?' void':'')+'"><b>'+esc(w.level)+'</b> · '+esc(fdate(w.date))+'<div>'+esc(w.reason)+'</div>'+(w.note?'<small>'+esc(w.note)+'</small>':'')+'<small>บันทึกโดย '+esc(w.by)+(w.void_at?' · ยกเลิกโดย '+esc(w.void_by):'')+'</small>'+(w.void_at?'':' <a href="#" data-v="'+esc(w.id)+'">ยกเลิกใบนี้</a>')+'</div>'; }).join(''):'<small>ยังไม่มีใบเตือน</small>')+
-      '<details class="wf"><summary>＋ เขียนใบเตือนใหม่</summary><select id="wlv">'+lv.map(function(x,i){return '<option'+(i===Math.min(act.length,lv.length-1)?' selected':'')+'>'+esc(x)+'</option>';}).join('')+'</select><input id="wdt" type="date" value="'+ymd(new Date())+'"><input id="wrs" maxlength="300" placeholder="ทำอะไรผิด (เช่น มาสายเกิน 3 ครั้ง)"><textarea id="wnt" rows="2" maxlength="1000" placeholder="หมายเหตุ / ที่คุยกับพนักงาน (ไม่บังคับ)"></textarea><button type="button" id="wsv">💾 บันทึกใบเตือน</button></details>';
+    if(!r||!r.ok){ box.innerHTML='<small>'+(r&&r.error==='forbidden'?'ไม่มีสิทธิ์ดูใบเตือน':'ต้องใช้หลังบ้าน v51 ขึ้นไป')+'</small>'; return; }
+    var today=r.today||ymd(new Date()), live=function(w){ return !w.void_at&&String(w.expires)>=today; };
+    var act=r.warnings.filter(live), lv=r.levels||[], items=r.items||[], emp=((DATA&&DATA.employees)||[]).filter(function(e){return e.name===name;})[0]||{};
+    var cases=((DATA&&DATA.orders)||[]).filter(function(o){return o.status!=='ส่งแล้ว'&&o.status!=='ยกเลิกเคส';}).slice(0,400).map(function(o){return '<option value="'+esc(o.case_id)+'">';}).join('');
+    var gs={}, go=[]; items.forEach(function(i){ if(!gs[i.g]){ gs[i.g]=[]; go.push(i.g); } gs[i.g].push(i.t); });
+    var wi=function(w){ var it=[]; try{ it=JSON.parse(w.items||'[]'); }catch(e){}
+      return '<div class="wi'+(w.void_at?' void':(live(w)?'':' old'))+'"><b>'+esc(w.level)+'</b> · '+esc(fdate(w.date))+' <small>'+(w.void_at?'ยกเลิกแล้ว':(live(w)?'มีผลถึง '+esc(fdate(w.expires)):'หมดอายุแล้ว'))+'</small>'+
+        (it.length?'<div>'+it.map(function(t){ return '<span class="chip'+(t.charAt(0)==='!'?' hot':'')+'">'+esc(warnItemsClean(t))+'</span>'; }).join('')+'</div>':'')+
+        '<div>'+esc(w.facts||w.reason)+'</div>'+(w.case_no?'<small>เคส '+esc(w.case_no)+'</small>':'')+(w.note?'<small>'+esc(w.note)+'</small>':'')+
+        '<small>บันทึกโดย '+esc(w.by)+(w.void_at?' · ยกเลิกโดย '+esc(w.void_by):'')+'</small> <a href="#" data-p="'+esc(w.id)+'">🖨 พิมพ์ A4</a>'+(w.void_at?'':' <a href="#" data-v="'+esc(w.id)+'">ยกเลิกใบนี้</a>')+'</div>'; };
+    var chk=go.map(function(g){ return '<div class="wg"><b>'+esc(g)+'</b>'+gs[g].map(function(t){ return '<label'+(t.charAt(0)==='!'?' class="hot"':'')+'><input type="checkbox" class="wck" value="'+esc(t)+'"> '+esc(warnItemsClean(t))+'</label>'; }).join('')+'</div>'; }).join('');
+    box.innerHTML='<h4>📄 ใบเตือน (มีผลอยู่ '+act.length+')</h4>'+(r.warnings.length?r.warnings.map(wi).join(''):'<small>ยังไม่มีใบเตือน</small>')+
+      '<details class="wf"><summary>＋ เขียนใบเตือนใหม่ (ติ๊กเลือก)</summary>'+
+      '<select id="wlv">'+lv.map(function(x,i){return '<option'+(i===Math.min(act.length,lv.length-1)?' selected':'')+'>'+esc(x)+'</option>';}).join('')+'</select>'+
+      '<label>วันที่ออกหนังสือ<input id="wdt" type="date" value="'+today+'"></label><label>วัน-เวลาที่เกิดเหตุ<input id="woc" type="datetime-local"></label>'+
+      '<label>เลขเคสที่เกี่ยวข้อง<input id="wcs" list="wcl" placeholder="พิมพ์หรือเลือก (ไม่บังคับ)"></label><datalist id="wcl">'+cases+'</datalist>'+
+      '<div class="wgs">'+chk+'</div><div id="wsr" class="wsr">⚠ ติ๊กข้อร้ายแรง — ควรปรึกษาทนายหรือที่ปรึกษาแรงงานก่อนดำเนินการ (ความผิดร้ายแรงอาจไม่ต้องออกใบเตือนก่อน)</div>'+
+      '<input id="wrs" maxlength="300" placeholder="เหตุอื่นๆ (ถ้าไม่มีในรายการติ๊ก)"><textarea id="wfc" rows="3" maxlength="2000" placeholder="รายละเอียดข้อเท็จจริง: เกิดอะไรขึ้น เมื่อไร ที่ไหน"></textarea>'+
+      '<input id="wru" maxlength="200" placeholder="ข้อบังคับ/ระเบียบที่เกี่ยวข้อง (เช่น ข้อ 5.2)"><textarea id="wrp" rows="2" maxlength="1000" placeholder="คำชี้แจงของพนักงาน"></textarea>'+
+      '<input id="wdm" maxlength="40" placeholder="ความเสียหาย (บาท) ถ้ามี"><textarea id="wfx" rows="2" maxlength="1000" placeholder="แนวทางแก้ไข / สิ่งที่ต้องทำ"></textarea>'+
+      '<label>วันติดตามผล<input id="wfu" type="date"></label><input id="wwt" maxlength="100" placeholder="ชื่อพยาน"><label class="wr"><input id="wrf" type="checkbox"> พนักงานปฏิเสธลงชื่อรับทราบ</label>'+
+      '<textarea id="wnt" rows="2" maxlength="1000" placeholder="หมายเหตุ (ไม่บังคับ)"></textarea><button type="button" id="wsv">💾 บันทึกใบเตือน</button></details>'+
+      '<details class="wf"><summary>⚙ แก้รายการที่ให้ติ๊ก</summary><div class="s">หนึ่งบรรทัดต่อหนึ่งข้อ: <b>กลุ่ม | ข้อความ</b> — ขึ้นต้นข้อความด้วย ! ถ้าเป็นความผิดร้ายแรง</div><textarea id="wit" rows="8">'+esc(items.map(function(i){return i.g+' | '+i.t;}).join('\n'))+'</textarea><button type="button" id="wis">💾 บันทึกรายการ</button></details>';
+    var chkEls=[].slice.call(box.querySelectorAll('.wck')), sr=document.getElementById('wsr');
+    chkEls.forEach(function(c){ c.onchange=function(){ sr.style.display=chkEls.some(function(x){return x.checked&&x.value.charAt(0)==='!';})?'block':'none'; }; });
     document.getElementById('wsv').onclick=function(){
-      var rs=document.getElementById('wrs').value.trim(); if(!rs){ alert('ต้องใส่ว่าทำอะไรผิด'); return; }
-      post({action:'warnAdd',name:name,level:document.getElementById('wlv').value,date:document.getElementById('wdt').value,reason:rs,note:document.getElementById('wnt').value}).then(function(x){ if(x&&x.ok) loadWarn(name); else alert(x&&x.error==='forbidden'?'เฉพาะแอดมิน/CEO':'บันทึกไม่สำเร็จ'); }).catch(function(){ alert('เชื่อมต่อไม่ได้'); });
+      var ticked=chkEls.filter(function(c){return c.checked;}).map(function(c){return c.value;}), other=document.getElementById('wrs').value.trim();
+      if(!ticked.length&&!other){ alert('ต้องติ๊กอย่างน้อย 1 ข้อ หรือพิมพ์เหตุอื่นๆ'); return; }
+      post({action:'warnAdd',name:name,level:document.getElementById('wlv').value,date:document.getElementById('wdt').value,items:ticked,reason:other,occurred:document.getElementById('woc').value,case_no:document.getElementById('wcs').value,facts:document.getElementById('wfc').value,rule_ref:document.getElementById('wru').value,reply:document.getElementById('wrp').value,damage:document.getElementById('wdm').value,fix_plan:document.getElementById('wfx').value,follow_up:document.getElementById('wfu').value,witness:document.getElementById('wwt').value,refused_sign:document.getElementById('wrf').checked,note:document.getElementById('wnt').value,position:emp.department||''}).then(function(x){
+        if(x&&x.ok){ if(x.serious) alert('บันทึกแล้ว — มีข้อร้ายแรง ควรปรึกษาทนายหรือที่ปรึกษาแรงงานก่อนดำเนินการต่อ'); loadWarn(name); } else alert(x&&x.error==='forbidden'?'เฉพาะแอดมิน/CEO':'บันทึกไม่สำเร็จ'); }).catch(function(){ alert('เชื่อมต่อไม่ได้'); });
     };
+    document.getElementById('wis').onclick=function(){
+      var list=document.getElementById('wit').value.split('\n').map(function(l){ var i=l.indexOf('|'); return i<0?null:{g:l.slice(0,i).trim(),t:l.slice(i+1).trim()}; }).filter(function(x){return x&&x.g&&x.t;});
+      if(!list.length){ alert('ต้องมีอย่างน้อย 1 บรรทัดรูปแบบ กลุ่ม | ข้อความ'); return; }
+      post({action:'setWarnItems',items:list}).then(function(x){ if(x&&x.ok) loadWarn(name); else alert('บันทึกไม่สำเร็จ'); });
+    };
+    [].forEach.call(box.querySelectorAll('[data-p]'),function(a){ a.onclick=function(e){ e.preventDefault(); var w=r.warnings.filter(function(x){return x.id===a.getAttribute('data-p');})[0]; if(w) printWarn(w,items); }; });
     [].forEach.call(box.querySelectorAll('[data-v]'),function(a){ a.onclick=function(e){ e.preventDefault(); if(!confirm('ยกเลิกใบเตือนใบนี้? (ยังเก็บประวัติไว้ แต่ไม่นับ)')) return; post({action:'warnVoid',id:a.getAttribute('data-v')}).then(function(){ loadWarn(name); }); }; });
   }).catch(function(){ var b=document.getElementById('wl'); if(b) b.innerHTML='<small>เชื่อมต่อไม่ได้</small>'; });
 }
