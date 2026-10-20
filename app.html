@@ -538,6 +538,7 @@
       <button data-tab="labmap" data-href="lab.html" title="เปิดแผนผังแล็บ (หน้าแยก)">🗺️ แผนผังแล็บ</button>
       <button data-tab="clock" data-href="checkin.html" title="เช็กอิน/เช็กเอาต์ (หน้าแยก)">🕘 ลงเวลาเข้า-ออกงาน</button>
       <button data-tab="attend" style="display:none">📒 เวลาทำงานพนักงาน</button>
+      <button data-tab="issues">🔔 แจ้ง<span id="iss-badge"></span></button>
       <button data-tab="updates" style="display:none">🆕 อัปเดตระบบ</button>
     </nav>
   </header>
@@ -759,6 +760,14 @@
       <div class="filters" style="margin:10px 0"><input type="date" id="att-from"> <input type="date" id="att-to"> <button class="btn ghost sm" id="att-go">แสดง</button> <button class="btn ghost sm" id="att-xlsx">⬇ Excel</button></div>
       <div id="att-sum" class="note"></div>
       <div style="overflow:auto"><table class="tbl" id="att-table"></table></div>
+    </div>
+  </section>
+
+  <section id="view-issues" class="view">
+    <div class="card">
+      <h2>🔔 แจ้ง <span class="tag">ปัญหาเคส</span></h2>
+      <div class="note">กดปุ่ม ⚠ แจ้ง ที่แถวเคสในหน้าแผนก เพื่อรายงานเช่น ไฟล์มีปัญหา ขอข้อมูลเพิ่ม ลูกค้าขอยกเลิก — แอดมินจะปิดเรื่องหรือยกเลิกเคสได้ที่นี่</div>
+      <div id="iss-body"></div>
     </div>
   </section>
 
@@ -1151,7 +1160,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-20 รุ่น 149 (DEW เช็กอินได้ทุกที่ · คนส่งของเช็กอินที่ไหนก็ได้ · ผังแล็บจัดห้องตามที่กำหนด + ซ่อน CEO + ไฟเขียวคนเช็กอิน · กำหนดเวลาเข้า-เลิกงาน/ผ่อนผัน/วันหยุด ปรับได้ แสดงสาย-ออกก่อน · ตั้งตำแหน่งแล็บจากพิกัดที่วางได้ · แผนผังแล็บ + ลงเวลาเข้า-ออกงานตามรัศมีแล็บ · หน้าลูกค้า: เคสที่ส่งออกแล้วแยกเป็นรายเดือน เลือกเดือน/ปีได้ · หน้าลูกค้า: ปุ่มดูเคสที่ส่งออกแล้ว · โน้ต Abutment (ไซด์ที่สั่ง) แสดงในหน้าลูกค้า · หมายเหตุการให้คูปองแสดงในหน้าลูกค้า · อัปเดตระบบ: ดูเวอร์ชันล่าสุด+รายละเอียด · คูปองของหมอในหน้าลูกค้า · สรุปประจำวัน+ส่ง LINE · ลูกค้าส่งงานออนไลน์ · ปรับหน้าตาใหม่ ขาว-ดำ + โลโก้บริษัท · Premill เสร็จ → เคสวนกลับไปสแกน/ออกแบบรอบ 2 ก่อนกลึงครอบ · ใช้ของแล็บหมวด Premill → ส่งเคสเข้า MILLING Premill อัตโนมัติ · MegaGen AnyRidge Standard + Ti blank · MegaGen BlueDiamond NC/RC ครบตามแคตตาล็อก (Octa/Bridge, Ti blank, AXA, EZ Post) · รหัสเว็บลูกค้าเฉพาะหมอ (หมอทำหลายคลินิก) · แคตตาล็อก Abutment: Camlog CONELOG Ti-base CAD/CAM · แก้ปุ่ม เปิดใช้ขั้นตอนนี้ ของ MILLING lane ให้เคสเข้าคิวจริง · 💰 รายรับ-รายจ่าย เฉพาะ CEO · ปุ่ม 📊 ภาพรวมคงเหลือในคลัง · สิทธิ์ แผนกสต็อก: เพิ่ม/ลดของได้ ไม่เห็นราคา · ประวัติเพิ่ม/ลดจำนวนคลัง ใครทำ เมื่อไหร่ เหตุผล · เลือกใช้ของแล็บในฟอร์ม Abutment ดึงโค้ด+ชื่อ และตัดคลัง · ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
+const APP_VERSION = "2026-10-20 รุ่น 151 (ใบเตือนพนักงาน: คลิกตัวละครในผังแล็บ (แอดมิน/CEO) · เมนู 🔔 แจ้ง: แจ้งปัญหาเคส ไฟล์มีปัญหา/ระงับ/ยกเลิก · DEW เช็กอินได้ทุกที่ · คนส่งของเช็กอินที่ไหนก็ได้ · ผังแล็บจัดห้องตามที่กำหนด + ซ่อน CEO + ไฟเขียวคนเช็กอิน · กำหนดเวลาเข้า-เลิกงาน/ผ่อนผัน/วันหยุด ปรับได้ แสดงสาย-ออกก่อน · ตั้งตำแหน่งแล็บจากพิกัดที่วางได้ · แผนผังแล็บ + ลงเวลาเข้า-ออกงานตามรัศมีแล็บ · หน้าลูกค้า: เคสที่ส่งออกแล้วแยกเป็นรายเดือน เลือกเดือน/ปีได้ · หน้าลูกค้า: ปุ่มดูเคสที่ส่งออกแล้ว · โน้ต Abutment (ไซด์ที่สั่ง) แสดงในหน้าลูกค้า · หมายเหตุการให้คูปองแสดงในหน้าลูกค้า · อัปเดตระบบ: ดูเวอร์ชันล่าสุด+รายละเอียด · คูปองของหมอในหน้าลูกค้า · สรุปประจำวัน+ส่ง LINE · ลูกค้าส่งงานออนไลน์ · ปรับหน้าตาใหม่ ขาว-ดำ + โลโก้บริษัท · Premill เสร็จ → เคสวนกลับไปสแกน/ออกแบบรอบ 2 ก่อนกลึงครอบ · ใช้ของแล็บหมวด Premill → ส่งเคสเข้า MILLING Premill อัตโนมัติ · MegaGen AnyRidge Standard + Ti blank · MegaGen BlueDiamond NC/RC ครบตามแคตตาล็อก (Octa/Bridge, Ti blank, AXA, EZ Post) · รหัสเว็บลูกค้าเฉพาะหมอ (หมอทำหลายคลินิก) · แคตตาล็อก Abutment: Camlog CONELOG Ti-base CAD/CAM · แก้ปุ่ม เปิดใช้ขั้นตอนนี้ ของ MILLING lane ให้เคสเข้าคิวจริง · 💰 รายรับ-รายจ่าย เฉพาะ CEO · ปุ่ม 📊 ภาพรวมคงเหลือในคลัง · สิทธิ์ แผนกสต็อก: เพิ่ม/ลดของได้ ไม่เห็นราคา · ประวัติเพิ่ม/ลดจำนวนคลัง ใครทำ เมื่อไหร่ เหตุผล · เลือกใช้ของแล็บในฟอร์ม Abutment ดึงโค้ด+ชื่อ และตัดคลัง · ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -5938,7 +5947,7 @@ function renderDept(){
         if(viewOnly || !canAssign(CURRENT_DEPT)) return who ? `<span class="badge ${who === me ? 'b-prog' : 'b-wait'}">👤 ${esc(who)}</span>` : '';
         const names = assignCandidates(CURRENT_DEPT); if(who && !names.includes(who)) names.push(who);
         return `<select class="dep-assign" data-id="${esc(r._id)}" title="ระบุว่าให้ใครทำขั้นตอนนี้ของเคสนี้" style="font-size:12.5px;padding:5px 6px;${who ? 'font-weight:700;' : ''}"><option value="">— ใครก็ได้ —</option>${names.map(n=>`<option ${n === who ? 'selected' : ''} ${n === me ? 'style="font-weight:700"' : ''}>${esc(n)}</option>`).join('')}</select>`; })()}</td>
-      <td>${caseLink(r)}${whereNowHtml(r)}</td>
+      <td>${caseLink(r)}${whereNowHtml(r)}${SERVER_VER >= ISSUE_NEEDED ? `<div><button type="button" class="btn ghost sm iss-btn" data-id="${esc(r._id)}" data-case="${esc(r.case_id)}" data-dept="${esc(CURRENT_DEPT)}" data-hold="${viewOnly ? '0' : '1'}" title="แจ้งปัญหาเคสนี้">⚠ แจ้ง</button>${issueOpenFor(r._id).length ? ' <span class="badge b-hold">⚠ ' + esc(issueOpenFor(r._id)[0].kind) + '</span>' : ''}</div>` : ''}</td>
       <td>${esc(r.clinic??'-')}</td>
       <td>${esc(r.patient??'-')}</td>
       <td data-q="${esc((r.qty??'-') + ' ซี่')}">${esc(r.material??'-')}</td>
@@ -6839,7 +6848,7 @@ function supOpenForm(mode){
 const TAB_RENDERERS = {
   order: ()=>{ refreshClinicSelect(); renderRecentOrders(); }, pending: ()=>renderPending(), delivery: ()=>renderDelivery(), dept: ()=>renderDept(), dash: ()=>renderDash(), coupon: ()=>renderCouponByDoctor(),
   web: ()=>renderWebTab(), overview: ()=>renderOverview(), report: ()=>renderReport(), billing: ()=>renderBilling(false), contacts: ()=>renderContacts(), perm: ()=>renderPerm(),
-  search: ()=>renderSearch(), shipped: ()=>renderShipped(), rework: ()=>renderRework(), abutment: ()=>renderAbutTab(), outsource: ()=>renderOutsourceTab(), supply: ()=>renderSupplyTab(), updates: ()=>renderUpdates(), attend: ()=>renderAttend(), requests: ()=>renderRequestsTab(), finance: ()=>renderFinanceTab(), perf: ()=>renderPerf()
+  search: ()=>renderSearch(), shipped: ()=>renderShipped(), rework: ()=>renderRework(), abutment: ()=>renderAbutTab(), outsource: ()=>renderOutsourceTab(), supply: ()=>renderSupplyTab(), updates: ()=>renderUpdates(), issues: ()=>renderIssues(), attend: ()=>renderAttend(), requests: ()=>renderRequestsTab(), finance: ()=>renderFinanceTab(), perf: ()=>renderPerf()
 };
 // ---------- 🌐 เว็บลูกค้า: รหัสให้คลินิกดูสถานะงานเอง + รายชื่อคลินิกที่สมัครผ่านหน้าเว็บ (backend v21) ----------
 const WEB_NEEDED = 21, LEAD_STATUSES = ['ใหม่', 'ติดต่อแล้ว', 'เปิดบัญชีแล้ว', 'ไม่สนใจ'];
@@ -6912,6 +6921,7 @@ function activeTabName(){ const b = document.querySelector('nav.tabs button.acti
 // only the tab you are looking at is drawn (the others are drawn when you open them): keeps refreshes fast with thousands of orders
 function renderAll(){
   renderServerBanner();
+  loadIssues(false);
   renderChatBadge();
   renderReminders();
   renderSetupBtn();
@@ -6976,7 +6986,7 @@ document.getElementById('pin-btn').addEventListener('click', ()=>openPinDialog('
 // Roles: admin = all tabs | everyone else = only "search" (ตรวจสอบงาน) + "dept" (สถานะแผนก)
 // A person counts as admin if role = admin, or (role blank and department = Admin)
 const REQ_NEEDED = 39, REQ_TOKENS = ['requests', 'request', 'คำขอ', 'รับงาน', 'reception', 'front'];
-const NORMAL_TABS = ['pending', 'search', 'dept', 'shipped', 'supply'];
+const NORMAL_TABS = ['pending', 'search', 'dept', 'shipped', 'supply', 'issues'];
 function isCeoUser(emp){
   if(!emp) return false;
   return String(emp.role || '').trim().toLowerCase() === 'ceo' || String(emp.department || '').trim().toLowerCase() === 'ceo';
@@ -7291,6 +7301,15 @@ init();
 
 // ---------- 🆕 อัปเดตระบบ (admin / CEO): เวอร์ชันล่าสุด + รายละเอียดที่เพิ่ม (ใหม่สุดอยู่บน) ----------
 const CHANGELOG = [
+  { rev: 151, server: 50, title: 'ใบเตือนพนักงาน (แอดมิน/CEO)', items: [
+    'ในแผนผังแล็บ คลิกตัวละครของพนักงาน → ส่วน 📄 ใบเตือน: ดูประวัติ และเขียนใบเตือนใหม่ (ระดับ: ตักเตือนด้วยวาจา / ครั้งที่ 1 / 2 / 3 สุดท้าย + ทำอะไรผิด + หมายเหตุ + วันที่)',
+    'ยกเลิกใบที่เขียนผิดได้ (ประวัติยังอยู่) • เห็น/เขียนได้เฉพาะแอดมินและ CEO — พนักงานคนอื่นไม่เห็นเลย • ต้องใช้หลังบ้าน v50',
+  ] },
+  { rev: 150, server: 49, title: 'เมนู 🔔 แจ้ง — แจ้งปัญหาเคส', items: [
+    'ปุ่ม ⚠ แจ้ง ที่แถวเคสในหน้าแผนก: เลือกเหตุผล (ไฟล์มีปัญหา / ขอข้อมูลเพิ่ม / ลูกค้าขอยกเลิก / ระงับงาน / อื่นๆ) + หมายเหตุ และเลือกระงับขั้นตอนของแผนกตัวเองไปพร้อมกันได้',
+    'เมนู 🔔 แจ้ง รวมเรื่องที่รอแก้ + ขั้นตอนที่ระงับชั่วคราวอยู่ + ประวัติที่แก้แล้ว 45 วัน • มีเลขแดงบอกจำนวนเรื่องค้าง',
+    'แอดมินกด ✔ แก้แล้ว หรือ 🚫 ยกเลิกเคสนี้ ได้ในเมนูนี้ • ต้องใช้หลังบ้าน v49',
+  ] },
   { rev: 149, server: 48, title: 'เช็กอินได้ทุกที่ (DEW) ตั้งรายชื่อได้', items: [
     'DEW (ทำงานต่างจังหวัด) เช็กอิน/เอาต์ได้ทุกที่ ไม่ต้องอยู่ในรัศมีแล็บ • แอดมินเพิ่ม/ลบชื่อได้ที่เมนู 📒 เวลาทำงานพนักงาน (กล่อง เช็กอินได้ทุกที่) • ต้องใช้หลังบ้าน v48',
   ] },
@@ -7356,6 +7375,81 @@ function renderUpdates(){
     '<div style="border-top:1px solid var(--line,#ddd);padding:12px 0"><div><b>รุ่น ' + c.rev + '</b> · ' + esc(c.title) +
     ' <span class="muted" style="font-size:12px">(หลังบ้าน v' + c.server + ')</span></div>' +
     '<ul style="margin:6px 0 0 18px">' + c.items.map(i => '<li>' + esc(i) + '</li>').join('') + '</ul></div>').join('');
+}
+
+// ---------- 🔔 แจ้ง (v49): แจ้งปัญหาเคส (ไฟล์มีปัญหา / ขอข้อมูลเพิ่ม / ลูกค้าขอยกเลิก / ระงับ) รวมไว้ที่เดียว ----------
+var ISSUE_NEEDED = 49, ISSUE_KINDS = ['ไฟล์มีปัญหา', 'ขอข้อมูลเพิ่ม', 'ลูกค้าขอยกเลิก', 'ระงับงาน', 'อื่นๆ'];
+var ISSUES = [], ISSUE_AT = 0;      // var: renderAll() may run before this line during start-up
+function issueOpenFor(id){ return ISSUES.filter(i=>i.status === 'open' && i.order_id === id); }
+async function loadIssues(force){
+  if(SERVER_VER < ISSUE_NEEDED || !CURRENT_EMPLOYEE) return false;
+  if(!force && Date.now() - ISSUE_AT < 60000) return true;
+  try{ const r = await apiPost({action:'issueList'}); if(r && r.ok){ ISSUES = r.issues || []; ISSUE_AT = Date.now(); drawIssueBadge(); return true; } }catch(e){}
+  return false;
+}
+function drawIssueBadge(){
+  const n = ISSUES.filter(i=>i.status === 'open').length, b = document.getElementById('iss-badge');
+  if(b){ b.textContent = n ? ' ' + n : ''; b.style.cssText = n ? 'background:#c0392b;color:#fff;border-radius:99px;padding:0 7px;font-size:12px' : ''; }
+}
+function issueDialog(orderId, caseId, deptKey, canHold){
+  if(SERVER_VER < ISSUE_NEEDED){ showToast('ระบบหลังบ้าน (Apps Script) ต้องอัปเดตเป็น v' + ISSUE_NEEDED + ' ขึ้นไปก่อนจึงใช้ แจ้ง ได้'); return; }
+  const ov = document.createElement('div'); ov.style.cssText = 'position:fixed;inset:0;background:#0007;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+  ov.innerHTML = `<div style="background:#fff;color:#111;border-radius:14px;max-width:420px;width:100%;padding:18px">
+    <h3 style="margin:0 0 4px">⚠ แจ้งปัญหา — เคส ${esc(caseId)}</h3>
+    <div class="note">รายการนี้จะไปอยู่ที่เมนู 🔔 แจ้ง ให้ทุกคนและแอดมินเห็น</div>
+    <div style="margin:10px 0"><select id="iss-kind" style="width:100%">${ISSUE_KINDS.map(k=>`<option>${esc(k)}</option>`).join('')}</select></div>
+    <textarea id="iss-note" rows="3" maxlength="500" placeholder="รายละเอียด เช่น เปิดไฟล์ STL ไม่ได้ / ต้องการสีฟัน" style="width:100%"></textarea>
+    ${canHold ? '<label style="display:block;margin:8px 0"><input type="checkbox" id="iss-hold"> ระงับขั้นตอนนี้ของแผนกฉันไว้ด้วย (ระงับชั่วคราว)</label>' : ''}
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px"><button class="btn ghost" id="iss-cancel">ปิด</button><button class="btn" id="iss-send">ส่งแจ้ง</button></div></div>`;
+  document.body.appendChild(ov);
+  ov.querySelector('#iss-cancel').onclick = ()=>ov.remove();
+  ov.querySelector('#iss-send').onclick = async ()=>{
+    const kind = ov.querySelector('#iss-kind').value, note = ov.querySelector('#iss-note').value.trim(), hold = !!(ov.querySelector('#iss-hold') && ov.querySelector('#iss-hold').checked);
+    if(kind === 'อื่นๆ' && !note){ showToast('เลือก "อื่นๆ" ต้องพิมพ์รายละเอียด'); return; }
+    const r = await apiPost({action:'issueAdd', order_id:orderId, case_id:caseId, dept_key:deptKey || '', kind, note});
+    if(!(r && r.ok)){ showToast(r && r.error === 'need_note' ? 'ต้องพิมพ์รายละเอียด' : 'ส่งแจ้งไม่สำเร็จ'); return; }
+    if(hold && deptKey) await setDeptRecord(orderId, deptKey, {status:'ระงับชั่วคราว'});
+    ov.remove(); showToast('ส่งแจ้งแล้ว' + (hold ? ' และระงับขั้นตอนนี้' : '')); await loadIssues(true);
+    if(typeof renderAll === 'function') renderAll();
+  };
+}
+document.addEventListener('click', e=>{
+  const b = e.target.closest && e.target.closest('.iss-btn'); if(!b) return;
+  e.preventDefault(); e.stopPropagation();
+  issueDialog(b.dataset.id, b.dataset.case, b.dataset.dept, b.dataset.hold === '1');
+}, true);
+async function renderIssues(){
+  const box = document.getElementById('iss-body'); if(!box) return;
+  if(SERVER_VER < ISSUE_NEEDED){ box.innerHTML = '<div class="note">ระบบหลังบ้าน (Apps Script) ยังเป็นเวอร์ชัน ' + SERVER_VER + ' — ต้องอัปเดตเป็น v' + ISSUE_NEEDED + ' ขึ้นไปก่อน</div>'; return; }
+  box.innerHTML = '<div class="note">กำลังโหลด…</div>'; await loadIssues(true);
+  const adm = isAdminUser(CURRENT_EMPLOYEE), L = {}; NEW_ORDERS.forEach(o=>{ L[o._id] = o; });
+  const dl = k=>{ const d = DEPARTMENTS.find(x=>x.key === k); return d ? d.label : (k || ''); };
+  const when = iso=>{ const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleString('th-TH', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'}); };
+  const open = ISSUES.filter(i=>i.status === 'open'), done = ISSUES.filter(i=>i.status !== 'open');
+  const held = []; NEW_ORDERS.map(withEffectiveStatus).forEach(o=>{ if(o.status === 'ส่งแล้ว' || o.status === 'ยกเลิกเคส') return; const ovs = DEP_OVERRIDES[o._id] || {}; Object.keys(ovs).forEach(k=>{ if(k.charAt(0) !== '_' && ovs[k] && ovs[k].status === 'ระงับชั่วคราว') held.push({o, k, rec:ovs[k]}); }); });
+  const card = i=>{ const o = L[i.order_id];
+    return `<div style="border:1px solid var(--line,#ddd);border-left:4px solid #c0392b;border-radius:10px;padding:10px 12px;margin:8px 0">
+      <div><b>เคส ${esc(i.case_id || (o && o.case_id) || '-')}</b> <span class="badge b-hold">${esc(i.kind)}</span> ${i.dept_key ? '<span class="muted" style="font-size:12px">แผนก ' + esc(dl(i.dept_key)) + '</span>' : ''}</div>
+      ${o ? `<div class="muted" style="font-size:12px">${esc(o.clinic || '')} ${o.patient ? '• ' + esc(o.patient) : ''}</div>` : ''}
+      ${i.note ? `<div style="margin:4px 0">${esc(i.note)}</div>` : ''}
+      <div class="muted" style="font-size:12px">แจ้งโดย ${esc(i.by)} • ${esc(when(i.at))}</div>
+      ${adm ? `<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm" data-iss-done="${esc(i.id)}">✔ แก้แล้ว</button>${o ? `<button class="btn ghost sm" data-iss-cancel="${esc(i.id)}">🚫 ยกเลิกเคสนี้</button>` : ''}</div>` : ''}</div>`; };
+  box.innerHTML = `<h3 style="margin:8px 0">รอแก้ (${open.length})</h3>${open.length ? open.map(card).join('') : '<div class="note">ไม่มีเรื่องค้าง 🎉</div>'}
+    <h3 style="margin:16px 0 4px">ขั้นตอนที่ระงับชั่วคราวอยู่ (${held.length})</h3><div class="note">มาจากการเลือก "ระงับชั่วคราว" ในตารางแผนก — ถ้ามีเหตุผลควรกด ⚠ แจ้ง ที่เคสนั้นด้วย</div>
+    ${held.length ? held.map(h=>`<div style="border-top:1px solid var(--line,#ddd);padding:6px 0"><b>${esc(h.o.case_id)}</b> • ${esc(dl(h.k))} <span class="muted" style="font-size:12px">${esc(h.o.clinic || '')} • ระงับโดย ${esc(h.rec.updated_by || '-')}</span></div>`).join('') : ''}
+    <details style="margin-top:16px"><summary>แก้แล้ว ${done.length} รายการล่าสุด (45 วัน)</summary>${done.map(i=>`<div style="border-top:1px solid var(--line,#ddd);padding:6px 0"><b>${esc(i.case_id)}</b> ${esc(i.kind)} — ${esc(i.note || '')}<div class="muted" style="font-size:12px">แจ้งโดย ${esc(i.by)} • แก้โดย ${esc(i.resolved_by)} ${esc(when(i.resolved_at))}${i.resolution ? ' • ' + esc(i.resolution) : ''}</div></div>`).join('')}</details>`;
+  box.querySelectorAll('[data-iss-done]').forEach(b=>b.onclick = async ()=>{
+    const note = prompt('บันทึกการแก้ (เว้นว่างได้)', ''); if(note === null) return;
+    const r = await apiPost({action:'issueResolve', id:b.dataset.issDone, resolution:note.trim()});
+    if(r && r.ok){ showToast('ปิดเรื่องแล้ว'); renderIssues(); renderAll(); } else showToast('ไม่สำเร็จ');
+  });
+  box.querySelectorAll('[data-iss-cancel]').forEach(b=>b.onclick = async ()=>{
+    const i = ISSUES.find(x=>x.id === b.dataset.issCancel); if(!i) return;
+    if(!confirm('ยกเลิกเคส ' + i.case_id + ' ? (เคสจะหายจากคิวและไม่ถูกนับซี่)')) return;
+    await patchOrder(i.order_id, {status:'ยกเลิกเคส'});
+    const r = await apiPost({action:'issueResolve', id:i.id, resolution:'ยกเลิกเคส'});
+    showToast(r && r.ok ? 'ยกเลิกเคสแล้ว' : 'ยกเลิกเคสแล้ว แต่ปิดเรื่องไม่สำเร็จ'); renderIssues(); renderAll();
+  });
 }
 
 // ---------- 📒 เวลาทำงานพนักงาน (admin / CEO): เช็กอิน-เอาต์ตามรัศมีแล็บ + ตั้งตำแหน่งแล็บ ----------

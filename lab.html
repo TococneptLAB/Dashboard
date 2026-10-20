@@ -70,6 +70,9 @@ h1{font-size:26px;font-weight:500;margin-top:4px}
 .card{background:#14161d;border:1px solid var(--line);border-radius:18px;max-width:420px;width:100%;max-height:80vh;overflow:auto;padding:18px}
 .card h3{font-weight:500;font-size:18px}.card .s{color:var(--mute);font-size:13px;margin:2px 0 10px}
 .card li{list-style:none;border-top:1px solid var(--line);padding:8px 0;font-size:14px;display:flex;justify-content:space-between;gap:10px}
+.wl{border-top:1px solid var(--line);margin-top:12px;padding-top:8px}.wl h4{font-weight:500;font-size:15px;margin-bottom:4px}
+.wi{border-left:3px solid #e45858;padding:4px 8px;margin:6px 0;font-size:13px}.wi.void{opacity:.5;text-decoration:line-through}.wi small{display:block;color:var(--mute)}.wi a{color:#7fb4ff;font-size:12px}
+.wf summary{cursor:pointer;margin:8px 0;color:#7fb4ff}.wf select,.wf input,.wf textarea{display:block;width:100%;margin:6px 0;background:#0e1016;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font:inherit}
 .card li small{color:var(--mute)}
 .card button{margin-top:12px;background:#222530;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px 16px;font:inherit;cursor:pointer}
 @media(prefers-reduced-motion:reduce){.av.work .guy,.zz{animation:none}}
@@ -188,8 +191,25 @@ function draw(){
 function openSheet(name){
   var p=(window.LAB.last.people||[]).filter(function(x){return x.name===name;})[0]; if(!p) return;
   var li=p.wip.length?p.wip.map(function(w){return '<li><b>'+esc(w.case_id)+'</b><small>'+esc(LABEL[w.dept]||w.dept)+'</small></li>';}).join(''):'<li><small>ตอนนี้ไม่มีงานที่กำลังทำ</small></li>';
-  document.getElementById('card').innerHTML='<h3>'+esc(p.name)+'</h3><div class="s">กำลังทำ '+p.wip.length+' ขั้น · เสร็จวันนี้ '+p.done+' ขั้น'+(p.assigned?' · รอทำ (ได้รับมอบ) '+p.assigned:'')+'</div><ul>'+li+'</ul><button type="button" id="cl">ปิด</button>';
+  document.getElementById('card').innerHTML='<h3>'+esc(p.name)+'</h3><div class="s">กำลังทำ '+p.wip.length+' ขั้น · เสร็จวันนี้ '+p.done+' ขั้น'+(p.assigned?' · รอทำ (ได้รับมอบ) '+p.assigned:'')+'</div><ul>'+li+'</ul>'+(isAdmin(EMP||{})?'<div id="wl" class="wl"><small>กำลังโหลดใบเตือน…</small></div>':'')+'<button type="button" id="cl">ปิด</button>';
   document.getElementById('sheet').classList.add('on'); document.getElementById('cl').onclick=function(){ document.getElementById('sheet').classList.remove('on'); };
+  if(isAdmin(EMP||{})) loadWarn(name);
+}
+// warning letters: only admin / CEO get the section (the server refuses everyone else)
+function fdate(d){ var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(d)); return m?(+m[3])+'/'+(+m[2])+'/'+(+m[1]+543):String(d||''); }
+function loadWarn(name){
+  post({action:'warnList',name:name}).then(function(r){
+    var box=document.getElementById('wl'); if(!box) return;
+    if(!r||!r.ok){ box.innerHTML='<small>'+(r&&r.error==='forbidden'?'ไม่มีสิทธิ์ดูใบเตือน':'ต้องใช้หลังบ้าน v50 ขึ้นไป')+'</small>'; return; }
+    var act=r.warnings.filter(function(w){return !w.void_at;}), lv=r.levels||[];
+    box.innerHTML='<h4>📄 ใบเตือน ('+act.length+')</h4>'+(r.warnings.length?r.warnings.map(function(w){ return '<div class="wi'+(w.void_at?' void':'')+'"><b>'+esc(w.level)+'</b> · '+esc(fdate(w.date))+'<div>'+esc(w.reason)+'</div>'+(w.note?'<small>'+esc(w.note)+'</small>':'')+'<small>บันทึกโดย '+esc(w.by)+(w.void_at?' · ยกเลิกโดย '+esc(w.void_by):'')+'</small>'+(w.void_at?'':' <a href="#" data-v="'+esc(w.id)+'">ยกเลิกใบนี้</a>')+'</div>'; }).join(''):'<small>ยังไม่มีใบเตือน</small>')+
+      '<details class="wf"><summary>＋ เขียนใบเตือนใหม่</summary><select id="wlv">'+lv.map(function(x,i){return '<option'+(i===Math.min(act.length,lv.length-1)?' selected':'')+'>'+esc(x)+'</option>';}).join('')+'</select><input id="wdt" type="date" value="'+ymd(new Date())+'"><input id="wrs" maxlength="300" placeholder="ทำอะไรผิด (เช่น มาสายเกิน 3 ครั้ง)"><textarea id="wnt" rows="2" maxlength="1000" placeholder="หมายเหตุ / ที่คุยกับพนักงาน (ไม่บังคับ)"></textarea><button type="button" id="wsv">💾 บันทึกใบเตือน</button></details>';
+    document.getElementById('wsv').onclick=function(){
+      var rs=document.getElementById('wrs').value.trim(); if(!rs){ alert('ต้องใส่ว่าทำอะไรผิด'); return; }
+      post({action:'warnAdd',name:name,level:document.getElementById('wlv').value,date:document.getElementById('wdt').value,reason:rs,note:document.getElementById('wnt').value}).then(function(x){ if(x&&x.ok) loadWarn(name); else alert(x&&x.error==='forbidden'?'เฉพาะแอดมิน/CEO':'บันทึกไม่สำเร็จ'); }).catch(function(){ alert('เชื่อมต่อไม่ได้'); });
+    };
+    [].forEach.call(box.querySelectorAll('[data-v]'),function(a){ a.onclick=function(e){ e.preventDefault(); if(!confirm('ยกเลิกใบเตือนใบนี้? (ยังเก็บประวัติไว้ แต่ไม่นับ)')) return; post({action:'warnVoid',id:a.getAttribute('data-v')}).then(function(){ loadWarn(name); }); }; });
+  }).catch(function(){ var b=document.getElementById('wl'); if(b) b.innerHTML='<small>เชื่อมต่อไม่ได้</small>'; });
 }
 document.getElementById('sheet').addEventListener('click',function(e){ if(e.target===this) this.classList.remove('on'); });
 function post(body){ return fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({},body,EMP&&EMP.token?{token:EMP.token}:{}))}).then(function(r){return r.json();}); }
