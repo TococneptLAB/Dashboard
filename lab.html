@@ -136,7 +136,7 @@ function roomOfKey(k){ for(var i=0;i<ROOMS.length;i++) if(ROOMS[i].keys.indexOf(
 // pure: boot (bootstrap result) + today (yyyy-mm-dd) -> {people:[{name,room,wip:[{case_id,dept}],done:n,assigned:n,present}], inLab, wipTotal, workingPeople}
 function compute(boot, today, board, rooms){
   var OV={}; (boot.overrides||[]).forEach(function(r){ var k=String(r.dept_key||''); if(!k||k.charAt(0)==='_') return; (OV[r.id]=OV[r.id]||{})[k]=r; });
-  var per={}, inLab=0, RS={};
+  var per={}, inLab=0, RS={}, RL={}; Object.keys(rooms||{}).forEach(function(k){ RL[String(k).toLowerCase()]=rooms[k]; });
   (boot.employees||[]).forEach(function(e){ if(String(e.role||'').trim().toLowerCase()==='ceo'||String(e.department||'').trim().toLowerCase()==='ceo'||String(e.name||'').trim().toLowerCase()==='ceo') return; per[e.name]={name:e.name,emp:e,wip:[],done:0,assigned:0,touched:false}; });
   function P(n){ n=String(n||'').trim(); return per[n]||null; }
   (boot.orders||[]).forEach(function(o){
@@ -157,8 +157,8 @@ function compute(boot, today, board, rooms){
     var p=per[n], e=p.emp, room='office';
     if(p.wip.length){ var c={}; p.wip.forEach(function(w){ var r=roomOfKey(w.dept); c[r]=(c[r]||0)+1; }); room=Object.keys(c).sort(function(a,b){return c[b]-c[a];})[0]; }
     else if(!isAdmin(e)){ var ks=deptKeysOf(e); if(ks&&ks.length) room=roomOfKey(ks[0]); }
-    var rl=(rooms&&rooms[n]||[]).filter(function(id){ return ROOMS.some(function(r){return r.id===id;}); }), rs=[room];
-    if(rl.length){ rs=rl.slice(); p.wip.forEach(function(w){ var r=roomOfKey(w.dept); if(rs.indexOf(r)<0) rs.push(r); }); room=rs[0]; }
+    var rl=(RL[String(n).toLowerCase()]||[]).filter(function(id){ return ROOMS.some(function(r){return r.id===id;}); }), rs=[room];
+    if(rl.length){ rs=rl.slice(); room=rs[0]; }          // fixed rooms: work in a room not on the list is counted in the first listed room
     var b=board&&board[n]; var present=board?!!(b&&b.in_at):p.touched;      // with attendance data, "present" = checked in today
     return {name:n,room:room,rooms:rs,custom:rl.length>0,wip:p.wip,done:p.done,assigned:p.assigned,present:present||p.wip.length>0,inAt:b&&b.in_at||'',outAt:b&&b.out_at||'',late:b&&b.st&&b.st.kind==='late'?b.st.late:0};
   });
@@ -174,9 +174,9 @@ function avatar(p){
   return '<button type="button" class="av '+(p.wip.length?'work':(p.present?'':'idle'))+(p.present&&!p.outAt?' on':'')+'" data-n="'+esc(p.name)+'" style="'+st+'"><div class="bub">'+esc(bub)+'</div><div class="desk"></div><div class="guy"><div class="head"></div><div class="body"></div></div><span class="zz">z</span><div class="nm">'+esc(p.name)+'</div>'+(p.done?'<span class="star">⭐ '+p.done+'</span>':'')+(p.assigned&&!p.wip.length?'<div class="sm">รอทำ '+p.assigned+'</div>':'')+'</button>';
 }
 function draw(){
-  var today=ymd(new Date()), r=compute(DATA,today,BOARD,ROOMMAP); window.LAB.last=r;
+  var today=ymd(new Date()), r=compute(DATA,today,BOARD,effRooms()); window.LAB.last=r;
   document.getElementById('stats').innerHTML=[[r.inLab,'เคสในแล็บ'],[r.wipTotal,'ขั้นที่กำลังทำ'],[r.working+'/'+r.people.length,'กำลังทำงานอยู่'],[r.present+'/'+r.people.length,'เริ่มงานวันนี้']].map(function(x){return '<div class="stat"><b>'+x[0]+'</b><span>'+x[1]+'</span></div>';}).join('');
-  var byRoom={}; r.people.forEach(function(p){ p.rooms.forEach(function(id){ var q=p; if(p.rooms.length>1) q=Object.assign({},p,{wip:p.wip.filter(function(w){return roomOfKey(w.dept)===id;})}); (byRoom[id]=byRoom[id]||[]).push(q); }); });
+  var byRoom={}; r.people.forEach(function(p){ p.rooms.forEach(function(id){ var q=p; if(p.rooms.length>1||p.custom) q=Object.assign({},p,{wip:p.wip.filter(function(w){ var wr=roomOfKey(w.dept); return wr===id||(p.rooms.indexOf(wr)<0&&id===p.rooms[0]); })}); (byRoom[id]=byRoom[id]||[]).push(q); }); });
   document.getElementById('map').innerHTML=ROOMS.map(function(rm){
     var ps=(byRoom[rm.id]||[]).sort(function(a,b){return (b.wip.length-a.wip.length)||(b.present-a.present)||a.name.localeCompare(b.name,'th');});
     var rs=r.roomStats[rm.id]; var w=ps.reduce(function(a,p){return a+p.wip.length;},0);
@@ -203,12 +203,15 @@ function load(){
 function showMap(){ document.getElementById('ed').style.display=EMP&&isAdmin(EMP)?'':'none'; document.getElementById('loginView').style.display='none'; document.getElementById('mapView').style.display='block'; load(); clearInterval(TIMER); TIMER=setInterval(load,30000); }
 function showLogin(msg){ clearInterval(TIMER); document.getElementById('mapView').style.display='none'; document.getElementById('loginView').style.display='block'; document.getElementById('lerr').textContent=msg||''; }
 var ROOMMAP={};
+// default seating (set by the owner 20 Oct): used until the admin saves a different arrangement for that person
+var DEFAULT_ROOMS={dew:['office'],admin:['office','abut'],biw:['scan','print','abut','mill'],jom:['scan','print','abut','mill'],aem:['print','mill'],tuck:['deliv'],mon:['deliv']};
+function effRooms(){ var m={}; Object.keys(DEFAULT_ROOMS).forEach(function(k){ m[k]=DEFAULT_ROOMS[k]; }); Object.keys(ROOMMAP||{}).forEach(function(k){ m[String(k).toLowerCase()]=ROOMMAP[k]; }); return m; }
 document.getElementById('rf').onclick=load;
 function editRooms(){
   var people=(window.LAB.last&&window.LAB.last.people)||[]; if(!people.length) return;
   var h='<h3>จัดห้องพนักงาน</h3><div class="s">ติ๊กห้องที่คนนี้ประจำ (เลือกได้หลายห้อง) • ไม่ติ๊กเลย = ให้ระบบจัดเองตามแผนกที่ตั้งไว้</div><div style="overflow:auto">';
   people.slice().sort(function(a,b){return a.name.localeCompare(b.name,'th');}).forEach(function(p){
-    h+='<div style="border-top:1px solid var(--line);padding:8px 0"><b>'+esc(p.name)+'</b><div style="display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:4px">'+ROOMS.map(function(r){ return '<label style="font-size:13px"><input type="checkbox" class="er" data-n="'+esc(p.name)+'" value="'+r.id+'"'+((ROOMMAP[p.name]||[]).indexOf(r.id)>=0?' checked':'')+'> '+r.ic+' '+esc(r.name.split(' ')[0])+'</label>'; }).join('')+'</div></div>';
+    h+='<div style="border-top:1px solid var(--line);padding:8px 0"><b>'+esc(p.name)+'</b><div style="display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:4px">'+ROOMS.map(function(r){ return '<label style="font-size:13px"><input type="checkbox" class="er" data-n="'+esc(p.name)+'" value="'+r.id+'"'+(((effRooms()[String(p.name).toLowerCase()])||[]).indexOf(r.id)>=0?' checked':'')+'> '+r.ic+' '+esc(r.name.split(' ')[0])+'</label>'; }).join('')+'</div></div>';
   });
   h+='</div><button type="button" id="esv">💾 บันทึก</button> <button type="button" id="ecl">ปิด</button>';
   document.getElementById('card').innerHTML=h; document.getElementById('sheet').classList.add('on');

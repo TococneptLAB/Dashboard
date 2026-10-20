@@ -51,6 +51,8 @@ a{color:var(--ink)}
   <div class="card">
     <div class="row"><span>เข้างานวันนี้</span><b id="tin">-</b></div>
     <div class="row"><span>ออกงานวันนี้</span><b id="tout">-</b></div>
+    <div class="row"><span>สถานะ</span><b id="tst">-</b></div>
+    <div class="row"><span>เวลาทำงาน</span><b id="twh">-</b></div>
   </div>
   <div class="btns"><button id="bin" type="button">☀️ เช็กอิน</button><button id="bout" type="button">🌙 เช็กเอาต์</button></div>
   <div class="msg" id="msg"></div>
@@ -64,18 +66,29 @@ function post(b){ return fetch(API,{method:'POST',headers:{'Content-Type':'text/
 function hm(iso){ if(!iso) return '-'; var d=new Date(iso); return isNaN(d)?'-':d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})+' น.'; }
 function say(t,ok){ var m=$('msg'); m.className='msg '+(ok?'ok':'bad'); m.textContent=t; }
 function tick(){ var d=new Date(); $('clk').textContent=d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}); $('day').textContent=d.toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); }
+function stText(st){ if(!st) return '-'; var a=[]; if(st.kind==='late') a.push('⚠ สาย '+st.late+' นาที'); else if(st.kind==='ontime') a.push('✅ ตรงเวลา'); else if(st.kind==='holiday_work') a.push('🏠 มาทำวันหยุด'); if(st.early>0) a.push('ออกก่อน '+st.early+' นาที'); if(st.ot>0) a.push('OT '+st.ot+' นาที'); return a.join(' • ')||'-'; }
 function paint(){
+  var w=SRV&&SRV.wh; $('twh').textContent=w?(w.start+'–'+w.end+' (สายหลัง '+w.grace+' นาที)'):'-'; $('tst').textContent=stText(SRV&&SRV.row&&SRV.row.st);
   var r=SRV&&SRV.row; $('tin').textContent=hm(r&&r.in_at); $('tout').textContent=hm(r&&r.out_at);
   $('bin').disabled=!!(r&&r.in_at); $('bout').disabled=!(r&&r.in_at);
 }
 function load(){
   return post({action:'attendToday'}).then(function(r){
-    if(r&&r.ok){ SRV=r; paint(); if(!r.geo_set) say('แอดมินยังไม่ได้ตั้งตำแหน่งแล็บ ยังลงเวลาไม่ได้ (ตั้งได้ที่เมนู 📒 เวลาทำงานพนักงาน ในหน้าแอป)',false); return; }
+    if(r&&r.ok){ SRV=r; paint(); if(!r.geo_set&&!r.roam) say('แอดมินยังไม่ได้ตั้งตำแหน่งแล็บ ยังลงเวลาไม่ได้ (ตั้งได้ที่เมนู 📒 เวลาทำงานพนักงาน ในหน้าแอป)',false); return; }
     if(r&&r.error==='auth'){ showLogin('หมดเวลาเข้าสู่ระบบ กรุณาเข้าสู่ระบบใหม่'); return; }
     say('ระบบหลังบ้าน (Apps Script) ยังไม่รองรับการลงเวลา ให้แอดมินวางโค้ดเวอร์ชันล่าสุด (v45 ขึ้นไป)',false);
   }).catch(function(){ say('เชื่อมต่อไม่ได้ ลองใหม่อีกครั้ง',false); });
 }
 function clock(kind){
+  if(SRV&&SRV.roam){          // delivery staff: check in / out from anywhere, no location needed
+    say('กำลังบันทึก…',true); $('bin').disabled=$('bout').disabled=true;
+    post({action:'attendClock',kind:kind}).then(function(r){
+      if(r&&r.ok){ SRV=Object.assign({},SRV,{row:r.row}); say(kind==='in'?(r.already?'วันนี้เช็กอินไว้แล้ว เวลา '+hm(r.row.in_at):'✅ เช็กอินแล้ว '+hm(r.row.in_at)+' (เช็กอินที่ไหนก็ได้)'):'✅ เช็กเอาต์แล้ว '+hm(r.row.out_at),true); }
+      else say(msgOf(r),false);
+      paint();
+    }).catch(function(){ say('เชื่อมต่อไม่ได้ ลองใหม่อีกครั้ง',false); paint(); });
+    return;
+  }
   if(!navigator.geolocation){ say('เบราว์เซอร์นี้ไม่รองรับการอ่านตำแหน่ง',false); return; }
   say('กำลังอ่านตำแหน่ง… (ถ้ามีหน้าต่างถาม ให้กด "อนุญาต")',true); $('bin').disabled=$('bout').disabled=true;
   navigator.geolocation.getCurrentPosition(function(p){
@@ -107,7 +120,7 @@ $('lgo').onclick=function(){
     else showLogin(r&&r.error==='locked'?'ใส่ PIN ผิดหลายครั้ง ถูกล็อกชั่วคราว 15 นาที':'ชื่อหรือ PIN ไม่ถูกต้อง');
   }).catch(function(){ showLogin('เชื่อมต่อไม่ได้'); });
 };
-window.CHK={msgOf:msgOf};
+window.CHK={msgOf:msgOf,stText:stText};
 (function(){
   try{ EMP=JSON.parse(localStorage.getItem('totu_employee')||'null'); }catch(e){}
   var u=''; try{ u=localStorage.getItem('totu_api_url')||''; }catch(e){}
