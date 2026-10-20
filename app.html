@@ -1151,7 +1151,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-20 รุ่น 148 (คนส่งของเช็กอินที่ไหนก็ได้ · ผังแล็บจัดห้องตามที่กำหนด + ซ่อน CEO + ไฟเขียวคนเช็กอิน · กำหนดเวลาเข้า-เลิกงาน/ผ่อนผัน/วันหยุด ปรับได้ แสดงสาย-ออกก่อน · ตั้งตำแหน่งแล็บจากพิกัดที่วางได้ · แผนผังแล็บ + ลงเวลาเข้า-ออกงานตามรัศมีแล็บ · หน้าลูกค้า: เคสที่ส่งออกแล้วแยกเป็นรายเดือน เลือกเดือน/ปีได้ · หน้าลูกค้า: ปุ่มดูเคสที่ส่งออกแล้ว · โน้ต Abutment (ไซด์ที่สั่ง) แสดงในหน้าลูกค้า · หมายเหตุการให้คูปองแสดงในหน้าลูกค้า · อัปเดตระบบ: ดูเวอร์ชันล่าสุด+รายละเอียด · คูปองของหมอในหน้าลูกค้า · สรุปประจำวัน+ส่ง LINE · ลูกค้าส่งงานออนไลน์ · ปรับหน้าตาใหม่ ขาว-ดำ + โลโก้บริษัท · Premill เสร็จ → เคสวนกลับไปสแกน/ออกแบบรอบ 2 ก่อนกลึงครอบ · ใช้ของแล็บหมวด Premill → ส่งเคสเข้า MILLING Premill อัตโนมัติ · MegaGen AnyRidge Standard + Ti blank · MegaGen BlueDiamond NC/RC ครบตามแคตตาล็อก (Octa/Bridge, Ti blank, AXA, EZ Post) · รหัสเว็บลูกค้าเฉพาะหมอ (หมอทำหลายคลินิก) · แคตตาล็อก Abutment: Camlog CONELOG Ti-base CAD/CAM · แก้ปุ่ม เปิดใช้ขั้นตอนนี้ ของ MILLING lane ให้เคสเข้าคิวจริง · 💰 รายรับ-รายจ่าย เฉพาะ CEO · ปุ่ม 📊 ภาพรวมคงเหลือในคลัง · สิทธิ์ แผนกสต็อก: เพิ่ม/ลดของได้ ไม่เห็นราคา · ประวัติเพิ่ม/ลดจำนวนคลัง ใครทำ เมื่อไหร่ เหตุผล · เลือกใช้ของแล็บในฟอร์ม Abutment ดึงโค้ด+ชื่อ และตัดคลัง · ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
+const APP_VERSION = "2026-10-20 รุ่น 149 (DEW เช็กอินได้ทุกที่ · คนส่งของเช็กอินที่ไหนก็ได้ · ผังแล็บจัดห้องตามที่กำหนด + ซ่อน CEO + ไฟเขียวคนเช็กอิน · กำหนดเวลาเข้า-เลิกงาน/ผ่อนผัน/วันหยุด ปรับได้ แสดงสาย-ออกก่อน · ตั้งตำแหน่งแล็บจากพิกัดที่วางได้ · แผนผังแล็บ + ลงเวลาเข้า-ออกงานตามรัศมีแล็บ · หน้าลูกค้า: เคสที่ส่งออกแล้วแยกเป็นรายเดือน เลือกเดือน/ปีได้ · หน้าลูกค้า: ปุ่มดูเคสที่ส่งออกแล้ว · โน้ต Abutment (ไซด์ที่สั่ง) แสดงในหน้าลูกค้า · หมายเหตุการให้คูปองแสดงในหน้าลูกค้า · อัปเดตระบบ: ดูเวอร์ชันล่าสุด+รายละเอียด · คูปองของหมอในหน้าลูกค้า · สรุปประจำวัน+ส่ง LINE · ลูกค้าส่งงานออนไลน์ · ปรับหน้าตาใหม่ ขาว-ดำ + โลโก้บริษัท · Premill เสร็จ → เคสวนกลับไปสแกน/ออกแบบรอบ 2 ก่อนกลึงครอบ · ใช้ของแล็บหมวด Premill → ส่งเคสเข้า MILLING Premill อัตโนมัติ · MegaGen AnyRidge Standard + Ti blank · MegaGen BlueDiamond NC/RC ครบตามแคตตาล็อก (Octa/Bridge, Ti blank, AXA, EZ Post) · รหัสเว็บลูกค้าเฉพาะหมอ (หมอทำหลายคลินิก) · แคตตาล็อก Abutment: Camlog CONELOG Ti-base CAD/CAM · แก้ปุ่ม เปิดใช้ขั้นตอนนี้ ของ MILLING lane ให้เคสเข้าคิวจริง · 💰 รายรับ-รายจ่าย เฉพาะ CEO · ปุ่ม 📊 ภาพรวมคงเหลือในคลัง · สิทธิ์ แผนกสต็อก: เพิ่ม/ลดของได้ ไม่เห็นราคา · ประวัติเพิ่ม/ลดจำนวนคลัง ใครทำ เมื่อไหร่ เหตุผล · เลือกใช้ของแล็บในฟอร์ม Abutment ดึงโค้ด+ชื่อ และตัดคลัง · ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -7291,6 +7291,9 @@ init();
 
 // ---------- 🆕 อัปเดตระบบ (admin / CEO): เวอร์ชันล่าสุด + รายละเอียดที่เพิ่ม (ใหม่สุดอยู่บน) ----------
 const CHANGELOG = [
+  { rev: 149, server: 48, title: 'เช็กอินได้ทุกที่ (DEW) ตั้งรายชื่อได้', items: [
+    'DEW (ทำงานต่างจังหวัด) เช็กอิน/เอาต์ได้ทุกที่ ไม่ต้องอยู่ในรัศมีแล็บ • แอดมินเพิ่ม/ลบชื่อได้ที่เมนู 📒 เวลาทำงานพนักงาน (กล่อง เช็กอินได้ทุกที่) • ต้องใช้หลังบ้าน v48',
+  ] },
   { rev: 148, server: 47, title: 'ผังแล็บจัดห้อง + คนส่งของเช็กอินได้ทุกที่', items: [
     'ผังแล็บ: จัดห้องตามที่กำหนด (สำนักงาน DEW/Admin • SCAN BIW/JOM • Model AEM/BIW/JOM • Abutment Admin/JOM/BIW • Milling JOM/BIW/AEM • Delivery TUCK/MON) แอดมินแก้ได้ที่ปุ่ม จัดห้องพนักงาน',
     'ผังแล็บ: คนที่เช็กอินเป็นสีเขียว • แต่ละห้องบอกว่าวันนี้เสร็จกี่ซี่ • ซ่อน CEO',
@@ -7391,6 +7394,17 @@ async function renderAttend(){
       const x = await apiPost({action:'setWorkHours', start:document.getElementById('wh-start').value, end:document.getElementById('wh-end').value, grace:Number(document.getElementById('wh-grace').value), days, holidays:hol});
       if(x && x.ok){ showToast('บันทึกเวลาทำงานแล้ว'); renderAttend(); } else showToast(x && x.error === 'bad_hours' ? 'เวลาไม่ถูกต้อง (เลิกงานต้องหลังเข้างาน, ผ่อนผัน 0–120 นาที)' : x && x.error === 'bad_days' ? 'ต้องเลือกวันทำงานอย่างน้อย 1 วัน' : 'บันทึกไม่สำเร็จ');
     };
+  }
+  if(isAdminUser(CURRENT_EMPLOYEE)){
+    let rm = null; try{ rm = await apiPost({action:'getRoamers'}); }catch(e){}
+    if(rm && rm.ok){
+      geo.innerHTML += `<div class="note" style="margin-top:14px;border-left:3px solid #2e7d32"><b>🧭 เช็กอินได้ทุกที่</b> (ไม่ต้องอยู่ในรัศมีแล็บ): คนที่มีแผนก Delivery + ชื่อที่ระบุ</div>
+        <div class="filters" style="margin-top:8px"><input id="roam-names" value="${esc(rm.names.join(', '))}" placeholder="ชื่อพนักงาน คั่นด้วยจุลภาค เช่น DEW" style="min-width:240px"> <button class="btn sm" id="roam-save">💾 บันทึก</button></div>`;
+      document.getElementById('roam-save').onclick = async ()=>{
+        const x = await apiPost({action:'setRoamers', names:document.getElementById('roam-names').value.split(/[,;]+/).map(v=>v.trim()).filter(Boolean)});
+        if(x && x.ok){ showToast('บันทึกแล้ว: ' + (x.names.join(', ') || 'ไม่มี')); renderAttend(); } else showToast('บันทึกไม่สำเร็จ (ต้องใช้หลังบ้าน v47)');
+      };
+    }
   }
   const sg = document.getElementById('att-setgeo');
   if(sg) sg.onclick = ()=>{
