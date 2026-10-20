@@ -143,7 +143,7 @@ function roomOfKey(k){ for(var i=0;i<ROOMS.length;i++) if(ROOMS[i].keys.indexOf(
 function compute(boot, today, board, rooms){
   var OV={}; (boot.overrides||[]).forEach(function(r){ var k=String(r.dept_key||''); if(!k||k.charAt(0)==='_') return; (OV[r.id]=OV[r.id]||{})[k]=r; });
   var per={}, inLab=0, RS={}, RL={}; Object.keys(rooms||{}).forEach(function(k){ RL[String(k).toLowerCase()]=rooms[k]; });
-  (boot.employees||[]).forEach(function(e){ if(String(e.role||'').trim().toLowerCase()==='ceo'||String(e.department||'').trim().toLowerCase()==='ceo'||String(e.name||'').trim().toLowerCase()==='ceo') return; per[e.name]={name:e.name,emp:e,wip:[],done:0,assigned:0,touched:false}; });
+  (boot.employees||[]).forEach(function(e){ if(String(e.role||'').trim().toLowerCase()==='ceo'||String(e.department||'').trim().toLowerCase()==='ceo'||String(e.name||'').trim().toLowerCase()==='ceo') return; per[e.name]={name:e.name,emp:e,wip:[],donelist:[],done:0,assigned:0,touched:false}; });
   function P(n){ n=String(n||'').trim(); return per[n]||null; }
   (boot.orders||[]).forEach(function(o){
     if(o.status==='ยกเลิกเคส') return;
@@ -154,7 +154,7 @@ function compute(boot, today, board, rooms){
       var start=ov.start||o['dep_'+k+'_start']||'', end=ov.end||o['dep_'+k+'_end']||'', p=P(by);
       if(live&&st==='กำลังดำเนินการ'&&p){ p.wip.push({case_id:o.case_id,dept:k}); p.touched=true; }
       if(st==='เสร็จแล้ว'&&dayOf(end)===today){ var rid=roomOfKey(k); RS[rid]=RS[rid]||{steps:0,teeth:0}; RS[rid].steps++; RS[rid].teeth+=Number(o.qty)||0; }
-      if(st==='เสร็จแล้ว'&&p&&dayOf(end)===today){ p.done++; p.touched=true; }
+      if(st==='เสร็จแล้ว'&&p&&dayOf(end)===today){ p.done++; p.touched=true; p.donelist.push({case_id:o.case_id,dept:k,end:end}); }
       else if(p&&dayOf(start)===today&&st!=='ไม่เกี่ยวข้อง'){ p.touched=true; }
       if(live&&asg[k]&&P(asg[k])&&st!=='เสร็จแล้ว'&&st!=='ไม่เกี่ยวข้อง'&&st!=='ยกเลิก') P(asg[k]).assigned++;
     });
@@ -166,7 +166,7 @@ function compute(boot, today, board, rooms){
     var rl=(RL[String(n).toLowerCase()]||[]).filter(function(id){ return ROOMS.some(function(r){return r.id===id;}); }), rs=[room];
     if(rl.length){ rs=rl.slice(); room=rs[0]; }          // fixed rooms: work in a room not on the list is counted in the first listed room
     var b=board&&board[n]; var present=board?!!(b&&b.in_at):p.touched;      // with attendance data, "present" = checked in today
-    return {name:n,room:room,rooms:rs,custom:rl.length>0,wip:p.wip,done:p.done,assigned:p.assigned,present:present||p.wip.length>0,inAt:b&&b.in_at||'',outAt:b&&b.out_at||'',late:b&&b.st&&b.st.kind==='late'?b.st.late:0};
+    return {name:n,room:room,rooms:rs,custom:rl.length>0,wip:p.wip,donelist:p.donelist,done:p.done,assigned:p.assigned,present:present||p.wip.length>0,inAt:b&&b.in_at||'',outAt:b&&b.out_at||'',late:b&&b.st&&b.st.kind==='late'?b.st.late:0};
   });
   return {roomStats:RS,people:people,inLab:inLab,wipTotal:people.reduce(function(a,p){return a+p.wip.length;},0),working:people.filter(function(p){return p.wip.length;}).length,present:people.filter(function(p){return p.present;}).length};
 }
@@ -194,7 +194,9 @@ function draw(){
 function openSheet(name){
   var p=(window.LAB.last.people||[]).filter(function(x){return x.name===name;})[0]; if(!p) return;
   var li=p.wip.length?p.wip.map(function(w){return '<li><b>'+esc(w.case_id)+'</b><small>'+esc(LABEL[w.dept]||w.dept)+'</small></li>';}).join(''):'<li><small>ตอนนี้ไม่มีงานที่กำลังทำ</small></li>';
-  document.getElementById('card').innerHTML='<h3>'+esc(p.name)+'</h3><div class="s">กำลังทำ '+p.wip.length+' ขั้น · เสร็จวันนี้ '+p.done+' ขั้น'+(p.assigned?' · รอทำ (ได้รับมอบ) '+p.assigned:'')+'</div><ul>'+li+'</ul>'+(isAdmin(EMP||{})?'<div id="wl" class="wl"><small>กำลังโหลดใบเตือน…</small></div>':'')+'<button type="button" id="cl">ปิด</button>';
+  var dl=(p.donelist||[]).slice().sort(function(a,b){ return String(b.end)<String(a.end)?-1:1; }).map(function(w){ var d=new Date(w.end), t=isNaN(d)?'':d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}); return '<li><b>'+esc(w.case_id)+'</b><small>'+esc(LABEL[w.dept]||w.dept)+(t?' · '+t:'')+'</small></li>'; }).join('');
+  var donehtml=p.done?'<div class="s" style="margin-top:12px">✓ เสร็จวันนี้ '+p.done+' ขั้น</div><ul>'+dl+'</ul>':'';
+  document.getElementById('card').innerHTML='<h3>'+esc(p.name)+'</h3><div class="s">กำลังทำ '+p.wip.length+' ขั้น · เสร็จวันนี้ '+p.done+' ขั้น'+(p.assigned?' · รอทำ (ได้รับมอบ) '+p.assigned:'')+'</div><ul>'+li+'</ul>'+donehtml+(isAdmin(EMP||{})?'<div id="wl" class="wl"><small>กำลังโหลดใบเตือน…</small></div>':'')+'<button type="button" id="cl">ปิด</button>';
   document.getElementById('sheet').classList.add('on'); document.getElementById('cl').onclick=function(){ document.getElementById('sheet').classList.remove('on'); };
   if(isAdmin(EMP||{})) loadWarn(name);
 }
