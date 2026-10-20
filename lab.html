@@ -152,9 +152,9 @@ function compute(boot, today, board, rooms){
     ALLKEYS.forEach(function(k){
       var ov=(OV[o._id]||{})[k]||{}, st=ov.status||o['dep_'+k]||'ไม่เกี่ยวข้อง', by=ov.updated_by||'';
       var start=ov.start||o['dep_'+k+'_start']||'', end=ov.end||o['dep_'+k+'_end']||'', p=P(by);
-      if(live&&st==='กำลังดำเนินการ'&&p){ p.wip.push({case_id:o.case_id,dept:k}); p.touched=true; }
+      if(live&&st==='กำลังดำเนินการ'&&p){ p.wip.push({case_id:o.case_id,dept:k,qty:Number(o.qty)||0}); p.touched=true; }
       if(st==='เสร็จแล้ว'&&dayOf(end)===today){ var rid=roomOfKey(k); RS[rid]=RS[rid]||{steps:0,teeth:0}; RS[rid].steps++; RS[rid].teeth+=Number(o.qty)||0; }
-      if(st==='เสร็จแล้ว'&&p&&dayOf(end)===today){ p.done++; p.touched=true; p.donelist.push({case_id:o.case_id,dept:k,end:end}); }
+      if(st==='เสร็จแล้ว'&&p&&dayOf(end)===today){ p.done++; p.touched=true; p.donelist.push({case_id:o.case_id,dept:k,end:end,qty:Number(o.qty)||0}); }
       else if(p&&dayOf(start)===today&&st!=='ไม่เกี่ยวข้อง'){ p.touched=true; }
       if(live&&asg[k]&&P(asg[k])&&st!=='เสร็จแล้ว'&&st!=='ไม่เกี่ยวข้อง'&&st!=='ยกเลิก') P(asg[k]).assigned++;
     });
@@ -193,10 +193,11 @@ function draw(){
 }
 function openSheet(name){
   var p=(window.LAB.last.people||[]).filter(function(x){return x.name===name;})[0]; if(!p) return;
-  var li=p.wip.length?p.wip.map(function(w){return '<li><b>'+esc(w.case_id)+'</b><small>'+esc(LABEL[w.dept]||w.dept)+'</small></li>';}).join(''):'<li><small>ตอนนี้ไม่มีงานที่กำลังทำ</small></li>';
-  var dl=(p.donelist||[]).slice().sort(function(a,b){ return String(b.end)<String(a.end)?-1:1; }).map(function(w){ var d=new Date(w.end), t=isNaN(d)?'':d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}); return '<li><b>'+esc(w.case_id)+'</b><small>'+esc(LABEL[w.dept]||w.dept)+(t?' · '+t:'')+'</small></li>'; }).join('');
-  var donehtml=p.done?'<div class="s" style="margin-top:12px">✓ เสร็จวันนี้ '+p.done+' ขั้น</div><ul>'+dl+'</ul>':'';
-  document.getElementById('card').innerHTML='<h3>'+esc(p.name)+'</h3><div class="s">กำลังทำ '+p.wip.length+' ขั้น · เสร็จวันนี้ '+p.done+' ขั้น'+(p.assigned?' · รอทำ (ได้รับมอบ) '+p.assigned:'')+'</div><ul>'+li+'</ul>'+donehtml+(isAdmin(EMP||{})?'<div id="wl" class="wl"><small>กำลังโหลดใบเตือน…</small></div>':'')+'<button type="button" id="cl">ปิด</button>';
+  var li=p.wip.length?p.wip.map(function(w){return '<li><b>'+esc(w.case_id)+'</b><small>'+esc(LABEL[w.dept]||w.dept)+(w.qty?' · '+w.qty+' ซี่':'')+'</small></li>';}).join(''):'<li><small>ตอนนี้ไม่มีงานที่กำลังทำ</small></li>';
+  var dl=(p.donelist||[]).slice().sort(function(a,b){ return String(b.end)<String(a.end)?-1:1; }).map(function(w){ var d=new Date(w.end), t=isNaN(d)?'':d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}); return '<li><b>'+esc(w.case_id)+'</b><small>'+esc(LABEL[w.dept]||w.dept)+(w.qty?' · '+w.qty+' ซี่':'')+(t?' · '+t:'')+'</small></li>'; }).join('');
+  var sum=function(a){ return a.reduce(function(x,w){ return x+(w.qty||0); },0); };
+  var donehtml=p.done?'<div class="s" style="margin-top:12px">✓ เสร็จวันนี้ '+p.done+' ขั้น · รวม '+sum(p.donelist||[])+' ซี่</div><ul>'+dl+'</ul>':'';
+  document.getElementById('card').innerHTML='<h3>'+esc(p.name)+'</h3><div class="s">กำลังทำ '+p.wip.length+' ขั้น'+(sum(p.wip)?' ('+sum(p.wip)+' ซี่)':'')+' · เสร็จวันนี้ '+p.done+' ขั้น'+(p.assigned?' · รอทำ (ได้รับมอบ) '+p.assigned:'')+'</div><ul>'+li+'</ul>'+donehtml+(isAdmin(EMP||{})?'<div id="wl" class="wl"><small>กำลังโหลดใบเตือน…</small></div>':'')+'<button type="button" id="cl">ปิด</button>';
   document.getElementById('sheet').classList.add('on'); document.getElementById('cl').onclick=function(){ document.getElementById('sheet').classList.remove('on'); };
   if(isAdmin(EMP||{})) loadWarn(name);
 }
