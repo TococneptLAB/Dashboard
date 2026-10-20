@@ -29,7 +29,7 @@ h1{font-size:26px;font-weight:500;margin-top:4px}
 @media(max-width:560px){.room.wide{grid-column:auto}}
 .rh{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;background:var(--rc);color:#10131a;font-weight:600;font-size:14px}
 .rh .ic{font-size:18px;margin-right:6px}.rh .rn{background:#10131a;color:#fff;border-radius:99px;font-size:12px;padding:2px 10px;white-space:nowrap}
-.tod{font-size:12px;color:#fff;opacity:.85;margin:2px 0 4px}.tod b{font-size:14px}
+.tod{padding:4px 14px 0;font-size:12px;color:#fff;opacity:.85;margin:2px 0 4px}.tod b{font-size:14px}
 .rh .rn.hot{background:#fff;color:#b85a00}
 .furn{display:flex;gap:10px;padding:10px 14px 0;font-size:22px;opacity:.9;filter:drop-shadow(0 2px 0 #0003)}
 .crew{display:flex;flex-wrap:wrap;gap:6px 14px;padding:8px 12px 0;justify-content:flex-start;align-items:flex-end}
@@ -137,7 +137,7 @@ function roomOfKey(k){ for(var i=0;i<ROOMS.length;i++) if(ROOMS[i].keys.indexOf(
 function compute(boot, today, board, rooms){
   var OV={}; (boot.overrides||[]).forEach(function(r){ var k=String(r.dept_key||''); if(!k||k.charAt(0)==='_') return; (OV[r.id]=OV[r.id]||{})[k]=r; });
   var per={}, inLab=0, RS={};
-  (boot.employees||[]).forEach(function(e){ per[e.name]={name:e.name,emp:e,wip:[],done:0,assigned:0,touched:false}; });
+  (boot.employees||[]).forEach(function(e){ if(String(e.role||'').trim().toLowerCase()==='ceo'||String(e.department||'').trim().toLowerCase()==='ceo'||String(e.name||'').trim().toLowerCase()==='ceo') return; per[e.name]={name:e.name,emp:e,wip:[],done:0,assigned:0,touched:false}; });
   function P(n){ n=String(n||'').trim(); return per[n]||null; }
   (boot.orders||[]).forEach(function(o){
     if(o.status==='ยกเลิกเคส') return;
