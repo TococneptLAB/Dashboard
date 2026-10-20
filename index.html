@@ -85,10 +85,16 @@ fieldset{border:1px solid var(--line);border-radius:10px;padding:12px 14px 4px;m
 .fine{font-size:12px;color:var(--mute);margin:4px 0 16px}
 #rmsg{margin-top:14px;font-size:14.5px}#rmsg.ok{color:#9fd29f}#rmsg.bad{color:#ff8a80}
 button.btn{cursor:pointer;font-family:inherit}
+.tags{margin-top:44px;display:flex;flex-wrap:wrap;gap:12px}.tags span{border:1px solid var(--line);padding:9px 20px;border-radius:99px;font-size:15px;font-family:'Montserrat','Noto Sans Thai',sans-serif;font-weight:400}
+.faq{margin-top:48px;max-width:820px}.faq details{border-bottom:1px solid var(--line);padding:20px 0}.faq details:first-child{border-top:1px solid var(--line)}
+.faq summary{cursor:pointer;font-size:17px;font-weight:400;list-style:none;display:flex;justify-content:space-between;gap:18px}.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";color:var(--accent);font-size:22px;line-height:1}.faq details[open] summary::after{content:"–"}
+.faq details p{margin-top:12px;color:var(--mute);font-size:15px;max-width:700px}
+.more{display:inline-block;margin-top:30px;color:var(--accent);font-size:15px;border-bottom:1px solid var(--accent)}
 </style>
 </head>
 <body>
-<header><div class="wrap"><a class="brand" href="#top">TOTU CONCEPT LAB</a><nav><a href="#services">งานของเรา</a><a href="#process">ขั้นตอน</a><a href="#why">ทำไมเรา</a><a href="#register">ลงทะเบียน</a><a class="cta" href="#contact">ติดต่อ</a></nav></div></header>
+<header><div class="wrap"><a class="brand" href="#top">TOTU CONCEPT LAB</a><nav><a href="#services">งานของเรา</a><a href="#process">ขั้นตอน</a><a href="#why">ทำไมเรา</a><a href="#faq">คำถาม</a><a href="#register">ลงทะเบียน</a><a class="cta" href="#contact">ติดต่อ</a></nav></div></header>
 
 <main id="top">
 <div class="hero"><div class="wrap">
@@ -137,6 +143,42 @@ button.btn{cursor:pointer;font-family:inherit}
     <li><b>รับ-ส่งงาน</b><span>มีบริการรับ-ส่งงานในพื้นที่กรุงเทพฯ และเชียงใหม่</span></li>
     <li><b>ตรวจ QC ก่อนส่ง</b><span>ทุกชิ้นผ่านขั้นตอนตรวจคุณภาพก่อนจัดส่ง</span></li>
   </ul>
+</div></section>
+
+<section id="clinic-tools"><div class="wrap">
+  <div class="eyebrow rv">For Clinics</div>
+  <h2 class="rv">ส่งงานง่าย ตามงานเองได้<br>ไม่ต้องโทรถามว่างานถึงไหน</h2>
+  <p class="sub rv">คลินิกที่ส่งงานกับเรามีหน้าเว็บของตัวเอง เข้าด้วยรหัสของคลินิกหรือของแพทย์ ใช้ได้ทั้งคอมพิวเตอร์และมือถือ</p>
+  <div class="grid rv">
+    <div class="card"><i>01</i><h3>ส่งเคสออนไลน์</h3><p>กรอกข้อมูลเคสและแนบไฟล์สแกน รูปถ่าย ได้จากหน้าเว็บโดยตรง</p></div>
+    <div class="card"><i>02</i><h3>ดูสถานะทุกเคส</h3><p>เห็นว่าเคสอยู่ขั้นตอนไหน และดูย้อนหลังเคสที่ส่งมอบแล้วแยกรายเดือน</p></div>
+    <div class="card"><i>03</i><h3>ดูแบบ 3D ก่อนผลิต</h3><p>แพทย์เปิดดูงานออกแบบผ่านลิงก์ได้ ในกรณีที่แล็บส่งลิงก์ให้</p></div>
+    <div class="card"><i>04</i><h3>ใบนำส่งพร้อม QR</h3><p>ติดไปกับชิ้นงาน ใช้ตรวจสอบเคสได้ทุกชิ้น</p></div>
+    <div class="card"><i>05</i><h3>ยอดคูปองคงเหลือ</h3><p>คลินิกที่ใช้ระบบคูปอง เปิดดูยอดคงเหลือและประวัติการใช้ได้เอง</p></div>
+    <div class="card"><i>06</i><h3>เห็นเฉพาะข้อมูลของคุณ</h3><p>แต่ละคลินิกเห็นเฉพาะเคสของตัวเอง ไม่ปะปนกับคลินิกอื่น</p></div>
+  </div>
+  <a class="more rv" href="clinic.html">เข้าสู่หน้าตรวจสอบสถานะงานของคลินิก</a>
+</div></section>
+
+<section id="implant"><div class="wrap">
+  <div class="eyebrow rv">Implant Systems</div>
+  <h2 class="rv">งานบนรากเทียมหลายระบบ</h2>
+  <p class="sub rv">เรามีประสบการณ์ทำงานบนรากเทียมหลายยี่ห้อ ทั้ง Ti-base ครอบบนรากเทียม และ Custom Abutment</p>
+  <div class="tags rv"><span>Dentium</span><span>Neodent</span><span>Straumann</span><span>Neobiotech</span><span>Cowell</span><span>Biohorizon</span><span>MegaGen</span><span>Camlog</span></div>
+  <p class="sub rv" style="margin-top:22px">ใช้ระบบอื่นอยู่? สอบถามได้ที่ทีมงาน เราเพิ่มแคตตาล็อกให้ตามที่คลินิกใช้จริง</p>
+</div></section>
+
+<section id="faq"><div class="wrap">
+  <div class="eyebrow rv">FAQ</div>
+  <h2 class="rv">คำถามที่คลินิกมักถามก่อนส่งงาน</h2>
+  <div class="faq rv">
+    <details><summary>ส่งไฟล์สแกนแบบไหนได้บ้าง</summary><p>รับไฟล์จาก 3Shape, Shining 3D และ iTero แนบผ่านหน้าเว็บหรือส่งตรงผ่านระบบได้ ถ้าไม่มีสแกนเนอร์ก็ส่งรอยพิมพ์มาที่แล็บได้</p></details>
+    <details><summary>ทำงานวัสดุอะไรได้บ้าง</summary><p>Zirconia, E.max, Premill, PMMA และงานบนรากเทียม ทั้งแบบกัดและแบบอัด เลือกตามชนิดงานที่แพทย์ต้องการ</p></details>
+    <details><summary>จะรู้ได้อย่างไรว่างานอยู่ถึงไหน</summary><p>ทุกเคสมีเลขเคสและบันทึกขั้นตอนของแต่ละแผนก คลินิกที่มีรหัสเข้าดูสถานะเคสของตัวเองได้ที่หน้าตรวจสอบสถานะงาน โดยไม่ต้องโทรถาม</p></details>
+    <details><summary>เริ่มส่งงานกับแล็บต้องทำอย่างไร</summary><p>กรอกแบบฟอร์มลงทะเบียนคลินิกใหม่ในหน้านี้ ทีมงานจะติดต่อกลับเพื่อเปิดบัญชีและให้รหัสเข้าใช้งาน แล้วส่งเคสแรกได้เลย</p></details>
+    <details><summary>มีบริการรับ-ส่งงานไหม</summary><p>มีบริการรับ-ส่งงานในพื้นที่กรุงเทพฯ และเชียงใหม่ สอบถามพื้นที่อื่นได้ทาง LINE</p></details>
+    <details><summary>มีระบบคูปองไหม</summary><p>มี คลินิกที่ใช้ระบบคูปองดูยอดคงเหลือแยกตามประเภทงานได้เอง ติดต่อทีมงานเพื่อสอบถามเงื่อนไขของคลินิกคุณ</p></details>
+  </div>
 </div></section>
 
 <section id="register"><div class="wrap two">
