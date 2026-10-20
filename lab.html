@@ -96,7 +96,7 @@ h1{font-size:26px;font-weight:500;margin-top:4px}
     <div><div class="brand">TOTU CONCEPT LAB</div><h1>🗺️ แผนผังแล็บ</h1></div>
     <div class="stats" id="stats"></div>
   </div>
-  <div class="bar"><span id="upd">กำลังโหลด…</span><button id="rf" type="button">⟳ รีเฟรช</button><button id="ed" type="button" style="display:none">✏ จัดห้องพนักงาน</button><a href="app.html">← กลับไปหน้าแอป</a></div>
+  <div class="bar"><span id="upd">กำลังโหลด…</span><button id="rf" type="button">⟳ รีเฟรช</button><a href="app.html#chat" target="_blank" rel="noopener" id="chl">💬 แชท</a><button id="ed" type="button" style="display:none">✏ จัดห้องพนักงาน</button><a href="app.html">← กลับไปหน้าแอป</a></div>
   <div class="legend"><span>🟡 ฟองสีเหลือง = กำลังทำงานอยู่ (จำนวนเคส)</span><span>💤 เทา = ยังไม่เช็กอิน/ยังไม่เริ่มงานวันนี้</span><span>🕘 เวลาเข้างานมาจากการเช็กอินในรัศมีแล็บ</span><span>⭐ = ขั้นตอนที่ทำเสร็จวันนี้</span><span>กดที่ตัวละครเพื่อดูว่าทำเคสไหนอยู่</span></div>
   <div class="map" id="map"></div>
 </div>
@@ -187,7 +187,7 @@ function draw(){
     var ps=(byRoom[rm.id]||[]).sort(function(a,b){return (b.wip.length-a.wip.length)||(b.present-a.present)||a.name.localeCompare(b.name,'th');});
     var rs=r.roomStats[rm.id]; var w=ps.reduce(function(a,p){return a+p.wip.length;},0);
     return '<div class="room'+(rm.wide?' wide':'')+'" style="--rc:'+rm.rc+';--rt:'+rm.rt+';--rt2:'+rm.rt2+'"><div class="rh"><span><span class="ic">'+rm.ic+'</span>'+esc(rm.name)+'</span><span class="rn'+(w?' hot':'')+'">'+(w?'กำลังทำ '+w:'ว่าง')+'</span></div><div class="furn">'+rm.furn+'</div><div class="tod">'+(rs?'✔ วันนี้เสร็จ <b>'+rs.teeth+' ซี่</b> ('+rs.steps+' เคส)':'วันนี้ยังไม่มีงานเสร็จ')+'</div><div class="crew">'+(ps.length?ps.map(avatar).join(''):'<div class="empty">ยังไม่มีใครประจำห้องนี้</div>')+'</div></div>';
-  }).join('');
+  }).join('')+'<div class="room wide meet" style="--rc:#b9a98c;--rt:#2d2a24;--rt2:#34302a"><div class="rh"><span><span class="ic">🪑</span>ห้องประชุม / แชททั้งร้าน</span><a class="rn" href="app.html#chat" target="_blank" rel="noopener" style="text-decoration:none">💬 เปิดแชท</a></div><div class="furn">🪑 🪑 🪑 🪑 📋</div><div class="crew"><div class="empty" style="color:#ddd">พิมพ์คุยกับทุกคนในร้านได้ที่นี่ — กด "เปิดแชท" เพื่อเปิดห้องแชททั้งร้านในแอป</div></div></div>';
   [].forEach.call(document.querySelectorAll('.av'),function(b){ b.onclick=function(){ openSheet(b.getAttribute('data-n')); }; });
   document.getElementById('upd').textContent=r.people.filter(function(p){return p.present&&!p.outAt;}).length+' คนเช็กอิน/ออนไลน์ (สีเขียว) • อัปเดตล่าสุด '+new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})+' (รีเฟรชเองทุก 30 วินาที)';
 }
@@ -201,22 +201,43 @@ function openSheet(name){
 // warning letters: only admin / CEO get the section (the server refuses everyone else)
 function fdate(d){ var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(d)); return m?(+m[3])+'/'+(+m[2])+'/'+(+m[1]+543):String(d||''); }
 function warnItemsClean(t){ return String(t||'').replace(/^!/,''); }
-function printWarn(w,items){
+var WS={co:'text-align:center;font-size:13px;line-height:1.5;margin:0 0 8px;color:#000',h1:'text-align:center;font-size:20px;font-weight:700;margin:0 0 2px;color:#000',h2:'text-align:center;font-size:14px;font-weight:400;margin:0 0 10px;color:#000',tb:'width:100%;border-collapse:collapse;margin:6px 0;color:#000',k:'border:1px solid #444;padding:3px 8px;vertical-align:top;width:30%;background:#f1f1f1;color:#000;font-size:13px',v:'border:1px solid #444;padding:3px 8px;vertical-align:top;color:#000;font-size:13px',g:'margin:6px 0;color:#000;font-size:13px',c:'display:flex;flex-wrap:wrap;gap:2px 16px',sp:'white-space:nowrap;color:#000',sig:'display:flex;gap:12px;margin-top:26px;color:#000;font-size:13px',sg:'flex:1;text-align:center',ln:'display:block;border-bottom:1px solid #000;height:34px;margin-bottom:4px',n:'font-size:11px;margin-top:10px;color:#000',p:'margin:8px 0;font-size:13px;color:#000',b:'font-weight:700;color:#000;font-size:13px'};
+function warnBody(w,items){
   var mine=[]; try{ mine=JSON.parse(w.items||'[]'); }catch(e){}
   var groups={}, order=[]; (items||[]).forEach(function(i){ if(!groups[i.g]){ groups[i.g]=[]; order.push(i.g); } groups[i.g].push(i.t); });
   var on={}; mine.forEach(function(t){ on[t]=1; });
   Object.keys(on).forEach(function(t){ if(!(items||[]).some(function(i){return i.t===t;})){ (groups['อื่นๆ']=groups['อื่นๆ']||[]).push(t); if(order.indexOf('อื่นๆ')<0) order.push('อื่นๆ'); } });
-  var ck=order.map(function(g){ return '<div class="g"><b>'+esc(g)+'</b><div class="c">'+groups[g].map(function(t){ return '<span>'+(on[t]?'☑':'☐')+' '+esc(warnItemsClean(t))+'</span>'; }).join('')+'</div></div>'; }).join('');
-  var row=function(k,v){ return '<tr><td class="k">'+k+'</td><td>'+(v?esc(v):'&nbsp;')+'</td></tr>'; };
-  var h='<!doctype html><html lang="th"><head><meta charset="utf-8"><title>หนังสือเตือน '+esc(w.name)+'</title><style>@page{size:A4;margin:16mm}body{font:14px/1.5 "Sarabun","Noto Sans Thai",sans-serif;color:#000}h1{text-align:center;font-size:20px;margin:0}h2{text-align:center;font-size:14px;font-weight:400;margin:2px 0 12px}table{width:100%;border-collapse:collapse;margin:6px 0}td{border:1px solid #444;padding:5px 8px;vertical-align:top}td.k{width:30%;background:#f1f1f1}.g{margin:6px 0}.c{display:flex;flex-wrap:wrap;gap:2px 16px}.c span{white-space:nowrap}.sig{display:flex;gap:12px;margin-top:34px}.sig div{flex:1;text-align:center}.sig i{display:block;border-bottom:1px solid #000;height:38px;margin-bottom:4px}.n{font-size:12px;margin-top:10px}</style></head><body>'
-   +'<h1>หนังสือเตือนพนักงาน</h1><h2>TOTU Concept Lab — '+esc(w.level)+'</h2><table>'
-   +row('วันที่ออกหนังสือ',fdate(w.date))+row('ชื่อ-นามสกุล',w.name)+row('ตำแหน่ง / แผนก',w.position)+row('วัน-เวลาที่เกิดเหตุ',String(w.occurred||'').replace('T',' '))+row('เลขเคสที่เกี่ยวข้อง',w.case_no)+'</table>'
-   +'<b>ลักษณะการกระทำผิด (ติ๊กเลือก)</b>'+ck+'<table>'+row('รายละเอียดข้อเท็จจริง',w.facts||w.reason)+row('ข้อบังคับ / ระเบียบที่เกี่ยวข้อง',w.rule_ref)+row('คำชี้แจงของพนักงาน',w.reply)+row('ความเสียหาย (บาท)',w.damage)+row('แนวทางแก้ไข',w.fix_plan)+row('วันติดตามผล',w.follow_up?fdate(w.follow_up):'')+row('หมายเหตุ',w.note)+'</table>'
-   +'<p>หนังสือฉบับนี้มีผลบังคับ 1 ปี นับจากวันที่ออก (ถึง '+esc(fdate(w.expires))+') หากพนักงานกระทำผิดซ้ำในเรื่องเดียวกันภายในกำหนด บริษัทอาจพิจารณาเลิกจ้างโดยไม่จ่ายค่าชดเชยตามมาตรา 119 แห่ง พ.ร.บ.คุ้มครองแรงงาน พ.ศ. 2541</p>'
-   +'<div class="sig"><div><i></i>ผู้ออกหนังสือเตือน<br>('+esc(w.by)+')</div><div><i></i>พนักงานรับทราบ<br>('+esc(w.name)+')'+(w.refused_sign?'<br>☑ พนักงานปฏิเสธลงชื่อ':'')+'</div><div><i></i>พยาน'+(w.witness?'<br>('+esc(w.witness)+')':'')+'</div></div>'
-   +'<div class="n">เอกสารนี้ออกจากระบบ TOTU Concept Lab — ควรให้ผู้เชี่ยวชาญด้านกฎหมายแรงงานตรวจแบบฟอร์มก่อนใช้จริง</div></body></html>';
+  var ck=order.map(function(g){ return '<div class="g" style="'+WS.g+'"><b style="'+WS.b+'">'+esc(g)+'</b><div style="'+WS.c+'">'+groups[g].map(function(t){ return '<span style="'+WS.sp+'">'+(on[t]?'☑':'☐')+' '+esc(warnItemsClean(t))+'</span>'; }).join('')+'</div></div>'; }).join('');
+  var row=function(k,v){ return '<tr style="break-inside:avoid"><td style="'+WS.k+'">'+k+'</td><td style="'+WS.v+'">'+(v?esc(v):'&nbsp;')+'</td></tr>'; };
+  var inner=''
+   +'<div style="'+WS.co+'"><b>บริษัท ตูตู๊คอนเซปต์ จำกัด</b><br>เลขที่ 2/1 ซอยวชิรธรรมสาธิต 44 แขวงบางจาก เขตพระโขนง กรุงเทพมหานคร 10260</div><h1 style="'+WS.h1+'">หนังสือเตือนพนักงาน</h1><h2 style="'+WS.h2+'">'+esc(w.level)+'</h2><table style="'+WS.tb+'">'
+   +row('วันที่ออกหนังสือ',fdate(w.date))+row('ชื่อ-นามสกุล',w.full_name?w.full_name+' ('+w.name+')':w.name)+row('ตำแหน่ง / แผนก',w.position)+row('วัน-เวลาที่เกิดเหตุ',String(w.occurred||'').replace('T',' '))+row('เลขเคสที่เกี่ยวข้อง',w.case_no)+'</table>'
+   +'<b style="'+WS.b+'">ลักษณะการกระทำผิด (ติ๊กเลือก)</b>'+ck+'<table style="'+WS.tb+'">'+row('รายละเอียดข้อเท็จจริง',w.facts||w.reason)+row('ข้อบังคับ / ระเบียบที่เกี่ยวข้อง',w.rule_ref)+row('คำชี้แจงของพนักงาน',w.reply)+row('ความเสียหาย (บาท)',w.damage)+row('แนวทางแก้ไข',w.fix_plan)+row('วันติดตามผล',w.follow_up?fdate(w.follow_up):'')+row('หมายเหตุ',w.note)+'</table>'
+   +'<p style="'+WS.p+'">หนังสือฉบับนี้มีผลบังคับ 1 ปี นับจากวันที่ออก (ถึง '+esc(fdate(w.expires))+') หากพนักงานกระทำผิดซ้ำในเรื่องเดียวกันภายในกำหนด<br>บริษัทอาจพิจารณาเลิกจ้างโดยไม่จ่ายค่าชดเชย <span style="white-space:nowrap">ตามมาตรา 119 แห่ง พ.ร.บ.คุ้มครองแรงงาน พ.ศ. 2541</span></p>'
+   +'<div class="sig" style="'+WS.sig+'"><div style="'+WS.sg+'"><i style="'+WS.ln+'"></i>กรรมการบริษัท<br>( ............................ )</div><div style="'+WS.sg+'"><i style="'+WS.ln+'"></i>พนักงานรับทราบ<br>('+esc(w.full_name||w.name)+')'+(w.refused_sign?'<br>☑ พนักงานปฏิเสธลงชื่อ':'')+'</div><div style="'+WS.sg+'"><i style="'+WS.ln+'"></i>พยาน'+(w.witness?'<br>('+esc(w.witness)+')':'')+'</div></div>'
+  ;
+  return inner;
+}
+function warnFile(w){ return 'หนังสือเตือน-'+String(w.full_name||w.name).replace(/[\\/:*?"<>|\s]+/g,'_')+'-'+w.date+'.pdf'; }
+function printWarn(w,items){
+  var h='<!doctype html><html lang="th"><head><meta charset="utf-8"><title>'+esc(warnFile(w).replace(/\.pdf$/,''))+'</title><style>@page{size:A4;margin:12mm}body{font:13px/1.4 "Sarabun","Noto Sans Thai",sans-serif;color:#000}</style></head><body>'+warnBody(w,items)+'</body></html>';
   var win=window.open('','_blank'); if(!win){ alert('เบราว์เซอร์บล็อกหน้าต่างพิมพ์ — อนุญาต pop-up ให้เว็บนี้แล้วลองใหม่'); return; }
   win.document.open(); win.document.write(h); win.document.close(); setTimeout(function(){ try{ win.focus(); win.print(); }catch(e){} },400);
+}
+// ⬇ PDF: the form is drawn off-screen and saved straight to a PDF file (html2pdf.js from cdnjs); if that library cannot load, fall back to the print window (choose "Save as PDF")
+var H2P_URL='https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+function loadH2P(){ return new Promise(function(ok,no){ if(window.html2pdf) return ok(); var sc=document.createElement('script'); sc.src=H2P_URL; sc.onload=ok; sc.onerror=no; document.head.appendChild(sc); }); }
+function pdfWarn(w,items){
+  var sh=document.getElementById('sheet'), wasOn=sh.classList.contains('on');      // the pop-up sheet must be closed while the page is photographed, otherwise the PDF comes out blank
+  var sx=window.scrollX||0, sy=window.scrollY||0;      // a scrolled page makes html2canvas draw a blank picture, so jump to the top first
+  var back=function(){ if(wasOn) sh.classList.add('on'); window.scrollTo(sx,sy); };
+  loadH2P().then(function(){
+    sh.classList.remove('on'); window.scrollTo(0,0);
+    var out=document.createElement('div'); out.style.cssText='position:absolute;left:0;top:0;width:186mm;z-index:-1;opacity:0;pointer-events:none';       // hidden behind the page (html2canvas needs it in the viewport area)
+    var box=document.createElement('div'); box.className='wpf'; box.style.cssText='width:186mm;background:#fff;color:#000;font-family:Sarabun,"Noto Sans Thai",sans-serif;font-size:13px;line-height:1.4';
+    var inner=document.createElement('div'); inner.innerHTML=warnBody(w,items); box.appendChild(inner); out.appendChild(box); document.body.appendChild(out);
+    return window.html2pdf().set({margin:12,filename:warnFile(w),image:{type:'jpeg',quality:0.96},html2canvas:{scale:2,useCORS:true,scrollX:0,scrollY:0},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['css'],avoid:['tr','.g','.sig']}}).from(inner).save().then(function(){ out.remove(); back(); },function(e){ out.remove(); back(); throw e; });
+  }).catch(function(){ back(); alert('สร้างไฟล์ PDF ไม่สำเร็จ — จะเปิดหน้าต่างพิมพ์ให้แทน เลือก "บันทึกเป็น PDF" ที่ปลายทางการพิมพ์'); printWarn(w,items); });
 }
 function loadWarn(name){
   post({action:'warnList',name:name}).then(function(r){
@@ -230,7 +251,7 @@ function loadWarn(name){
       return '<div class="wi'+(w.void_at?' void':(live(w)?'':' old'))+'"><b>'+esc(w.level)+'</b> · '+esc(fdate(w.date))+' <small>'+(w.void_at?'ยกเลิกแล้ว':(live(w)?'มีผลถึง '+esc(fdate(w.expires)):'หมดอายุแล้ว'))+'</small>'+
         (it.length?'<div>'+it.map(function(t){ return '<span class="chip'+(t.charAt(0)==='!'?' hot':'')+'">'+esc(warnItemsClean(t))+'</span>'; }).join('')+'</div>':'')+
         '<div>'+esc(w.facts||w.reason)+'</div>'+(w.case_no?'<small>เคส '+esc(w.case_no)+'</small>':'')+(w.note?'<small>'+esc(w.note)+'</small>':'')+
-        '<small>บันทึกโดย '+esc(w.by)+(w.void_at?' · ยกเลิกโดย '+esc(w.void_by):'')+'</small> <a href="#" data-p="'+esc(w.id)+'">🖨 พิมพ์ A4</a>'+(w.void_at?'':' <a href="#" data-v="'+esc(w.id)+'">ยกเลิกใบนี้</a>')+'</div>'; };
+        '<small>บันทึกโดย '+esc(w.by)+(w.void_at?' · ยกเลิกโดย '+esc(w.void_by):'')+'</small> <a href="#" data-p="'+esc(w.id)+'">🖨 พิมพ์ A4</a> <a href="#" data-f="'+esc(w.id)+'">⬇ PDF</a>'+(w.void_at?'':' <a href="#" data-v="'+esc(w.id)+'">ยกเลิกใบนี้</a>')+'</div>'; };
     var chk=go.map(function(g){ return '<div class="wg"><b>'+esc(g)+'</b>'+gs[g].map(function(t){ return '<label'+(t.charAt(0)==='!'?' class="hot"':'')+'><input type="checkbox" class="wck" value="'+esc(t)+'"> '+esc(warnItemsClean(t))+'</label>'; }).join('')+'</div>'; }).join('');
     box.innerHTML='<h4>📄 ใบเตือน (มีผลอยู่ '+act.length+')</h4>'+(r.warnings.length?r.warnings.map(wi).join(''):'<small>ยังไม่มีใบเตือน</small>')+
       '<details class="wf"><summary>＋ เขียนใบเตือนใหม่ (ติ๊กเลือก)</summary>'+
@@ -258,6 +279,7 @@ function loadWarn(name){
       post({action:'setWarnItems',items:list}).then(function(x){ if(x&&x.ok) loadWarn(name); else alert('บันทึกไม่สำเร็จ'); });
     };
     [].forEach.call(box.querySelectorAll('[data-p]'),function(a){ a.onclick=function(e){ e.preventDefault(); var w=r.warnings.filter(function(x){return x.id===a.getAttribute('data-p');})[0]; if(w) printWarn(w,items); }; });
+    [].forEach.call(box.querySelectorAll('[data-f]'),function(a){ a.onclick=function(e){ e.preventDefault(); var w=r.warnings.filter(function(x){return x.id===a.getAttribute('data-f');})[0]; if(w) pdfWarn(w,items); }; });
     [].forEach.call(box.querySelectorAll('[data-v]'),function(a){ a.onclick=function(e){ e.preventDefault(); if(!confirm('ยกเลิกใบเตือนใบนี้? (ยังเก็บประวัติไว้ แต่ไม่นับ)')) return; post({action:'warnVoid',id:a.getAttribute('data-v')}).then(function(){ loadWarn(name); }); }; });
   }).catch(function(){ var b=document.getElementById('wl'); if(b) b.innerHTML='<small>เชื่อมต่อไม่ได้</small>'; });
 }
