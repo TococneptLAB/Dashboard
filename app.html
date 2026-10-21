@@ -51,6 +51,14 @@
   input,select,textarea{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font-family:inherit;font-size:14px;background:#fff;color:var(--ink);}
   input:focus,select:focus,textarea:focus{outline:2px solid var(--teal);outline-offset:1px;border-color:var(--teal);}
   .field{margin-bottom:2px;}
+  .sg-box{border:1.5px solid #0e7490;background:#ecfeff;border-radius:10px;padding:8px 10px;margin:8px 0}
+  .sg-h{font-weight:800;color:#0e7490;margin-bottom:4px}
+  .sg-miss{color:#b45309;font-weight:700;font-size:13px;margin-top:4px}
+  .sg-ok{color:#047857;font-weight:700;font-size:13px;margin-top:4px}
+  #sg-head{grid-column:1 / -1}
+  #f_sg_boxes{display:flex;flex-wrap:wrap;gap:6px 16px}
+  #f_sg_boxes label{display:flex;align-items:center;gap:6px;width:auto;margin:0;font-weight:600}
+  #f_sg_boxes input{width:auto}
   .actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
   button.btn{border:none;padding:10px 18px;border-radius:8px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;}
   .btn.primary{background:var(--teal);color:#fff;}
@@ -1162,7 +1170,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-20 รุ่น 159 (หน้าคลินิกแสดงส่งมอบแล้วเมื่อขั้นตอน DELIVERY เสร็จ · แชทลบอัตโนมัติทุกเที่ยงคืน · ตารางเวลาเข้า-ออกงานรายคน รายวัน + คัดลอกส่ง LINE · เปลี่ยนประเภทคูปองของเคสได้ในรายการเคสรายหมอ · แยกคลินิกรหัสคล้ายกัน เช่น BPDC/BWDC ไม่รวมคูปองกัน · แก้ประเภทคูปองในประวัติการให้คูปองได้ · ห้องประชุมในผังแล็บ เปิดแชททั้งร้าน · ใบเตือน: ช่องเซ็น กรรมการบริษัท + ใช้ชื่อจริงภาษาไทย · ใบเตือนแบบติ๊ก + พิมพ์ A4 · ใบเตือนพนักงาน: คลิกตัวละครในผังแล็บ (แอดมิน/CEO) · เมนู 🔔 แจ้ง: แจ้งปัญหาเคส ไฟล์มีปัญหา/ระงับ/ยกเลิก · DEW เช็กอินได้ทุกที่ · คนส่งของเช็กอินที่ไหนก็ได้ · ผังแล็บจัดห้องตามที่กำหนด + ซ่อน CEO + ไฟเขียวคนเช็กอิน · กำหนดเวลาเข้า-เลิกงาน/ผ่อนผัน/วันหยุด ปรับได้ แสดงสาย-ออกก่อน · ตั้งตำแหน่งแล็บจากพิกัดที่วางได้ · แผนผังแล็บ + ลงเวลาเข้า-ออกงานตามรัศมีแล็บ · หน้าลูกค้า: เคสที่ส่งออกแล้วแยกเป็นรายเดือน เลือกเดือน/ปีได้ · หน้าลูกค้า: ปุ่มดูเคสที่ส่งออกแล้ว · โน้ต Abutment (ไซด์ที่สั่ง) แสดงในหน้าลูกค้า · หมายเหตุการให้คูปองแสดงในหน้าลูกค้า · อัปเดตระบบ: ดูเวอร์ชันล่าสุด+รายละเอียด · คูปองของหมอในหน้าลูกค้า · สรุปประจำวัน+ส่ง LINE · ลูกค้าส่งงานออนไลน์ · ปรับหน้าตาใหม่ ขาว-ดำ + โลโก้บริษัท · Premill เสร็จ → เคสวนกลับไปสแกน/ออกแบบรอบ 2 ก่อนกลึงครอบ · ใช้ของแล็บหมวด Premill → ส่งเคสเข้า MILLING Premill อัตโนมัติ · MegaGen AnyRidge Standard + Ti blank · MegaGen BlueDiamond NC/RC ครบตามแคตตาล็อก (Octa/Bridge, Ti blank, AXA, EZ Post) · รหัสเว็บลูกค้าเฉพาะหมอ (หมอทำหลายคลินิก) · แคตตาล็อก Abutment: Camlog CONELOG Ti-base CAD/CAM · แก้ปุ่ม เปิดใช้ขั้นตอนนี้ ของ MILLING lane ให้เคสเข้าคิวจริง · 💰 รายรับ-รายจ่าย เฉพาะ CEO · ปุ่ม 📊 ภาพรวมคงเหลือในคลัง · สิทธิ์ แผนกสต็อก: เพิ่ม/ลดของได้ ไม่เห็นราคา · ประวัติเพิ่ม/ลดจำนวนคลัง ใครทำ เมื่อไหร่ เหตุผล · เลือกใช้ของแล็บในฟอร์ม Abutment ดึงโค้ด+ชื่อ และตัดคลัง · ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
+const APP_VERSION = "2026-10-21 รุ่น 160 (ฟอร์มรับงาน Surgical Guide (3Shape) · หน้าคลินิกแสดงส่งมอบแล้วเมื่อขั้นตอน DELIVERY เสร็จ · แชทลบอัตโนมัติทุกเที่ยงคืน · ตารางเวลาเข้า-ออกงานรายคน รายวัน + คัดลอกส่ง LINE · เปลี่ยนประเภทคูปองของเคสได้ในรายการเคสรายหมอ · แยกคลินิกรหัสคล้ายกัน เช่น BPDC/BWDC ไม่รวมคูปองกัน · แก้ประเภทคูปองในประวัติการให้คูปองได้ · ห้องประชุมในผังแล็บ เปิดแชททั้งร้าน · ใบเตือน: ช่องเซ็น กรรมการบริษัท + ใช้ชื่อจริงภาษาไทย · ใบเตือนแบบติ๊ก + พิมพ์ A4 · ใบเตือนพนักงาน: คลิกตัวละครในผังแล็บ (แอดมิน/CEO) · เมนู 🔔 แจ้ง: แจ้งปัญหาเคส ไฟล์มีปัญหา/ระงับ/ยกเลิก · DEW เช็กอินได้ทุกที่ · คนส่งของเช็กอินที่ไหนก็ได้ · ผังแล็บจัดห้องตามที่กำหนด + ซ่อน CEO + ไฟเขียวคนเช็กอิน · กำหนดเวลาเข้า-เลิกงาน/ผ่อนผัน/วันหยุด ปรับได้ แสดงสาย-ออกก่อน · ตั้งตำแหน่งแล็บจากพิกัดที่วางได้ · แผนผังแล็บ + ลงเวลาเข้า-ออกงานตามรัศมีแล็บ · หน้าลูกค้า: เคสที่ส่งออกแล้วแยกเป็นรายเดือน เลือกเดือน/ปีได้ · หน้าลูกค้า: ปุ่มดูเคสที่ส่งออกแล้ว · โน้ต Abutment (ไซด์ที่สั่ง) แสดงในหน้าลูกค้า · หมายเหตุการให้คูปองแสดงในหน้าลูกค้า · อัปเดตระบบ: ดูเวอร์ชันล่าสุด+รายละเอียด · คูปองของหมอในหน้าลูกค้า · สรุปประจำวัน+ส่ง LINE · ลูกค้าส่งงานออนไลน์ · ปรับหน้าตาใหม่ ขาว-ดำ + โลโก้บริษัท · Premill เสร็จ → เคสวนกลับไปสแกน/ออกแบบรอบ 2 ก่อนกลึงครอบ · ใช้ของแล็บหมวด Premill → ส่งเคสเข้า MILLING Premill อัตโนมัติ · MegaGen AnyRidge Standard + Ti blank · MegaGen BlueDiamond NC/RC ครบตามแคตตาล็อก (Octa/Bridge, Ti blank, AXA, EZ Post) · รหัสเว็บลูกค้าเฉพาะหมอ (หมอทำหลายคลินิก) · แคตตาล็อก Abutment: Camlog CONELOG Ti-base CAD/CAM · แก้ปุ่ม เปิดใช้ขั้นตอนนี้ ของ MILLING lane ให้เคสเข้าคิวจริง · 💰 รายรับ-รายจ่าย เฉพาะ CEO · ปุ่ม 📊 ภาพรวมคงเหลือในคลัง · สิทธิ์ แผนกสต็อก: เพิ่ม/ลดของได้ ไม่เห็นราคา · ประวัติเพิ่ม/ลดจำนวนคลัง ใครทำ เมื่อไหร่ เหตุผล · เลือกใช้ของแล็บในฟอร์ม Abutment ดึงโค้ด+ชื่อ และตัดคลัง · ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -1585,6 +1593,36 @@ document.querySelectorAll('nav.tabs button').forEach(btn=>{
 
 // ---------- Order Form ----------
 let REQ_FROM = null;
+// ---- Surgical Guide (3Shape Implant Studio) — the lab plans the implants from CBCT + scan ----
+const SG_SUPPORT = ['Tooth-supported (ฟันรองรับ)', 'Mucosa-supported (เหงือกรองรับ)', 'Bone-supported (กระดูกรองรับ)', 'ไร้ฟันทั้งปาก (เหงือก + Pins)'];
+const SG_GUIDED = ['Pilot guide (นำทางเจาะนำ)', 'Fully guided (นำทางทั้งหมด)'];
+const SG_CBCT = ['มีไฟล์ DICOM แล้ว', 'รอคลินิกส่ง DICOM', 'ส่งเป็นแผ่น/แฟลชไดรฟ์'];
+const SG_SCAN = ['Intraoral scan (STL)', 'สแกนโมเดลปูน', 'ยังไม่มีสแกน — แล็บทำโมเดลจากรอยพิมพ์'];
+const SG_APPROVE = ['ส่งแผนให้หมออนุมัติก่อนพิมพ์', 'พิมพ์ได้เลยหลังวางแผน'];
+const SG_OPTS = ['Anchor pins', 'หน้าต่างตรวจดู (Inspection window)', 'Sleeve โลหะ', 'ทำ Digital wax-up ก่อนวางแผน', 'ต้องการ Stent ตรวจ Bite'];
+function sgOn(o){ return /^ใช่/.test(String((o && o.sg_on) || '')); }
+function sgMissing(o){
+  if(!sgOn(o)) return [];
+  const m = [], has = k=>String(o[k] || '').trim() !== '';
+  if(!has('sg_support')) m.push('ชนิด Guide');
+  if(!has('sg_cbct')) m.push('สถานะ CBCT');
+  else if(o.sg_cbct === SG_CBCT[0] && !has('sg_cbct_link') && !has('file_link')) m.push('ลิงก์ไฟล์ CBCT');
+  if(!has('sg_scan_type')) m.push('ไฟล์สแกน/โมเดล');
+  if(!has('sg_sites')) m.push('ตำแหน่งรากเทียม');
+  if(!has('sg_implant')) m.push('ยี่ห้อ/รุ่น/ขนาดรากเทียม');
+  if(!has('sg_kit')) m.push('ชุด Guided surgery / Sleeve');
+  return m;
+}
+function sgBlockHtml(o, f){
+  if(!sgOn(o)) return '';
+  const miss = sgMissing(o);
+  return `<div class="sg-box"><div class="sg-h">🧭 Surgical Guide — 3Shape Implant Studio</div><div class="cm-grid">` +
+    f('ชนิด Guide', o.sg_support) + f('ระดับการนำทาง', o.sg_guided) + f('สถานะ CBCT', o.sg_cbct) +
+    f('ลิงก์ CBCT', o.sg_cbct_link) + f('ไฟล์สแกน', o.sg_scan_type) + f('ตำแหน่งรากเทียม', o.sg_sites) +
+    f('รากเทียม', o.sg_implant) + f('ชุด Guided / Sleeve', o.sg_kit) + f('ตัวเลือก', o.sg_opts) +
+    f('การอนุมัติแผน', o.sg_approve) + f('วันผ่าตัด', o.sg_surgery_date) + `</div>` +
+    (miss.length ? `<div class="sg-miss">⚠ ข้อมูลที่ยังขาด: ${esc(miss.join(' • '))}</div>` : '<div class="sg-ok">✓ ข้อมูลวางแผนครบ</div>') + `</div>`;
+}
 const FORM_FIELDS = [
   {key:'date_received', label:'วันรับงาน', type:'date'},
   {key:'case_id', label:'เลขเคส (CASE)', type:'text'},
@@ -1614,6 +1652,18 @@ const FORM_FIELDS = [
   {key:'appointment_date', label:'วันนัดคนไข้', type:'date'},
   {key:'is_rework', label:'ประเภทงาน', type:'select2', opts:['งานปกติ','งานแก้ (Rework)']},
   {key:'file_link', label:'ลิงก์ไฟล์ / ภาพ (Google Drive ฯลฯ)', type:'text'},
+  {key:'sg_on', label:'🧭 เคส Surgical Guide (วางแผนใน 3Shape)', type:'select2', opts:['ไม่ใช่','ใช่ (Surgical Guide)']},
+  {key:'sg_support', label:'ชนิด Guide (รองรับด้วย)', type:'list', opts:SG_SUPPORT, sg:true},
+  {key:'sg_guided', label:'ระดับการนำทาง', type:'list', opts:SG_GUIDED, sg:true},
+  {key:'sg_cbct', label:'สถานะไฟล์ CBCT (DICOM)', type:'list', opts:SG_CBCT, sg:true},
+  {key:'sg_cbct_link', label:'ลิงก์ไฟล์ CBCT / DICOM', type:'text', sg:true},
+  {key:'sg_scan_type', label:'ไฟล์สแกนช่องปาก/โมเดล', type:'list', opts:SG_SCAN, sg:true},
+  {key:'sg_sites', label:'ตำแหน่งที่จะฝังรากเทียม (เช่น 36, 46)', type:'text', sg:true},
+  {key:'sg_implant', label:'ยี่ห้อ / รุ่น / ขนาดรากเทียม (เช่น Straumann BLT 4.1x10)', type:'text', sg:true},
+  {key:'sg_kit', label:'ชุด Guided surgery / Sleeve ที่หมอใช้', type:'text', sg:true},
+  {key:'sg_opts', label:'ตัวเลือกของ Guide (ติ๊กได้หลายอัน)', type:'sgopts', sg:true},
+  {key:'sg_approve', label:'การอนุมัติแผน', type:'select2', opts:SG_APPROVE, sg:true},
+  {key:'sg_surgery_date', label:'วันผ่าตัด (ต้องได้ Guide ก่อนวันนี้)', type:'date', sg:true},
   {key:'detail', label:'รายละเอียด / ข้อความจากแพทย์ / หมายเหตุ', type:'textarea'},
 ];
 
@@ -1668,6 +1718,8 @@ function buildOrderForm(){
       inner += `<div class="ct-radios" id="f_tasks_boxes" style="margin:4px 0">${TASK_DEFS.filter(t=>t.key !== 'abut').map(t=>`<label><input type="checkbox" data-tk="${t.key}"> ${t.icon} ${t.label}</label>`).join('')}</div><input type="hidden" id="f_${f.key}">`;
     } else if(f.type==='combo'){
       inner += `<div style="display:flex;gap:8px"><input id="f_${f.key}" list="dl-clinic-form" autocomplete="off" placeholder="พิมพ์ชื่อคลินิก เช่น teeth / ลาดพร้าว" style="flex:1"><button type="button" class="btn ghost sm" id="clinic-search-btn" style="white-space:nowrap">🔍 ค้นหา</button></div><div id="clinic-picker" style="display:none"></div><div id="clinic-hint" class="note" style="margin:4px 0 0"></div>`;
+    } else if(f.type==='sgopts'){
+      inner += `<div class="ct-radios" id="f_sg_boxes" style="margin:4px 0">${SG_OPTS.map(t=>`<label><input type="checkbox" data-sg="${esc(t)}"> ${esc(t)}</label>`).join('')}</div><input type="hidden" id="f_${f.key}">`;
     } else if(f.type==='select2'){
       inner += `<select id="f_${f.key}">` + (f.opts||[]).map(o=>`<option value="${esc(o)}">${esc(o)}</option>`).join('') + `</select>`;
     } else if(f.type==='textarea'){
@@ -1675,9 +1727,13 @@ function buildOrderForm(){
     } else {
       inner += `<input id="f_${f.key}" type="${f.type}">`;
     }
+    if(f.sg) div.classList.add('sg-field');
+    if(f.key === 'sg_on') div.id = 'sg-head';
     div.innerHTML = inner;
     wrap.appendChild(div);
+    if(f.key === 'sg_on') wrap.insertAdjacentHTML('beforeend', '<div id="sg-miss" class="sg-field note" style="grid-column:1/-1;margin:0"></div>');
   });
+  bindSgFields();
   document.getElementById('f_date_received').value = todayLocal();
   FORM_FIELDS.forEach(f=>{ if(f.default){ const el = document.getElementById('f_' + f.key); if(el) el.value = f.default; } });   // e.g. สถานะรวม = รับเข้าระบบ, ประเภทเคส = ปกติ
   document.getElementById('f_doctor').setAttribute('list', 'dl-doctors');
@@ -1753,6 +1809,43 @@ function buildOrderForm(){
   }
 }
 
+function sgReadNow(){
+  const o = {};
+  FORM_FIELDS.forEach(f=>{ if(/^sg_/.test(f.key) || f.key === 'file_link'){ const el = document.getElementById('f_' + f.key); o[f.key] = el ? el.value : ''; } });
+  return o;
+}
+function applySg(){
+  const on = sgOn(sgReadNow());
+  document.querySelectorAll('#order-form .sg-field').forEach(el=>{ el.style.display = on ? '' : 'none'; if(el.id === 'sg-miss') el.style.gridColumn = '1 / -1'; });
+  const box = document.getElementById('sg-miss');
+  if(box){ const m = sgMissing(sgReadNow()); box.textContent = on ? (m.length ? '⚠ ข้อมูลที่ยังขาด (บันทึกได้ แต่ควรขอจากหมอ): ' + m.join(' • ') : '✓ ข้อมูลวางแผนครบ') : ''; }
+  applyDeptRelevance();
+}
+function bindSgFields(){
+  const on = document.getElementById('f_sg_on');
+  if(!on) return;
+  on.addEventListener('change', ()=>{ on.dataset.manual = '1'; applySg(); });
+  document.querySelectorAll('#order-form .sg-field input, #order-form .sg-field select').forEach(el=>{ el.addEventListener('input', applySg); el.addEventListener('change', applySg); });
+  const box = document.getElementById('f_file_link'); if(box) box.addEventListener('input', applySg);
+  document.querySelectorAll('#f_sg_boxes [data-sg]').forEach(c=>c.addEventListener('change', ()=>{
+    document.getElementById('f_sg_opts').value = [...document.querySelectorAll('#f_sg_boxes [data-sg]')].filter(x=>x.checked).map(x=>x.dataset.sg).join(', ');
+    applySg();
+  }));
+  // picking a guide material / "Guide stent" type switches the guide section on (unless the user set it by hand)
+  const auto = ()=>{
+    if(on.dataset.manual) return;
+    const m = (document.getElementById('f_material') || {}).value || '', s = (document.getElementById('f_implant_system') || {}).value || '';
+    on.value = (/guide/i.test(m) || /guide/i.test(s)) ? 'ใช่ (Surgical Guide)' : 'ไม่ใช่';
+    applySg();
+  };
+  ['f_material', 'f_implant_system'].forEach(id=>{ const el = document.getElementById(id); if(el) el.addEventListener('change', auto); });
+  applySg();
+}
+function syncSgBoxes(){
+  const el = document.getElementById('f_sg_opts'); if(!el) return;
+  const set = String(el.value || '').split(',').map(x=>x.trim()).filter(Boolean);
+  document.querySelectorAll('#f_sg_boxes [data-sg]').forEach(c=>{ c.checked = set.includes(c.dataset.sg); });
+}
 function readForm(){
   const o = {};
   FORM_FIELDS.forEach(f=>{
@@ -1967,6 +2060,7 @@ function ticketHtml(o){
       <div><b>วันนัดคนไข้</b>${esc(o.appointment_date||'-')}</div>
       <div><b>ประเภทเคส</b>${esc(o.case_type||'ปกติ')}${o.case_type==='คูปอง' ? ' (' + esc(o.coupon_status||'-') + (couponKindText(o) ? ' • ' + esc(couponKindText(o)) : '') + ')' : ''}</div>
       <div><b>ต้องสั่ง Abutment</b>${esc(o.need_abutment||'ไม่ต้อง')}</div>
+      ${sgOn(o) ? `<div style="grid-column:1/-1;border:2px solid #000;padding:4px 8px"><b>🧭 SURGICAL GUIDE (3Shape)</b>${esc([o.sg_support, o.sg_guided].filter(Boolean).join(' / ') || '-')}<br>ตำแหน่ง: ${esc(o.sg_sites||'-')} • รากเทียม: ${esc(o.sg_implant||'-')}<br>Sleeve/ชุด: ${esc(o.sg_kit||'-')} • CBCT: ${esc(o.sg_cbct||'-')} • สแกน: ${esc(o.sg_scan_type||'-')}<br>ตัวเลือก: ${esc(o.sg_opts||'-')} • ${esc(o.sg_approve||'-')} • ผ่าตัด: ${esc(o.sg_surgery_date||'-')}</div>` : ''}
       <div style="grid-column:1/-1"><b>รายละเอียด/หมายเหตุ</b>${esc(o.detail||'-')}</div>
     </div>${chk}
     <div style="margin-top:26px;display:flex;justify-content:space-between;font-size:13px;">
@@ -2087,6 +2181,7 @@ function renderCase(){
       ${f('วันรับงาน', fmtDate(o.date_received))}${f('วันส่งออก (กำหนด)', o.ship_date ? fmtDate(o.ship_date) : '')}${f('วันนัดคนไข้', o.appointment_date ? fmtDate(o.appointment_date) : '')}${f('วันส่งงานจริง', deliveredDate(o) ? fmtStamp(deliveredDate(o)) : '')}
       ${f('ประเภทเคส', (o.case_type === 'คูปอง' ? 'คูปอง' + (o.coupon_status ? ' (' + o.coupon_status + ')' : '') : 'ปกติ') + (o.is_rework === true ? ' • งานแก้' : ''))}${f('วิธีจัดส่ง', o.delivery_method)}${f('คีย์โดย', o.created_by)}
     </div>
+    ${sgBlockHtml(o, f)}
     ${o.detail ? `<div class="cm-note"><small>รายละเอียด / หมายเหตุ</small>${esc(o.detail)}</div>` : ''}
     <div class="filters" style="margin:8px 0 0">
       <button class="btn ghost sm" id="cm-copy">📋 คัดลอกข้อความ</button>${chatOn() ? '<button class="btn ghost sm" id="cm-chat">💬 คุยเรื่องเคสนี้</button>' : ''}
@@ -4103,6 +4198,7 @@ function startEdit(id){
   document.getElementById('f_case_id').dataset.manual = '1';
   document.getElementById('f_has_scan').dataset.manual = '1';
   syncTaskBoxes();
+  { const so = document.getElementById('f_sg_on'); if(so){ so.dataset.manual = '1'; syncSgBoxes(); applySg(); } }
   TOOTH = toothFromString(o.tooth_types); buildToothUi();
   setEditUi(true, o.case_id);
   window.scrollTo({top:0, behavior:'smooth'});
@@ -7120,7 +7216,7 @@ function currentPeople(r){
 // which steps a case needs (material + whether an abutment must be ordered)
 const NON_DIGITAL_SCAN = ['รอยพิมพ์', 'ส่งแมส', 'EMS'];     // impressions sent physically: no scan file, so no model printing
 function LANES_ON(){ return SERVER_VER >= 12; }
-function depRelevance(material, needAbutment, hasScan){
+function depRelevance(material, needAbutment, hasScan, sg){
   const m = String(material || '').toLowerCase();
   const rel = {order_intake:true, scan:!hasScan, design:true, model_printing: !!hasScan, abutment:false, receive:false,
                milling:true, all_ceramic:false, qc:true, billing:true, delivery:true};
@@ -7134,6 +7230,12 @@ function depRelevance(material, needAbutment, hasScan){
   // press-only materials are pressed at ALL CERAMIC, not milled
   if(/press/.test(m) && !/zir/.test(m)){ rel.milling = false; rel.milling_emax = false; rel.milling_premill = false; }
   // colour / glaze step applies to crown & bridge work, not to models, guides or temporaries
+  if(sg){   // Surgical Guide: planned in 3Shape, printed (no milling / colour step / abutment)
+    rel.milling = rel.milling_zir = rel.milling_emax = rel.milling_premill = false;
+    rel.all_ceramic = false; rel.abutment = false; rel.receive = false;
+    rel.design = true; rel.model_printing = true;
+    return rel;
+  }
   if(!(/print model|guide/.test(m) || m === 'model' || /wax|special tray/.test(m) || (/temp/.test(m) && /pmma/.test(m)))) rel.all_ceramic = true;
   return rel;
 }
@@ -7141,7 +7243,8 @@ function applyDeptRelevance(){
   const matEl = document.getElementById('f_material');
   const abEl = document.getElementById('f_need_abutment');
   const hsEl = document.getElementById('f_has_scan');
-  const rel = depRelevance(matEl ? matEl.value : '', abEl && abEl.value === 'ต้องสั่ง', hsEl && hsEl.value === 'มี');
+  const sgEl = document.getElementById('f_sg_on');
+  const rel = depRelevance(matEl ? matEl.value : '', abEl && abEl.value === 'ต้องสั่ง', hsEl && hsEl.value === 'มี', !!sgEl && /^ใช่/.test(sgEl.value));
   DEPARTMENTS.forEach(d=>{
     const sel = document.getElementById('fd_'+d.key);
     if(!sel) return;
@@ -7178,7 +7281,7 @@ function drawRequests(){
   box.innerHTML = rows.length ? rows.map(x=>{
     const fl = (x.files || []).map(y=>`<a href="https://drive.google.com/file/d/${esc(y.id)}/view" target="_blank" rel="noopener">${esc(y.name)}</a> <small>(${esc(fmtSize(Number(y.size) || 0))})</small>`).join('<br>');
     const meta = [x.material, x.teeth && ('ซี่ ' + x.teeth), x.shade && ('สี ' + x.shade), x.qty && (x.qty + ' ซี่'), x.implant_system, x.due_date && ('ต้องการ ' + x.due_date)].filter(Boolean).map(esc).join(' • ');
-    return `<div class="cm-note" style="padding:12px 14px;margin-bottom:10px"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><b>${esc(x.clinic || '-')}${x.doctor ? ' • ' + esc(x.doctor) : ''}</b><span>${esc(ST[x.status] || x.status)} <small>${esc(reqFmtDate(x.created_at))}</small></span></div>
+    return `<div class="cm-note" style="padding:12px 14px;margin-bottom:10px"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><b>${x.guide ? '🧭 Surgical Guide • ' : ''}${esc(x.clinic || '-')}${x.doctor ? ' • ' + esc(x.doctor) : ''}</b><span>${esc(ST[x.status] || x.status)} <small>${esc(reqFmtDate(x.created_at))}</small></span></div>
       <div>คนไข้: <b>${esc(x.patient)}</b>${meta ? ' — ' + meta : ''}</div>
       ${x.contact ? `<div><small>ติดต่อ: ${esc(x.contact)}</small></div>` : ''}${x.note ? `<div><small>หมายเหตุ: ${esc(x.note)}</small></div>` : ''}${x.links ? `<div><small>ลิงก์: ${esc(x.links)}</small></div>` : ''}
       ${fl ? `<div style="margin-top:4px">${fl}</div>` : ''}
@@ -7203,6 +7306,14 @@ function reqAccept(id){
   setOpt('material', x.material); setOpt('implant_system', x.implant_system);
   set('detail', ['ลูกค้าส่งออนไลน์', x.material && !Array.from((document.getElementById('f_material') || {}).options || []).some(o=>o.value === x.material) ? 'วัสดุ: ' + x.material : '', x.implant_system ? 'ระบบรากเทียม: ' + x.implant_system : '', x.due_date ? 'ต้องการงานภายใน ' + x.due_date : '', x.contact ? 'ติดต่อ: ' + x.contact : '', x.note].filter(Boolean).join(' • '));
   if((x.files || []).length){ const hs = document.getElementById('f_has_scan'); if(hs){ hs.value = 'มี'; hs.dataset.manual = '1'; } }
+  if(x.guide){   // Surgical Guide ordered by the doctor from the clinic portal: fill the guide section too
+    let g = null; try{ g = JSON.parse(x.guide); }catch(e){ g = null; }
+    if(g){
+      const so = document.getElementById('f_sg_on'); if(so){ so.value = 'ใช่ (Surgical Guide)'; so.dataset.manual = '1'; }
+      Object.keys(g).forEach(k=>{ if(/^sg_/.test(k) && k !== 'sg_on'){ const el = document.getElementById('f_' + k); if(el && g[k]){ if(el.tagName === 'SELECT' && ![...el.options].some(op=>op.value === g[k])) el.add(new Option(g[k], g[k])); el.value = g[k]; } } });
+      syncSgBoxes(); applySg();
+    }
+  }
   try{ applyDeptRelevance(); }catch(e){ /* ignore */ }
   REQ_FROM = {id:x.id};
   const rb = document.getElementById('req-banner'); rb.style.display = ''; rb.textContent = '📥 กำลังรับคำขอจากลูกค้า (' + (x.clinic || x.doctor || '') + ' • ' + x.patient + ') — ตรวจข้อมูลแล้วกด "บันทึกออเดอร์" ไฟล์ ' + (x.files || []).length + ' ไฟล์จะย้ายเข้าเคสให้เอง';
@@ -7315,6 +7426,13 @@ init();
 
 // ---------- 🆕 อัปเดตระบบ (admin / CEO): เวอร์ชันล่าสุด + รายละเอียดที่เพิ่ม (ใหม่สุดอยู่บน) ----------
 const CHANGELOG = [
+  { rev: 160, server: 55, title: 'สั่งและรับงาน Surgical Guide (3Shape)', items: [
+    'หมอสั่ง Surgical Guide เองได้จากหน้าคลินิก (ปุ่ม 🧭 สั่ง Surgical Guide) — แอดมินรับเคสที่แท็บ คำขอจากลูกค้า แล้วข้อมูล Guide เติมลงฟอร์มให้เอง (ต้องอัปเดต Apps Script เป็นรุ่น 55)',
+    'หน้า สร้างออเดอร์ มีช่อง "เคส Surgical Guide" — เลือกวัสดุ Digital Guide / Guide stent จะเปิดให้อัตโนมัติ',
+    'กรอกชนิด Guide, สถานะ/ลิงก์ CBCT, ไฟล์สแกน, ตำแหน่งและยี่ห้อรากเทียม, ชุด Sleeve, ตัวเลือก, การอนุมัติแผน, วันผ่าตัด',
+    'มีเช็กลิสต์ "ข้อมูลที่ยังขาด" แสดงทันที (บันทึกได้ ไม่บังคับ) และโชว์ในใบเคสกับใบพิมพ์',
+    'ขั้นตอนเคส Guide: ข้ามกลึง/ลงสี/Abutment ให้เอง เหลือออกแบบ → พิมพ์ → QC → ส่ง'
+  ] },
   { rev: 159, server: 54, title: 'หน้าคลินิก: ส่งมอบแล้วตรงกับในระบบ', items: [
     'เคสที่ขั้นตอน DELIVERY เสร็จแล้ว แต่สถานะเคสยังไม่ถูกเปลี่ยนเป็น ส่งแล้ว เดิมหน้าคลินิกยังขึ้น ถึงคิว/กำลังทำ — ตอนนี้ขึ้น ส่งมอบแล้ว เหมือนในแอปหลัก (ต้องอัปเดต Apps Script เป็น v54)',
   ] },

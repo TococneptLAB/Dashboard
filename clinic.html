@@ -82,7 +82,7 @@ fetch('config.json').then(function(r){return r.json();}).then(function(c){ API=c
 document.getElementById('f').addEventListener('submit', function(e){ e.preventDefault(); go(); });
 
 // ---------- ส่งงานออนไลน์ (v39) ----------
-var CODE='', FILES=[], REQ_ID='', SENDING=false, EXT=/\.(stl|ply|obj|zip|rar|7z|pdf|jpg|jpeg|png|heic|webp|dcm|xml)$/i, MAXB=100*1024*1024, CH=8*262144;
+var GUIDE=false, CODE='', FILES=[], REQ_ID='', SENDING=false, EXT=/\.(stl|ply|obj|zip|rar|7z|pdf|jpg|jpeg|png|heic|webp|dcm|xml)$/i, MAXB=100*1024*1024, CH=8*262144;
 function rid(){ var a=new Uint8Array(12); (window.crypto||window.msCrypto).getRandomValues(a); return 'r'+Array.prototype.map.call(a,function(x){return ('0'+x.toString(16)).slice(-2);}).join(''); }
 function api(o){ return fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(o)}).then(function(r){return r.json();}); }
 function sz(n){ return n>=1048576? (n/1048576).toFixed(1)+' MB' : Math.max(1,Math.round(n/1024))+' KB'; }
@@ -92,30 +92,53 @@ function initSend(r){
   api({action:'clientRequests',code:CODE}).then(function(q){
     if(!q||!q.ok) return;                         // old backend (before v39) or code problem: just do not show the form
     var h='<div class="send"><h2>📤 ส่งงานออนไลน์</h2><div class="meta">ส่งไฟล์สแกนและรายละเอียดมาที่แล็บได้เลย แล็บจะตรวจแล้วรับเข้าระบบ คุณจะเห็นสถานะที่หน้านี้</div>'+
-    '<button class="go" id="sopen" type="button">＋ ส่งงานใหม่</button><div id="sform" style="display:none"></div>'+
+    '<button class="go" id="sopen" type="button">＋ ส่งงานใหม่</button>'+(q.guide_ok?' <button class="go" id="gopen" type="button" style="background:#0e7490">🧭 สั่ง Surgical Guide</button>':'')+'<div id="sform" style="display:none"></div>'+
     '<div id="slist">'+reqList(q.requests)+'</div></div>';
     box.innerHTML=h;
-    document.getElementById('sopen').onclick=function(){ var f=document.getElementById('sform'); if(f.style.display==='none'){ f.style.display='block'; if(!f.innerHTML) buildForm(r); } else f.style.display='none'; };
+    document.getElementById('sopen').onclick=function(){ var f=document.getElementById('sform'); if(f.style.display==='none'||GUIDE){ f.style.display='block'; if(!f.innerHTML||GUIDE) buildForm(r,false); } else f.style.display='none'; };
+    var go=document.getElementById('gopen'); if(go) go.onclick=function(){ var f=document.getElementById('sform'); if(f.style.display==='none'||!GUIDE){ f.style.display='block'; buildForm(r,true); } else f.style.display='none'; };
   }).catch(function(){});
 }
 function reqList(a){
   if(!a||!a.length) return '';
   return '<details open style="margin-top:14px"><summary>คำขอที่ส่งไปแล้ว ('+a.length+')</summary>'+a.map(function(x){
     var t=ST[x.status]||x.status; if(x.status==='accepted'&&x.case_id) t+=' · เลขเคส '+x.case_id; if(x.status==='rejected'&&x.reason) t+=' · '+x.reason;
-    return '<div class="rq"><span><b>'+esc(x.patient||'-')+'</b> <span class="m">'+esc(x.material||'')+(x.files?' · '+x.files+' ไฟล์':'')+' · '+fd(String(x.created_at).slice(0,10))+'</span></span><span class="pill '+(x.status==='accepted'?'d':(x.status==='rejected'?'h':''))+'">'+esc(t)+'</span></div>';
+    return '<div class="rq"><span><b>'+esc(x.patient||'-')+'</b> <span class="m">'+esc(x.material||'')+(x.guide?'🧭 Surgical Guide':'')+(x.files?' · '+x.files+' ไฟล์':'')+' · '+fd(String(x.created_at).slice(0,10))+'</span></span><span class="pill '+(x.status==='accepted'?'d':(x.status==='rejected'?'h':''))+'">'+esc(t)+'</span></div>';
   }).join('')+'</details>';
 }
-function buildForm(r){
-  REQ_ID=rid(); FILES=[];
+function opt(a){ return '<option value="">-- เลือก --</option>'+a.map(function(m){return '<option>'+esc(m)+'</option>';}).join(''); }
+var G_SUP=['Tooth-supported (ฟันรองรับ)','Mucosa-supported (เหงือกรองรับ)','Bone-supported (กระดูกรองรับ)','ไร้ฟันทั้งปาก (เหงือก + Pins)'], G_GUIDED=['Pilot guide (นำทางเจาะนำ)','Fully guided (นำทางทั้งหมด)'], G_CBCT=['มีไฟล์ DICOM แล้ว (แนบลิงก์/ไฟล์)','จะส่ง DICOM ตามมา','ส่งเป็นแผ่น/แฟลชไดรฟ์'], G_SCAN=['Intraoral scan (STL)','สแกนโมเดลปูน','ยังไม่มีสแกน — ขอให้แล็บทำจากรอยพิมพ์'], G_OPT=['Anchor pins','หน้าต่างตรวจดู (Inspection window)','Sleeve โลหะ','ทำ Digital wax-up ก่อนวางแผน'];
+function guideFields(){
+  return '<div class="w"><b style="color:#0e7490">🧭 สั่ง Surgical Guide — แล็บวางแผนใน 3Shape จาก CBCT + สแกน แล้วส่งแผนให้หมออนุมัติก่อนพิมพ์</b></div>'+
+  '<div><label>ชนิด Guide</label><select id="g_support">'+opt(G_SUP)+'</select></div>'+
+  '<div><label>ระดับการนำทาง</label><select id="g_guided">'+opt(G_GUIDED)+'</select></div>'+
+  '<div><label>ตำแหน่งที่จะฝังรากเทียม *</label><input id="g_sites" maxlength="80" placeholder="เช่น 36, 46"></div>'+
+  '<div><label>ยี่ห้อ / รุ่น / ขนาดรากเทียม</label><input id="g_implant" maxlength="120" placeholder="เช่น Straumann BLT 4.1x10"></div>'+
+  '<div><label>ชุด Guided surgery / Sleeve ที่ใช้</label><input id="g_kit" maxlength="120" placeholder="เช่น Straumann Guided"></div>'+
+  '<div><label>ไฟล์ CBCT (DICOM)</label><select id="g_cbct">'+opt(G_CBCT)+'</select></div>'+
+  '<div class="w"><label>ลิงก์ไฟล์ CBCT / DICOM (Google Drive ฯลฯ)</label><input id="g_cbctlink" maxlength="400" placeholder="https://..."></div>'+
+  '<div><label>ไฟล์สแกน</label><select id="g_scan">'+opt(G_SCAN)+'</select></div>'+
+  '<div><label>วันผ่าตัด</label><input id="g_date" type="date"></div>'+
+  '<div class="w"><label>ตัวเลือก (ติ๊กได้หลายอัน)</label><div style="display:flex;flex-wrap:wrap;gap:6px 16px">'+G_OPT.map(function(t){ return '<label style="display:flex;gap:6px;align-items:center;margin:0"><input type="checkbox" class="g_opt" value="'+esc(t)+'" style="width:auto"> '+esc(t)+'</label>'; }).join('')+'</div></div>'+
+  '<div><label>การอนุมัติแผน</label><select id="g_approve"><option>ส่งแผนให้หมออนุมัติก่อนพิมพ์</option><option>พิมพ์ได้เลยหลังวางแผน</option></select></div>';
+}
+function guideData(){
+  var g=function(i){ return document.getElementById(i).value.trim(); };
+  return {sg_support:g('g_support'),sg_guided:g('g_guided'),sg_cbct:g('g_cbct'),sg_cbct_link:g('g_cbctlink'),sg_scan_type:g('g_scan'),sg_sites:g('g_sites'),sg_implant:g('g_implant'),sg_kit:g('g_kit'),
+    sg_opts:Array.prototype.filter.call(document.querySelectorAll('.g_opt'),function(c){return c.checked;}).map(function(c){return c.value;}).join(', '),sg_approve:g('g_approve'),sg_surgery_date:g('g_date')};
+}
+function buildForm(r,guide){
+  GUIDE=!!guide; REQ_ID=rid(); FILES=[];
   var mats=['Zirconia','Zirconia + Temp','E.max','Premill (Abutment)','PMMA / Temporary','Model / Splint','อื่นๆ (ระบุในหมายเหตุ)'];
   document.getElementById('sform').innerHTML='<div class="fm">'+
   '<div><label>ชื่อคนไข้ หรือรหัสคนไข้ *</label><input id="s_patient" maxlength="80" placeholder="ใช้ชื่อย่อหรือรหัสได้"></div>'+
   '<div><label>แพทย์</label><input id="s_doctor" maxlength="80" value="'+esc(r.doctor||'')+'"></div>'+
-  '<div><label>วัสดุ / ประเภทงาน</label><select id="s_material"><option value="">-- เลือก --</option>'+mats.map(function(m){return '<option>'+esc(m)+'</option>';}).join('')+'</select></div>'+
+  (GUIDE?guideFields()+'<input type="hidden" id="s_material"><input type="hidden" id="s_teeth"><input type="hidden" id="s_shade"><input type="hidden" id="s_qty" value="1"><input type="hidden" id="s_sys">':'')+
+  (GUIDE?'':'<div><label>วัสดุ / ประเภทงาน</label><select id="s_material"><option value="">-- เลือก --</option>'+mats.map(function(m){return '<option>'+esc(m)+'</option>';}).join('')+'</select></div>'+
   '<div><label>ตำแหน่งฟัน (ซี่) </label><input id="s_teeth" maxlength="60" placeholder="เช่น 11, 21"></div>'+
   '<div><label>สี (Shade)</label><input id="s_shade" maxlength="30" placeholder="เช่น A2"></div>'+
   '<div><label>จำนวน (ซี่)</label><input id="s_qty" type="number" min="1" max="99"></div>'+
-  '<div><label>ระบบรากฟันเทียม (ถ้ามี)</label><input id="s_sys" maxlength="80" placeholder="เช่น Dentium Superline"></div>'+
+  '<div><label>ระบบรากฟันเทียม (ถ้ามี)</label><input id="s_sys" maxlength="80" placeholder="เช่น Dentium Superline"></div>')+
   '<div><label>ต้องการงานภายในวันที่</label><input id="s_due" type="date"></div>'+
   '<div class="w"><label>ติดต่อกลับ (LINE / เบอร์โทร)</label><input id="s_contact" maxlength="80"></div>'+
   '<div class="w"><label>หมายเหตุถึงแล็บ</label><textarea id="s_note" maxlength="600"></textarea></div>'+
@@ -166,14 +189,15 @@ async function send(){
   if(SENDING) return; var msg=document.getElementById('s_msg'), g=function(i){ return document.getElementById(i).value.trim(); };
   msg.className='msg'; msg.textContent='';
   if(!g('s_patient')){ msg.textContent=SERR.need_patient; msg.className='msg bad'; return; }
-  if(!FILES.length && !g('s_links')){ msg.textContent=SERR.need_file; msg.className='msg bad'; return; }
+  if(GUIDE && !g('g_sites')){ msg.textContent='กรุณากรอกตำแหน่งที่จะฝังรากเทียม'; msg.className='msg bad'; return; }
+  if(!FILES.length && !g('s_links') && !(GUIDE && g('g_cbctlink'))){ msg.textContent=SERR.need_file; msg.className='msg bad'; return; }
   if(!document.getElementById('s_ok').checked){ msg.textContent='กรุณาติ๊กยืนยันความยินยอมของผู้ป่วย'; msg.className='msg bad'; return; }
   SENDING=true; var btn=document.getElementById('s_go'); btn.disabled=true; btn.textContent='กำลังส่ง…'; drawFiles();
   for(var i=0;i<FILES.length;i++){ if(FILES[i].state==='ok') continue; var e=await upOne(FILES[i]); if(e){ msg.textContent=(SERR[e]||'อัปโหลด '+FILES[i].file.name+' ไม่สำเร็จ')+' — กดส่งอีกครั้งเพื่อลองใหม่ (ไฟล์ที่สำเร็จแล้วไม่ต้องส่งซ้ำ)'; msg.className='msg bad'; SENDING=false; btn.disabled=false; btn.textContent='ส่งงานให้แล็บ'; drawFiles(); return; } }
-  var r; try{ r=await api({action:'clientSubmit',code:CODE,request_id:REQ_ID,patient:g('s_patient'),doctor:g('s_doctor'),material:g('s_material'),teeth:g('s_teeth'),shade:g('s_shade'),qty:g('s_qty'),implant_system:g('s_sys'),due_date:g('s_due'),contact:g('s_contact'),note:g('s_note'),links:g('s_links'),files:FILES.map(function(x){return {id:x.id};})}); }catch(e){ r=null; }
+  var r; try{ r=await api({action:'clientSubmit',code:CODE,request_id:REQ_ID,patient:g('s_patient'),doctor:g('s_doctor'),material:g('s_material'),teeth:g('s_teeth'),shade:g('s_shade'),qty:g('s_qty'),implant_system:g('s_sys'),due_date:g('s_due'),contact:g('s_contact'),note:g('s_note'),links:g('s_links'),guide:(GUIDE?guideData():undefined),files:FILES.map(function(x){return {id:x.id};})}); }catch(e){ r=null; }
   SENDING=false; btn.disabled=false; btn.textContent='ส่งงานให้แล็บ';
   if(!r||!r.ok){ msg.textContent=SERR[(r&&r.error)||'network']||'ส่งไม่สำเร็จ ลองใหม่อีกครั้ง'; msg.className='msg bad'; drawFiles(); return; }
-  document.getElementById('sform').innerHTML='<div class="msg ok">✓ ส่งงานให้แล็บแล้ว แล็บจะตรวจสอบและรับเข้าระบบ คุณดูสถานะได้ในรายการด้านล่าง</div>'; FILES=[];
+  document.getElementById('sform').innerHTML='<div class="msg ok">✓ ส่งงานให้แล็บแล้ว แล็บจะตรวจสอบและรับเข้าระบบ'+(GUIDE?' แล้ววางแผนใน 3Shape ส่งให้คุณอนุมัติ':'')+' คุณดูสถานะได้ในรายการด้านล่าง</div>'; FILES=[];
   api({action:'clientRequests',code:CODE}).then(function(q){ if(q&&q.ok) document.getElementById('slist').innerHTML=reqList(q.requests); });
 }
 function go(){
