@@ -1171,7 +1171,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-10-27 รุ่น 166 (ตารางเวลาแยกกลุ่มแมส · ตารางเวลาซ่อนชื่อได้ · รายการสั่ง Osstem Transfer Abutment รหัส TSTA ใหม่ · รายการสั่ง Neodent ตามใบสั่งสินค้าจริง · PDF สรุปคูปองไม่ขึ้นหน้าใหม่ทุกคลินิก · คูปองรายหมอแยกสถานะ รออนุมัติ/อนุมัติ/ใช้แล้ว คนละสี · ฟอร์มรับงาน Surgical Guide (3Shape) · หน้าคลินิกแสดงส่งมอบแล้วเมื่อขั้นตอน DELIVERY เสร็จ · แชทลบอัตโนมัติทุกเที่ยงคืน · ตารางเวลาเข้า-ออกงานรายคน รายวัน + คัดลอกส่ง LINE · เปลี่ยนประเภทคูปองของเคสได้ในรายการเคสรายหมอ · แยกคลินิกรหัสคล้ายกัน เช่น BPDC/BWDC ไม่รวมคูปองกัน · แก้ประเภทคูปองในประวัติการให้คูปองได้ · ห้องประชุมในผังแล็บ เปิดแชททั้งร้าน · ใบเตือน: ช่องเซ็น กรรมการบริษัท + ใช้ชื่อจริงภาษาไทย · ใบเตือนแบบติ๊ก + พิมพ์ A4 · ใบเตือนพนักงาน: คลิกตัวละครในผังแล็บ (แอดมิน/CEO) · เมนู 🔔 แจ้ง: แจ้งปัญหาเคส ไฟล์มีปัญหา/ระงับ/ยกเลิก · DEW เช็กอินได้ทุกที่ · คนส่งของเช็กอินที่ไหนก็ได้ · ผังแล็บจัดห้องตามที่กำหนด + ซ่อน CEO + ไฟเขียวคนเช็กอิน · กำหนดเวลาเข้า-เลิกงาน/ผ่อนผัน/วันหยุด ปรับได้ แสดงสาย-ออกก่อน · ตั้งตำแหน่งแล็บจากพิกัดที่วางได้ · แผนผังแล็บ + ลงเวลาเข้า-ออกงานตามรัศมีแล็บ · หน้าลูกค้า: เคสที่ส่งออกแล้วแยกเป็นรายเดือน เลือกเดือน/ปีได้ · หน้าลูกค้า: ปุ่มดูเคสที่ส่งออกแล้ว · โน้ต Abutment (ไซด์ที่สั่ง) แสดงในหน้าลูกค้า · หมายเหตุการให้คูปองแสดงในหน้าลูกค้า · อัปเดตระบบ: ดูเวอร์ชันล่าสุด+รายละเอียด · คูปองของหมอในหน้าลูกค้า · สรุปประจำวัน+ส่ง LINE · ลูกค้าส่งงานออนไลน์ · ปรับหน้าตาใหม่ ขาว-ดำ + โลโก้บริษัท · Premill เสร็จ → เคสวนกลับไปสแกน/ออกแบบรอบ 2 ก่อนกลึงครอบ · ใช้ของแล็บหมวด Premill → ส่งเคสเข้า MILLING Premill อัตโนมัติ · MegaGen AnyRidge Standard + Ti blank · MegaGen BlueDiamond NC/RC ครบตามแคตตาล็อก (Octa/Bridge, Ti blank, AXA, EZ Post) · รหัสเว็บลูกค้าเฉพาะหมอ (หมอทำหลายคลินิก) · แคตตาล็อก Abutment: Camlog CONELOG Ti-base CAD/CAM · แก้ปุ่ม เปิดใช้ขั้นตอนนี้ ของ MILLING lane ให้เคสเข้าคิวจริง · 💰 รายรับ-รายจ่าย เฉพาะ CEO · ปุ่ม 📊 ภาพรวมคงเหลือในคลัง · สิทธิ์ แผนกสต็อก: เพิ่ม/ลดของได้ ไม่เห็นราคา · ประวัติเพิ่ม/ลดจำนวนคลัง ใครทำ เมื่อไหร่ เหตุผล · เลือกใช้ของแล็บในฟอร์ม Abutment ดึงโค้ด+ชื่อ และตัดคลัง · ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
+const APP_VERSION = "2026-10-27 รุ่น 167 (ขาดงานบ่อยขึ้นแดง · แมสไม่นับสาย · ตารางเวลาแยกกลุ่มแมส · ตารางเวลาซ่อนชื่อได้ · รายการสั่ง Osstem Transfer Abutment รหัส TSTA ใหม่ · รายการสั่ง Neodent ตามใบสั่งสินค้าจริง · PDF สรุปคูปองไม่ขึ้นหน้าใหม่ทุกคลินิก · คูปองรายหมอแยกสถานะ รออนุมัติ/อนุมัติ/ใช้แล้ว คนละสี · ฟอร์มรับงาน Surgical Guide (3Shape) · หน้าคลินิกแสดงส่งมอบแล้วเมื่อขั้นตอน DELIVERY เสร็จ · แชทลบอัตโนมัติทุกเที่ยงคืน · ตารางเวลาเข้า-ออกงานรายคน รายวัน + คัดลอกส่ง LINE · เปลี่ยนประเภทคูปองของเคสได้ในรายการเคสรายหมอ · แยกคลินิกรหัสคล้ายกัน เช่น BPDC/BWDC ไม่รวมคูปองกัน · แก้ประเภทคูปองในประวัติการให้คูปองได้ · ห้องประชุมในผังแล็บ เปิดแชททั้งร้าน · ใบเตือน: ช่องเซ็น กรรมการบริษัท + ใช้ชื่อจริงภาษาไทย · ใบเตือนแบบติ๊ก + พิมพ์ A4 · ใบเตือนพนักงาน: คลิกตัวละครในผังแล็บ (แอดมิน/CEO) · เมนู 🔔 แจ้ง: แจ้งปัญหาเคส ไฟล์มีปัญหา/ระงับ/ยกเลิก · DEW เช็กอินได้ทุกที่ · คนส่งของเช็กอินที่ไหนก็ได้ · ผังแล็บจัดห้องตามที่กำหนด + ซ่อน CEO + ไฟเขียวคนเช็กอิน · กำหนดเวลาเข้า-เลิกงาน/ผ่อนผัน/วันหยุด ปรับได้ แสดงสาย-ออกก่อน · ตั้งตำแหน่งแล็บจากพิกัดที่วางได้ · แผนผังแล็บ + ลงเวลาเข้า-ออกงานตามรัศมีแล็บ · หน้าลูกค้า: เคสที่ส่งออกแล้วแยกเป็นรายเดือน เลือกเดือน/ปีได้ · หน้าลูกค้า: ปุ่มดูเคสที่ส่งออกแล้ว · โน้ต Abutment (ไซด์ที่สั่ง) แสดงในหน้าลูกค้า · หมายเหตุการให้คูปองแสดงในหน้าลูกค้า · อัปเดตระบบ: ดูเวอร์ชันล่าสุด+รายละเอียด · คูปองของหมอในหน้าลูกค้า · สรุปประจำวัน+ส่ง LINE · ลูกค้าส่งงานออนไลน์ · ปรับหน้าตาใหม่ ขาว-ดำ + โลโก้บริษัท · Premill เสร็จ → เคสวนกลับไปสแกน/ออกแบบรอบ 2 ก่อนกลึงครอบ · ใช้ของแล็บหมวด Premill → ส่งเคสเข้า MILLING Premill อัตโนมัติ · MegaGen AnyRidge Standard + Ti blank · MegaGen BlueDiamond NC/RC ครบตามแคตตาล็อก (Octa/Bridge, Ti blank, AXA, EZ Post) · รหัสเว็บลูกค้าเฉพาะหมอ (หมอทำหลายคลินิก) · แคตตาล็อก Abutment: Camlog CONELOG Ti-base CAD/CAM · แก้ปุ่ม เปิดใช้ขั้นตอนนี้ ของ MILLING lane ให้เคสเข้าคิวจริง · 💰 รายรับ-รายจ่าย เฉพาะ CEO · ปุ่ม 📊 ภาพรวมคงเหลือในคลัง · สิทธิ์ แผนกสต็อก: เพิ่ม/ลดของได้ ไม่เห็นราคา · ประวัติเพิ่ม/ลดจำนวนคลัง ใครทำ เมื่อไหร่ เหตุผล · เลือกใช้ของแล็บในฟอร์ม Abutment ดึงโค้ด+ชื่อ และตัดคลัง · ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -7435,6 +7435,10 @@ init();
 
 // ---------- 🆕 อัปเดตระบบ (admin / CEO): เวอร์ชันล่าสุด + รายละเอียดที่เพิ่ม (ใหม่สุดอยู่บน) ----------
 const CHANGELOG = [
+  { rev: 167, server: 56, title: 'แมสไม่นับสาย + ขาดงานบ่อยขึ้นแดง', items: [
+    'ตารางเวลา: คนที่ขาดงาน 3 วันขึ้นไปในช่วงที่เลือก ชื่อจะขึ้นสีแดง ⚠ พร้อมจำนวนวันขาด และช่องวันที่ขาดขึ้นคำว่า ขาด (นับเฉพาะวันทำงานตามที่ตั้งไว้ และไม่นับคนที่ไม่มีข้อมูลเช็กอินเลย)',
+    'คนที่เป็นแมส/คนส่งของ (เช่น TUCK, MON) ไม่ถูกนับว่ามาสายในตารางเวลา ข้อความ LINE และหน้าเช็กอินของเขา (ต้องวาง Apps Script รุ่น 56 ด้วยจึงมีผลกับหน้าเช็กอิน)'
+  ] },
   { rev: 166, server: 55, title: 'ตารางเวลา: แยกกลุ่มแมส', items: [
     'ในตารางเวลาเข้า-ออกงานและข้อความ LINE แยกกลุ่ม "🛵 แมส" ไว้ท้ายตาราง (TUCK, MON และใครที่แผนกมีคำว่า แมส)'
   ] },
@@ -7712,9 +7716,17 @@ async function renderAttend(){
   tbl.innerHTML = '<tr><td class="empty">กำลังโหลด…</td></tr>';
   const r = r0;
   if(!r || !r.ok){ tbl.innerHTML = '<tr><td class="empty">โหลดไม่สำเร็จ' + (r && r.error === 'forbidden' ? ' (ไม่มีสิทธิ์)' : '') + '</td></tr>'; return; }
-  ATT_ROWS = r.rows || []; attSetView(ATT_VIEW);
+  ATT_ROWS = r.rows || []; ATT_WH = r.wh || null; attSetView(ATT_VIEW);
 }
-let ATT_VIEW = 'grid';
+let ATT_VIEW = 'grid', ATT_WH = null;
+const ATT_ABS_WARN = 3;      // ขาดตั้งแต่กี่วันในช่วงที่เลือก ถึงขึ้นแดงเตือน
+// วันทำงานตามที่ตั้งไว้ (วันในสัปดาห์ + วันหยุด) นับถึงวันนี้ และเริ่มนับจากวันแรกที่มีใครลงเวลาในข้อมูล (กันนับก่อนเริ่มใช้ระบบ)
+function attAbsentDays(n, days, by){
+  const wh = ATT_WH || {days:[1, 2, 3, 4, 5], holidays:[]}, today = todayLocal();
+  const first = ATT_ROWS.reduce((m, r)=>(r.in_at && (!m || r.date < m)) ? r.date : m, '');
+  if(!first || !Object.values(by[n] || {}).some(r=>r.in_at)) return [];      // ไม่มีข้อมูลเลย = ไม่ตัดสิน (อาจไม่ได้ใช้ระบบเช็กอิน)
+  return days.filter(d=>d >= first && d <= today && (wh.days || []).includes(new Date(d + 'T00:00:00').getDay()) && !(wh.holidays || []).includes(d) && !((by[n] || {})[d]));
+}
 function attDays(){ const f = document.getElementById('att-from').value, t = document.getElementById('att-to').value, out = []; if(!f || !t) return out; const d = new Date(f + 'T00:00:00'), e = new Date(t + 'T00:00:00'); for(let n = 0; d <= e && n < 62; n++, d.setDate(d.getDate() + 1)) out.push(ymdLocal(d)); return out; }
 function attHM(h){ const m = Math.round(h * 60); return Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0'); }
 // ชื่อที่ซ่อนจากตารางเวลา (จำในเครื่องนี้) — ค่าเริ่มต้นซ่อน PTOO, DEW ตามที่เจ้าของสั่ง
@@ -7739,14 +7751,15 @@ function drawAttGrid(){
   const firstMess = names.findIndex(attIsMess), hasLab = names.some(n=>!attIsMess(n));
   const body = names.map((n, ni)=>{
     let nd = 0, hs = 0, late = 0;
+    const absent = attAbsentDays(n, days, by), warnAbs = absent.length >= ATT_ABS_WARN;
     const tds = days.map(d=>{
-      const r = (by[n] || {})[d]; if(!r || !r.in_at) return '<td style="text-align:center;color:#999">–</td>';
-      nd++; const h = attHours(r); if(h !== null) hs += h; const isLate = r.st && r.st.kind === 'late'; if(isLate) late++;
+      const r = (by[n] || {})[d]; if(!r || !r.in_at) return absent.includes(d) ? '<td style="text-align:center;color:#c0392b;font-size:11px;background:#fff5f4">ขาด</td>' : '<td style="text-align:center;color:#999">–</td>';
+      nd++; const h = attHours(r); if(h !== null) hs += h; const isLate = r.st && r.st.kind === 'late' && !attIsMess(n); if(isLate) late++;
       const out = r.out_at ? attHhmm(r.out_at) : '', bg = !r.out_at ? '#fff3cd' : isLate ? '#fdecea' : '#e6f4ea';
       return `<td style="text-align:center;background:${bg};line-height:1.25;padding:3px 2px"><b${isLate ? ' style="color:#c0392b"' : ''}>${esc(attHhmm(r.in_at))}</b><br><small>${out ? esc(out) : 'ยังไม่ออก'}</small>${isLate ? `<br><small style="color:#c0392b">สาย ${r.st.late}</small>` : ''}</td>`;
     }).join('');
     const sep = (ni === firstMess && hasLab) ? `<tr><th colspan="${days.length + 4}" style="text-align:left;background:#eef3f2;padding:4px 8px">🛵 แมส (คนส่งของ)</th></tr>` : '';
-    return sep + `<tr><th style="text-align:left;position:sticky;left:0;background:#fff;z-index:1;white-space:nowrap">${esc(n)} <a href="#" data-att-hide="${esc(n)}" title="ซ่อนชื่อนี้จากตาราง" style="color:#bbb;text-decoration:none;font-weight:400">✕</a></th>${tds}<td style="text-align:center">${nd}</td><td style="text-align:center;white-space:nowrap">${attHM(hs)}</td><td style="text-align:center;${late ? 'color:#c0392b;font-weight:700' : ''}">${late}</td></tr>`;
+    return sep + `<tr><th style="text-align:left;position:sticky;left:0;background:#fff;z-index:1;white-space:nowrap${warnAbs ? ';color:#c0392b' : ''}">${warnAbs ? '⚠ ' : ''}${esc(n)}${warnAbs ? ' <small title="ขาดงานในช่วงที่เลือก">ขาด ' + absent.length + ' วัน</small>' : ''} <a href="#" data-att-hide="${esc(n)}" title="ซ่อนชื่อนี้จากตาราง" style="color:#bbb;text-decoration:none;font-weight:400">✕</a></th>${tds}<td style="text-align:center">${nd}</td><td style="text-align:center;white-space:nowrap">${attHM(hs)}</td><td style="text-align:center;${late ? 'color:#c0392b;font-weight:700' : ''}">${late}</td></tr>`;
   }).join('');
   box.innerHTML = `<table class="tbl" style="font-size:.82rem;border-collapse:collapse"><tr><th style="position:sticky;left:0;background:#fff;z-index:2"></th>${th}<th>วัน</th><th>ชม.</th><th>สาย</th></tr>${body}</table>
     <div class="note" style="margin-top:6px">เขียว = เข้า-ออกครบ • เหลือง = ยังไม่เช็กเอาต์ • แดง = มาสาย • – = ไม่ได้เช็กอิน • เลื่อนซ้าย-ขวาได้</div>`;
@@ -7761,7 +7774,7 @@ function attLineText(){
   names.forEach(n=>{
     const rs = days.map(d=>(by[n] || {})[d]).filter(r=>r && r.in_at); if(!rs.length) return;
     if(!mdone && attIsMess(n) && names.some(x=>!attIsMess(x))){ mdone = true; L.push('', '🛵 แมส (คนส่งของ)'); }
-    const hs = rs.reduce((a, r)=>a + (attHours(r) || 0), 0), late = rs.filter(r=>r.st && r.st.kind === 'late').length;
+    const hs = rs.reduce((a, r)=>a + (attHours(r) || 0), 0), late = attIsMess(n) ? 0 : rs.filter(r=>r.st && r.st.kind === 'late').length;
     L.push('', '• ' + n + ' — ' + rs.length + ' วัน / ' + attHM(hs) + ' ชม.' + (late ? ' / สาย ' + late + ' ครั้ง' : ''));
     rs.forEach(r=>{ const dt = new Date(r.date + 'T00:00:00'); L.push('   ' + dt.getDate() + '/' + (dt.getMonth() + 1) + ' ' + attHhmm(r.in_at) + '-' + (r.out_at ? attHhmm(r.out_at) : 'ยังไม่ออก') + (r.st && r.st.kind === 'late' ? ' (สาย ' + r.st.late + ' นาที)' : '')); });
   });
