@@ -1174,7 +1174,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-11-02 รุ่น 169 (ใส่ราคาสรุปเองในรายงานหมอ · สรุปหมอเลือกงานใหม่/งานแก้ · ปุ่ม ✓ ส่งแล้ว ในรายการค้างนาน · ขาดงานบ่อยขึ้นแดง · แมสไม่นับสาย · ตารางเวลาแยกกลุ่มแมส · ตารางเวลาซ่อนชื่อได้ · รายการสั่ง Osstem Transfer Abutment รหัส TSTA ใหม่ · รายการสั่ง Neodent ตามใบสั่งสินค้าจริง · PDF สรุปคูปองไม่ขึ้นหน้าใหม่ทุกคลินิก · คูปองรายหมอแยกสถานะ รออนุมัติ/อนุมัติ/ใช้แล้ว คนละสี · ฟอร์มรับงาน Surgical Guide (3Shape) · หน้าคลินิกแสดงส่งมอบแล้วเมื่อขั้นตอน DELIVERY เสร็จ · แชทลบอัตโนมัติทุกเที่ยงคืน · ตารางเวลาเข้า-ออกงานรายคน รายวัน + คัดลอกส่ง LINE · เปลี่ยนประเภทคูปองของเคสได้ในรายการเคสรายหมอ · แยกคลินิกรหัสคล้ายกัน เช่น BPDC/BWDC ไม่รวมคูปองกัน · แก้ประเภทคูปองในประวัติการให้คูปองได้ · ห้องประชุมในผังแล็บ เปิดแชททั้งร้าน · ใบเตือน: ช่องเซ็น กรรมการบริษัท + ใช้ชื่อจริงภาษาไทย · ใบเตือนแบบติ๊ก + พิมพ์ A4 · ใบเตือนพนักงาน: คลิกตัวละครในผังแล็บ (แอดมิน/CEO) · เมนู 🔔 แจ้ง: แจ้งปัญหาเคส ไฟล์มีปัญหา/ระงับ/ยกเลิก · DEW เช็กอินได้ทุกที่ · คนส่งของเช็กอินที่ไหนก็ได้ · ผังแล็บจัดห้องตามที่กำหนด + ซ่อน CEO + ไฟเขียวคนเช็กอิน · กำหนดเวลาเข้า-เลิกงาน/ผ่อนผัน/วันหยุด ปรับได้ แสดงสาย-ออกก่อน · ตั้งตำแหน่งแล็บจากพิกัดที่วางได้ · แผนผังแล็บ + ลงเวลาเข้า-ออกงานตามรัศมีแล็บ · หน้าลูกค้า: เคสที่ส่งออกแล้วแยกเป็นรายเดือน เลือกเดือน/ปีได้ · หน้าลูกค้า: ปุ่มดูเคสที่ส่งออกแล้ว · โน้ต Abutment (ไซด์ที่สั่ง) แสดงในหน้าลูกค้า · หมายเหตุการให้คูปองแสดงในหน้าลูกค้า · อัปเดตระบบ: ดูเวอร์ชันล่าสุด+รายละเอียด · คูปองของหมอในหน้าลูกค้า · สรุปประจำวัน+ส่ง LINE · ลูกค้าส่งงานออนไลน์ · ปรับหน้าตาใหม่ ขาว-ดำ + โลโก้บริษัท · Premill เสร็จ → เคสวนกลับไปสแกน/ออกแบบรอบ 2 ก่อนกลึงครอบ · ใช้ของแล็บหมวด Premill → ส่งเคสเข้า MILLING Premill อัตโนมัติ · MegaGen AnyRidge Standard + Ti blank · MegaGen BlueDiamond NC/RC ครบตามแคตตาล็อก (Octa/Bridge, Ti blank, AXA, EZ Post) · รหัสเว็บลูกค้าเฉพาะหมอ (หมอทำหลายคลินิก) · แคตตาล็อก Abutment: Camlog CONELOG Ti-base CAD/CAM · แก้ปุ่ม เปิดใช้ขั้นตอนนี้ ของ MILLING lane ให้เคสเข้าคิวจริง · 💰 รายรับ-รายจ่าย เฉพาะ CEO · ปุ่ม 📊 ภาพรวมคงเหลือในคลัง · สิทธิ์ แผนกสต็อก: เพิ่ม/ลดของได้ ไม่เห็นราคา · ประวัติเพิ่ม/ลดจำนวนคลัง ใครทำ เมื่อไหร่ เหตุผล · เลือกใช้ของแล็บในฟอร์ม Abutment ดึงโค้ด+ชื่อ และตัดคลัง · ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
+const APP_VERSION = "2026-11-02 รุ่น 170 (ค้นหาในหน้าสถานะแผนกหาทุกเดือน/ทุกเคส · แสดงค่าใช้จ่ายต่อเคสในตารางรายงานหมอบนหน้าจอ · ใส่ราคาสรุปเองในรายงานหมอ · สรุปหมอเลือกงานใหม่/งานแก้ · ปุ่ม ✓ ส่งแล้ว ในรายการค้างนาน · ขาดงานบ่อยขึ้นแดง · แมสไม่นับสาย · ตารางเวลาแยกกลุ่มแมส · ตารางเวลาซ่อนชื่อได้ · รายการสั่ง Osstem Transfer Abutment รหัส TSTA ใหม่ · รายการสั่ง Neodent ตามใบสั่งสินค้าจริง · PDF สรุปคูปองไม่ขึ้นหน้าใหม่ทุกคลินิก · คูปองรายหมอแยกสถานะ รออนุมัติ/อนุมัติ/ใช้แล้ว คนละสี · ฟอร์มรับงาน Surgical Guide (3Shape) · หน้าคลินิกแสดงส่งมอบแล้วเมื่อขั้นตอน DELIVERY เสร็จ · แชทลบอัตโนมัติทุกเที่ยงคืน · ตารางเวลาเข้า-ออกงานรายคน รายวัน + คัดลอกส่ง LINE · เปลี่ยนประเภทคูปองของเคสได้ในรายการเคสรายหมอ · แยกคลินิกรหัสคล้ายกัน เช่น BPDC/BWDC ไม่รวมคูปองกัน · แก้ประเภทคูปองในประวัติการให้คูปองได้ · ห้องประชุมในผังแล็บ เปิดแชททั้งร้าน · ใบเตือน: ช่องเซ็น กรรมการบริษัท + ใช้ชื่อจริงภาษาไทย · ใบเตือนแบบติ๊ก + พิมพ์ A4 · ใบเตือนพนักงาน: คลิกตัวละครในผังแล็บ (แอดมิน/CEO) · เมนู 🔔 แจ้ง: แจ้งปัญหาเคส ไฟล์มีปัญหา/ระงับ/ยกเลิก · DEW เช็กอินได้ทุกที่ · คนส่งของเช็กอินที่ไหนก็ได้ · ผังแล็บจัดห้องตามที่กำหนด + ซ่อน CEO + ไฟเขียวคนเช็กอิน · กำหนดเวลาเข้า-เลิกงาน/ผ่อนผัน/วันหยุด ปรับได้ แสดงสาย-ออกก่อน · ตั้งตำแหน่งแล็บจากพิกัดที่วางได้ · แผนผังแล็บ + ลงเวลาเข้า-ออกงานตามรัศมีแล็บ · หน้าลูกค้า: เคสที่ส่งออกแล้วแยกเป็นรายเดือน เลือกเดือน/ปีได้ · หน้าลูกค้า: ปุ่มดูเคสที่ส่งออกแล้ว · โน้ต Abutment (ไซด์ที่สั่ง) แสดงในหน้าลูกค้า · หมายเหตุการให้คูปองแสดงในหน้าลูกค้า · อัปเดตระบบ: ดูเวอร์ชันล่าสุด+รายละเอียด · คูปองของหมอในหน้าลูกค้า · สรุปประจำวัน+ส่ง LINE · ลูกค้าส่งงานออนไลน์ · ปรับหน้าตาใหม่ ขาว-ดำ + โลโก้บริษัท · Premill เสร็จ → เคสวนกลับไปสแกน/ออกแบบรอบ 2 ก่อนกลึงครอบ · ใช้ของแล็บหมวด Premill → ส่งเคสเข้า MILLING Premill อัตโนมัติ · MegaGen AnyRidge Standard + Ti blank · MegaGen BlueDiamond NC/RC ครบตามแคตตาล็อก (Octa/Bridge, Ti blank, AXA, EZ Post) · รหัสเว็บลูกค้าเฉพาะหมอ (หมอทำหลายคลินิก) · แคตตาล็อก Abutment: Camlog CONELOG Ti-base CAD/CAM · แก้ปุ่ม เปิดใช้ขั้นตอนนี้ ของ MILLING lane ให้เคสเข้าคิวจริง · 💰 รายรับ-รายจ่าย เฉพาะ CEO · ปุ่ม 📊 ภาพรวมคงเหลือในคลัง · สิทธิ์ แผนกสต็อก: เพิ่ม/ลดของได้ ไม่เห็นราคา · ประวัติเพิ่ม/ลดจำนวนคลัง ใครทำ เมื่อไหร่ เหตุผล · เลือกใช้ของแล็บในฟอร์ม Abutment ดึงโค้ด+ชื่อ และตัดคลัง · ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -4613,12 +4613,17 @@ function renderReport(){
     Object.values(rel).sort((a,b)=>b.cases - a.cases).map(x=>`<tr><td>${esc(x.n)}</td><td class="num">${x.cases}</td><td class="num">${x.qty.toLocaleString()}</td></tr>`).join('');
 
   const cases = g.rows.slice().sort((a,b)=>String(b.date_received||'').localeCompare(String(a.date_received||''))).slice(0,200);
+  const costOn = rpCostOn(), prices = costOn ? readPrices() : null, freeAll = costOn && document.getElementById('rp-cost-free').checked;
+  let ctotal = 0, cmiss = 0;
+  const body = cases.map(r=>{
+    const kind = [r.case_type === 'คูปอง' ? 'คูปอง' : 'ปกติ', r.is_rework === true ? 'งานแก้' : ''].filter(Boolean).join(' • ');
+    let cc = '';
+    if(costOn){ const c = rpCostOf(r, prices, freeAll); if(c.miss){ cmiss++; cc = '<td class="num">-</td><td class="num">⚠ ไม่มีราคา</td>'; } else { ctotal += c.amt; cc = `<td class="num">${money(c.unit)}</td><td class="num">${money(c.amt)}</td>`; } }
+    return `<tr><td>${caseLink(r)}</td><td>${esc(fmtDate(r.date_received))}</td><td>${esc(r.patient ?? '-')}</td><td>${esc(rpMaterial(r))}</td><td class="num">${esc(r.qty ?? '-')}</td><td>${esc(kind)}</td><td>${statusBadge(r)}</td>${cc}</tr>`;
+  }).join('');
+  const foot = costOn ? `<tr><td colspan="8" class="num"><b>รวมค่าใช้จ่าย</b></td><td class="num"><b>${money(ctotal)}</b></td></tr>` + (cmiss ? `<tr><td colspan="9" class="muted">⚠ ไม่มีราคา ${cmiss} เคส (ตั้งราคาในแท็บ ราคา/บิล)</td></tr>` : '') : '';
   document.getElementById('rp-cases-table').innerHTML =
-    '<tr><th>เลขเคส</th><th>วันรับงาน</th><th>คนไข้</th><th>วัสดุ</th><th class="num">ซี่</th><th>ประเภท</th><th>สถานะ</th></tr>' +
-    cases.map(r=>{
-      const kind = [r.case_type === 'คูปอง' ? 'คูปอง' : 'ปกติ', r.is_rework === true ? 'งานแก้' : ''].filter(Boolean).join(' • ');
-      return `<tr><td>${caseLink(r)}</td><td>${esc(fmtDate(r.date_received))}</td><td>${esc(r.patient ?? '-')}</td><td>${esc(rpMaterial(r))}</td><td class="num">${esc(r.qty ?? '-')}</td><td>${esc(kind)}</td><td>${statusBadge(r)}</td></tr>`;
-    }).join('');
+    '<tr><th>เลขเคส</th><th>วันรับงาน</th><th>คนไข้</th><th>วัสดุ</th><th class="num">ซี่</th><th>ประเภท</th><th>สถานะ</th>' + (costOn ? '<th class="num">ราคา/ซี่</th><th class="num">ค่าใช้จ่าย (บาท)</th>' : '') + '</tr>' + body + foot;
 }
 ['rp-by','rp-period'].forEach(id=>document.getElementById(id).addEventListener('change', ()=>{ if(id==='rp-by') RP_SELECTED = null; renderReport(); }));
 document.getElementById('rp-q').addEventListener('input', renderReport);
@@ -4773,6 +4778,12 @@ function kpiLine(a){ return `เคส ${a.cases.toLocaleString()} • ซี่
 
 // ---- Excel exports for the summary ----
 function rpCostOn(){ const c = document.getElementById('rp-cost'); return !!c && c.checked && !!CURRENT_EMPLOYEE && (isAdminUser(CURRENT_EMPLOYEE) || isCeoFin(CURRENT_EMPLOYEE)); }
+function rpCostOf(o, prices, freeAll){
+  const q = parseFloat(o.qty) || 0, free = freeAll && (o.case_type === 'คูปอง' || o.is_rework === true), cp = free ? null : casePrice(o);
+  const unit = free ? 0 : (cp !== null ? (q > 0 ? round2(cp / q) : cp) : priceFor(prices, rpName(o, 'clinic'), rpMaterial(o)));
+  if(!free && unit === null) return {miss:true, unit:null, amt:0};
+  return {miss:false, unit, amt: cp !== null && !free ? round2(cp) : round2(q * (unit || 0))};
+}
 function rpCaseRows(rows){
   let out = rpCaseRowsAll(rows);
   if(rpCostOn()){      // ค่าใช้จ่ายต่อเคส = ราคาตามเคส หรือ ราคา/ซี่ ของคลินิก/มาตรฐาน × ซี่ (ตามตารางราคาในแท็บ ราคา/บิล)
@@ -4781,11 +4792,10 @@ function rpCaseRows(rows){
     let total = 0, miss = 0;
     out = out.map((r, i)=>{
       if(i === 0) return r.concat(['ราคา/ซี่ (บาท)', 'ค่าใช้จ่าย (บาท)']);
-      const o = sorted[i - 1], q = parseFloat(o.qty) || 0, free = freeAll && (o.case_type === 'คูปอง' || o.is_rework === true), cp = free ? null : casePrice(o);
-      const unit = free ? 0 : (cp !== null ? (q > 0 ? round2(cp / q) : cp) : priceFor(prices, rpName(o, 'clinic'), rpMaterial(o)));
-      if(!free && unit === null){ miss++; return r.concat(['⚠ ไม่มีราคา', '']); }
-      const amt = cp !== null && !free ? round2(cp) : round2(q * (unit || 0)); total += amt;
-      return r.concat([unit, amt]);
+      const c = rpCostOf(sorted[i - 1], prices, freeAll);
+      if(c.miss){ miss++; return r.concat(['⚠ ไม่มีราคา', '']); }
+      total += c.amt;
+      return r.concat([c.unit, c.amt]);
     });
     const w = out[0].length, pad = n=>new Array(n).fill('');
     out.push(pad(w - 2).concat(['รวมค่าใช้จ่าย', round2(total)]));
@@ -6067,11 +6077,11 @@ function renderDept(){
     return;
   }
   const viewOnly = !(isAdminUser(CURRENT_EMPLOYEE) || allowedDeptKeys().includes(CURRENT_DEPT));      // another department: look only (the server still checks permissions)
-  const data = allData();
   const q = document.getElementById('dep-f-text').value.trim().toLowerCase();
+  const data = q ? NEW_ORDERS.concat(HISTORICAL).map(withEffectiveStatus) : allData();      // ค้นหา = หาทุกเดือน
   const stFilter = document.getElementById('dep-f-status').value;
   let rows = data.map(r=>({r, rec: depRecord(r, CURRENT_DEPT)}));
-  rows = rows.filter(x=>x.rec.status !== 'ไม่เกี่ยวข้อง' || stFilter==='ไม่เกี่ยวข้อง');
+  rows = rows.filter(x=>q || x.rec.status !== 'ไม่เกี่ยวข้อง' || stFilter==='ไม่เกี่ยวข้อง');      // ค้นหา = แสดงแม้แผนกนี้ไม่เกี่ยวข้อง
   if(q) rows = rows.filter(x=>[x.r.case_id,x.r.patient,x.r.clinic].some(v=>v && String(v).toLowerCase().includes(q)));
   if(stFilter) rows = rows.filter(x=>x.rec.status===stFilter);
   const queueN = rows.filter(x=>isActiveAt(x.r, CURRENT_DEPT)).length;
@@ -7486,6 +7496,7 @@ init();
 
 // ---------- 🆕 อัปเดตระบบ (admin / CEO): เวอร์ชันล่าสุด + รายละเอียดที่เพิ่ม (ใหม่สุดอยู่บน) ----------
 const CHANGELOG = [
+  { rev: 170, server: 57, title: 'แสดงค่าใช้จ่ายต่อเคสบนหน้าจอรายงาน', items: ['ช่องค้นหาในหน้า สถานะแผนก หาเคสทุกเดือน แม้แผนกนั้นไม่เกี่ยวข้อง', 'ติ๊ก "ใส่ค่าใช้จ่ายต่อเคส" แล้วตารางรายการเคสแสดงราคา/ซี่ + ค่าใช้จ่าย + ยอดรวมทันที (เฉพาะแอดมิน/CEO)'] },
   { rev: 169, server: 57, title: 'ราคาสรุปในรายงานหมอ/คลินิก', items: [
     'สรุปหมอ / คลินิก: ติ๊ก "ใส่ค่าใช้จ่ายต่อเคส" เพื่อให้รายการเคสใน PDF/Excel/CSV มีราคา/ซี่ + ค่าใช้จ่ายต่อเคส และรวมท้ายตาราง (ใช้ให้คลินิกหักค่า DF หมอ; ราคาตามตารางราคา/ราคาตามเคส; คูปอง/งานแก้ไม่คิดเงินถ้าติ๊ก; เห็นเฉพาะแอดมิน/การเงิน)',
     'สรุปหมอ / คลินิก (รายคน): ช่อง 💰 ราคาสรุป ใส่เองได้ (แอดมิน/การเงินเท่านั้น) — พิมพ์ท้าย PDF และอยู่ในชีตสรุปของ Excel'
