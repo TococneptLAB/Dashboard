@@ -729,7 +729,7 @@
           <option value="all">ทั้งหมด</option>
         </select>
         <input id="rp-q" placeholder="ค้นหาชื่อ">
-        <label class="rp-chk"><input type="checkbox" id="rp-new" checked> งานใหม่</label> <label class="rp-chk"><input type="checkbox" id="rp-fix" checked> งานแก้</label> <label class="rp-chk"><input type="checkbox" id="rp-ship" checked> ใส่วันส่งงานจริงในรายการเคส</label>
+        <label class="rp-chk"><input type="checkbox" id="rp-new" checked> งานใหม่</label> <label class="rp-chk"><input type="checkbox" id="rp-fix" checked> งานแก้</label> <label class="rp-chk"><input type="checkbox" id="rp-ship" checked> ใส่วันส่งงานจริงในรายการเคส</label> <span id="rp-cost-wrap" style="display:none"><label class="rp-chk"><input type="checkbox" id="rp-cost"> ใส่ค่าใช้จ่ายต่อเคส (สำหรับคลินิกหักค่า DF หมอ)</label> <label class="rp-chk"><input type="checkbox" id="rp-cost-free" checked> คูปอง/งานแก้ = ไม่คิดเงิน</label></span>
         <button class="btn primary" id="rp-xlsx-overview">⬇ Excel: สรุปทั้งหมด</button>
         <button class="btn ghost" id="rp-xlsx-each">⬇ Excel: แยกชีทต่อคน</button>
         <button class="btn primary" id="rp-pdf-overview">🖨 PDF: สรุปทั้งหมด</button>
@@ -743,6 +743,7 @@
     <div class="card" id="rp-detail-card" style="display:none">
       <h2 id="rp-detail-title"></h2>
       <div class="filters"><button class="btn primary" id="rp-xlsx-detail">⬇ Excel: สรุปคนนี้ (รายเดือน + รายการเคส)</button> <button class="btn primary" id="rp-pdf-detail">🖨 PDF: สรุปคนนี้</button> <button class="btn ghost" id="rp-csv-detail">⬇ CSV (รายเดือน)</button></div>
+      <div class="filters" id="rp-sum-box" style="display:none"><label for="rp-sumprice" style="font-weight:700">💰 ราคาสรุป (ใส่เอง)</label><input type="number" min="0" step="any" id="rp-sumprice" placeholder="บาท" style="max-width:150px"><input id="rp-sumnote" placeholder="หมายเหตุ เช่น หลังหักส่วนลด (ไม่ใส่ก็ได้)" style="min-width:220px"><span class="note" style="margin:0">ใส่แล้วจะพิมพ์ท้าย PDF และอยู่ในชีตสรุปของ Excel ของคนนี้ (จำไว้ในเครื่องนี้)</span></div>
       <div class="sub">แต่ละเดือนทำอะไรไปบ้าง</div>
       <div class="tablewrap"><table id="rp-month-table"></table></div>
       <div class="sub" id="rp-rel-title"></div>
@@ -1173,7 +1174,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-11-02 รุ่น 168 (สรุปหมอเลือกงานใหม่/งานแก้ · ปุ่ม ✓ ส่งแล้ว ในรายการค้างนาน · ขาดงานบ่อยขึ้นแดง · แมสไม่นับสาย · ตารางเวลาแยกกลุ่มแมส · ตารางเวลาซ่อนชื่อได้ · รายการสั่ง Osstem Transfer Abutment รหัส TSTA ใหม่ · รายการสั่ง Neodent ตามใบสั่งสินค้าจริง · PDF สรุปคูปองไม่ขึ้นหน้าใหม่ทุกคลินิก · คูปองรายหมอแยกสถานะ รออนุมัติ/อนุมัติ/ใช้แล้ว คนละสี · ฟอร์มรับงาน Surgical Guide (3Shape) · หน้าคลินิกแสดงส่งมอบแล้วเมื่อขั้นตอน DELIVERY เสร็จ · แชทลบอัตโนมัติทุกเที่ยงคืน · ตารางเวลาเข้า-ออกงานรายคน รายวัน + คัดลอกส่ง LINE · เปลี่ยนประเภทคูปองของเคสได้ในรายการเคสรายหมอ · แยกคลินิกรหัสคล้ายกัน เช่น BPDC/BWDC ไม่รวมคูปองกัน · แก้ประเภทคูปองในประวัติการให้คูปองได้ · ห้องประชุมในผังแล็บ เปิดแชททั้งร้าน · ใบเตือน: ช่องเซ็น กรรมการบริษัท + ใช้ชื่อจริงภาษาไทย · ใบเตือนแบบติ๊ก + พิมพ์ A4 · ใบเตือนพนักงาน: คลิกตัวละครในผังแล็บ (แอดมิน/CEO) · เมนู 🔔 แจ้ง: แจ้งปัญหาเคส ไฟล์มีปัญหา/ระงับ/ยกเลิก · DEW เช็กอินได้ทุกที่ · คนส่งของเช็กอินที่ไหนก็ได้ · ผังแล็บจัดห้องตามที่กำหนด + ซ่อน CEO + ไฟเขียวคนเช็กอิน · กำหนดเวลาเข้า-เลิกงาน/ผ่อนผัน/วันหยุด ปรับได้ แสดงสาย-ออกก่อน · ตั้งตำแหน่งแล็บจากพิกัดที่วางได้ · แผนผังแล็บ + ลงเวลาเข้า-ออกงานตามรัศมีแล็บ · หน้าลูกค้า: เคสที่ส่งออกแล้วแยกเป็นรายเดือน เลือกเดือน/ปีได้ · หน้าลูกค้า: ปุ่มดูเคสที่ส่งออกแล้ว · โน้ต Abutment (ไซด์ที่สั่ง) แสดงในหน้าลูกค้า · หมายเหตุการให้คูปองแสดงในหน้าลูกค้า · อัปเดตระบบ: ดูเวอร์ชันล่าสุด+รายละเอียด · คูปองของหมอในหน้าลูกค้า · สรุปประจำวัน+ส่ง LINE · ลูกค้าส่งงานออนไลน์ · ปรับหน้าตาใหม่ ขาว-ดำ + โลโก้บริษัท · Premill เสร็จ → เคสวนกลับไปสแกน/ออกแบบรอบ 2 ก่อนกลึงครอบ · ใช้ของแล็บหมวด Premill → ส่งเคสเข้า MILLING Premill อัตโนมัติ · MegaGen AnyRidge Standard + Ti blank · MegaGen BlueDiamond NC/RC ครบตามแคตตาล็อก (Octa/Bridge, Ti blank, AXA, EZ Post) · รหัสเว็บลูกค้าเฉพาะหมอ (หมอทำหลายคลินิก) · แคตตาล็อก Abutment: Camlog CONELOG Ti-base CAD/CAM · แก้ปุ่ม เปิดใช้ขั้นตอนนี้ ของ MILLING lane ให้เคสเข้าคิวจริง · 💰 รายรับ-รายจ่าย เฉพาะ CEO · ปุ่ม 📊 ภาพรวมคงเหลือในคลัง · สิทธิ์ แผนกสต็อก: เพิ่ม/ลดของได้ ไม่เห็นราคา · ประวัติเพิ่ม/ลดจำนวนคลัง ใครทำ เมื่อไหร่ เหตุผล · เลือกใช้ของแล็บในฟอร์ม Abutment ดึงโค้ด+ชื่อ และตัดคลัง · ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
+const APP_VERSION = "2026-11-02 รุ่น 169 (ใส่ราคาสรุปเองในรายงานหมอ · สรุปหมอเลือกงานใหม่/งานแก้ · ปุ่ม ✓ ส่งแล้ว ในรายการค้างนาน · ขาดงานบ่อยขึ้นแดง · แมสไม่นับสาย · ตารางเวลาแยกกลุ่มแมส · ตารางเวลาซ่อนชื่อได้ · รายการสั่ง Osstem Transfer Abutment รหัส TSTA ใหม่ · รายการสั่ง Neodent ตามใบสั่งสินค้าจริง · PDF สรุปคูปองไม่ขึ้นหน้าใหม่ทุกคลินิก · คูปองรายหมอแยกสถานะ รออนุมัติ/อนุมัติ/ใช้แล้ว คนละสี · ฟอร์มรับงาน Surgical Guide (3Shape) · หน้าคลินิกแสดงส่งมอบแล้วเมื่อขั้นตอน DELIVERY เสร็จ · แชทลบอัตโนมัติทุกเที่ยงคืน · ตารางเวลาเข้า-ออกงานรายคน รายวัน + คัดลอกส่ง LINE · เปลี่ยนประเภทคูปองของเคสได้ในรายการเคสรายหมอ · แยกคลินิกรหัสคล้ายกัน เช่น BPDC/BWDC ไม่รวมคูปองกัน · แก้ประเภทคูปองในประวัติการให้คูปองได้ · ห้องประชุมในผังแล็บ เปิดแชททั้งร้าน · ใบเตือน: ช่องเซ็น กรรมการบริษัท + ใช้ชื่อจริงภาษาไทย · ใบเตือนแบบติ๊ก + พิมพ์ A4 · ใบเตือนพนักงาน: คลิกตัวละครในผังแล็บ (แอดมิน/CEO) · เมนู 🔔 แจ้ง: แจ้งปัญหาเคส ไฟล์มีปัญหา/ระงับ/ยกเลิก · DEW เช็กอินได้ทุกที่ · คนส่งของเช็กอินที่ไหนก็ได้ · ผังแล็บจัดห้องตามที่กำหนด + ซ่อน CEO + ไฟเขียวคนเช็กอิน · กำหนดเวลาเข้า-เลิกงาน/ผ่อนผัน/วันหยุด ปรับได้ แสดงสาย-ออกก่อน · ตั้งตำแหน่งแล็บจากพิกัดที่วางได้ · แผนผังแล็บ + ลงเวลาเข้า-ออกงานตามรัศมีแล็บ · หน้าลูกค้า: เคสที่ส่งออกแล้วแยกเป็นรายเดือน เลือกเดือน/ปีได้ · หน้าลูกค้า: ปุ่มดูเคสที่ส่งออกแล้ว · โน้ต Abutment (ไซด์ที่สั่ง) แสดงในหน้าลูกค้า · หมายเหตุการให้คูปองแสดงในหน้าลูกค้า · อัปเดตระบบ: ดูเวอร์ชันล่าสุด+รายละเอียด · คูปองของหมอในหน้าลูกค้า · สรุปประจำวัน+ส่ง LINE · ลูกค้าส่งงานออนไลน์ · ปรับหน้าตาใหม่ ขาว-ดำ + โลโก้บริษัท · Premill เสร็จ → เคสวนกลับไปสแกน/ออกแบบรอบ 2 ก่อนกลึงครอบ · ใช้ของแล็บหมวด Premill → ส่งเคสเข้า MILLING Premill อัตโนมัติ · MegaGen AnyRidge Standard + Ti blank · MegaGen BlueDiamond NC/RC ครบตามแคตตาล็อก (Octa/Bridge, Ti blank, AXA, EZ Post) · รหัสเว็บลูกค้าเฉพาะหมอ (หมอทำหลายคลินิก) · แคตตาล็อก Abutment: Camlog CONELOG Ti-base CAD/CAM · แก้ปุ่ม เปิดใช้ขั้นตอนนี้ ของ MILLING lane ให้เคสเข้าคิวจริง · 💰 รายรับ-รายจ่าย เฉพาะ CEO · ปุ่ม 📊 ภาพรวมคงเหลือในคลัง · สิทธิ์ แผนกสต็อก: เพิ่ม/ลดของได้ ไม่เห็นราคา · ประวัติเพิ่ม/ลดจำนวนคลัง ใครทำ เมื่อไหร่ เหตุผล · เลือกใช้ของแล็บในฟอร์ม Abutment ดึงโค้ด+ชื่อ และตัดคลัง · ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -4524,6 +4525,7 @@ function renderReport(){
   const by = byEl.value;
   const pd = rpPeriod();
   const q = document.getElementById('rp-q').value.trim().toLowerCase();
+  { const cw = document.getElementById('rp-cost-wrap'); if(cw) cw.style.display = (CURRENT_EMPLOYEE && (isAdminUser(CURRENT_EMPLOYEE) || isCeoFin(CURRENT_EMPLOYEE))) ? '' : 'none'; }
   const wantNew = document.getElementById('rp-new').checked, wantFix = document.getElementById('rp-fix').checked;     // งานใหม่ / งานแก้ (ติ๊กได้ทั้งคู่)
   const all = NEW_ORDERS.concat(HISTORICAL).map(withEffectiveStatus).filter(r=>pd.test(monthKeyOf(r)) && (r.is_rework === true ? wantFix : wantNew));
 
@@ -4581,6 +4583,9 @@ function renderReport(){
   const g = RP_SELECTED ? groups[RP_SELECTED] : null;
   if(!g){ card.style.display = 'none'; return; }
   card.style.display = '';
+  { const box = document.getElementById('rp-sum-box'), ok = !!CURRENT_EMPLOYEE && (isAdminUser(CURRENT_EMPLOYEE) || isCeoFin(CURRENT_EMPLOYEE));
+    box.style.display = ok ? '' : 'none';
+    if(ok){ const v = rpSumGet(); document.getElementById('rp-sumprice').value = v ? v.price : ''; document.getElementById('rp-sumnote').value = v ? v.note : ''; } }
   document.getElementById('rp-detail-title').textContent = `${label}: ${g.name} (${pd.label})`;
 
   const byMonth = {};
@@ -4617,7 +4622,7 @@ function renderReport(){
 }
 ['rp-by','rp-period'].forEach(id=>document.getElementById(id).addEventListener('change', ()=>{ if(id==='rp-by') RP_SELECTED = null; renderReport(); }));
 document.getElementById('rp-q').addEventListener('input', renderReport);
-['rp-new', 'rp-fix'].forEach(id=>document.getElementById(id).addEventListener('change', renderReport));
+['rp-new', 'rp-fix', 'rp-cost', 'rp-cost-free', 'rp-ship'].forEach(id=>document.getElementById(id).addEventListener('change', renderReport));
 document.getElementById('rp-csv-overview').addEventListener('click', ()=>downloadCsv('สรุป-' + (document.getElementById('rp-by').value === 'doctor' ? 'หมอ' : 'คลินิก') + '.csv', RP_CSV_OVERVIEW));
 document.getElementById('rp-csv-detail').addEventListener('click', ()=>downloadCsv('สรุปรายเดือน.csv', RP_CSV_DETAIL));
 
@@ -4767,8 +4772,26 @@ function printPdf(filename, title, sections){
 function kpiLine(a){ return `เคส ${a.cases.toLocaleString()} • ซี่ ${a.qty.toLocaleString()} • งานแก้ ${a.rework} • คูปอง ${a.coupon} • ส่งแล้ว ${a.delivered} • ค้าง ${a.pending}`; }
 
 // ---- Excel exports for the summary ----
+function rpCostOn(){ const c = document.getElementById('rp-cost'); return !!c && c.checked && !!CURRENT_EMPLOYEE && (isAdminUser(CURRENT_EMPLOYEE) || isCeoFin(CURRENT_EMPLOYEE)); }
 function rpCaseRows(rows){
-  const out = rpCaseRowsAll(rows), ship = document.getElementById('rp-ship');
+  let out = rpCaseRowsAll(rows);
+  if(rpCostOn()){      // ค่าใช้จ่ายต่อเคส = ราคาตามเคส หรือ ราคา/ซี่ ของคลินิก/มาตรฐาน × ซี่ (ตามตารางราคาในแท็บ ราคา/บิล)
+    const prices = readPrices(), freeAll = document.getElementById('rp-cost-free').checked;
+    const sorted = rows.slice().sort((a,b)=>String(b.date_received || '').localeCompare(String(a.date_received || '')));
+    let total = 0, miss = 0;
+    out = out.map((r, i)=>{
+      if(i === 0) return r.concat(['ราคา/ซี่ (บาท)', 'ค่าใช้จ่าย (บาท)']);
+      const o = sorted[i - 1], q = parseFloat(o.qty) || 0, free = freeAll && (o.case_type === 'คูปอง' || o.is_rework === true), cp = free ? null : casePrice(o);
+      const unit = free ? 0 : (cp !== null ? (q > 0 ? round2(cp / q) : cp) : priceFor(prices, rpName(o, 'clinic'), rpMaterial(o)));
+      if(!free && unit === null){ miss++; return r.concat(['⚠ ไม่มีราคา', '']); }
+      const amt = cp !== null && !free ? round2(cp) : round2(q * (unit || 0)); total += amt;
+      return r.concat([unit, amt]);
+    });
+    const w = out[0].length, pad = n=>new Array(n).fill('');
+    out.push(pad(w - 2).concat(['รวมค่าใช้จ่าย', round2(total)]));
+    if(miss) out.push(pad(w - 2).concat(['⚠ ไม่มีราคา ' + miss + ' เคส (ตั้งราคาในแท็บ ราคา/บิล)', '']));
+  }
+  const ship = document.getElementById('rp-ship');
   if(ship && !ship.checked){ const i = out[0].indexOf('วันส่งงานจริง'); if(i >= 0) return out.map(r=>r.filter((_, k)=>k !== i)); }      // ติ๊กออก = ไม่ใส่คอลัมน์วันส่งงานจริง
   return out;
 }
@@ -4795,11 +4818,18 @@ function rpRelatedRows(g){
   g.rows.forEach(r=>{ const n = rpName(r, relBy); const a = rel[n] = rel[n] || {n, cases:0, qty:0}; a.cases++; a.qty += parseFloat(r.qty) || 0; });
   return [[RP_CTX.by === 'doctor' ? 'คลินิก' : 'หมอ', 'เคส', 'ซี่']].concat(Object.values(rel).sort((a,b)=>b.cases - a.cases).map(x=>[x.n, x.cases, x.qty]));
 }
+// ราคาสรุปที่ใส่เองต่อหมอ/คลินิก + ช่วงเวลา (เฉพาะแอดมิน/การเงิน) — จำในเครื่องนี้
+function rpSumKey(){ return 'totu_rp_sum|' + (RP_CTX ? RP_CTX.by : '') + '|' + (RP_SELECTED || '') + '|' + (RP_CTX ? RP_CTX.pd.label : ''); }
+function rpSumGet(){ try{ const v = JSON.parse(localStorage.getItem(rpSumKey()) || 'null'); return v && isFinite(Number(v.price)) && String(v.price) !== '' ? {price: Number(v.price), note: String(v.note || '')} : null; }catch(e){ return null; } }
+function rpSumRows(){
+  if(!(CURRENT_EMPLOYEE && (isAdminUser(CURRENT_EMPLOYEE) || isCeoFin(CURRENT_EMPLOYEE)))) return null;
+  const v = rpSumGet(); return v ? [['รายการ', 'จำนวนเงิน (บาท)'], [v.note || 'ราคาสรุป', money(v.price)]] : null;
+}
 function exportPersonXlsx(key){
   if(!RP_CTX || !RP_CTX.groups[key]) return;
   const g = RP_CTX.groups[key];
   downloadXlsx(safeFileName(g.name + ' ' + RP_CTX.pd.label) + '.xlsx', [
-    {name:'สรุปรายเดือน', rows: rpMonthlyRows(g)},
+    {name:'สรุปรายเดือน', rows: rpMonthlyRows(g).concat(rpSumRows() ? [[]].concat(rpSumRows()) : [])},
     {name:'รายการเคส', rows: rpCaseRows(g.rows)},
     {name: RP_CTX.by === 'doctor' ? 'คลินิกที่ใช้' : 'หมอที่ส่งงาน', rows: rpRelatedRows(g)},
   ]);
@@ -4820,6 +4850,11 @@ function exportEachXlsx(){
 }
 document.getElementById('rp-xlsx-overview').addEventListener('click', exportOverviewXlsx);
 document.getElementById('rp-xlsx-each').addEventListener('click', exportEachXlsx);
+['rp-sumprice', 'rp-sumnote'].forEach(id=>document.getElementById(id).addEventListener('input', ()=>{
+  if(!RP_SELECTED) return;
+  const price = document.getElementById('rp-sumprice').value.trim(), note = document.getElementById('rp-sumnote').value.trim();
+  try{ if(price === '' && !note) localStorage.removeItem(rpSumKey()); else localStorage.setItem(rpSumKey(), JSON.stringify({price, note})); }catch(e){ /* ignore */ }
+}));
 document.getElementById('rp-xlsx-detail').addEventListener('click', ()=>{ if(RP_SELECTED) exportPersonXlsx(RP_SELECTED); });
 
 
@@ -4830,7 +4865,7 @@ function pdfPerson(key){
     {heading:'สรุปรายเดือน', kpi: kpiLine(g.agg), rows: rpMonthlyRows(g)},
     {heading: c.by === 'doctor' ? 'ส่งงานผ่านคลินิก' : 'หมอที่ส่งงาน', rows: rpRelatedRows(g)},
     {heading:'รายการเคส', rows: rpCaseRows(g.rows)},
-  ]);
+  ].concat(rpSumRows() ? [{heading:'ราคาสรุป', rows: rpSumRows()}] : []));
 }
 function pdfOverview(){
   if(!RP_CTX || !RP_CTX.list.length){ showToast('ยังไม่มีข้อมูลในช่วงเวลานี้'); return; }
@@ -7451,6 +7486,10 @@ init();
 
 // ---------- 🆕 อัปเดตระบบ (admin / CEO): เวอร์ชันล่าสุด + รายละเอียดที่เพิ่ม (ใหม่สุดอยู่บน) ----------
 const CHANGELOG = [
+  { rev: 169, server: 57, title: 'ราคาสรุปในรายงานหมอ/คลินิก', items: [
+    'สรุปหมอ / คลินิก: ติ๊ก "ใส่ค่าใช้จ่ายต่อเคส" เพื่อให้รายการเคสใน PDF/Excel/CSV มีราคา/ซี่ + ค่าใช้จ่ายต่อเคส และรวมท้ายตาราง (ใช้ให้คลินิกหักค่า DF หมอ; ราคาตามตารางราคา/ราคาตามเคส; คูปอง/งานแก้ไม่คิดเงินถ้าติ๊ก; เห็นเฉพาะแอดมิน/การเงิน)',
+    'สรุปหมอ / คลินิก (รายคน): ช่อง 💰 ราคาสรุป ใส่เองได้ (แอดมิน/การเงินเท่านั้น) — พิมพ์ท้าย PDF และอยู่ในชีตสรุปของ Excel'
+  ] },
   { rev: 168, server: 57, title: 'ปุ่ม export แยกคลินิกในหน้าคลินิก + ปิดเคสที่ส่งแล้วจากรายการค้าง', items: [
     'สรุปหมอ / คลินิก: ติ๊กเลือกได้ว่าจะดู งานใหม่ และ/หรือ งานแก้ (ตัวเลข Excel/PDF/CSV ตามที่ติ๊ก) และติ๊กได้ว่าจะใส่คอลัมน์ วันส่งงานจริง ในรายการเคสหรือไม่',
     'หน้าคลินิก/หมอ: มีปุ่มดาวน์โหลดรายการเคสเป็นไฟล์ Excel (CSV) ทั้งหมด และแยกไฟล์ตามคลินิกที่ส่งงาน (ต้องวาง Apps Script รุ่น 57)',
