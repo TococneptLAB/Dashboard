@@ -220,6 +220,7 @@ function go(){
     else if(cp===null && r.doctor) h+='<div class="cp"><div class="cpt">🎟 คูปอง</div><div class="meta">รหัสนี้เป็นรหัสเฉพาะหมอ จึงไม่แสดงคูปอง (คูปองดูได้ที่รหัสของคลินิก) หากต้องการทราบยอดคูปอง กรุณาติดต่อแล็บ</div></div>';
     else if(cp===null) h+='<div class="cp"><div class="cpt">🎟 คูปองของคลินิก</div><div class="meta">ยังไม่พบคูปองของคลินิกนี้ในระบบ หากมีคูปองอยู่ กรุณาติดต่อแล็บเพื่อตรวจสอบ</div></div>';
     var inLab=r.cases.filter(function(c){return !c.delivered;}), sent=r.cases.filter(function(c){return c.delivered;}).sort(function(a,b){return String(b.shipped_at||'').localeCompare(String(a.shipped_at||''));});
+    h+='<div id="exp" class="meta" style="margin:8px 0"></div>';
     h+='<div class="seg" id="seg"><button data-v="lab" class="on">🏭 อยู่ในแล็บ ('+inLab.length+')</button><button data-v="sent">✅ ส่งออกแล้ว ('+sent.length+')</button></div><div id="cases"></div>';
     function caseHtml(c){
       return '<div class="case'+(c.delivered?' done':'')+'"><div class="top"><span class="cid">'+esc(c.case_id)+'</span><span class="pill '+(c.delivered?'d':(/พัก/.test(c.status)?'h':''))+'">'+esc(pill(c))+'</span></div>'+
@@ -251,6 +252,22 @@ function go(){
       [].forEach.call(document.querySelectorAll('#seg button'),function(b){ b.className=b.getAttribute('data-v')===v?'on':''; });
     }
     out.innerHTML=h; initSend(r);
+    // ---- export (CSV เปิดใน Excel ได้) แยกตามคลินิกที่ส่งงาน ----
+    (function(){
+      var box=document.getElementById('exp'); if(!box||!r.cases.length) return;
+      var COLS=[['คลินิก','clinic'],['เลขเคส','case_id'],['คนไข้','patient'],['แพทย์','doctor'],['วัสดุ / ประเภทงาน','material'],['จำนวน (ซี่)','qty'],['ตำแหน่งฟัน','teeth'],['สี','shade'],['ระบบรากเทียม','implant_system'],['วันรับงาน','date_received'],['กำหนดส่งออก','ship_date'],['วันนัดคนไข้','appointment_date'],['สถานะ','_st'],['ส่งออกเมื่อ','shipped_at']];
+      function cell(v){ v=String(v==null?'':v); if(/^[=+\-@]/.test(v)) v="'"+v; return '"'+v.replace(/"/g,'""')+'"'; }
+      function stText(c){ return c.delivered?'ส่งออกแล้ว':pill(c); }
+      function csv(list){ return '\ufeff'+[COLS.map(function(x){return cell(x[0]);}).join(',')].concat(list.map(function(c){ return COLS.map(function(x){ return cell(x[1]==='_st'?stText(c):(/date|shipped/.test(x[1])&&c[x[1]]?String(c[x[1]]).slice(0,10):c[x[1]])); }).join(','); })).join('\r\n'); }
+      function save(name,list){ var b=new Blob([csv(list)],{type:'text/csv;charset=utf-8'}), a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=name+'.csv'; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },500); }
+      var by={}, names=[]; r.cases.forEach(function(c){ var k=c.clinic||r.clinic||'-'; if(!by[k]){ by[k]=[]; names.push(k); } by[k].push(c); });
+      var day=new Date().toISOString().slice(0,10);
+      var h3='<button type="button" class="go" id="exp-all" style="padding:6px 12px;font-size:13px">⬇ ดาวน์โหลดรายการเคสทั้งหมด (Excel)</button>';
+      if(names.length>1) h3+=' <span style="margin-left:6px">แยกตามคลินิก:</span> '+names.map(function(k,i){ return '<button type="button" class="go" data-exp="'+i+'" style="padding:6px 10px;font-size:12px;background:#fff;color:var(--ink);border:1px solid var(--line)">⬇ '+esc(k)+' ('+by[k].length+')</button>'; }).join(' ');
+      box.innerHTML=h3;
+      document.getElementById('exp-all').onclick=function(){ save('เคสทั้งหมด_'+day, r.cases.slice().sort(function(a,b){ return String(a.clinic||'').localeCompare(String(b.clinic||''))||String(b.date_received).localeCompare(String(a.date_received)); })); };
+      Array.prototype.forEach.call(box.querySelectorAll('[data-exp]'),function(b){ b.onclick=function(){ var k=names[+b.getAttribute('data-exp')]; save(k.replace(/[\\/:*?"<>|]/g,'_')+'_'+day, by[k]); }; });
+    })();
     [].forEach.call(document.querySelectorAll('#seg button'),function(b){ b.onclick=function(){ drawCases(b.getAttribute('data-v')); }; });
     drawCases('lab');
   }).catch(function(){ out.innerHTML=''; err.textContent='เชื่อมต่อไม่ได้ ลองใหม่อีกครั้ง'; });
