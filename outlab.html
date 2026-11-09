@@ -74,6 +74,7 @@ function card(i, kind){
   h+= kind==='done' ? '<span class="pill d">TOTU รับกลับแล้ว</span>' : kind==='back' ? '<span class="pill d">ส่งกลับแล้ว รอ TOTU รับ</span>' : i.lab_recv ? '<span class="pill">รับของแล้ว กำลังทำ</span>' : '<span class="pill w">รอรับของ</span>';
   h+='</span></div><div class="grid"><div>งาน <b>'+esc(i.what||'-')+'</b></div><div>วัสดุ <b>'+esc(i.material||'-')+'</b>'+(i.qty?' × '+esc(i.qty)+' ซี่':'')+'</div><div>ตำแหน่งฟัน <b>'+esc(i.position||'-')+'</b></div><div>สี <b>'+esc(i.color||'-')+'</b></div><div>ระบบรากเทียม <b>'+esc(i.implant_system||'-')+'</b></div><div>ส่งให้แล็บ <b>'+esc(fd(i.sent))+'</b></div><div>กำหนดส่งกลับ <b'+(late?' style="color:var(--bad)"':'')+'>'+esc(i.due?fd(i.due):'-')+'</b></div>'+(i.lab_recv?'<div>แล็บรับของ <b>'+esc(fd(i.lab_recv))+'</b></div>':'')+(i.lab_ret?'<div>แล็บส่งกลับ <b>'+esc(fd(i.lab_ret))+'</b></div>':'')+(kind==='done'?'<div>TOTU รับกลับ <b>'+esc(fd(i.back))+'</b></div>':'')+'</div>';
   if(i.note) h+='<div class="note"><b style="font-weight:500">หมายเหตุจาก TOTU:</b> '+esc(i.note)+'</div>';
+  if(i.files && i.files.length) h+='<div class="note"><b style="font-weight:500">ไฟล์งาน:</b> '+i.files.map(function(f){ return '<button class="g" style="margin:3px 6px 3px 0;padding:5px 12px;font-size:13px" data-fid="'+esc(f.id)+'" data-ref="'+esc(i.ref)+'">⬇ '+esc(f.name)+'</button>'; }).join('')+'</div>';
   if(i.lab_note) h+='<div class="ok">บันทึกของแล็บ: '+esc(i.lab_note)+(i.lab_by?' ('+esc(i.lab_by)+')':'')+'</div>';
   if(kind==='open'){
     h+='<div class="act">';
@@ -93,7 +94,26 @@ function draw(){
   document.getElementById('out').innerHTML=h;
   document.getElementById('rf').onclick=function(){ load(); };
   Array.prototype.forEach.call(document.querySelectorAll('.seg button'),function(x){ x.onclick=function(){ TAB=x.getAttribute('data-tab'); draw(); }; });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-fid]'),function(x){ x.onclick=function(){ dl(x); }; });
   Array.prototype.forEach.call(document.querySelectorAll('[data-act]'),function(x){ x.onclick=function(){ ack(x); }; });
+}
+function b64u8(b){ var bin=atob(b), u=new Uint8Array(bin.length); for(var k=0;k<bin.length;k++) u[k]=bin.charCodeAt(k); return u; }
+function dl(btn){
+  if(btn.disabled) return; var ref=btn.getAttribute('data-ref'), fid=btn.getAttribute('data-fid'), it=null;
+  (DATA.open||[]).concat(DATA.sent_back||[],DATA.done||[]).forEach(function(i){ if(i.ref===ref) it=i; });
+  var f=null; if(it) it.files.forEach(function(x){ if(x.id===fid) f=x; }); if(!f) return;
+  if(f.link){ window.open(f.link,'_blank'); return; }
+  var old=btn.textContent, chunks=[], n=1, k=0; btn.disabled=true;
+  (function next(){
+    api({action:'labFile',code:CODE,ref:ref,id:fid,index:k}).then(function(r){
+      if(!(r&&r.ok)) throw new Error(ERR[r&&r.error]||'โหลดไฟล์ไม่สำเร็จ ลองใหม่');
+      n=r.count; chunks.push(b64u8(r.data)); k++; btn.textContent='⏳ '+k+'/'+n;
+      if(k<n) return next();
+      var a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(chunks,{type:f.mime||'application/octet-stream'})); a.download=f.name;
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){ URL.revokeObjectURL(a.href); },60000);
+      btn.textContent=old; btn.disabled=false;
+    }).catch(function(e){ btn.textContent=old; btn.disabled=false; var m=document.getElementById('msg'); if(m) m.textContent=(e&&e.message)||'โหลดไฟล์ไม่สำเร็จ ลองใหม่'; });
+  })();
 }
 function ack(btn){
   if(BUSY) return; var act=btn.getAttribute('data-act'), ref=btn.getAttribute('data-ref'), note='';
