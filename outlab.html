@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>รับ-ส่งงาน แล็บนอก — TO CONCEPT LAB</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500&family=Noto+Sans+Thai:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#000;--ink:#f4f4f2;--mute:#9a9a96;--line:#2a2a2c;--accent:#5fd1c4;--warn:#e8b25a;--ok:#9fd29f;--bad:#ff8a80}
+*{box-sizing:border-box;margin:0}body{background:var(--bg);color:var(--ink);font-family:'Noto Sans Thai',system-ui,sans-serif;font-weight:300;line-height:1.6;min-height:100vh}
+.wrap{max-width:860px;margin:0 auto;padding:28px 20px 60px}
+.brand{font-family:'Montserrat',system-ui,sans-serif;letter-spacing:.28em;font-size:13px;font-weight:500;text-decoration:none;color:inherit}
+h1{font-size:26px;font-weight:400;margin:34px 0 6px}.sub{color:var(--mute);font-size:14.5px}
+.box{margin-top:22px;display:flex;gap:10px;flex-wrap:wrap}
+input,textarea{background:#0b0b0c;border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:11px 13px;font:inherit}
+#code{flex:1;min-width:200px;font-size:17px;letter-spacing:2px;text-transform:uppercase;padding:13px 14px}
+button{background:var(--ink);color:#000;border:0;border-radius:10px;padding:12px 22px;font:inherit;font-weight:500;cursor:pointer}
+button.g{background:transparent;border:1px solid var(--line);color:var(--mute);padding:8px 16px;font-size:14px}
+button:disabled{opacity:.5;cursor:wait}
+.err{color:var(--bad);margin-top:12px;min-height:24px;font-size:14.5px}
+.hd{margin-top:28px;display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px}
+.hd b{font-size:19px;font-weight:500}.hd span{color:var(--mute);font-size:13px}
+.seg{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}.seg button{background:transparent;border:1px solid var(--line);color:var(--mute);border-radius:99px;padding:9px 18px;font-size:14px}.seg button.on{background:#f4f4f0;color:#000;border-color:#f4f4f0}
+.case{border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:14px;background:#08080a}
+.top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
+.cid{font-family:'Montserrat',system-ui,sans-serif;font-weight:500;letter-spacing:.06em;font-size:18px}
+.pill{font-size:12.5px;padding:3px 12px;border-radius:99px;border:1px solid var(--accent);color:var(--accent);white-space:nowrap}
+.pill.w{border-color:var(--warn);color:var(--warn)}.pill.d{border-color:#6b8f6b;color:var(--ok)}.pill.b{border-color:var(--bad);color:var(--bad)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:6px 18px;margin-top:10px;font-size:14px}
+.grid div{color:var(--mute)}.grid b{color:var(--ink);font-weight:400}
+.note{margin-top:10px;font-size:14px;border-left:2px solid var(--warn);padding:2px 0 2px 10px}
+.act{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.act input{flex:1;min-width:180px}
+.ok{color:var(--ok);font-size:13.5px;margin-top:8px}
+.empty{color:var(--mute);margin-top:30px}
+.msg{margin-top:10px;font-size:14px;color:var(--bad)}
+footer{margin-top:50px;color:var(--mute);font-size:12.5px}
+</style></head>
+<body><div class="wrap">
+<a class="brand" href="./">TOTU CONCEPT LAB</a>
+<h1>รับ-ส่งงาน แล็บนอก</h1>
+<p class="sub">สำหรับแล็บที่รับงานจาก TOTU ใส่รหัสที่ได้รับ จะเห็นเฉพาะงานที่ส่งมาให้แล็บของท่านเท่านั้น</p>
+<form class="box" id="f"><input id="code" placeholder="รหัสแล็บ เช่น ABCDE-FGHJK" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="14"><button>เข้าดูงาน</button></form>
+<div class="err" id="err"></div>
+<div id="out"></div>
+<footer>เมื่อได้รับของ กด "รับของแล้ว" และเมื่อส่งกลับ กด "ส่งกลับแล้ว" พร้อมใส่เลขพัสดุ แล็บ TOTU จะเห็นสถานะทันที หากมีข้อสงสัยกรุณาติดต่อแล็บทาง LINE @toconcept</footer>
+</div>
+<script>
+var API = '', CODE = '', DATA = null, TAB = 'open', BUSY = false, TIMER = null;
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];}); }
+function fd(s){ if(!s) return '-'; var m=/^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}:\d{2}))?/.exec(s); return m? m[3]+'/'+m[2]+'/'+(+m[1]+543)+(m[4]?' '+m[4]:'') : s; }
+function api(o){ return fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(o)}).then(function(r){return r.json();}); }
+fetch('config.json').then(function(r){return r.json();}).then(function(c){ API=c.api_url; var q=new URLSearchParams(location.search).get('c'); if(q){ document.getElementById('code').value=q.toUpperCase(); go(); } }).catch(function(){});
+document.getElementById('f').addEventListener('submit', function(e){ e.preventDefault(); go(); });
+var ERR={invalid_code:'รหัสไม่ถูกต้อง หรือถูกปิดใช้งาน กรุณาตรวจรหัสอีกครั้ง',locked:'ใส่รหัสผิดหลายครั้ง กรุณารอ 10 นาทีแล้วลองใหม่',already_back:'TOTU รับงานนี้กลับแล้ว ไม่ต้องบันทึกเพิ่ม',not_found:'ไม่พบงานนี้ อาจถูกยกเลิก กรุณารีเฟรช',busy:'ระบบกำลังยุ่ง กรุณาลองใหม่อีกครั้ง'};
+function go(){
+  var code=document.getElementById('code').value.trim(); if(!code) return;
+  CODE=code; var err=document.getElementById('err'); err.textContent='กำลังตรวจสอบ…';
+  load(function(ok){ if(ok) err.textContent=''; });
+}
+function load(cb){
+  api({action:'labPortal',code:CODE}).then(function(r){
+    if(!r||!r.ok){ document.getElementById('err').textContent=ERR[r&&r.error]||'ระบบหลังบ้านยังไม่รองรับหน้านี้ กรุณาแจ้งแล็บ TOTU'; if(cb) cb(false); return; }
+    DATA=r; draw(); if(cb) cb(true);
+    if(!TIMER) TIMER=setInterval(function(){ if(!BUSY && !document.hidden && !document.querySelector('.act input:focus')) load(); }, 60000);
+  }).catch(function(){ document.getElementById('err').textContent='เชื่อมต่อไม่ได้ กรุณาตรวจอินเทอร์เน็ต'; if(cb) cb(false); });
+}
+function od(i){ if(!i.due||i.lab_ret||i.back) return 0; var t=new Date(); t.setHours(0,0,0,0); var d=new Date(i.due+'T00:00:00'); return d<t? Math.round((t-d)/86400000):0; }
+function card(i, kind){
+  var late=od(i), h='<div class="case"><div class="top"><span class="cid">'+esc(i.case_id)+'</span><span>';
+  if(late) h+='<span class="pill b">เกินกำหนด '+late+' วัน</span> ';
+  h+= kind==='done' ? '<span class="pill d">TOTU รับกลับแล้ว</span>' : kind==='back' ? '<span class="pill d">ส่งกลับแล้ว รอ TOTU รับ</span>' : i.lab_recv ? '<span class="pill">รับของแล้ว กำลังทำ</span>' : '<span class="pill w">รอรับของ</span>';
+  h+='</span></div><div class="grid"><div>งาน <b>'+esc(i.what||'-')+'</b></div><div>วัสดุ <b>'+esc(i.material||'-')+'</b>'+(i.qty?' × '+esc(i.qty)+' ซี่':'')+'</div><div>ตำแหน่งฟัน <b>'+esc(i.position||'-')+'</b></div><div>สี <b>'+esc(i.color||'-')+'</b></div><div>ระบบรากเทียม <b>'+esc(i.implant_system||'-')+'</b></div><div>ส่งให้แล็บ <b>'+esc(fd(i.sent))+'</b></div><div>กำหนดส่งกลับ <b'+(late?' style="color:var(--bad)"':'')+'>'+esc(i.due?fd(i.due):'-')+'</b></div>'+(i.lab_recv?'<div>แล็บรับของ <b>'+esc(fd(i.lab_recv))+'</b></div>':'')+(i.lab_ret?'<div>แล็บส่งกลับ <b>'+esc(fd(i.lab_ret))+'</b></div>':'')+(kind==='done'?'<div>TOTU รับกลับ <b>'+esc(fd(i.back))+'</b></div>':'')+'</div>';
+  if(i.note) h+='<div class="note"><b style="font-weight:500">หมายเหตุจาก TOTU:</b> '+esc(i.note)+'</div>';
+  if(i.lab_note) h+='<div class="ok">บันทึกของแล็บ: '+esc(i.lab_note)+(i.lab_by?' ('+esc(i.lab_by)+')':'')+'</div>';
+  if(kind==='open'){
+    h+='<div class="act">';
+    if(!i.lab_recv) h+='<button data-act="received" data-ref="'+esc(i.ref)+'">📥 รับของแล้ว</button>';
+    else h+='<input maxlength="150" placeholder="เลขพัสดุ / หมายเหตุ (ถ้ามี)" data-n="'+esc(i.ref)+'"><button data-act="returned" data-ref="'+esc(i.ref)+'">📤 ส่งกลับแล้ว</button><button class="g" data-act="clear" data-ref="'+esc(i.ref)+'">↩ ยกเลิกรับของ</button>';
+    h+='</div>';
+  } else if(kind==='back') h+='<div class="act"><button class="g" data-act="clear" data-ref="'+esc(i.ref)+'">↩ ยังไม่ได้ส่งกลับ (แก้ไข)</button></div>';
+  return h+'</div>';
+}
+function draw(){
+  var d=DATA, o=d.open||[], b=d.sent_back||[], dn=d.done||[];
+  var list = TAB==='open'? o : TAB==='back'? b : dn, kind = TAB==='open'?'open':TAB==='back'?'back':'done';
+  var h='<div class="hd"><b>'+esc(d.lab)+'</b><span>อัปเดตทุก 1 นาที <button class="g" id="rf" style="padding:4px 12px;font-size:12.5px">↻ รีเฟรช</button></span></div>';
+  h+='<div class="seg"><button data-tab="open" class="'+(TAB==='open'?'on':'')+'">รอทำ / อยู่ที่แล็บ ('+o.length+')</button><button data-tab="back" class="'+(TAB==='back'?'on':'')+'">ส่งกลับแล้ว ('+b.length+')</button><button data-tab="done" class="'+(TAB==='done'?'on':'')+'">เสร็จสิ้น 90 วัน ('+dn.length+')</button></div>';
+  h+='<div id="msg" class="msg"></div>';
+  h+= list.length ? list.map(function(i){ return card(i,kind); }).join('') : '<div class="empty">ไม่มีรายการ</div>';
+  document.getElementById('out').innerHTML=h;
+  document.getElementById('rf').onclick=function(){ load(); };
+  Array.prototype.forEach.call(document.querySelectorAll('.seg button'),function(x){ x.onclick=function(){ TAB=x.getAttribute('data-tab'); draw(); }; });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-act]'),function(x){ x.onclick=function(){ ack(x); }; });
+}
+function ack(btn){
+  if(BUSY) return; var act=btn.getAttribute('data-act'), ref=btn.getAttribute('data-ref'), note='';
+  if(act==='clear' && !window.confirm('ยืนยันยกเลิกสถานะที่บันทึกไว้?')) return;
+  var inp=document.querySelector('input[data-n="'+ref.replace(/["\\]/g,'')+'"]'); if(inp) note=inp.value.trim();
+  BUSY=true; btn.disabled=true;
+  api({action:'labAck',code:CODE,ref:ref,act:act,note:note}).then(function(r){
+    BUSY=false;
+    if(!r||!r.ok){ load(function(){ var m=document.getElementById('msg'); if(m) m.textContent=ERR[r&&r.error]||'บันทึกไม่สำเร็จ กรุณาลองใหม่'; }); return; }
+    if(act==='returned') TAB='open'; load();
+  }).catch(function(){ BUSY=false; btn.disabled=false; var m=document.getElementById('msg'); if(m) m.textContent='เชื่อมต่อไม่ได้ ยังไม่ได้บันทึก กรุณาลองใหม่'; });
+}
+</script>
+</body></html>

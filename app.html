@@ -1087,6 +1087,12 @@
       <div class="note">เปิดเคส → ส่วน "🏭 ส่งแล็บนอก" → กรอกชื่อแล็บ/ส่งอะไร → เคสมาอยู่ที่นี่ จนกดรับกลับ ระบบนับวันที่ค้างอยู่กับแล็บให้</div>
       <div class="tablewrap" style="max-height:560px"><table id="os-table"></table></div>
     </div>
+    <div class="card" id="os-lab-card" style="display:none">
+      <h2>🔗 ลิงก์สำหรับแล็บนอก <span class="tag">แล็บนอกเช็กงานของตัวเอง</span></h2>
+      <div class="note" id="os-lab-note"></div>
+      <div class="filters" style="margin-top:8px"><input id="os-lab-name" list="dl-labs-card" placeholder="ชื่อแล็บนอก (ตรงกับที่ใช้ตอนส่งเคส)" style="min-width:260px"><datalist id="dl-labs-card"></datalist><button class="btn primary sm" id="os-lab-make">+ สร้างรหัสให้แล็บนี้</button></div>
+      <div class="tablewrap"><table id="os-lab-codes"></table></div>
+    </div>
   </section>
 
   <!-- DELIVERY TAB -->
@@ -1177,7 +1183,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-11-02 รุ่น 179 (รายงานสรุป: ติ๊กเลือก คูปอง / ไม่ใช่คูปอง · PDF สรุปแบบสั้น: รายการเคส + ค่าใช้จ่าย · รายงานสรุปไม่แสดงจำนวนงานค้าง · ไฟล์สรุป: รายการราคารวมในบรรทัดเดียวต่อเคส กระชับขึ้น · รายงานสรุปไม่แสดงสถานะ/วันส่งงานจริง · ราคาที่ใส่เองออกใน PDF/Excel อัตโนมัติ + ชนะกฎคูปองฟรี · รายการราคามีจำนวน × ราคาต่อหน่วย · รายการราคา: ปุ่มกดเลือกชื่อรายการ หรือพิมพ์เอง · แตกรายการราคาต่อเคส (Zirconia/implant/cementation/model) + รวม ออกใน PDF/Excel · พิมพ์ราคาแต่ละเคสเองได้ในตารางรายงานหมอ · ค้นหาในหน้าสถานะแผนกหาทุกเดือน/ทุกเคส · แสดงค่าใช้จ่ายต่อเคสในตารางรายงานหมอบนหน้าจอ · ใส่ราคาสรุปเองในรายงานหมอ · สรุปหมอเลือกงานใหม่/งานแก้ · ปุ่ม ✓ ส่งแล้ว ในรายการค้างนาน · ขาดงานบ่อยขึ้นแดง · แมสไม่นับสาย · ตารางเวลาแยกกลุ่มแมส · ตารางเวลาซ่อนชื่อได้ · รายการสั่ง Osstem Transfer Abutment รหัส TSTA ใหม่ · รายการสั่ง Neodent ตามใบสั่งสินค้าจริง · PDF สรุปคูปองไม่ขึ้นหน้าใหม่ทุกคลินิก · คูปองรายหมอแยกสถานะ รออนุมัติ/อนุมัติ/ใช้แล้ว คนละสี · ฟอร์มรับงาน Surgical Guide (3Shape) · หน้าคลินิกแสดงส่งมอบแล้วเมื่อขั้นตอน DELIVERY เสร็จ · แชทลบอัตโนมัติทุกเที่ยงคืน · ตารางเวลาเข้า-ออกงานรายคน รายวัน + คัดลอกส่ง LINE · เปลี่ยนประเภทคูปองของเคสได้ในรายการเคสรายหมอ · แยกคลินิกรหัสคล้ายกัน เช่น BPDC/BWDC ไม่รวมคูปองกัน · แก้ประเภทคูปองในประวัติการให้คูปองได้ · ห้องประชุมในผังแล็บ เปิดแชททั้งร้าน · ใบเตือน: ช่องเซ็น กรรมการบริษัท + ใช้ชื่อจริงภาษาไทย · ใบเตือนแบบติ๊ก + พิมพ์ A4 · ใบเตือนพนักงาน: คลิกตัวละครในผังแล็บ (แอดมิน/CEO) · เมนู 🔔 แจ้ง: แจ้งปัญหาเคส ไฟล์มีปัญหา/ระงับ/ยกเลิก · DEW เช็กอินได้ทุกที่ · คนส่งของเช็กอินที่ไหนก็ได้ · ผังแล็บจัดห้องตามที่กำหนด + ซ่อน CEO + ไฟเขียวคนเช็กอิน · กำหนดเวลาเข้า-เลิกงาน/ผ่อนผัน/วันหยุด ปรับได้ แสดงสาย-ออกก่อน · ตั้งตำแหน่งแล็บจากพิกัดที่วางได้ · แผนผังแล็บ + ลงเวลาเข้า-ออกงานตามรัศมีแล็บ · หน้าลูกค้า: เคสที่ส่งออกแล้วแยกเป็นรายเดือน เลือกเดือน/ปีได้ · หน้าลูกค้า: ปุ่มดูเคสที่ส่งออกแล้ว · โน้ต Abutment (ไซด์ที่สั่ง) แสดงในหน้าลูกค้า · หมายเหตุการให้คูปองแสดงในหน้าลูกค้า · อัปเดตระบบ: ดูเวอร์ชันล่าสุด+รายละเอียด · คูปองของหมอในหน้าลูกค้า · สรุปประจำวัน+ส่ง LINE · ลูกค้าส่งงานออนไลน์ · ปรับหน้าตาใหม่ ขาว-ดำ + โลโก้บริษัท · Premill เสร็จ → เคสวนกลับไปสแกน/ออกแบบรอบ 2 ก่อนกลึงครอบ · ใช้ของแล็บหมวด Premill → ส่งเคสเข้า MILLING Premill อัตโนมัติ · MegaGen AnyRidge Standard + Ti blank · MegaGen BlueDiamond NC/RC ครบตามแคตตาล็อก (Octa/Bridge, Ti blank, AXA, EZ Post) · รหัสเว็บลูกค้าเฉพาะหมอ (หมอทำหลายคลินิก) · แคตตาล็อก Abutment: Camlog CONELOG Ti-base CAD/CAM · แก้ปุ่ม เปิดใช้ขั้นตอนนี้ ของ MILLING lane ให้เคสเข้าคิวจริง · 💰 รายรับ-รายจ่าย เฉพาะ CEO · ปุ่ม 📊 ภาพรวมคงเหลือในคลัง · สิทธิ์ แผนกสต็อก: เพิ่ม/ลดของได้ ไม่เห็นราคา · ประวัติเพิ่ม/ลดจำนวนคลัง ใครทำ เมื่อไหร่ เหตุผล · เลือกใช้ของแล็บในฟอร์ม Abutment ดึงโค้ด+ชื่อ และตัดคลัง · ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
+const APP_VERSION = "2026-11-09 รุ่น 181 (ลิงก์ให้แล็บนอกเช็กงาน/กดรับของ-ส่งกลับเอง (outlab.html) · คูปอง: ยกยอด ณ วันที่ — นับเฉพาะเคสที่รับหลังวันที่ยกยอด · รายงานสรุป: ติ๊กเลือก คูปอง / ไม่ใช่คูปอง · PDF สรุปแบบสั้น: รายการเคส + ค่าใช้จ่าย · รายงานสรุปไม่แสดงจำนวนงานค้าง · ไฟล์สรุป: รายการราคารวมในบรรทัดเดียวต่อเคส กระชับขึ้น · รายงานสรุปไม่แสดงสถานะ/วันส่งงานจริง · ราคาที่ใส่เองออกใน PDF/Excel อัตโนมัติ + ชนะกฎคูปองฟรี · รายการราคามีจำนวน × ราคาต่อหน่วย · รายการราคา: ปุ่มกดเลือกชื่อรายการ หรือพิมพ์เอง · แตกรายการราคาต่อเคส (Zirconia/implant/cementation/model) + รวม ออกใน PDF/Excel · พิมพ์ราคาแต่ละเคสเองได้ในตารางรายงานหมอ · ค้นหาในหน้าสถานะแผนกหาทุกเดือน/ทุกเคส · แสดงค่าใช้จ่ายต่อเคสในตารางรายงานหมอบนหน้าจอ · ใส่ราคาสรุปเองในรายงานหมอ · สรุปหมอเลือกงานใหม่/งานแก้ · ปุ่ม ✓ ส่งแล้ว ในรายการค้างนาน · ขาดงานบ่อยขึ้นแดง · แมสไม่นับสาย · ตารางเวลาแยกกลุ่มแมส · ตารางเวลาซ่อนชื่อได้ · รายการสั่ง Osstem Transfer Abutment รหัส TSTA ใหม่ · รายการสั่ง Neodent ตามใบสั่งสินค้าจริง · PDF สรุปคูปองไม่ขึ้นหน้าใหม่ทุกคลินิก · คูปองรายหมอแยกสถานะ รออนุมัติ/อนุมัติ/ใช้แล้ว คนละสี · ฟอร์มรับงาน Surgical Guide (3Shape) · หน้าคลินิกแสดงส่งมอบแล้วเมื่อขั้นตอน DELIVERY เสร็จ · แชทลบอัตโนมัติทุกเที่ยงคืน · ตารางเวลาเข้า-ออกงานรายคน รายวัน + คัดลอกส่ง LINE · เปลี่ยนประเภทคูปองของเคสได้ในรายการเคสรายหมอ · แยกคลินิกรหัสคล้ายกัน เช่น BPDC/BWDC ไม่รวมคูปองกัน · แก้ประเภทคูปองในประวัติการให้คูปองได้ · ห้องประชุมในผังแล็บ เปิดแชททั้งร้าน · ใบเตือน: ช่องเซ็น กรรมการบริษัท + ใช้ชื่อจริงภาษาไทย · ใบเตือนแบบติ๊ก + พิมพ์ A4 · ใบเตือนพนักงาน: คลิกตัวละครในผังแล็บ (แอดมิน/CEO) · เมนู 🔔 แจ้ง: แจ้งปัญหาเคส ไฟล์มีปัญหา/ระงับ/ยกเลิก · DEW เช็กอินได้ทุกที่ · คนส่งของเช็กอินที่ไหนก็ได้ · ผังแล็บจัดห้องตามที่กำหนด + ซ่อน CEO + ไฟเขียวคนเช็กอิน · กำหนดเวลาเข้า-เลิกงาน/ผ่อนผัน/วันหยุด ปรับได้ แสดงสาย-ออกก่อน · ตั้งตำแหน่งแล็บจากพิกัดที่วางได้ · แผนผังแล็บ + ลงเวลาเข้า-ออกงานตามรัศมีแล็บ · หน้าลูกค้า: เคสที่ส่งออกแล้วแยกเป็นรายเดือน เลือกเดือน/ปีได้ · หน้าลูกค้า: ปุ่มดูเคสที่ส่งออกแล้ว · โน้ต Abutment (ไซด์ที่สั่ง) แสดงในหน้าลูกค้า · หมายเหตุการให้คูปองแสดงในหน้าลูกค้า · อัปเดตระบบ: ดูเวอร์ชันล่าสุด+รายละเอียด · คูปองของหมอในหน้าลูกค้า · สรุปประจำวัน+ส่ง LINE · ลูกค้าส่งงานออนไลน์ · ปรับหน้าตาใหม่ ขาว-ดำ + โลโก้บริษัท · Premill เสร็จ → เคสวนกลับไปสแกน/ออกแบบรอบ 2 ก่อนกลึงครอบ · ใช้ของแล็บหมวด Premill → ส่งเคสเข้า MILLING Premill อัตโนมัติ · MegaGen AnyRidge Standard + Ti blank · MegaGen BlueDiamond NC/RC ครบตามแคตตาล็อก (Octa/Bridge, Ti blank, AXA, EZ Post) · รหัสเว็บลูกค้าเฉพาะหมอ (หมอทำหลายคลินิก) · แคตตาล็อก Abutment: Camlog CONELOG Ti-base CAD/CAM · แก้ปุ่ม เปิดใช้ขั้นตอนนี้ ของ MILLING lane ให้เคสเข้าคิวจริง · 💰 รายรับ-รายจ่าย เฉพาะ CEO · ปุ่ม 📊 ภาพรวมคงเหลือในคลัง · สิทธิ์ แผนกสต็อก: เพิ่ม/ลดของได้ ไม่เห็นราคา · ประวัติเพิ่ม/ลดจำนวนคลัง ใครทำ เมื่อไหร่ เหตุผล · เลือกใช้ของแล็บในฟอร์ม Abutment ดึงโค้ด+ชื่อ และตัดคลัง · ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -1260,7 +1266,7 @@ let INVOICES = [];
 const NEEDED_SERVER = 10;
 const PIN_MIN = 17;
 const ABUT_RECEIVE_ALL_MIN = 18;
-const OUTSOURCE_MIN = 19;
+const OUTSOURCE_MIN = 19, OUTLAB_MIN = 58;
 const ASSIGN_MIN = 20;
 const FILE_ANY_TOKENS = ['files', 'file', 'upload', 'ไฟล์', 'อัปโหลด', 'อัพโหลด'];
 let SERVER_VER = NEEDED_SERVER;
@@ -3866,6 +3872,11 @@ function canOutsource(){ return isAdminUser(CURRENT_EMPLOYEE) || allowedDeptKeys
 function osDays(v){ const d = parseYmd(v.sent); return d ? daysSince(d) : null; }
 function osOverdue(v){ if(v.back || !v.due) return 0; const e = parseYmd(v.due), t = new Date(); t.setHours(0, 0, 0, 0); return e && e < t ? Math.round((t - e) / 86400000) : 0; }
 function osLabs(){ return [...new Set(NEW_ORDERS.map(o=>{ const v = outsourceOf(o); return v ? v.lab : ''; }).filter(Boolean))].sort((a, b)=>a.localeCompare(b, 'th')); }
+function osLabChips(v){      // what the outside lab itself reported on its own page (outlab.html)
+  if(v.back || !(v.lab_recv || v.lab_ret)) return '';
+  const who = v.lab_by ? ' โดย ' + esc(v.lab_by) : '', note = v.lab_note ? ' • ' + esc(v.lab_note) : '';
+  return (v.lab_ret ? `<div><span class="badge b-hold" title="แล็บนอกกดส่งกลับแล้ว รอเรากดรับกลับ">📤 แล็บส่งกลับแล้ว ${esc(fmtStamp(v.lab_ret))}${who}${note}</span></div>` : `<div><span class="badge b-prog">📥 แล็บรับของแล้ว ${esc(fmtStamp(v.lab_recv))}${who}</span></div>`);
+}
 function outsourceSectionHtml(o){
   const v = outsourceOf(o), can = canOutsource();
   if(!v && !can) return '';
@@ -3875,7 +3886,7 @@ function outsourceSectionHtml(o){
     inner += `<div class="ab-card"><div><span class="badge ${v.back ? 'b-done' : 'b-prog'}">${v.back ? 'รับกลับแล้ว' : 'อยู่ที่แล็บนอก'}</span>${od ? `<span class="badge b-hold" style="margin-left:6px">เกินกำหนด ${od} วัน</span>` : ''}
       <span style="color:var(--muted);font-size:12px;margin-left:8px">ส่งโดย ${esc(v.by || '-')}${!v.back && days !== null ? ' • ค้างที่แล็บ ' + days + ' วัน' : ''}</span></div>
       <div class="ab-grid"><div><b>แล็บ</b> ${esc(v.lab)}</div><div><b>ส่งอะไร</b> ${esc(v.what || '-')}</div><div><b>ส่งเมื่อ</b> ${esc(v.sent ? fmtStamp(v.sent) : '-')}</div><div><b>กำหนดรับกลับ</b> ${esc(v.due ? fmtDate(v.due) : '-')}</div>
-      <div><b>รับกลับเมื่อ</b> ${esc(v.back ? fmtStamp(v.back) : '-')}${v.back && v.back_by ? ' โดย ' + esc(v.back_by) : ''}</div></div>${v.note ? `<div style="font-size:12.5px"><b>โน้ต:</b> ${esc(v.note)}</div>` : ''}</div>`;
+      <div><b>รับกลับเมื่อ</b> ${esc(v.back ? fmtStamp(v.back) : '-')}${v.back && v.back_by ? ' โดย ' + esc(v.back_by) : ''}</div>${v.lab_recv ? `<div><b>แล็บนอกรับของ</b> ${esc(fmtStamp(v.lab_recv))}</div>` : ''}${v.lab_ret ? `<div><b>แล็บนอกส่งกลับ</b> ${esc(fmtStamp(v.lab_ret))}${v.lab_note ? ' • ' + esc(v.lab_note) : ''}</div>` : ''}</div>${v.note ? `<div style="font-size:12.5px"><b>โน้ต:</b> ${esc(v.note)}</div>` : ''}</div>`;
     if(can) inner += `<div class="actions" style="margin-bottom:6px">${v.back ? '' : '<button class="btn primary" id="os-back">📦 รับกลับแล้ว (ตอนนี้)</button>'}<button class="btn ghost" id="os-edit">✏️ แก้ไข</button><button class="btn danger" id="os-del">✕ ยกเลิกการส่ง</button></div>`;
   } else {
     inner += '<div class="actions"><button class="btn primary" id="os-edit">🏭 ส่งงานไปแล็บนอก</button></div><div class="note">ส่งกลึง Milling / Abutment ให้แล็บอื่นทำ? กดเพื่อจดว่าส่งไปที่ไหน เมื่อไร กำหนดกลับวันไหน</div>';
@@ -3928,20 +3939,56 @@ function renderOutsourceTab(){
   const all = NEW_ORDERS.map(o=>({o, v: outsourceOf(o)})).filter(x=>x.v), open = all.filter(x=>!x.v.back);
   if(btn) btn.textContent = '🏭 แล็บนอก' + (open.length ? ' (' + open.length + ')' : '');
   if(!canOutsource()) return;
+  renderOsLabCodes();
   const k = (n, l, c)=>`<div class="kpi ${c || ''}"><div class="num">${n}</div><div class="lbl">${l}</div></div>`, thisM = currentMonthKey();
-  document.getElementById('os-kpis').innerHTML = k(open.length, 'อยู่ที่แล็บนอก', 'warn') + k(open.filter(x=>osOverdue(x.v) > 0).length, 'เกินกำหนดรับกลับ', 'danger') + k(all.filter(x=>x.v.back && String(x.v.back).slice(0, 7) === thisM).length, 'รับกลับแล้วเดือนนี้');
+  document.getElementById('os-kpis').innerHTML = k(open.length, 'อยู่ที่แล็บนอก', 'warn') + k(open.filter(x=>osOverdue(x.v) > 0).length, 'เกินกำหนดรับกลับ', 'danger') + k(open.filter(x=>x.v.lab_ret).length, 'แล็บส่งกลับแล้ว รอรับ', 'ok') + k(all.filter(x=>x.v.back && String(x.v.back).slice(0, 7) === thisM).length, 'รับกลับแล้วเดือนนี้');
   const rows = osRowsForTab();
   if(!rows.length){ t.innerHTML = '<tr><td class="empty">ไม่มีรายการ</td></tr>'; return; }
   t.innerHTML = '<tr><th>เลขเคส</th><th>คลินิก</th><th>คนไข้</th><th>แล็บ</th><th>ส่งอะไร</th><th>ส่งเมื่อ</th><th>กำหนดกลับ</th><th>ค้าง</th><th>สถานะ</th><th>ส่งโดย</th><th></th></tr>' + rows.map(({o, v})=>{
     const od = osOverdue(v), dd = osDays(v);
     return `<tr><td>${caseLink(o)}</td><td>${esc(rpName(o, 'clinic'))}</td><td>${esc(o.patient || '-')}</td><td>${esc(v.lab)}</td><td>${esc(v.what || '-')}</td><td>${esc(v.sent ? fmtStamp(v.sent) : '-')}</td><td>${v.due ? esc(fmtDate(v.due)) : '-'}${od ? `<div><span class="badge b-hold">เกิน ${od} วัน</span></div>` : ''}</td><td>${v.back ? '-' : daysCell(dd)}</td>
-      <td><span class="badge ${v.back ? 'b-done' : 'b-prog'}">${v.back ? 'รับกลับแล้ว ' + esc(fmtDate(v.back)) : 'อยู่ที่แล็บ'}</span></td><td>${esc(v.by || '-')}</td><td>${v.back ? '' : `<button class="btn primary sm" data-os-back="${esc(o._id)}">📦 รับกลับแล้ว</button>`}</td></tr>`;
+      <td><span class="badge ${v.back ? 'b-done' : 'b-prog'}">${v.back ? 'รับกลับแล้ว ' + esc(fmtDate(v.back)) : 'อยู่ที่แล็บ'}</span>${osLabChips(v)}</td><td>${esc(v.by || '-')}</td><td>${v.back ? '' : `<button class="btn primary sm" data-os-back="${esc(o._id)}">📦 รับกลับแล้ว</button>`}</td></tr>`;
   }).join('');
   t.querySelectorAll('[data-os-back]').forEach(b=>b.addEventListener('click', async ()=>{
     const o = orderById(b.dataset.osBack), v = outsourceOf(o); if(!v) return;
     if(!window.confirm('บันทึกว่ารับเคส ' + (o.case_id || '') + ' กลับจาก ' + v.lab + ' แล้ว?')) return;
     await osSave(o._id, Object.assign({}, v, {back:nowStamp(), back_by:CURRENT_EMPLOYEE.name}), '📦 บันทึกว่ารับกลับแล้ว');
   }));
+}
+let OSL_CACHE = null;      // {at, codes}: the code list is fetched at most once a minute (the tab redraws on every refresh of the data)
+async function renderOsLabCodes(){      // admin only: private codes for the outside labs (outlab.html)
+  const card = document.getElementById('os-lab-card'); if(!card) return;
+  if(!isAdminUser(CURRENT_EMPLOYEE)){ card.style.display = 'none'; return; }
+  card.style.display = '';
+  const note = document.getElementById('os-lab-note'), t = document.getElementById('os-lab-codes'), url = location.origin + location.pathname.replace(/[^\/]*$/, '') + 'outlab.html';
+  document.getElementById('dl-labs-card').innerHTML = osLabs().map(x=>`<option value="${esc(x)}">`).join('');
+  if(SERVER_VER < OUTLAB_MIN){ note.textContent = 'ระบบหลังบ้าน (Apps Script) ยังเป็นเวอร์ชัน ' + SERVER_VER + ' — ต้องอัปเดตเป็นเวอร์ชัน ' + OUTLAB_MIN + ' ก่อน จึงจะสร้างลิงก์ให้แล็บนอกได้'; t.innerHTML = ''; return; }
+  note.innerHTML = 'แล็บนอกเข้าที่ <b>' + esc(url) + '</b> ใส่รหัสของแล็บ จะเห็นเฉพาะงานที่เราส่งไปให้แล็บนั้น (ไม่เห็นชื่อคนไข้ / คลินิก / ราคา) แล้วกด "รับของแล้ว" / "ส่งกลับแล้ว" ได้เอง • <b>ชื่อแล็บต้องตรงกับที่กรอกตอนส่งเคส</b> • โน้ตที่เรากรอกตอนส่งเคส แล็บจะเห็นด้วย';
+  const load = async (force)=>{
+    if(!force && !card.closest('.view.active')) return;      // only while the tab is open
+    if(force || !OSL_CACHE || Date.now() - OSL_CACHE.at > 60000){
+      try{ const r = await apiPost({action:'listLabCodes'}); if(r && r.ok) OSL_CACHE = {at: Date.now(), codes: r.codes || []}; }catch(e){ console.warn('listLabCodes failed', e); }
+    }
+    const codes = OSL_CACHE ? OSL_CACHE.codes : [];
+    t.innerHTML = codes.length ? '<tr><th>แล็บ</th><th>งานค้างที่แล็บ</th><th>รหัส</th><th>สถานะ</th><th></th></tr>' + codes.map(c=>{
+      const n = NEW_ORDERS.filter(o=>{ const v = outsourceOf(o); return v && !v.back && normKey(v.lab).replace(/\s/g, '') === normKey(c.lab).replace(/\s/g, ''); }).length;
+      return `<tr><td><b>${esc(c.lab)}</b></td><td class="num">${n}</td><td><code style="font-size:15px;letter-spacing:1px">${esc(c.code)}</code></td><td><span class="badge ${c.active ? 'b-done' : 'b-hold'}">${c.active ? 'ใช้งานอยู่' : 'ปิดอยู่'}</span></td>
+        <td style="white-space:nowrap"><button class="btn primary sm" data-olcopy="${esc(c.code)}" data-olname="${esc(c.lab)}">📋 คัดลอกข้อความส่งแล็บ</button> <button class="btn ghost sm" data-oltog="${esc(c.code)}" data-olon="${c.active ? '1' : ''}">${c.active ? 'ปิดรหัส' : 'เปิดรหัส'}</button> <button class="btn ghost sm" data-oldel="${esc(c.code)}" data-olname="${esc(c.lab)}">ลบ</button></td></tr>`;
+    }).join('') : '<tr><td class="empty">ยังไม่มีรหัส — พิมพ์ชื่อแล็บด้านบนแล้วกดสร้างรหัส</td></tr>';
+    t.querySelectorAll('[data-olcopy]').forEach(b=>b.addEventListener('click', ()=>copyText('สวัสดีครับ ' + b.dataset.olname + '\nเช็กงานที่ TOTU ส่งให้ และกดรับของ/ส่งกลับได้ที่ ' + url + '\nรหัสของแล็บ: ' + b.dataset.olcopy + '\n(เมื่อได้รับของกด "รับของแล้ว" ส่งกลับกด "ส่งกลับแล้ว" พร้อมใส่เลขพัสดุ)', 'คัดลอกข้อความแล้ว ✓ วางส่งใน LINE ได้เลย')));
+    t.querySelectorAll('[data-oltog]').forEach(b=>b.addEventListener('click', async ()=>{ await apiPost({action:'saveLabCode', code:b.dataset.oltog, active:!b.dataset.olon}); load(true); }));
+    t.querySelectorAll('[data-oldel]').forEach(b=>b.addEventListener('click', async ()=>{
+      if(!window.confirm('ลบรหัสของ "' + b.dataset.olname + '" ถาวร?\n\nรหัสที่ส่งให้แล็บจะใช้ไม่ได้ทันที (ถ้าต้องการแค่พัก ให้กด "ปิดรหัส")')) return;
+      const x = await apiPost({action:'deleteLabCode', code:b.dataset.oldel}); showToast(x && x.ok ? 'ลบรหัสแล้ว ✓' : 'ลบไม่สำเร็จ'); load(true);
+    }));
+  };
+  document.getElementById('os-lab-make').onclick = async ()=>{
+    const el = document.getElementById('os-lab-name'), lab = el.value.trim(); if(!lab){ showToast('พิมพ์ชื่อแล็บก่อน'); return; }
+    const r = await apiPost({action:'saveLabCode', lab});
+    if(r && r.ok){ el.value = ''; showToast('สร้างรหัสแล้ว ✓ กด "คัดลอกข้อความส่งแล็บ" ได้เลย'); load(true); }
+    else showToast(r && r.error === 'bad_lab' ? 'ชื่อแล็บสั้นเกินไป' : 'สร้างรหัสไม่สำเร็จ ลองใหม่');
+  };
+  load();
 }
 ['os-filter', 'os-q'].forEach(id=>document.getElementById(id).addEventListener(id === 'os-q' ? 'input' : 'change', renderOutsourceTab));
 document.getElementById('os-xlsx').addEventListener('click', ()=>{
@@ -6324,7 +6371,7 @@ function couponWallets(upTo){
     return W[k] || (W[k] = {key:k, clinic:String(cpClinName(clinic) || '').trim() || (String(doctor || '').trim() ? 'ทุกคลินิก' : '(ไม่ระบุคลินิก)'), doctor:String(doctor || '').trim(), kinds:{}, grants:[], cases:[], unkinded:0, hasGrant:false});
   };
   const kd = (w, kind)=>w.kinds[kind] || (w.kinds[kind] = {granted:0, used:0});
-  readPrices().coupon_grants.filter(g=>!upTo || String(g.date || '') <= upTo).forEach(g=>{ const w = mk(g.clinic, g.doctor); w.hasGrant = true; kd(w, String(g.kind || '')).granted += Number(g.qty) || 0; w.grants.push(g); });
+  readPrices().coupon_grants.filter(g=>!upTo || String(g.date || '') <= upTo).forEach(g=>{ const w = mk(g.clinic, g.doctor); w.hasGrant = true; const e = kd(w, String(g.kind || '')); e.granted += Number(g.qty) || 0; if(/^\d{4}-\d{2}-\d{2}$/.test(String(g.asof || '')) && String(g.asof) > (e.asof || '')) e.asof = String(g.asof); w.grants.push(g); });      // asof = ยกยอด ณ วันที่ → นับเฉพาะเคสที่รับหลังวันนั้น
   NEW_ORDERS.filter(o=>isCouponCase(o) && o.status !== 'ยกเลิกเคส' && (!upTo || String(o.date_received || '').slice(0, 10) <= upTo)).forEach(o=>{
     const parts = couponParts(o), counted = o.coupon_status !== 'คูปองหมดอายุ/ยกเลิก';
     const own = W[cpClin(o.clinic) + '\u0001' + cpNorm(o.doctor)], clin = W[cpClin(o.clinic) + '\u0001'], docw = cpNorm(o.doctor) ? W['\u0001' + cpNorm(o.doctor)] : null;
@@ -6337,7 +6384,7 @@ function couponWallets(upTo){
       const has = x=>x && x.kinds[pt.kind] && x.kinds[pt.kind].granted;
       const w = has(own) ? own : has(clin) ? clin : has(docw) ? docw : (own || mk(o.clinic, o.doctor));
       if(!w.cases.includes(o)) w.cases.push(o);
-      if(counted) kd(w, pt.kind).used += pt.qty;
+      { const e = kd(w, pt.kind); if(counted && !(e.asof && String(o.date_received || '').slice(0, 10) <= e.asof)) e.used += pt.qty; }
     });
   });
   // safety net: wallets whose clinic names have the SAME core (…จั่นเจา = …หมอจั่นเจา) and the same doctor are one wallet, even if the automatic name match above was ambiguous
@@ -6348,7 +6395,7 @@ function couponWallets(upTo){
     ws.sort((a, b)=>(b.grants.length - a.grants.length) || (Object.keys(b.kinds).length - Object.keys(a.kinds).length));
     const t = ws[0], nameBy = ws.slice().sort((a, b)=>b.cases.length - a.cases.length || a.clinic.length - b.clinic.length);      // the merged wallet carries the spelling the cases are actually written with
     ws.slice(1).forEach(o=>{
-      Object.keys(o.kinds).forEach(k=>{ const x = kd(t, k); x.granted += o.kinds[k].granted; x.used += o.kinds[k].used; });
+      Object.keys(o.kinds).forEach(k=>{ const x = kd(t, k); x.granted += o.kinds[k].granted; x.used += o.kinds[k].used; if((o.kinds[k].asof || '') > (x.asof || '')) x.asof = o.kinds[k].asof; });
       t.grants = t.grants.concat(o.grants); o.cases.forEach(c=>{ if(!t.cases.includes(c)) t.cases.push(c); });
       t.unkinded += o.unkinded; t.hasGrant = t.hasGrant || o.hasGrant; delete W[o.key];
     });
@@ -6423,7 +6470,7 @@ function renderCouponWallets(){
   renderCouponSummary(list);
   if(!list.length){ box.innerHTML = '<div class="note">ยังไม่ได้ให้คูปองกับใคร' + (admin ? ' — กด "＋ เพิ่มคูปองให้หมอ/คลินิก" ด้านบน' : '') + '</div>'; return; }
   box.innerHTML = list.map(w=>{
-    const gr = w.grants.slice().sort((a, b)=>String(b.date || '').localeCompare(String(a.date || ''))).map(g=>`<tr data-gid="${esc(g.id)}"><td>${esc(fmtDate(g.date))}</td><td>${esc(g.kind)}</td><td class="num">${Number(g.qty) > 0 ? '+' : ''}${esc(g.qty)}</td><td>${esc(g.note || '')}</td><td>${esc(g.by || '')}</td>${admin ? `<td style="white-space:nowrap"><button type="button" class="btn ghost sm" data-cpw-edit="${esc(g.id)}">✏️ แก้</button> <button type="button" class="btn ghost sm" data-cpw-del="${esc(g.id)}">ลบ</button></td>` : ''}</tr>`).join('');
+    const gr = w.grants.slice().sort((a, b)=>String(b.date || '').localeCompare(String(a.date || ''))).map(g=>`<tr data-gid="${esc(g.id)}"><td>${esc(fmtDate(g.date))}</td><td>${esc(g.kind)}</td><td class="num">${Number(g.qty) > 0 ? '+' : ''}${esc(g.qty)}</td><td>${esc(g.note || '')}${g.asof ? ` <span class="muted" title="ระบบนับเฉพาะเคสที่รับหลังวันนี้">• ยกยอด ณ ${esc(fmtDate(g.asof))}</span>` : ''}</td><td>${esc(g.by || '')}</td>${admin ? `<td style="white-space:nowrap"><button type="button" class="btn ghost sm" data-cpw-edit="${esc(g.id)}">✏️ แก้</button> <button type="button" class="btn ghost sm" data-cpw-del="${esc(g.id)}">ลบ</button></td>` : ''}</tr>`).join('');
     const cs = w.cases.slice().sort((a, b)=>String(b.date_received || '').localeCompare(String(a.date_received || ''))).map(o=>`<tr><td>${esc(fmtDate(o.date_received))}</td><td><a href="#" class="caselink" data-open-case="${esc(o._id)}">${esc(o.case_id || '-')}</a></td><td>${esc(o.doctor || '')}</td><td>${couponKindText(o) ? (admin && !String(o.coupon_split || '').trim() && couponParts(o).length === 1 ? `<select data-cpw-kind="${esc(o._id)}" title="เลือกผิด? เปลี่ยนประเภทคูปองของเคสนี้ได้ที่นี่" style="width:auto">${[...new Set(couponKinds().concat(o.coupon_kind))].map(k=>`<option${k === o.coupon_kind ? ' selected' : ''}>${esc(k)}</option>`).join('')}</select>` : esc(couponKindText(o))) : (admin ? `<select data-cpw-kind="${esc(o._id)}" style="width:auto"><option value="">— เลือกประเภทเพื่อหักคูปอง —</option>${couponKinds().map(k=>`<option>${esc(k)}</option>`).join('')}</select>` : '— ไม่ระบุ')}${admin && (Number(o.qty) || 1) >= 2 ? ` <a href="#" data-cpw-split="${esc(o._id)}" title="ใช้เมื่อเคสนี้ใช้คูปองหลายประเภท เช่น 1 ซี่ธรรมดา + 1 ซี่รากเทียม" style="font-size:12px;color:#777;white-space:nowrap">✎ แบ่งประเภท</a>` : ''}</td><td>${esc(o.coupon_status || '-')}</td></tr>`).join('');
     return `<details class="cpd-row" data-k="${esc(w.key)}" ${open.has(w.key) ? 'open' : ''}><summary><b>${esc(w.clinic)}</b><span>${w.doctor ? '👨‍⚕️ ' + esc(w.doctor) : '🏥 ทั้งคลินิก'}</span><span class="cpd-n">${walletChips(w)}</span></summary><div class="cpd-cases">
       <b>ประวัติการให้คูปอง</b>${gr ? `<table><tr><th>วันที่</th><th>ประเภท</th><th>จำนวน</th><th>หมายเหตุ</th><th>โดย</th>${admin ? '<th></th>' : ''}</tr>${gr}</table>` : '<div class="note">ยังไม่มีการให้คูปอง (มีแต่เคสที่ใช้)</div>'}
@@ -6442,7 +6489,7 @@ function renderCouponWallets(){
     const kinds = couponKinds(); if(g.kind && !kinds.includes(g.kind)) kinds.unshift(g.kind);
     tds[1].innerHTML = '<select class="cpw-e-kind" style="width:100%;min-width:200px">' + kinds.map(k=>`<option value="${esc(k)}"${k === g.kind ? ' selected' : ''}>${esc(k)}</option>`).join('') + '</select>';      // wrong type picked? change it here
     tds[2].innerHTML = '<input type="number" step="1" class="cpw-e-qty" value="' + esc(g.qty) + '" style="width:80px">';
-    tds[3].innerHTML = '<input type="text" class="cpw-e-note" maxlength="120" value="' + esc(g.note || '') + '" style="width:100%;min-width:160px">';
+    tds[3].innerHTML = '<input type="text" class="cpw-e-note" maxlength="120" value="' + esc(g.note || '') + '" style="width:100%;min-width:160px"><div style="font-size:12px;margin-top:4px">ยกยอด ณ วันที่ (นับเฉพาะเคสที่รับหลังวันนี้) <input type="date" class="cpw-e-asof" value="' + esc(g.asof || '') + '"></div>';
     tds[tds.length - 1].innerHTML = '<button type="button" class="btn primary sm cpw-e-save">บันทึก</button> <button type="button" class="btn ghost sm cpw-e-cancel">ยกเลิก</button>';
     tr.querySelector('.cpw-e-cancel').addEventListener('click', ()=>renderCouponByDoctor());
     tr.querySelector('.cpw-e-save').addEventListener('click', async ()=>{
@@ -6450,7 +6497,7 @@ function renderCouponWallets(){
       if(!isFinite(qty) || qty === 0){ showToast('จำนวนต้องเป็นตัวเลข (ไม่ใช่ 0)'); return; }
       const kind = tr.querySelector('.cpw-e-kind').value;
       if(!kind){ showToast('เลือกประเภทคูปอง'); return; }
-      await saveSettingsPatch(cur=>{ const x = cur.coupon_grants.find(y=>y.id === id); if(x){ x.qty = qty; x.note = note; x.kind = kind; } });
+      await saveSettingsPatch(cur=>{ const x = cur.coupon_grants.find(y=>y.id === id); if(x){ x.qty = qty; x.note = note; x.kind = kind; const af = tr.querySelector('.cpw-e-asof').value; if(af) x.asof = af; else delete x.asof; } });
       showToast('✓ แก้รายการแล้ว'); renderCouponByDoctor();
     });
   }));
@@ -6512,12 +6559,13 @@ function renderCouponAdmin(force){
   if(!force && CPW_FORM_OPEN && document.getElementById('cpw-clinic')) return;      // do not wipe what is being typed when the page refreshes
   if(!CPW_FORM_OPEN){ box.innerHTML = '<button type="button" class="btn primary sm" id="cpw-open">＋ เพิ่มคูปองให้หมอ/คลินิก</button>'; document.getElementById('cpw-open').addEventListener('click', ()=>{ CPW_FORM_OPEN = true; renderCouponAdmin(true); }); return; }
   const kinds = couponKinds(), keep = id=>{ const e = document.getElementById(id); return e ? e.value : ''; };
-  const v = {clinic: keep('cpw-clinic'), doctor: keep('cpw-doctor'), kind: keep('cpw-kind'), qty: keep('cpw-qty') || '1', note: keep('cpw-note'), old: keep('cpw-old')};
+  const v = {clinic: keep('cpw-clinic'), doctor: keep('cpw-doctor'), kind: keep('cpw-kind'), qty: keep('cpw-qty') || '1', note: keep('cpw-note'), old: keep('cpw-old'), asof: keep('cpw-asof')};
   box.innerHTML = `<div class="cpw-form"><div><label>คลินิก (เว้นว่าง = หมอทำหลายคลินิก)</label><input id="cpw-clinic" list="dl-clinic-form" autocomplete="off" value="${esc(v.clinic)}" placeholder="ชื่อคลินิก"></div>
     <div><label>หมอ (เว้นว่าง = ทั้งคลินิก)</label><input id="cpw-doctor" list="dl-doctors" autocomplete="off" value="${esc(v.doctor)}" placeholder="ชื่อหมอ"></div>
     <div><label>ประเภทคูปอง</label><select id="cpw-kind">${kinds.map(k=>`<option value="${esc(k)}" ${k === v.kind ? 'selected' : ''}>${esc(k)}</option>`).join('')}<option value="__new__">＋ เพิ่มประเภทใหม่…</option></select></div>
     <div><label>จำนวนซี่ (ใส่ - เพื่อหักออก)</label><input id="cpw-qty" type="number" step="1" value="${esc(v.qty)}" style="width:90px"></div>
     <div><label title="จำนวนที่ใช้ไปแล้วจากข้อมูลเก่า ก่อนมาใช้เว็บนี้ — ระบบหักออกให้ ไม่ไปนับซ้ำกับเคสใหม่">ใช้ไปแล้ว (ข้อมูลเก่า)</label><input id="cpw-old" type="number" step="1" min="0" value="${esc(v.old)}" placeholder="เช่น 21" style="width:110px"></div>
+    <div><label title="ถ้าจำนวนที่ให้เป็นยอดคงเหลือยกมาจากฐานข้อมูลเดิม ใส่วันที่ที่ยกยอด ระบบจะไม่นับเคสที่รับก่อนหรือในวันนั้น">ยกยอด ณ วันที่ (ถ้ามี)</label><input id="cpw-asof" type="date" value="${esc(v.asof)}"></div>
     <div style="flex:1;min-width:140px"><label>หมายเหตุ</label><input id="cpw-note" value="${esc(v.note)}" placeholder="เช่น ซื้อ 10 แถม 1 / โปรเดือนนี้" style="width:100%"></div>
     <div><button type="button" class="btn primary" id="cpw-add">เพิ่มคูปอง</button> <button type="button" class="btn ghost" id="cpw-cancel">ปิด</button></div></div>`;
   document.getElementById('cpw-cancel').addEventListener('click', ()=>{ CPW_FORM_OPEN = false; renderCouponAdmin(true); });
@@ -6530,7 +6578,7 @@ function renderCouponAdmin(force){
   document.getElementById('cpw-add').addEventListener('click', async ()=>{
     const clinic = document.getElementById('cpw-clinic').value.trim(), doctor = document.getElementById('cpw-doctor').value.trim(), kind = document.getElementById('cpw-kind').value;
     const qty0 = parseInt(document.getElementById('cpw-qty').value, 10), note = document.getElementById('cpw-note').value.trim().slice(0, 120);
-    const oldUsed = Math.max(0, parseInt(document.getElementById('cpw-old').value, 10) || 0), qty = isFinite(qty0) ? qty0 : 0;
+    const oldUsed = Math.max(0, parseInt(document.getElementById('cpw-old').value, 10) || 0), qty = isFinite(qty0) ? qty0 : 0, asof = document.getElementById('cpw-asof').value;
     if(!clinic && !doctor){ showToast('ใส่ชื่อคลินิก หรือชื่อหมอ (หมอที่ทำหลายคลินิก เว้นคลินิกว่างได้)'); return; }
     if(!kind || kind === '__new__'){ showToast('เลือกประเภทคูปอง'); return; }
     if(qty === 0 && !oldUsed){ showToast('จำนวนต้องเป็นตัวเลข (ไม่ใช่ 0)'); return; }
@@ -6539,7 +6587,7 @@ function renderCouponAdmin(force){
     const canon = clinic ? (canonName('clinics', clinic) || clinic) : '';
     const gid = ()=>'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
     await saveSettingsPatch(cur=>{
-      if(qty) cur.coupon_grants.push({id:gid(), clinic: canon, doctor, kind, qty, note, date: todayLocal(), by: CURRENT_EMPLOYEE.name});
+      if(qty) cur.coupon_grants.push(Object.assign({id:gid(), clinic: canon, doctor, kind, qty, note, date: todayLocal(), by: CURRENT_EMPLOYEE.name}, asof ? {asof} : {}));
       if(oldUsed) cur.coupon_grants.push({id:gid(), clinic: canon, doctor, kind, qty: -oldUsed, note: 'ใช้ไปแล้วก่อนเข้าระบบ (ข้อมูลเก่า)', date: todayLocal(), by: CURRENT_EMPLOYEE.name});
     });
     showToast('✓ เพิ่มคูปอง ' + kind + ' ' + (qty ? qty + ' ใบ' : '') + (oldUsed ? ' • หักที่ใช้ไปแล้ว ' + oldUsed + ' ใบ' : '') + ' ให้ ' + canon + (clinic ? (doctor ? ' / ' + doctor : ' (ทั้งคลินิก)') : ' (หมอ ทุกคลินิก)'));
@@ -7553,6 +7601,8 @@ init();
 
 // ---------- 🆕 อัปเดตระบบ (admin / CEO): เวอร์ชันล่าสุด + รายละเอียดที่เพิ่ม (ใหม่สุดอยู่บน) ----------
 const CHANGELOG = [
+  { rev: 181, server: 58, title: 'ลิงก์สำหรับแล็บนอก', items: ['แท็บ แล็บนอก: สร้างรหัสให้แต่ละแล็บ + คัดลอกข้อความส่ง LINE', 'หน้าใหม่ outlab.html: แล็บนอกเห็นเฉพาะงานที่ส่งไปให้ (ไม่เห็นชื่อคนไข้/คลินิก/ราคา) กด รับของแล้ว / ส่งกลับแล้ว + เลขพัสดุ', 'ในแอปเห็นสถานะที่แล็บนอกกดมา (ต้องใช้ Apps Script v58)'] },
+  { rev: 180, server: 57, title: 'คูปอง: ยกยอด ณ วันที่', items: ['กรอก/แก้รายการให้คูปองได้ว่า ยกยอด ณ วันที่ใด ระบบจะไม่หักเคสที่รับก่อนหรือในวันนั้น (กันนับซ้ำกับยอดเหลือที่ยกมาจากฐานข้อมูลเดิม)'] },
   { rev: 179, server: 57, title: 'ติ๊กเลือกคูปอง/ไม่ใช่คูปองในรายงานสรุป', items: ['เพิ่มช่องติ๊ก "คูปอง" และ "ไม่ใช่คูปอง" กรองทั้งตาราง PDF Excel CSV'] },
   { rev: 178, server: 57, title: 'PDF สรุปแบบสั้น', items: ['PDF สรุปหมอ/คลินิก เหลือ: ยอดรวมเคส + รายการเคส (เลขเคส/วันรับ/คนไข้/วัสดุ/ซี่/ประเภท/รายการราคา/ค่าใช้จ่าย) + ยอดรวมค่าใช้จ่าย ส่วน Excel ยังละเอียดเหมือนเดิม'] },
   { rev: 177, server: 57, title: 'ตัดงานค้างออกจากรายงานสรุป', items: ['ตารางและ PDF/Excel/CSV สรุปหมอ/คลินิก ไม่แสดงคอลัมน์/ตัวเลข ค้าง'] },
