@@ -263,7 +263,7 @@ function go(){
       var by={}, names=[]; r.cases.forEach(function(c){ var k=c.clinic||r.clinic||'-'; if(!by[k]){ by[k]=[]; names.push(k); } by[k].push(c); });
       var day=new Date().toISOString().slice(0,10);
       var h3='<button type="button" class="go" id="exp-all" style="padding:6px 12px;font-size:13px">⬇ ดาวน์โหลดรายการเคสทั้งหมด (Excel)</button>';
-      if(names.length>1) h3+=' <span style="margin-left:6px">แยกตามคลินิก:</span> '+names.map(function(k,i){ return '<button type="button" class="go" data-exp="'+i+'" style="padding:6px 10px;font-size:12px;background:#fff;color:var(--ink);border:1px solid var(--line)">⬇ '+esc(k)+' ('+by[k].length+')</button>'; }).join(' ');
+      if(names.length>1) h3+=' <span style="margin-left:6px">แยกตามคลินิก:</span> '+names.map(function(k,i){ return '<button type="button" class="go" data-exp="'+i+'" style="padding:6px 10px;font-size:12px;background:#fff;color:#000;border:1px solid var(--line)">⬇ '+esc(k)+' ('+by[k].length+')</button>'; }).join(' ');
       box.innerHTML=h3;
       document.getElementById('exp-all').onclick=function(){ save('เคสทั้งหมด_'+day, r.cases.slice().sort(function(a,b){ return String(a.clinic||'').localeCompare(String(b.clinic||''))||String(b.date_received).localeCompare(String(a.date_received)); })); };
       Array.prototype.forEach.call(box.querySelectorAll('[data-exp]'),function(b){ b.onclick=function(){ var k=names[+b.getAttribute('data-exp')]; save(k.replace(/[\\/:*?"<>|]/g,'_')+'_'+day, by[k]); }; });
