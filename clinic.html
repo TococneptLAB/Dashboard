@@ -265,24 +265,42 @@ function go(){
       function csv(list){ return '\ufeff'+[COLS.map(function(x){return cell(x[0]);}).join(',')].concat(list.map(function(c){ return COLS.map(function(x){ return cell(x[1]==='_st'?stText(c):(/date|shipped/.test(x[1])&&c[x[1]]?String(c[x[1]]).slice(0,10):c[x[1]])); }).join(','); })).join('\r\n'); }
       function save(name,list){ var b=new Blob([csv(list)],{type:'text/csv;charset=utf-8'}), a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=name+'.csv'; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },500); }
       var PC=['clinic','case_id','patient','doctor','material','qty','teeth','shade','implant_system','date_received','ship_date','_st'];
-      function pdf(title,list){
-        var cols=COLS.filter(function(x){ return PC.indexOf(x[1])>=0; }), el=document.getElementById('pdfp');
+      function tbl(cols,list){ return '<table><tr>'+cols.map(function(x){return '<th>'+esc(x[0])+'</th>';}).join('')+'</tr>'+list.map(function(c){ return '<tr>'+cols.map(function(x){ return '<td>'+esc(x[1]==='_st'?stText(c):(/date/.test(x[1])&&c[x[1]]?String(c[x[1]]).slice(0,10):c[x[1]]))+'</td>'; }).join('')+'</tr>'; }).join('')+'</table>'; }
+      function pdf(title,groups){       // groups = [{name,list}] — one section per group, each on its own page
+        var cols=COLS.filter(function(x){ return PC.indexOf(x[1])>=0; }), el=document.getElementById('pdfp'), n=groups.reduce(function(a,g){return a+g.list.length;},0);
         if(!el){ el=document.createElement('div'); el.id='pdfp'; document.body.appendChild(el); }
-        el.innerHTML='<h2>'+esc(title)+'</h2><div class="m">TOTU Concept Lab • พิมพ์เมื่อ '+esc(new Date().toLocaleString('th-TH'))+' • '+list.length+' เคส</div><table><tr>'+cols.map(function(x){return '<th>'+esc(x[0])+'</th>';}).join('')+'</tr>'+list.map(function(c){ return '<tr>'+cols.map(function(x){ return '<td>'+esc(x[1]==='_st'?stText(c):(/date/.test(x[1])&&c[x[1]]?String(c[x[1]]).slice(0,10):c[x[1]]))+'</td>'; }).join('')+'</tr>'; }).join('')+'</table>';
+        el.innerHTML=groups.map(function(g,i){ return '<div'+(i?' style="break-before:page"':'')+'><h2>'+esc(groups.length>1?g.name:title)+'</h2><div class="m">'+(groups.length>1?esc(title)+' • ':'')+'TOTU Concept Lab • พิมพ์เมื่อ '+esc(new Date().toLocaleString('th-TH'))+' • '+g.list.length+' เคส</div>'+tbl(cols,g.list)+'</div>'; }).join('');
         var old=document.title; document.title=title.replace(/[\\/:*?"<>|]/g,'_');
         var done=function(){ document.title=old; el.innerHTML=''; window.removeEventListener('afterprint',done); };
         window.addEventListener('afterprint',done); window.print();
       }
-      var by={}, names=[]; r.cases.forEach(function(c){ var k=c.clinic||r.clinic||'-'; if(!by[k]){ by[k]=[]; names.push(k); } by[k].push(c); });
-      var day=new Date().toISOString().slice(0,10);
-      var h3='<span style="margin-right:6px">ดาวน์โหลดรายการเคส</span>';
-      if(names.length>1) h3+='<select id="exp-sel" style="width:auto;padding:7px 10px;font-size:13px;margin-right:6px"><option value="-1">ทุกคลินิก ('+r.cases.length+')</option>'+names.map(function(k,i){ return '<option value="'+i+'">'+esc(k)+' ('+by[k].length+')</option>'; }).join('')+'</select>';
-      h3+='<button type="button" class="go" id="pdf-all" style="padding:7px 14px;font-size:13px;margin-right:6px">🖨 PDF</button><button type="button" class="go" id="exp-all" style="padding:7px 14px;font-size:13px;background:#fff;color:#000">⬇ Excel (.csv)</button>';
+      var names=[]; r.cases.forEach(function(c){ var k=c.clinic||r.clinic||'-'; if(names.indexOf(k)<0) names.push(k); });
+      names.sort(function(a,b){ return a.localeCompare(b,'th'); });
+      var ck=function(c){ return c.clinic||r.clinic||'-'; }, ym=function(c){ return String(c.date_received||'').slice(0,7); };
+      var years=[], day=new Date().toISOString().slice(0,10);
+      r.cases.forEach(function(c){ var y=ym(c).slice(0,4); if(y&&years.indexOf(y)<0) years.push(y); }); years.sort().reverse();
+      var MN=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+      var st='padding:7px 10px;font-size:13px;width:auto';
+      var h3='<div style="font-weight:600;margin-bottom:6px">ดาวน์โหลดรายการเคส</div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'+
+        '<select id="exp-y" style="'+st+'"><option value="">ทุกปี</option>'+years.map(function(y){ return '<option value="'+y+'">ปี '+(+y+543)+'</option>'; }).join('')+'</select>'+
+        '<select id="exp-m" style="'+st+'"><option value="">ทุกเดือน</option>'+MN.map(function(m,i){ return '<option value="'+('0'+(i+1)).slice(-2)+'">'+m+'</option>'; }).join('')+'</select></div>';
+      if(names.length>1) h3+='<div id="exp-cl" style="display:flex;gap:6px 14px;flex-wrap:wrap;margin-top:8px">'+names.map(function(k,i){ return '<label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;color:var(--ink)"><input type="checkbox" data-c="'+i+'" checked style="width:auto;min-width:0;margin:0;flex:none"> '+esc(k)+'</label>'; }).join('')+'</div>'+
+        '<div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:13px"><label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer"><input type="radio" name="exp-mode" value="one" checked style="width:auto;min-width:0;margin:0"> รวมในไฟล์เดียว</label><label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer"><input type="radio" name="exp-mode" value="sep" style="width:auto;min-width:0;margin:0"> แยกตามคลินิก</label></div>';
+      h3+='<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px"><button type="button" class="go" id="pdf-all" style="padding:7px 14px;font-size:13px">🖨 PDF</button><button type="button" class="go" id="exp-all" style="padding:7px 14px;font-size:13px;background:#fff;color:#000">⬇ Excel (.csv)</button><span id="exp-n" style="font-size:12.5px;color:var(--mute)"></span></div>';
       box.innerHTML=h3;
-      var srt=function(){ return r.cases.slice().sort(function(a,b){ return String(a.clinic||'').localeCompare(String(b.clinic||''))||String(b.date_received).localeCompare(String(a.date_received)); }); };
-      function pick(){ var sel=document.getElementById('exp-sel'), i=sel?+sel.value:-1; return i<0?{name:'เคสทั้งหมด',list:srt()}:{name:names[i],list:by[names[i]]}; }
-      document.getElementById('pdf-all').onclick=function(){ var x=pick(); pdf('รายการเคส '+x.name+' '+day, x.list); };
-      document.getElementById('exp-all').onclick=function(){ var x=pick(); save(x.name.replace(/[\\/:*?"<>|]/g,'_')+'_'+day, x.list); };
+      function groups(){        // cases that match the year/month/clinic ticks, as one group or one per clinic
+        var y=document.getElementById('exp-y').value, m=document.getElementById('exp-m').value, on={};
+        names.forEach(function(k,i){ var cb=box.querySelector('[data-c="'+i+'"]'); on[k]=cb?cb.checked:true; });
+        var list=r.cases.filter(function(c){ var t=ym(c); return on[ck(c)] && (!y||t.slice(0,4)===y) && (!m||t.slice(5,7)===m); })
+          .sort(function(a,b){ return ck(a).localeCompare(ck(b),'th')||String(b.date_received).localeCompare(String(a.date_received)); });
+        var sep=(box.querySelector('input[name="exp-mode"]:checked')||{}).value==='sep', label=(y?'ปี '+(+y+543):'')+(m?' '+MN[+m-1]:'');
+        var gs=sep?names.filter(function(k){return on[k];}).map(function(k){ return {name:k,list:list.filter(function(c){return ck(c)===k;})}; }).filter(function(g){return g.list.length;}):[{name:'เคสทั้งหมด',list:list}];
+        return {gs:gs, n:list.length, label:label.trim()};
+      }
+      function note(){ var g=groups(); document.getElementById('exp-n').textContent=g.n+' เคสตรงเงื่อนไข'; return g; }
+      Array.prototype.forEach.call(box.querySelectorAll('select,input'),function(x){ x.onchange=note; }); note();
+      document.getElementById('pdf-all').onclick=function(){ var g=note(); if(!g.n){ alert('ไม่มีเคสตรงเงื่อนไข'); return; } pdf('รายการเคส'+(g.label?' '+g.label:'')+' '+day, g.gs); };
+      document.getElementById('exp-all').onclick=function(){ var g=note(); if(!g.n){ alert('ไม่มีเคสตรงเงื่อนไข'); return; } g.gs.forEach(function(x,i){ setTimeout(function(){ save(x.name.replace(/[\\/:*?"<>|]/g,'_')+(g.label?'_'+g.label.replace(/\s+/g,'_'):'')+'_'+day, x.list); },i*400); }); };
     })();
     [].forEach.call(document.querySelectorAll('#seg button'),function(b){ b.onclick=function(){ drawCases(b.getAttribute('data-v')); }; });
     drawCases('lab');
