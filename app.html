@@ -1183,7 +1183,7 @@ const API_URL_BUILT = "https://script.google.com/macros/s/AKfycbyK9U_ljXjTmq8hE5
 let API_URL = API_URL_BUILT;
 const API_URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
 try{ const u = localStorage.getItem('totu_api_url'); if(u && API_URL_OK.test(u)) API_URL = u; }catch(e){}
-const APP_VERSION = "2026-11-09 รุ่น 194 (สั่ง Abutment: จำรหัสที่สั่งบ่อย ขึ้นปุ่มลัดให้กดสั่งซ้ำ · คูปอง: เตือนเมื่อใส่วันที่ยกยอดที่ล้างยอดใช้ไปทั้งหมด · คูปอง: ฟันซี่เดียวแบ่งหลายประเภท/บริการได้ · ตารางเวลา: ซ่อน AO เป็นค่าเริ่มต้น · ตารางเวลา: แมส (MON/TUCK) แสดงเฉพาะเวลาเข้า · Biotem Ti-base Regular แก้ขนาดเป็น Ø4.5 ตามฉลาก (ดูรหัส Tibs เป็นหลัก) · สั่ง Abutment: เพิ่ม Dentis Couple Abutment (S-LINE) · คูปอง: แสดงคลินิก/ซี่ฟัน/ระบบรากเทียมรายเคส ทั้งหน้าจอและ PDF/Excel · แก้ช่องติ๊กคลินิกชื่อซ้อนกัน · คูปองหมอ: ติ๊กเลือกคลินิกที่จะดู + รวมยอดที่ติ๊ก · อย่าลืม: แสดงระบบรากเทียมในแต่ละเคส · แนบไฟล์ STL ให้แล็บนอกโหลดจากลิงก์ · ลิงก์ให้แล็บนอกเช็กงาน/กดรับของ-ส่งกลับเอง (outlab.html) · คูปอง: ยกยอด ณ วันที่ — นับเฉพาะเคสที่รับหลังวันที่ยกยอด · รายงานสรุป: ติ๊กเลือก คูปอง / ไม่ใช่คูปอง · PDF สรุปแบบสั้น: รายการเคส + ค่าใช้จ่าย · รายงานสรุปไม่แสดงจำนวนงานค้าง · ไฟล์สรุป: รายการราคารวมในบรรทัดเดียวต่อเคส กระชับขึ้น · รายงานสรุปไม่แสดงสถานะ/วันส่งงานจริง · ราคาที่ใส่เองออกใน PDF/Excel อัตโนมัติ + ชนะกฎคูปองฟรี · รายการราคามีจำนวน × ราคาต่อหน่วย · รายการราคา: ปุ่มกดเลือกชื่อรายการ หรือพิมพ์เอง · แตกรายการราคาต่อเคส (Zirconia/implant/cementation/model) + รวม ออกใน PDF/Excel · พิมพ์ราคาแต่ละเคสเองได้ในตารางรายงานหมอ · ค้นหาในหน้าสถานะแผนกหาทุกเดือน/ทุกเคส · แสดงค่าใช้จ่ายต่อเคสในตารางรายงานหมอบนหน้าจอ · ใส่ราคาสรุปเองในรายงานหมอ · สรุปหมอเลือกงานใหม่/งานแก้ · ปุ่ม ✓ ส่งแล้ว ในรายการค้างนาน · ขาดงานบ่อยขึ้นแดง · แมสไม่นับสาย · ตารางเวลาแยกกลุ่มแมส · ตารางเวลาซ่อนชื่อได้ · รายการสั่ง Osstem Transfer Abutment รหัส TSTA ใหม่ · รายการสั่ง Neodent ตามใบสั่งสินค้าจริง · PDF สรุปคูปองไม่ขึ้นหน้าใหม่ทุกคลินิก · คูปองรายหมอแยกสถานะ รออนุมัติ/อนุมัติ/ใช้แล้ว คนละสี · ฟอร์มรับงาน Surgical Guide (3Shape) · หน้าคลินิกแสดงส่งมอบแล้วเมื่อขั้นตอน DELIVERY เสร็จ · แชทลบอัตโนมัติทุกเที่ยงคืน · ตารางเวลาเข้า-ออกงานรายคน รายวัน + คัดลอกส่ง LINE · เปลี่ยนประเภทคูปองของเคสได้ในรายการเคสรายหมอ · แยกคลินิกรหัสคล้ายกัน เช่น BPDC/BWDC ไม่รวมคูปองกัน · แก้ประเภทคูปองในประวัติการให้คูปองได้ · ห้องประชุมในผังแล็บ เปิดแชททั้งร้าน · ใบเตือน: ช่องเซ็น กรรมการบริษัท + ใช้ชื่อจริงภาษาไทย · ใบเตือนแบบติ๊ก + พิมพ์ A4 · ใบเตือนพนักงาน: คลิกตัวละครในผังแล็บ (แอดมิน/CEO) · เมนู 🔔 แจ้ง: แจ้งปัญหาเคส ไฟล์มีปัญหา/ระงับ/ยกเลิก · DEW เช็กอินได้ทุกที่ · คนส่งของเช็กอินที่ไหนก็ได้ · ผังแล็บจัดห้องตามที่กำหนด + ซ่อน CEO + ไฟเขียวคนเช็กอิน · กำหนดเวลาเข้า-เลิกงาน/ผ่อนผัน/วันหยุด ปรับได้ แสดงสาย-ออกก่อน · ตั้งตำแหน่งแล็บจากพิกัดที่วางได้ · แผนผังแล็บ + ลงเวลาเข้า-ออกงานตามรัศมีแล็บ · หน้าลูกค้า: เคสที่ส่งออกแล้วแยกเป็นรายเดือน เลือกเดือน/ปีได้ · หน้าลูกค้า: ปุ่มดูเคสที่ส่งออกแล้ว · โน้ต Abutment (ไซด์ที่สั่ง) แสดงในหน้าลูกค้า · หมายเหตุการให้คูปองแสดงในหน้าลูกค้า · อัปเดตระบบ: ดูเวอร์ชันล่าสุด+รายละเอียด · คูปองของหมอในหน้าลูกค้า · สรุปประจำวัน+ส่ง LINE · ลูกค้าส่งงานออนไลน์ · ปรับหน้าตาใหม่ ขาว-ดำ + โลโก้บริษัท · Premill เสร็จ → เคสวนกลับไปสแกน/ออกแบบรอบ 2 ก่อนกลึงครอบ · ใช้ของแล็บหมวด Premill → ส่งเคสเข้า MILLING Premill อัตโนมัติ · MegaGen AnyRidge Standard + Ti blank · MegaGen BlueDiamond NC/RC ครบตามแคตตาล็อก (Octa/Bridge, Ti blank, AXA, EZ Post) · รหัสเว็บลูกค้าเฉพาะหมอ (หมอทำหลายคลินิก) · แคตตาล็อก Abutment: Camlog CONELOG Ti-base CAD/CAM · แก้ปุ่ม เปิดใช้ขั้นตอนนี้ ของ MILLING lane ให้เคสเข้าคิวจริง · 💰 รายรับ-รายจ่าย เฉพาะ CEO · ปุ่ม 📊 ภาพรวมคงเหลือในคลัง · สิทธิ์ แผนกสต็อก: เพิ่ม/ลดของได้ ไม่เห็นราคา · ประวัติเพิ่ม/ลดจำนวนคลัง ใครทำ เมื่อไหร่ เหตุผล · เลือกใช้ของแล็บในฟอร์ม Abutment ดึงโค้ด+ชื่อ และตัดคลัง · ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
+const APP_VERSION = "2026-11-09 รุ่น 195 (คูปอง: ปุ่ม ปิดคูปอง (หมดแล้ว) — เติมใหม่เป็นก้อนใหม่ เปิดดูเคสของก้อนเก่าได้ · สั่ง Abutment: จำรหัสที่สั่งบ่อย ขึ้นปุ่มลัดให้กดสั่งซ้ำ · คูปอง: เตือนเมื่อใส่วันที่ยกยอดที่ล้างยอดใช้ไปทั้งหมด · คูปอง: ฟันซี่เดียวแบ่งหลายประเภท/บริการได้ · ตารางเวลา: ซ่อน AO เป็นค่าเริ่มต้น · ตารางเวลา: แมส (MON/TUCK) แสดงเฉพาะเวลาเข้า · Biotem Ti-base Regular แก้ขนาดเป็น Ø4.5 ตามฉลาก (ดูรหัส Tibs เป็นหลัก) · สั่ง Abutment: เพิ่ม Dentis Couple Abutment (S-LINE) · คูปอง: แสดงคลินิก/ซี่ฟัน/ระบบรากเทียมรายเคส ทั้งหน้าจอและ PDF/Excel · แก้ช่องติ๊กคลินิกชื่อซ้อนกัน · คูปองหมอ: ติ๊กเลือกคลินิกที่จะดู + รวมยอดที่ติ๊ก · อย่าลืม: แสดงระบบรากเทียมในแต่ละเคส · แนบไฟล์ STL ให้แล็บนอกโหลดจากลิงก์ · ลิงก์ให้แล็บนอกเช็กงาน/กดรับของ-ส่งกลับเอง (outlab.html) · คูปอง: ยกยอด ณ วันที่ — นับเฉพาะเคสที่รับหลังวันที่ยกยอด · รายงานสรุป: ติ๊กเลือก คูปอง / ไม่ใช่คูปอง · PDF สรุปแบบสั้น: รายการเคส + ค่าใช้จ่าย · รายงานสรุปไม่แสดงจำนวนงานค้าง · ไฟล์สรุป: รายการราคารวมในบรรทัดเดียวต่อเคส กระชับขึ้น · รายงานสรุปไม่แสดงสถานะ/วันส่งงานจริง · ราคาที่ใส่เองออกใน PDF/Excel อัตโนมัติ + ชนะกฎคูปองฟรี · รายการราคามีจำนวน × ราคาต่อหน่วย · รายการราคา: ปุ่มกดเลือกชื่อรายการ หรือพิมพ์เอง · แตกรายการราคาต่อเคส (Zirconia/implant/cementation/model) + รวม ออกใน PDF/Excel · พิมพ์ราคาแต่ละเคสเองได้ในตารางรายงานหมอ · ค้นหาในหน้าสถานะแผนกหาทุกเดือน/ทุกเคส · แสดงค่าใช้จ่ายต่อเคสในตารางรายงานหมอบนหน้าจอ · ใส่ราคาสรุปเองในรายงานหมอ · สรุปหมอเลือกงานใหม่/งานแก้ · ปุ่ม ✓ ส่งแล้ว ในรายการค้างนาน · ขาดงานบ่อยขึ้นแดง · แมสไม่นับสาย · ตารางเวลาแยกกลุ่มแมส · ตารางเวลาซ่อนชื่อได้ · รายการสั่ง Osstem Transfer Abutment รหัส TSTA ใหม่ · รายการสั่ง Neodent ตามใบสั่งสินค้าจริง · PDF สรุปคูปองไม่ขึ้นหน้าใหม่ทุกคลินิก · คูปองรายหมอแยกสถานะ รออนุมัติ/อนุมัติ/ใช้แล้ว คนละสี · ฟอร์มรับงาน Surgical Guide (3Shape) · หน้าคลินิกแสดงส่งมอบแล้วเมื่อขั้นตอน DELIVERY เสร็จ · แชทลบอัตโนมัติทุกเที่ยงคืน · ตารางเวลาเข้า-ออกงานรายคน รายวัน + คัดลอกส่ง LINE · เปลี่ยนประเภทคูปองของเคสได้ในรายการเคสรายหมอ · แยกคลินิกรหัสคล้ายกัน เช่น BPDC/BWDC ไม่รวมคูปองกัน · แก้ประเภทคูปองในประวัติการให้คูปองได้ · ห้องประชุมในผังแล็บ เปิดแชททั้งร้าน · ใบเตือน: ช่องเซ็น กรรมการบริษัท + ใช้ชื่อจริงภาษาไทย · ใบเตือนแบบติ๊ก + พิมพ์ A4 · ใบเตือนพนักงาน: คลิกตัวละครในผังแล็บ (แอดมิน/CEO) · เมนู 🔔 แจ้ง: แจ้งปัญหาเคส ไฟล์มีปัญหา/ระงับ/ยกเลิก · DEW เช็กอินได้ทุกที่ · คนส่งของเช็กอินที่ไหนก็ได้ · ผังแล็บจัดห้องตามที่กำหนด + ซ่อน CEO + ไฟเขียวคนเช็กอิน · กำหนดเวลาเข้า-เลิกงาน/ผ่อนผัน/วันหยุด ปรับได้ แสดงสาย-ออกก่อน · ตั้งตำแหน่งแล็บจากพิกัดที่วางได้ · แผนผังแล็บ + ลงเวลาเข้า-ออกงานตามรัศมีแล็บ · หน้าลูกค้า: เคสที่ส่งออกแล้วแยกเป็นรายเดือน เลือกเดือน/ปีได้ · หน้าลูกค้า: ปุ่มดูเคสที่ส่งออกแล้ว · โน้ต Abutment (ไซด์ที่สั่ง) แสดงในหน้าลูกค้า · หมายเหตุการให้คูปองแสดงในหน้าลูกค้า · อัปเดตระบบ: ดูเวอร์ชันล่าสุด+รายละเอียด · คูปองของหมอในหน้าลูกค้า · สรุปประจำวัน+ส่ง LINE · ลูกค้าส่งงานออนไลน์ · ปรับหน้าตาใหม่ ขาว-ดำ + โลโก้บริษัท · Premill เสร็จ → เคสวนกลับไปสแกน/ออกแบบรอบ 2 ก่อนกลึงครอบ · ใช้ของแล็บหมวด Premill → ส่งเคสเข้า MILLING Premill อัตโนมัติ · MegaGen AnyRidge Standard + Ti blank · MegaGen BlueDiamond NC/RC ครบตามแคตตาล็อก (Octa/Bridge, Ti blank, AXA, EZ Post) · รหัสเว็บลูกค้าเฉพาะหมอ (หมอทำหลายคลินิก) · แคตตาล็อก Abutment: Camlog CONELOG Ti-base CAD/CAM · แก้ปุ่ม เปิดใช้ขั้นตอนนี้ ของ MILLING lane ให้เคสเข้าคิวจริง · 💰 รายรับ-รายจ่าย เฉพาะ CEO · ปุ่ม 📊 ภาพรวมคงเหลือในคลัง · สิทธิ์ แผนกสต็อก: เพิ่ม/ลดของได้ ไม่เห็นราคา · ประวัติเพิ่ม/ลดจำนวนคลัง ใครทำ เมื่อไหร่ เหตุผล · เลือกใช้ของแล็บในฟอร์ม Abutment ดึงโค้ด+ชื่อ และตัดคลัง · ช่องโค้ดสินค้าในคลัง · นำเข้าคลังเดิมจากไฟล์ Material 2026 + หมวดของ · Point Implant: Cemented Abutment ตามแคตตาล็อกจริง · 📦 คลัง / สั่งของ · ปุ่มลบรายชื่อลงทะเบียน · ปุ่มลบรหัสคลินิก · แท็บ 🌐 เว็บลูกค้า: จับคู่ชื่อคลินิกกับเคสให้ เห็นจำนวนเคสและชื่อใกล้เคียง) ตอนเพิ่มคูปอง • คูปอง: คลินิกชื่อเกือบเหมือนกัน (หมอ/ไม่หมอ) รวมเป็นกระเป๋าเดียว • ทุกแผนกเห็นว่างานอยู่แผนกไหนกับใคร • Dentis Link Regular/Narrow • MegaGen • WEGO/Warantec/SIC/Point/Neodent Zi/DIO • Straumann Variobase • Abutment: ระบุซี่ที่ใช้ของแต่ละรหัสได้ • สั่งได้หลายรหัส • คูปอง: สรุปรายคลินิก) • ต้องใช้ backend v20";
 // ============================================================
 
 // ---------- Load embedded data ----------
@@ -1266,7 +1266,7 @@ let INVOICES = [];
 const NEEDED_SERVER = 10;
 const PIN_MIN = 17;
 const ABUT_RECEIVE_ALL_MIN = 18;
-const OUTSOURCE_MIN = 19, OUTLAB_MIN = 58, OUTFILE_MIN = 59;
+const OUTSOURCE_MIN = 19, OUTLAB_MIN = 58, OUTFILE_MIN = 59, COUPON_CLOSE_MIN = 60;
 const ASSIGN_MIN = 20;
 const FILE_ANY_TOKENS = ['files', 'file', 'upload', 'ไฟล์', 'อัปโหลด', 'อัพโหลด'];
 let SERVER_VER = NEEDED_SERVER;
@@ -5033,8 +5033,8 @@ document.getElementById('sr-pdf').addEventListener('click', ()=>{
 let PRICES_WORK = null, BL_DIRTY = false, BL_EXTRA = [];
 function readPrices(){
   const rec = DEP_OVERRIDES['_settings'] && DEP_OVERRIDES['_settings']['prices'];
-  const p = {default:{}, clinics:{}, hidden:[], targets:{}, credit_days:0, clinics_imported:false, share_all:true, coupon_kinds:[], coupon_grants:[], coupon_aliases:[]};
-  if(rec && rec.status){ try{ const v = JSON.parse(rec.status); p.default = v.default || {}; p.clinics = v.clinics || {}; p.hidden = Array.isArray(v.hidden) ? v.hidden : []; p.targets = (v.targets && typeof v.targets === 'object') ? v.targets : {}; p.credit_days = Number(v.credit_days) > 0 ? Number(v.credit_days) : 0; p.clinics_imported = !!v.clinics_imported; p.share_all = v.share_all === undefined ? true : !!v.share_all; p.coupon_kinds = Array.isArray(v.coupon_kinds) ? v.coupon_kinds.map(x=>String(x)).filter(Boolean) : []; p.coupon_grants = Array.isArray(v.coupon_grants) ? v.coupon_grants.filter(g=>g && g.id) : []; p.coupon_aliases = Array.isArray(v.coupon_aliases) ? v.coupon_aliases.filter(a=>a && a.from && a.to) : []; }catch(e){} }
+  const p = {default:{}, clinics:{}, hidden:[], targets:{}, credit_days:0, clinics_imported:false, share_all:true, coupon_kinds:[], coupon_grants:[], coupon_aliases:[], coupon_closes:[]};
+  if(rec && rec.status){ try{ const v = JSON.parse(rec.status); p.default = v.default || {}; p.clinics = v.clinics || {}; p.hidden = Array.isArray(v.hidden) ? v.hidden : []; p.targets = (v.targets && typeof v.targets === 'object') ? v.targets : {}; p.credit_days = Number(v.credit_days) > 0 ? Number(v.credit_days) : 0; p.clinics_imported = !!v.clinics_imported; p.share_all = v.share_all === undefined ? true : !!v.share_all; p.coupon_kinds = Array.isArray(v.coupon_kinds) ? v.coupon_kinds.map(x=>String(x)).filter(Boolean) : []; p.coupon_grants = Array.isArray(v.coupon_grants) ? v.coupon_grants.filter(g=>g && g.id) : []; p.coupon_aliases = Array.isArray(v.coupon_aliases) ? v.coupon_aliases.filter(a=>a && a.from && a.to) : []; p.coupon_closes = Array.isArray(v.coupon_closes) ? v.coupon_closes.filter(c=>c && c.id && c.kind) : []; }catch(e){} }
   return p;
 }
 async function saveSettingsPatch(fn){
@@ -6391,10 +6391,19 @@ function isCouponCase(o){ return !!o && o.case_type === 'คูปอง' && o.i
 function couponWallets(upTo){
   const W = {}, mk = (clinic, doctor)=>{
     const k = cpClin(clinic) + '\u0001' + cpNorm(doctor);
-    return W[k] || (W[k] = {key:k, clinic:String(cpClinName(clinic) || '').trim() || (String(doctor || '').trim() ? 'ทุกคลินิก' : '(ไม่ระบุคลินิก)'), doctor:String(doctor || '').trim(), kinds:{}, grants:[], cases:[], unkinded:0, hasGrant:false});
+    return W[k] || (W[k] = {key:k, clinic:String(cpClinName(clinic) || '').trim() || (String(doctor || '').trim() ? 'ทุกคลินิก' : '(ไม่ระบุคลินิก)'), doctor:String(doctor || '').trim(), kinds:{}, grants:[], cases:[], rounds:[], unkinded:0, hasGrant:false});
   };
   const kd = (w, kind)=>w.kinds[kind] || (w.kinds[kind] = {granted:0, used:0});
-  readPrices().coupon_grants.filter(g=>!upTo || String(g.date || '') <= upTo).forEach(g=>{ const w = mk(g.clinic, g.doctor); w.hasGrant = true; const e = kd(w, String(g.kind || '')); e.granted += Number(g.qty) || 0; if(/^\d{4}-\d{2}-\d{2}$/.test(String(g.asof || '')) && String(g.asof) > (e.asof || '')) e.asof = String(g.asof); w.grants.push(g); });      // asof = ยกยอด ณ วันที่ → นับเฉพาะเคสที่รับหลังวันนั้น
+  // ปิดคูปอง: grants ที่ปิดไปแล้วไม่นับเป็นยอดให้ไว้ + เคสที่รับถึงวันปิดเป็นของคูปองก้อนนั้น (ซี่ที่เกินยกไปหักก้อนใหม่ = carry)
+  const closes = readPrices().coupon_closes.filter(c=>!upTo || String(c.date || '') <= upTo), closedBy = {};
+  closes.forEach(c=>(c.grant_ids || []).forEach(i=>{ closedBy[i] = c.id; }));
+  readPrices().coupon_grants.filter(g=>!upTo || String(g.date || '') <= upTo).forEach(g=>{ const w = mk(g.clinic, g.doctor); w.hasGrant = true; const e = kd(w, String(g.kind || '')); if(!closedBy[g.id]){ e.granted += Number(g.qty) || 0; if(/^\d{4}-\d{2}-\d{2}$/.test(String(g.asof || '')) && String(g.asof) > (e.asof || '')) e.asof = String(g.asof); } w.grants.push(g); });
+  closes.forEach(c=>{
+    const w = mk(c.clinic, c.doctor); w.hasGrant = true; const e = kd(w, String(c.kind || '')); const cut = String(c.cutoff || '');
+    if(cut > (e.cutoff || '')) e.cutoff = cut;
+    e.closed = true; e.carry = (e.carry || 0) + (Number(c.carry) || 0); e.used += Number(c.carry) || 0;
+    w.rounds.push({close:c, grants:w.grants.filter(g=>closedBy[g.id] === c.id), cases:[]});
+  });      // asof = ยกยอด ณ วันที่ → นับเฉพาะเคสที่รับหลังวันนั้น
   NEW_ORDERS.filter(o=>isCouponCase(o) && o.status !== 'ยกเลิกเคส' && (!upTo || String(o.date_received || '').slice(0, 10) <= upTo)).forEach(o=>{
     const parts = couponParts(o), counted = o.coupon_status !== 'คูปองหมดอายุ/ยกเลิก';
     const own = W[cpClin(o.clinic) + '\u0001' + cpNorm(o.doctor)], clin = W[cpClin(o.clinic) + '\u0001'], docw = cpNorm(o.doctor) ? W['\u0001' + cpNorm(o.doctor)] : null;
@@ -6404,10 +6413,13 @@ function couponWallets(upTo){
       return;
     }
     parts.forEach(pt=>{
-      const has = x=>x && x.kinds[pt.kind] && x.kinds[pt.kind].granted;
+      const has = x=>x && x.kinds[pt.kind] && (x.kinds[pt.kind].granted || x.kinds[pt.kind].closed);
       const w = has(own) ? own : has(clin) ? clin : has(docw) ? docw : (own || mk(o.clinic, o.doctor));
       if(!w.cases.includes(o)) w.cases.push(o);
-      { const e = kd(w, pt.kind); if(counted && !(e.asof && String(o.date_received || '').slice(0, 10) <= e.asof)) e.used += pt.qty; }
+      { const e = kd(w, pt.kind), dte = String(o.date_received || '').slice(0, 10);
+        const rd = w.rounds.filter(r=>r.close.kind === pt.kind).sort((a, b)=>String(a.close.cutoff).localeCompare(String(b.close.cutoff))).find(r=>dte <= String(r.close.cutoff || ''));
+        if(rd){ rd.cases.push({o, qty:pt.qty, counted}); }      // เคสของคูปองก้อนที่ปิดแล้ว
+        else { const lim = (e.asof || '') > (e.cutoff || '') ? e.asof : (e.cutoff || ''); if(counted && !(lim && dte <= lim)) e.used += pt.qty; } }
     });
   });
   // safety net: wallets whose clinic names have the SAME core (…จั่นเจา = …หมอจั่นเจา) and the same doctor are one wallet, even if the automatic name match above was ambiguous
@@ -6418,8 +6430,8 @@ function couponWallets(upTo){
     ws.sort((a, b)=>(b.grants.length - a.grants.length) || (Object.keys(b.kinds).length - Object.keys(a.kinds).length));
     const t = ws[0], nameBy = ws.slice().sort((a, b)=>b.cases.length - a.cases.length || a.clinic.length - b.clinic.length);      // the merged wallet carries the spelling the cases are actually written with
     ws.slice(1).forEach(o=>{
-      Object.keys(o.kinds).forEach(k=>{ const x = kd(t, k); x.granted += o.kinds[k].granted; x.used += o.kinds[k].used; if((o.kinds[k].asof || '') > (x.asof || '')) x.asof = o.kinds[k].asof; });
-      t.grants = t.grants.concat(o.grants); o.cases.forEach(c=>{ if(!t.cases.includes(c)) t.cases.push(c); });
+      Object.keys(o.kinds).forEach(k=>{ const x = kd(t, k); x.granted += o.kinds[k].granted; x.used += o.kinds[k].used; if((o.kinds[k].asof || '') > (x.asof || '')) x.asof = o.kinds[k].asof; if(o.kinds[k].closed){ x.closed = true; if((o.kinds[k].cutoff || '') > (x.cutoff || '')) x.cutoff = o.kinds[k].cutoff; } });
+      t.grants = t.grants.concat(o.grants); t.rounds = t.rounds.concat(o.rounds); o.cases.forEach(c=>{ if(!t.cases.includes(c)) t.cases.push(c); });
       t.unkinded += o.unkinded; t.hasGrant = t.hasGrant || o.hasGrant; delete W[o.key];
     });
     t.clinic = nameBy[0].clinic;
@@ -6431,8 +6443,9 @@ function walletChips(w){
   const kinds = [...new Set(couponKinds().concat(Object.keys(w.kinds)))].filter(k=>w.kinds[k]);
   const chips = kinds.map(k=>{
     const x = w.kinds[k], left = x.granted - x.used;
-    const label = x.granted ? (left < 0 ? `${esc(k)} เกิน ${-left}` : `${esc(k)} เหลือ ${left}/${x.granted}`) : `${esc(k)} ใช้ ${x.used} (ยังไม่ได้ให้ไว้)`;
-    return `<span class="cpd-chip wal ${left < 0 || !x.granted ? 'neg' : left === 0 ? 'zero' : ''}" title="ให้ไว้ ${x.granted} • ใช้ไป ${x.used}">${label}</span>`;
+    const waiting = !x.granted && x.closed;      // คูปองก้อนเก่าปิดแล้ว ยังไม่เติมก้อนใหม่
+    const label = x.granted ? (left < 0 ? `${esc(k)} เกิน ${-left}` : `${esc(k)} เหลือ ${left}/${x.granted}`) : waiting ? (x.used > 0 ? `${esc(k)} ใช้ ${x.used} (รอเติมคูปองใหม่)` : `${esc(k)} ปิดแล้ว — รอเติมใหม่`) : `${esc(k)} ใช้ ${x.used} (ยังไม่ได้ให้ไว้)`;
+    return `<span class="cpd-chip wal ${waiting ? (x.used > 0 ? 'neg' : 'zero') : (left < 0 || !x.granted ? 'neg' : left === 0 ? 'zero' : '')}" title="ให้ไว้ ${x.granted} • ใช้ไป ${x.used}">${label}</span>`;
   });
   if(w.unkinded) chips.push(`<span class="cpd-chip neg" title="เคสคูปองที่ยังไม่ได้เลือกประเภท จึงยังไม่ถูกหักจากกระเป๋า">⚠ ยังไม่เลือกประเภท ${w.unkinded} เคส</span>`);
   return chips.join('');
@@ -6491,10 +6504,17 @@ function renderCouponWallets(){
   const admin = isAdminUser(CURRENT_EMPLOYEE), qq = String(document.getElementById('cpd-q').value || '').trim().toLowerCase();
   const open = new Set([...box.querySelectorAll('details[open]')].map(d=>d.dataset.k));
   const list = couponWallets().filter(w=>!qq || (w.clinic + ' ' + w.doctor).toLowerCase().includes(qq));
+  const closedIds = new Set(); readPrices().coupon_closes.forEach(c=>(c.grant_ids || []).forEach(i=>closedIds.add(i)));
   renderCouponSummary(list);
   if(!list.length){ box.innerHTML = '<div class="note">ยังไม่ได้ให้คูปองกับใคร' + (admin ? ' — กด "＋ เพิ่มคูปองให้หมอ/คลินิก" ด้านบน' : '') + '</div>'; return; }
   box.innerHTML = list.map(w=>{
-    const gr = w.grants.slice().sort((a, b)=>String(b.date || '').localeCompare(String(a.date || ''))).map(g=>`<tr data-gid="${esc(g.id)}"><td>${esc(fmtDate(g.date))}</td><td>${esc(g.kind)}</td><td class="num">${Number(g.qty) > 0 ? '+' : ''}${esc(g.qty)}</td><td>${esc(g.note || '')}${g.asof ? ` <span class="muted" title="ระบบนับเฉพาะเคสที่รับหลังวันนี้">• ยกยอด ณ ${esc(fmtDate(g.asof))}</span>` : ''}</td><td>${esc(g.by || '')}</td>${admin ? `<td style="white-space:nowrap"><button type="button" class="btn ghost sm" data-cpw-edit="${esc(g.id)}">✏️ แก้</button> <button type="button" class="btn ghost sm" data-cpw-del="${esc(g.id)}">ลบ</button></td>` : ''}</tr>`).join('');
+    const gr = w.grants.slice().sort((a, b)=>String(b.date || '').localeCompare(String(a.date || ''))).map(g=>`<tr data-gid="${esc(g.id)}"><td>${esc(fmtDate(g.date))}</td><td>${esc(g.kind)}</td><td class="num">${Number(g.qty) > 0 ? '+' : ''}${esc(g.qty)}</td><td>${esc(g.note || '')}${g.asof ? ` <span class="muted" title="ระบบนับเฉพาะเคสที่รับหลังวันนี้">• ยกยอด ณ ${esc(fmtDate(g.asof))}</span>` : ''}</td><td>${esc(g.by || '')}</td>${admin ? (closedIds.has(g.id) ? '<td class="muted" style="white-space:nowrap">🔒 ปิดแล้ว</td>' : `<td style="white-space:nowrap"><button type="button" class="btn ghost sm" data-cpw-edit="${esc(g.id)}">✏️ แก้</button> <button type="button" class="btn ghost sm" data-cpw-del="${esc(g.id)}">ลบ</button></td>`) : ''}</tr>`).join('');
+    const closeBar = admin ? Object.keys(w.kinds).filter(k=>w.kinds[k].granted).map(k=>`<button type="button" class="btn ghost sm" data-cpw-close="${esc(w.key)}" data-kind="${esc(k)}" style="margin:4px 6px 0 0" title="ใช้คูปองก้อนนี้หมดแล้ว — ปิดก้อนนี้ แล้วเติมก้อนใหม่ได้">🔒 ปิดคูปอง ${esc(k)} (หมดแล้ว)</button>`).join('') : '';
+    const roundsHtml = w.rounds.length ? `<b style="display:block;margin-top:10px">🔒 คูปองที่ปิดไปแล้ว (${w.rounds.length} ก้อน)</b>` + w.rounds.slice().sort((a, b)=>String(b.close.date || '').localeCompare(String(a.close.date || ''))).map(r=>{
+      const c = r.close, G = r.grants.reduce((a, g)=>a + (Number(g.qty) || 0), 0), U = r.cases.filter(x=>x.counted).reduce((a, x)=>a + x.qty, 0), lf = G - U;
+      const rows = r.cases.slice().sort((a, b)=>String(b.o.date_received || '').localeCompare(String(a.o.date_received || ''))).map(x=>`<tr><td>${esc(fmtDate(x.o.date_received))}</td><td><a href="#" class="caselink" data-open-case="${esc(x.o._id)}">${esc(x.o.case_id || '-')}</a></td><td>${esc(String(cpClinName(x.o.clinic) || ''))}</td><td>${esc(x.o.position || '')}</td><td>${esc(x.o.implant_system || '')}</td><td class="num">${x.qty}</td></tr>`).join('');
+      return `<details style="margin:6px 0;padding:6px 10px;background:#f6f6f6;border-radius:8px"><summary style="cursor:pointer"><b>${esc(c.kind)}</b> • ปิดเมื่อ ${esc(fmtDate(c.date))} • ให้ไว้ ${G} ใช้ ${U} ${lf < 0 ? '(เกิน ' + (-lf) + ' ยกไปหักก้อนใหม่)' : lf > 0 ? '(เหลือ ' + lf + ' ถูกตัดทิ้ง)' : '(หมดพอดี)'} • ${r.cases.length} เคส</summary>${r.grants.length ? '<div class="note">ที่ให้ไว้: ' + r.grants.map(g=>esc(fmtDate(g.date)) + ' ' + (Number(g.qty) > 0 ? '+' : '') + esc(g.qty) + (g.note ? ' (' + esc(g.note) + ')' : '')).join(' • ') + '</div>' : ''}${rows ? `<table><tr><th>วันรับงาน</th><th>เคส</th><th>คลินิก</th><th>ซี่ฟัน</th><th>ระบบ</th><th>ซี่ที่ใช้</th></tr>${rows}</table>` : '<div class="note">ไม่มีเคสในคูปองก้อนนี้</div>'}${admin ? `<div style="margin-top:6px"><button type="button" class="btn ghost sm" data-cpw-reopen="${esc(c.id)}">↩ เปิดกลับ (ยกเลิกการปิด)</button></div>` : ''}</details>`;
+    }).join('') : '';
     const clinOf = o=>String(cpClinName(o.clinic) || '').trim() || '(ไม่ระบุคลินิก)', clinCount = {};
     w.cases.forEach(o=>{ const c = clinOf(o); clinCount[c] = (clinCount[c] || 0) + 1; });
     const clinNames = Object.keys(clinCount).sort((a, b)=>a.localeCompare(b, 'th')), picks = (CPW_CLIN[w.key] || []).filter(c=>clinCount[c]), isPick = o=>!picks.length || picks.includes(clinOf(o));
@@ -6502,10 +6522,16 @@ function renderCouponWallets(){
     const clinSel = clinNames.length > 1 ? `<div style="margin:6px 0;padding:8px 10px;background:#f4f7fb;border-radius:8px"><b style="font-size:13px">🏥 ติ๊กเลือกคลินิกที่จะดู</b> <small style="color:#777">(ไม่ติ๊ก = ทุกคลินิก)</small><div style="display:flex;gap:6px 14px;flex-wrap:wrap;margin-top:4px">${clinNames.map(c=>`<label style="font-size:13px;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;width:auto"><input type="checkbox" style="width:auto;margin:0;flex:none" data-cpw-clin="${esc(w.key)}" value="${esc(c)}"${picks.includes(c) ? ' checked' : ''}> ${esc(c)} (${clinCount[c]})</label>`).join('')}</div>${picks.length ? `<div style="margin-top:6px;font-size:13px">รวมที่เลือก ${picks.length} คลินิก: <b>${w.cases.filter(isPick).length} เคส</b>${Object.keys(used).length ? ' • ใช้คูปอง ' + Object.keys(used).map(k=>esc(k) + ' ' + used[k]).join(' • ') : ''}</div>` : ''}</div>` : '';
     const cs = w.cases.filter(isPick).sort((a, b)=>String(b.date_received || '').localeCompare(String(a.date_received || ''))).map(o=>`<tr><td>${esc(fmtDate(o.date_received))}</td><td><a href="#" class="caselink" data-open-case="${esc(o._id)}">${esc(o.case_id || '-')}</a></td><td>${esc(clinOf(o))}</td><td>${esc(o.doctor || '')}</td><td>${esc(o.position || '')}</td><td>${esc(o.implant_system || '')}</td><td>${couponKindText(o) ? (admin && !String(o.coupon_split || '').trim() && couponParts(o).length === 1 ? `<select data-cpw-kind="${esc(o._id)}" title="เลือกผิด? เปลี่ยนประเภทคูปองของเคสนี้ได้ที่นี่" style="width:auto">${[...new Set(couponKinds().concat(o.coupon_kind))].map(k=>`<option${k === o.coupon_kind ? ' selected' : ''}>${esc(k)}</option>`).join('')}</select>` : esc(couponKindText(o))) : (admin ? `<select data-cpw-kind="${esc(o._id)}" style="width:auto"><option value="">— เลือกประเภทเพื่อหักคูปอง —</option>${couponKinds().map(k=>`<option>${esc(k)}</option>`).join('')}</select>` : '— ไม่ระบุ')}${admin ? ` <a href="#" data-cpw-split="${esc(o._id)}" title="ใช้เมื่อเคสนี้ใช้คูปองหลายประเภท เช่น 1 ซี่ธรรมดา + 1 ซี่รากเทียม" style="font-size:12px;color:#777;white-space:nowrap">✎ แบ่งประเภท</a>` : ''}</td><td>${esc(o.coupon_status || '-')}</td></tr>`).join('');
     return `<details class="cpd-row" data-k="${esc(w.key)}" ${open.has(w.key) ? 'open' : ''}><summary><b>${esc(w.clinic)}</b><span>${w.doctor ? '👨‍⚕️ ' + esc(w.doctor) : '🏥 ทั้งคลินิก'}</span><span class="cpd-n">${walletChips(w)}</span></summary><div class="cpd-cases">
-      <b>ประวัติการให้คูปอง</b>${gr ? `<table><tr><th>วันที่</th><th>ประเภท</th><th>จำนวน</th><th>หมายเหตุ</th><th>โดย</th>${admin ? '<th></th>' : ''}</tr>${gr}</table>` : '<div class="note">ยังไม่มีการให้คูปอง (มีแต่เคสที่ใช้)</div>'}
-      <b style="display:block;margin-top:8px">เคสที่หักจากกระเป๋านี้</b>${clinSel}${cs ? `<table><tr><th>วันรับงาน</th><th>เคส</th><th>คลินิก</th><th>หมอ</th><th>ซี่ฟัน</th><th>ระบบ</th><th>ประเภท</th><th>สถานะคูปอง</th></tr>${cs}</table>` : '<div class="note">ยังไม่มี</div>'}</div></details>`;
+      <b>ประวัติการให้คูปอง</b>${gr ? `<table><tr><th>วันที่</th><th>ประเภท</th><th>จำนวน</th><th>หมายเหตุ</th><th>โดย</th>${admin ? '<th></th>' : ''}</tr>${gr}</table>` : '<div class="note">ยังไม่มีการให้คูปอง (มีแต่เคสที่ใช้)</div>'}${closeBar}
+      <b style="display:block;margin-top:8px">เคสที่หักจากกระเป๋านี้</b>${clinSel}${cs ? `<table><tr><th>วันรับงาน</th><th>เคส</th><th>คลินิก</th><th>หมอ</th><th>ซี่ฟัน</th><th>ระบบ</th><th>ประเภท</th><th>สถานะคูปอง</th></tr>${cs}</table>` : '<div class="note">ยังไม่มี</div>'}${roundsHtml}</div></details>`;
   }).join('');
   renderCouponMerge();
+  box.querySelectorAll('[data-cpw-close]').forEach(b=>b.addEventListener('click', ()=>closeCouponRound(b.dataset.cpwClose, b.dataset.kind)));
+  box.querySelectorAll('[data-cpw-reopen]').forEach(b=>b.addEventListener('click', async ()=>{
+    if(!window.confirm('เปิดคูปองก้อนนี้กลับ? (ยอดจะนับรวมกลับเหมือนก่อนปิด)')) return;
+    await saveSettingsPatch(cur=>{ cur.coupon_closes = (cur.coupon_closes || []).filter(c=>c.id !== b.dataset.cpwReopen); });
+    showToast('เปิดคูปองกลับแล้ว'); renderCouponByDoctor();
+  }));
   box.querySelectorAll('[data-cpw-clin]').forEach(cb=>cb.addEventListener('change', ()=>{ const k = cb.dataset.cpwClin; CPW_CLIN[k] = [...box.querySelectorAll('[data-cpw-clin]')].filter(x=>x.dataset.cpwClin === k && x.checked).map(x=>x.value); renderCouponWallets(); }));
   box.querySelectorAll('[data-cpw-split]').forEach(b=>b.addEventListener('click', e=>{ e.preventDefault(); openSplitEditor(b.dataset.cpwSplit); }));
   box.querySelectorAll('[data-cpw-kind]').forEach(sel=>sel.addEventListener('change', async ()=>{
@@ -6536,6 +6562,24 @@ function renderCouponWallets(){
     await saveSettingsPatch(cur=>{ cur.coupon_grants = cur.coupon_grants.filter(g=>g.id !== b.dataset.cpwDel); });
     showToast('ลบแล้ว'); renderCouponByDoctor();
   }));
+}
+// ปิดคูปอง: ใช้หมดแล้ว → ก้อนนี้จบ เคสที่รับถึงวันล่าสุดเป็นของก้อนนี้ ซี่ที่เกินยกไปหักก้อนใหม่ เติมใหม่ = ก้อนใหม่
+async function closeCouponRound(wkey, kind){
+  if(SERVER_VER < COUPON_CLOSE_MIN){ window.alert('ต้องอัปเดต Apps Script เป็น v' + COUPON_CLOSE_MIN + ' ก่อน จึงจะปิดคูปองได้ (เพื่อให้หน้าคลินิกนับตรงกับแอป)'); return; }
+  const w = couponWallets().find(x=>x.key === wkey); if(!w || !w.kinds[kind]) return;
+  const e = w.kinds[kind], closedIds = new Set(); readPrices().coupon_closes.forEach(c=>(c.grant_ids || []).forEach(i=>closedIds.add(i)));
+  const gs = w.grants.filter(g=>String(g.kind || '') === kind && !closedIds.has(g.id)); if(!gs.length) return;
+  const inRound = new Set(); w.rounds.forEach(r=>r.cases.forEach(x=>inRound.add(x.o)));
+  const dates = w.cases.filter(o=>!inRound.has(o) && o.status !== 'ยกเลิกเคส' && o.coupon_status !== 'คูปองหมดอายุ/ยกเลิก' && couponParts(o).some(p=>p.kind === kind)).map(o=>String(o.date_received || '').slice(0, 10)).filter(Boolean).sort();
+  const cutoff = dates.length ? dates[dates.length - 1] : todayLocal(), left = e.granted - e.used;
+  const who = (w.doctor ? w.doctor : 'ทั้งคลินิก') + ' (' + w.clinic + ')';
+  const msg = 'ปิดคูปอง "' + kind + '" ของ ' + who + '\n\nให้ไว้ ' + e.granted + ' • ใช้ไป ' + e.used + '\n'
+    + (left > 0 ? 'เหลือ ' + left + ' ซี่ — จะถูกตัดทิ้ง (ไม่ยกไปคูปองใหม่)' : left < 0 ? 'ใช้เกิน ' + (-left) + ' ซี่ — จะยกไปหักจากคูปองก้อนใหม่' : 'หมดพอดี ✓')
+    + '\n\nเคสที่รับถึงวันที่ ' + fmtDate(cutoff) + ' จะนับเป็นคูปองก้อนนี้ เคสหลังจากนั้นเริ่มนับก้อนใหม่\nเติมคูปองใหม่เมื่อไหร่ก็ได้ (ช่องวันที่ยกยอดเว้นว่าง)\n\nกดตกลงเพื่อปิดคูปอง';
+  if(!window.confirm(msg)) return;
+  const first = gs[0];
+  await saveSettingsPatch(cur=>{ cur.coupon_closes = (cur.coupon_closes || []).concat({id:'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), clinic:first.clinic || '', doctor:first.doctor || '', kind, cutoff, grant_ids:gs.map(g=>g.id), granted:e.granted, used:e.used, carry:Math.max(0, -left), left:Math.max(0, left), date:todayLocal(), by:CURRENT_EMPLOYEE.name}); });
+  showToast('ปิดคูปองแล้ว ✓ — เติมคูปองใหม่ได้เลย'); renderCouponByDoctor();
 }
 function openSplitEditor(id){
   const o = NEW_ORDERS.find(x=>x._id === id); if(!o) return;
@@ -7651,6 +7695,7 @@ init();
 
 // ---------- 🆕 อัปเดตระบบ (admin / CEO): เวอร์ชันล่าสุด + รายละเอียดที่เพิ่ม (ใหม่สุดอยู่บน) ----------
 const CHANGELOG = [
+  { rev: 195, server: 60, title: 'คูปอง: ปิดคูปอง / ก้อนใหม่', items: ['กดปุ่ม ปิดคูปอง (หมดแล้ว) ในกระเป๋าคูปองของหมอ — ก้อนเก่าจบ ดูได้ว่าใช้กับเคสไหนบ้าง', 'ซี่ที่ใช้เกินก้อนเก่ายกไปหักจากก้อนใหม่ ที่เหลือ (ถ้ามี) ถูกตัดทิ้ง', 'เติมคูปองใหม่ = เริ่มนับก้อนใหม่ นับเฉพาะเคสหลังวันปิด', 'เปิดกลับ (ยกเลิกการปิด) ได้', 'ต้องใช้ Apps Script v60 (หน้าคลินิกนับตรงกับแอป รวมถึง ยกยอด ณ วันที่)'] },
   { rev: 194, server: 59, title: 'สั่ง Abutment: จำรหัสที่สั่งบ่อย', items: ['ฟอร์มสั่ง Abutment มีปุ่ม ⭐ สั่งบ่อย (สูงสุด 6 รหัส) กดแล้วเพิ่มเข้ารายการทันที ไม่ต้องเลือกยี่ห้อ/ชนิด/ขนาดใหม่ — จำแยกตามเครื่องที่ใช้ (เบราว์เซอร์)'] },
   { rev: 193, server: 59, title: 'คูปอง: เตือนวันที่ยกยอด', items: ['ตอนเพิ่มคูปอง ถ้าใส่ วันที่ยกยอด ที่ตรงหรือหลังเคสล่าสุดของหมอ (ทำให้เคสเก่าทั้งหมดไม่ถูกนับว่าใช้ไป) ระบบถามยืนยันก่อน'] },
   { rev: 192, server: 59, title: 'คูปอง: ซี่เดียวหลายบริการ', items: ['ลิงก์ แบ่งประเภท ในตารางเคสคูปองขึ้นกับทุกเคส รวมเคสฟันซี่เดียว ใส่ได้หลายประเภท เช่น Zirconia 1 + implant service 1 + Milling 1 + Cementation 1 และหักคูปองแต่ละประเภทตามจำนวน'] },
